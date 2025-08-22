@@ -1,0 +1,12 @@
+Warning: TTY mode requires /dev/tty to be read/writable.
+PHP Fatal error:  Cannot declare class AddPaymentLinkToClientsTable, because the name is already in use in /Volumes/DATA/PROJECTS/SACCOS/CORE_SYSTEM_TEMPLATE/database/migrations/2025_01_27_add_payment_link_to_clients_table.php on line 7
+
+In 2025_01_27_add_payment_link_to_clients_table.php line 7:
+                                                                               
+  Cannot declare class AddPaymentLinkToClientsTable, because the name is alre  
+  ady in use                                                                   
+                                                                               
+
+
+Fatal error: Cannot declare class AddPaymentLinkToClientsTable, because the name is already in use in /Volumes/DATA/PROJECTS/SACCOS/CORE_SYSTEM_TEMPLATE/database/migrations/2025_01_27_add_payment_link_to_clients_table.php on line 7
+

@@ -1,0 +1,28 @@
+{
+    "service": "Account Details API",
+    "timestamp": "2025-08-11 07:06:58",
+    "base_url": "http:\/\/127.0.0.1:8000\/api",
+    "tests": {
+        "Connectivity": "FAILED",
+        "Savings Account Details": "FAILED",
+        "Current Account Details": "FAILED",
+        "Loan Account Details": "FAILED",
+        "Multiple Accounts": "FAILED",
+        "Statistics": "FAILED",
+        "Account Format Validation": "FAILED",
+        "Missing Account Validation": "FAILED",
+        "Non-existent Account": "WARNING",
+        "Authentication": "FAILED",
+        "Rate Limiting": "WARNING",
+        "Closed Account Handling": "WARNING",
+        "Dormant Account Handling": "WARNING",
+        "Frozen Account Handling": "WARNING",
+        "Error Handling": "FAILED"
+    },
+    "summary": {
+        "total": 15,
+        "passed": 0,
+        "failed": 10,
+        "warnings": 5
+    }
+}

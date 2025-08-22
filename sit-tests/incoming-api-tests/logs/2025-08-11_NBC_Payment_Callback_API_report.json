@@ -1,0 +1,26 @@
+{
+    "service": "NBC Payment Callback API",
+    "timestamp": "2025-08-11 07:06:58",
+    "base_url": "http:\/\/127.0.0.1:8000\/api",
+    "tests": {
+        "Signature Verification": "FAILED",
+        "Invalid Signature": "FAILED",
+        "Valid Signature": "WARNING",
+        "Successful Payment Callback": "FAILED",
+        "Failed Payment Callback": "FAILED",
+        "Pending Payment Callback": "FAILED",
+        "Missing Transaction ID": "FAILED",
+        "Invalid Status": "FAILED",
+        "Negative Amount": "FAILED",
+        "Callback Idempotency": "FAILED",
+        "Timeout Handling": "FAILED",
+        "Reversal Handling": "FAILED",
+        "Error Handling": "FAILED"
+    },
+    "summary": {
+        "total": 13,
+        "passed": 0,
+        "failed": 12,
+        "warnings": 1
+    }
+}

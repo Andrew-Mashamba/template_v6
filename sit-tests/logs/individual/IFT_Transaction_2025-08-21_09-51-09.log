@@ -1,0 +1,60 @@
+========================================
+Test: IFT Transaction
+Started: 2025-08-21 09:51:09
+========================================
+
+ℹ️  INFO: Starting IFT Transaction test
+  Timestamp: 2025-08-21 09:51:09
+
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/ift-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "account_from": "1234567890",
+    "account_to": "0987654321",
+    "amount": 10000,
+    "currency": "TZS",
+    "description": "IFT Test Transaction",
+    "reference": "IFT1755769869"
+}
+  Metadata: {
+    "transaction_type": "IFT",
+    "test_environment": "live"
+}
+  Timestamp: 2025-08-21 09:51:09
+
+🔌 CONNECTION FAILURE DETECTED:
+  Endpoint Type: Private NBC Endpoint
+  Response Time: 117.25 ms
+  Error: cURL error 6: Could not resolve host: cbpuat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/ift-transaction
+  Timestamp: 2025-08-21 09:51:09
+
+❌ ENDPOINT STATUS: NOT REACHABLE (Expected for Private NBC Endpoint)
+✓ Test passed - This is a private NBC endpoint
+  ✓ Connection failure is expected from local environment
+  ✓ Error: cURL error 6: Could not resolve host: cbpuat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/ift-transaction
+  ✓ Response Time: 117.25 ms
+  ✓ Exception Type: Illuminate\Http\Client\ConnectionException
+  ✓ Endpoint Type: Private NBC Endpoint
+
+🎯 TEST RESULT:
+  Status: FAILED
+  Message: IFT Transaction test failed - Connection failure detected
+  Details: {
+    "Error": "cURL error 6: Could not resolve host: cbpuat.intra.nbc.co.tz (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/cbpuat.intra.nbc.co.tz:6666\/api\/nbc-sg\/internal_ft\/ift-transaction",
+    "Response Time": "117.25 ms",
+    "Exception Type": "Illuminate\\Http\\Client\\ConnectionException",
+    "Endpoint Type": "Private NBC Endpoint"
+}
+  Timestamp: 2025-08-21 09:51:09
+
+========================================
+Test: IFT Transaction - FAILED
+Completed: 2025-08-21 09:51:09
+Log File: IFT_Transaction_2025-08-21_09-51-09.log
+========================================
+

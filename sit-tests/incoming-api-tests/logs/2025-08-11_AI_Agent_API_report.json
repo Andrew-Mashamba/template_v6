@@ -1,0 +1,31 @@
+{
+    "service": "AI Agent API",
+    "timestamp": "2025-08-11 07:06:59",
+    "base_url": "http:\/\/127.0.0.1:8000\/api",
+    "tests": {
+        "Sanctum Authentication": "PASSED",
+        "Invalid Token": "PASSED",
+        "Account balance Question": "WARNING",
+        "Transaction history Question": "WARNING",
+        "Loan eligibility Question": "WARNING",
+        "General Inquiry": "WARNING",
+        "Calculation Request": "WARNING",
+        "Policy Question": "WARNING",
+        "Swahili Question": "WARNING",
+        "Session Context": "WARNING",
+        "No Context Handling": "WARNING",
+        "Empty Question Validation": "WARNING",
+        "Question Length Limit": "WARNING",
+        "SQL Injection Prevention": "WARNING",
+        "AI Agent Rate Limiting": "WARNING",
+        "Content Filter": "WARNING",
+        "Timeout Handling": "WARNING",
+        "Error Handling": "FAILED"
+    },
+    "summary": {
+        "total": 18,
+        "passed": 2,
+        "failed": 1,
+        "warnings": 15
+    }
+}

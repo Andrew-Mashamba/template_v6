@@ -1,0 +1,23 @@
+{
+    "service": "Billing API",
+    "timestamp": "2025-08-11 07:06:57",
+    "base_url": "http:\/\/127.0.0.1:8000\/api",
+    "tests": {
+        "Billing Inquiry": "FAILED",
+        "Payment Notification": "FAILED",
+        "Status Check": "FAILED",
+        "Input Validation - Invalid": "PASSED",
+        "Input Validation - Valid": "FAILED",
+        "Amount Validation": "PASSED",
+        "Control Number Format": "PASSED",
+        "Duplicate Payment Handling": "WARNING",
+        "Non-existent Control Number": "WARNING",
+        "Error Handling": "PASSED"
+    },
+    "summary": {
+        "total": 10,
+        "passed": 4,
+        "failed": 4,
+        "warnings": 2
+    }
+}

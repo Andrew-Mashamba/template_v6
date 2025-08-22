@@ -1,0 +1,219 @@
+================================================================================
+Test: Bank Transaction Service
+Timestamp: 2025-08-11 05:28:58
+Duration: 0.004 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Bank Transaction Service API Tests
+========================================
+
+[TEST] IFT Transaction...
+✓ IFT Transaction test passed
+
+[TEST] EFT Transaction...
+✓ EFT Transaction test passed
+
+[TEST] Mobile Transaction...
+✓ Mobile Transaction test passed
+
+[TEST] Invalid Transaction Type...
+✓ Invalid Transaction Type test passed
+
+[TEST] Connection Failure Handling...
+✗ Connection Failure test failed: Error not handled properly
+
+========================================
+Test Results Summary
+========================================
+IFT Transaction               : PASSED
+EFT Transaction               : PASSED
+Mobile Transaction            : PASSED
+Invalid Transaction Type      : PASSED
+Connection Failure            : FAILED
+----------------------------------------
+Total: 5 tests
+Passed: 4 | Failed: 1 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: GEPG Gateway
+Timestamp: 2025-08-11 05:28:58
+Duration: 0 seconds
+--------------------------------------------------------------------------------
+
+========================================
+GEPG Gateway API Tests
+========================================
+
+[TEST] Bill Query (Control Number Verification)...
+✓ Bill Query test passed - Control Number: 991700123456
+
+[TEST] Bill Payment Processing...
+✓ Bill Payment test passed - Reference: PAY1754890138
+
+[TEST] Prepaid Payment (Quote)...
+✓ Prepaid Payment test passed - Token: 12345678901234567890
+
+[TEST] Transaction Status Check...
+✓ Status Check test passed - Status: SUCCESS
+
+[TEST] XML Signing and Verification...
+✓ XML Signing test passed
+
+[TEST] Error Handling...
+  ✓ Error scenario handled: 4001 - Invalid control number
+  ✓ Error scenario handled: 4002 - Expired bill
+  ✓ Error scenario handled: 4003 - Insufficient funds
+  ✓ Error scenario handled: 5001 - System error
+
+========================================
+Test Results Summary
+========================================
+Bill Query                    : PASSED
+Bill Payment                  : PASSED
+Prepaid Payment               : PASSED
+Status Check                  : PASSED
+XML Signing                   : PASSED
+Error Handling                : PASSED
+----------------------------------------
+Total: 6 tests
+Passed: 6 | Failed: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: Luku Gateway
+Timestamp: 2025-08-11 05:28:58
+Duration: 0.095 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Luku Gateway API Tests
+========================================
+
+[TEST] Token Query...
+✓ Token Query test passed - Meter: 04123456789
+
+[TEST] Token Purchase...
+✓ Token Purchase test passed - Token: 12345-67890-12345-67890
+  Units: 125.5 kWh
+
+[TEST] Meter Validation...
+  ✓ Meter 04123456789 validation: Valid (as expected)
+  ✗ Meter 04999999999 validation failed
+  ✗ Meter INVALID validation failed
+
+[TEST] Transaction Status Check...
+✗ Transaction Status test error: cURL error 6: Could not resolve host: nbc-gateway-uat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://nbc-gateway-uat.intra.nbc.co.tz/api/transaction/status?transaction_id=TRX1754890138
+
+[TEST] SSL Configuration...
+⚠ SSL Configuration warning - SSL verification disabled
+
+[TEST] Error Handling...
+  ✓ Error 400 handled: Invalid meter number
+  ✗ Error 401 not handled properly
+  ✗ Error 403 not handled properly
+  ✗ Error 500 not handled properly
+  ✗ Error 503 not handled properly
+
+========================================
+Test Results Summary
+========================================
+Token Query                   : PASSED
+Token Purchase                : PASSED
+Meter Validation              : FAILED
+Transaction Status            : ERROR
+SSL Configuration             : WARNING
+Error Handling                : FAILED
+----------------------------------------
+Total: 6 tests
+Passed: 2 | Failed: 2 | Warnings: 1 | Errors: 1
+========================================
+
+================================================================================
+
+================================================================================
+Test: NBC SMS
+Timestamp: 2025-08-11 05:28:58
+Duration: 0.001 seconds
+--------------------------------------------------------------------------------
+
+========================================
+NBC SMS API Tests
+========================================
+
+[TEST] Single SMS Send...
+✓ Single SMS test passed - Message ID: MSG1754890138
+
+[TEST] Bulk SMS Send...
+✓ Bulk SMS test passed - Batch ID: BATCH1754890138
+  Sent: 3 messages
+
+[TEST] SMS Status Check...
+✓ SMS Status test passed - Status: DELIVERED
+
+[TEST] Rate Limiting...
+✗ Rate Limiting test failed - limit not enforced
+
+[TEST] Invalid Phone Number Handling...
+✗ Invalid Phone Number test error: A request was made, but the response sequence is empty.
+
+[TEST] Long Message Handling...
+✗ Long Message test error: A request was made, but the response sequence is empty.
+
+========================================
+Test Results Summary
+========================================
+Single SMS                    : PASSED
+Bulk SMS                      : PASSED
+SMS Status                    : PASSED
+Rate Limiting                 : FAILED
+Invalid Phone Number          : ERROR
+Long Message                  : ERROR
+----------------------------------------
+Total: 6 tests
+Passed: 3 | Failed: 1 | Errors: 2
+========================================
+
+================================================================================
+
+================================================================================
+Test: AI Services
+Timestamp: 2025-08-11 05:28:58
+Duration: 0 seconds
+--------------------------------------------------------------------------------
+
+========================================
+AI Services API Tests
+========================================
+
+[TEST] Groq API...
+✓ Groq API test passed - Model: llama3-8b-8192
+
+[TEST] OpenAI API...
+✓ OpenAI API test passed - Model: gpt-3.5-turbo
+
+[TEST] Together AI API...
+✓ Together AI API test passed - Model: meta-llama/Llama-2-70b-chat-hf
+
+[TEST] Claude API...
+✓ Claude API test passed
+
+========================================
+Test Results Summary
+========================================
+Groq API                      : PASSED
+OpenAI API                    : PASSED
+Together AI API               : PASSED
+Claude API                    : PASSED
+----------------------------------------
+Total: 4 tests
+Passed: 4 | Failed: 0 | Skipped: 0 | Errors: 0
+========================================
+
+================================================================================
+

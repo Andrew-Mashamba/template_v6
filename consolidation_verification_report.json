@@ -1,0 +1,246 @@
+{
+    "shares": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 14,
+        "migrations_consolidated": 7,
+        "file": "2025_07_27_100100_create_shares_table_consolidated.php"
+    },
+    "institutions": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 60,
+        "migrations_consolidated": 6,
+        "file": "2025_07_27_100200_create_institutions_table_consolidated.php"
+    },
+    "tellers": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 18,
+        "migrations_consolidated": 6,
+        "file": "2025_07_27_100300_create_tellers_table_consolidated.php"
+    },
+    "loans": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 81,
+        "migrations_consolidated": 6,
+        "file": "2025_07_27_100400_create_loans_table_consolidated.php"
+    },
+    "users": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 33,
+        "migrations_consolidated": 5,
+        "file": "2025_07_27_100500_create_users_table_consolidated.php"
+    },
+    "ppes": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 43,
+        "migrations_consolidated": 4,
+        "file": "2025_07_27_100600_create_ppes_table_consolidated.php"
+    },
+    "roles": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 15,
+        "migrations_consolidated": 5,
+        "file": "2025_07_27_100700_create_roles_table_consolidated.php"
+    },
+    "accounts": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 34,
+        "migrations_consolidated": 4,
+        "file": "2025_07_27_100800_create_accounts_table_consolidated.php"
+    },
+    "departments": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 13,
+        "migrations_consolidated": 4,
+        "file": "2025_07_27_100900_create_departments_table_consolidated.php"
+    },
+    "tills": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 27,
+        "migrations_consolidated": 4,
+        "file": "2025_07_27_101000_create_tills_table_consolidated.php"
+    },
+    "approvals": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 31,
+        "migrations_consolidated": 4,
+        "file": "2025_07_27_101100_create_approvals_table_consolidated.php"
+    },
+    "strongroom_ledgers": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 13,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_101200_create_strongroom_ledgers_table_consolidated.php"
+    },
+    "cash_movements": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 21,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_101300_create_cash_movements_table_consolidated.php"
+    },
+    "branches": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 20,
+        "migrations_consolidated": 3,
+        "file": "2025_07_27_101400_create_branches_table_consolidated.php"
+    },
+    "clients": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 134,
+        "migrations_consolidated": 3,
+        "file": "2025_07_27_101500_create_clients_table_consolidated.php"
+    },
+    "sub_products": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 72,
+        "migrations_consolidated": 3,
+        "file": "2025_07_27_101600_create_sub_products_table_consolidated.php"
+    },
+    "permissions": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 13,
+        "migrations_consolidated": 3,
+        "file": "2025_07_27_101700_create_permissions_table_consolidated.php"
+    },
+    "dividends": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 11,
+        "migrations_consolidated": 4,
+        "file": "2025_07_27_101800_create_dividends_table_consolidated.php"
+    },
+    "notifications": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 11,
+        "migrations_consolidated": 3,
+        "file": "2025_07_27_101900_create_notifications_table_consolidated.php"
+    },
+    "services": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 15,
+        "migrations_consolidated": 3,
+        "file": "2025_07_27_102000_create_services_table_consolidated.php"
+    },
+    "Expenses": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 13,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_102100_create_Expenses_table_consolidated.php"
+    },
+    "ai_interactions": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 9,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_102200_create_ai_interactions_table_consolidated.php"
+    },
+    "budget_managements": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 16,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_102300_create_budget_managements_table_consolidated.php"
+    },
+    "committees": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 15,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_102400_create_committees_table_consolidated.php"
+    },
+    "employees": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 60,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_102500_create_employees_table_consolidated.php"
+    },
+    "loan_images": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 12,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_102600_create_loan_images_table_consolidated.php"
+    },
+    "menus": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 14,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_102700_create_menus_table_consolidated.php"
+    },
+    "receivables": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 46,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_102800_create_receivables_table_consolidated.php"
+    },
+    "role_permissions": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 9,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_102900_create_role_permissions_table_consolidated.php"
+    },
+    "bank_accounts": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 19,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_103000_create_bank_accounts_table_consolidated.php"
+    },
+    "menu_actions": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 7,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_103100_create_menu_actions_table_consolidated.php"
+    },
+    "share_transactions": {
+        "status": "SKIPPED",
+        "reason": "Table does not exist in database",
+        "migrations": 2
+    },
+    "process_code_configs": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 15,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_103300_create_process_code_configs_table_consolidated.php"
+    },
+    "transactions": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 104,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_103400_create_transactions_table_consolidated.php"
+    },
+    "meeting_attendance": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 9,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_103500_create_meeting_attendance_table_consolidated.php"
+    },
+    "vaults": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 18,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_103600_create_vaults_table_consolidated.php"
+    },
+    "share_registers": {
+        "status": "SKIPPED",
+        "reason": "Table does not exist in database",
+        "migrations": 2
+    },
+    "bills": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 21,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_103800_create_bills_table_consolidated.php"
+    },
+    "locked_amounts": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 15,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_103900_create_locked_amounts_table_consolidated.php"
+    },
+    "expenses": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 19,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_104000_create_expenses_table_consolidated.php"
+    },
+    "approval_comments": {
+        "status": "CONSOLIDATED",
+        "columns_in_db": 5,
+        "migrations_consolidated": 2,
+        "file": "2025_07_27_104100_create_approval_comments_table_consolidated.php"
+    }
+}

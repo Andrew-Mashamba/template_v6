@@ -1,0 +1,14 @@
+{
+    "restoration_date": "2025-07-27 10:54:37",
+    "backup_dirs_searched": [
+        "FULL_BACKUP_2025-07-27_100400",
+        "MINIMAL_BACKUP_2025-07-27_101407",
+        "ORIGINALS_2025-07-27_101533",
+        "2025-07-27_095012",
+        "DUPLICATES_2025-07-27_101606"
+    ],
+    "total_found": 346,
+    "restored": 346,
+    "failed": 0,
+    "final_count": 346
+}

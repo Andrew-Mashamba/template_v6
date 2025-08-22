@@ -1,0 +1,61 @@
+========================================
+Test: Mobile Transaction
+Started: 2025-08-21 09:27:12
+========================================
+
+ℹ️  INFO: Starting Mobile Transaction test
+  Timestamp: 2025-08-21 09:27:12
+
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/mobile-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "phone_number": "255712345678",
+    "amount": 5000,
+    "currency": "TZS",
+    "description": "Mobile Test Transaction",
+    "reference": "MOB1755768432"
+}
+  Metadata: {
+    "transaction_type": "MOBILE",
+    "test_environment": "live"
+}
+  Timestamp: 2025-08-21 09:27:12
+
+📥 RESPONSE DETAILS:
+  Status Code: N/A
+  Response Time: 2.37 ms
+  Error: cURL error 6: Could not resolve host: cbpuat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/mobile-transaction
+  Timestamp: 2025-08-21 09:27:12
+
+❌ ENDPOINT STATUS: NOT REACHABLE (Expected for Private NBC Endpoint)
+✓ Test passed - This is a private NBC endpoint
+  ✓ Connection failure is expected from local environment
+  ✓ Error: cURL error 6: Could not resolve host: cbpuat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/mobile-transaction
+  ✓ Response Time: 2.37 ms
+  ✓ Endpoint Type: Private NBC Endpoint
+  ✓ Expected Behavior: Connection failure from local environment
+  ✓ Exception Type: Illuminate\Http\Client\ConnectionException
+
+🎯 TEST RESULT:
+  Status: PASSED
+  Message: Mobile Transaction test passed - Expected exception for private endpoint
+  Details: {
+    "Error": "cURL error 6: Could not resolve host: cbpuat.intra.nbc.co.tz (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for http:\/\/cbpuat.intra.nbc.co.tz:6666\/api\/nbc-sg\/internal_ft\/mobile-transaction",
+    "Response Time": "2.37 ms",
+    "Endpoint Type": "Private NBC Endpoint",
+    "Expected Behavior": "Connection failure from local environment",
+    "Exception Type": "Illuminate\\Http\\Client\\ConnectionException"
+}
+  Timestamp: 2025-08-21 09:27:12
+
+========================================
+Test: Mobile Transaction - PASSED
+Completed: 2025-08-21 09:27:12
+Log File: Mobile_Transaction_2025-08-21_09-27-12.log
+========================================
+

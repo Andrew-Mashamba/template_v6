@@ -1,0 +1,5 @@
+*
+!public/
+!config/**
+!.env
+!.gitignore

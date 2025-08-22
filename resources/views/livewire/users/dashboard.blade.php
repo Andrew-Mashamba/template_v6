@@ -1,0 +1,385 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div class="p-6">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="p-3 bg-blue-900 rounded-xl shadow-lg">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">User Management</h1>
+                        <p class="text-gray-600 mt-1">Manage users, roles, departments, and permissions with ease and clarity</p>
+                    </div>
+                </div>
+                
+                <!-- Quick Stats -->
+                <div class="flex items-center space-x-4">
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-indigo-100 rounded-lg">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-500">Total Users</p>
+                                <p class="text-lg font-semibold text-gray-900">{{ number_format($totalUsers ?? 0) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-green-100 rounded-lg">
+                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-500">Active Roles</p>
+                                <p class="text-lg font-semibold text-gray-900">{{ number_format($totalRoles ?? 0) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-blue-100 rounded-lg">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-500">Departments</p>
+                                <p class="text-lg font-semibold text-gray-900">{{ number_format($totalDepartments ?? 0) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-6">
+            <!-- Enhanced Sidebar -->
+            <div class="w-80 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <!-- Search Section -->
+                <div class="p-6 border-b border-gray-100">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <input 
+                            type="text" 
+                            placeholder="Search users, roles, or departments..."
+                            class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white focus:bg-white"
+                            aria-label="Search users"
+                        />
+                    </div>
+                </div>
+
+                <!-- Navigation Menu -->
+                <div class="p-4">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 px-2">Navigation</h3>
+                    
+                    @php
+                        $user_sections = [
+                            [
+                                'id' => 'users', 
+                                'label' => 'Users Management', 
+                                'icon' => 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+                                'description' => 'Manage user accounts',
+                                'count' => $totalUsers ?? 0,
+                                'color' => 'indigo'
+                            ],
+                            [
+                                'id' => 'roles', 
+                                'label' => 'Roles & Permissions', 
+                                'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+                                'description' => 'Define user roles',
+                                'count' => $totalRoles ?? 0,
+                                'color' => 'green'
+                            ],
+                            [
+                                'id' => 'departments', 
+                                'label' => 'Departments', 
+                                'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
+                                'description' => 'Organize departments',
+                                'count' => $totalDepartments ?? 0,
+                                'color' => 'blue'
+                            ],
+                            [
+                                'id' => 'permissions', 
+                                'label' => 'Permissions', 
+                                'icon' => 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z',
+                                'description' => 'Manage permissions',
+                                'count' => null,
+                                'color' => 'yellow'
+                            ],
+                           // [
+                           //     'id' => 'settings', 
+                           //     'label' => 'Settings', 
+                           //     'icon' => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
+                          //      'description' => 'System configuration',
+                           //     'count' => null,
+                           //     'color' => 'gray'
+                            //],
+                            [
+                                'id' => 'organizational-structure', 
+                                'label' => 'Organizational Structure', 
+                                'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
+                                'description' => 'SACCOS hierarchy & roles',
+                                'count' => null,
+                                'color' => 'purple'
+                            ],
+                            [
+                                'id' => 'audit-logs', 
+                                'label' => 'Audit Logs', 
+                                'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+                                'description' => 'Activity tracking',
+                                'count' => null,
+                                'color' => 'pink'
+                            ],
+                        ];
+                    @endphp
+
+                    <nav class="space-y-2">
+                        @foreach ($user_sections as $section)
+                            @php
+                                $isActive = $this->section === $section['id'];
+                                $colorClasses = [
+                                    'indigo' => $isActive ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100',
+                                    'green' => $isActive ? 'bg-green-600 text-white' : 'bg-green-50 text-green-700 hover:bg-green-100',
+                                    'blue' => $isActive ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100',
+                                    'yellow' => $isActive ? 'bg-yellow-600 text-white' : 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100',
+                                    'gray' => $isActive ? 'bg-gray-700 text-white' : 'bg-gray-50 text-gray-700 hover:bg-gray-100',
+                                    'purple' => $isActive ? 'bg-purple-600 text-white' : 'bg-purple-50 text-purple-700 hover:bg-purple-100',
+                                    'pink' => $isActive ? 'bg-pink-600 text-white' : 'bg-pink-50 text-pink-700 hover:bg-pink-100',
+                                ];
+                                $iconColorClasses = [
+                                    'indigo' => $isActive ? 'text-white' : 'text-indigo-600',
+                                    'green' => $isActive ? 'text-white' : 'text-green-600',
+                                    'blue' => $isActive ? 'text-white' : 'text-blue-600',
+                                    'yellow' => $isActive ? 'text-white' : 'text-yellow-600',
+                                    'gray' => $isActive ? 'text-white' : 'text-gray-600',
+                                    'purple' => $isActive ? 'text-white' : 'text-purple-600',
+                                    'pink' => $isActive ? 'text-white' : 'text-pink-600',
+                                ];
+                            @endphp
+
+                            <button
+                                wire:click="setSection('{{ $section['id'] }}')"
+                                class="relative w-full group transition-all duration-200"
+                                aria-label="{{ $section['label'] }}"
+                            >
+                                <div class="flex items-center p-3 rounded-xl transition-all duration-200 shadow-sm
+                                    @if ($isActive) 
+                                        {{ $colorClasses[$section['color']] }} shadow-lg scale-105
+                                    @else 
+                                        {{ $colorClasses[$section['color']] }} hover:shadow-md
+                                    @endif">
+                                    
+                                    <!-- Loading State -->
+                                    <div wire:loading wire:target="setSection('section', '{{ $section['id'] }}')" class="mr-3">
+                                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    </div>
+
+                                    <!-- Icon -->
+                                    <div wire:loading.remove wire:target="setSection('section', '{{ $section['id'] }}')" class="mr-3">
+                                        <svg class="w-5 h-5 {{ $iconColorClasses[$section['color']] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $section['icon'] }}"></path>
+                                        </svg>
+                                    </div>
+
+                                    <!-- Content -->
+                                    <div class="flex-1 text-left">
+                                        <div class="font-medium text-sm">{{ $section['label'] }}</div>
+                                        <div class="text-xs opacity-75">{{ $section['description'] }}</div>
+                                    </div>
+
+                                    <!-- Count Badge -->
+                                    @if ($section['count'] !== null)
+                                        <div class="ml-2">
+                                            <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full min-w-[20px] h-5
+                                                @if ($isActive)
+                                                    bg-white bg-opacity-20 text-white
+                                                @else
+                                                    bg-white bg-opacity-80 {{ $iconColorClasses[$section['color']] }}
+                                                @endif">
+                                                {{ $section['count'] > 99 ? '99+' : $section['count'] }}
+                                            </span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </button>
+                        @endforeach
+                    </nav>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="p-4 border-t border-gray-100 bg-gray-50">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">Quick Actions</h3>
+                    <div class="space-y-2">
+                        <button wire:click="$set('section', 'users')" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Add New User
+                        </button>
+                        <button wire:click="$set('section', 'roles')" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            View Reports
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="flex-1">
+                @if($this->section === 'users')
+                    <livewire:users.users />
+                @elseif($this->section === 'roles')
+                    <livewire:users.roles />
+                @elseif($this->section === 'departments')
+                    <livewire:users.departments />
+                @elseif($this->section === 'permissions')
+                    <livewire:users.manage-permissions />
+                @elseif($this->section === 'organizational-structure')
+                    <livewire:users.organizational-structure />
+                {{--@elseif($this->section === 'settings')
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <livewire:users.settings />
+                        <livewire:users.user-settings />
+                        <livewire:users.institution-settings />
+                        <livewire:users.password-policy />
+                    </div>
+                
+                @elseif($this->section === 'audit-logs')
+                    <livewire:users.audit-logs />--}}
+                @elseif($this->section === 'user-groups')
+                    <livewire:users.user-groups />
+                @elseif($this->section === 'loan-committee')
+                    <livewire:users.loan-committee />
+                @else
+                    <!-- Dashboard Overview -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <!-- Users Card -->
+                        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-6 border border-indigo-200">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-indigo-900">Users Overview</h3>
+                                <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                            </div>
+                            <div class="text-3xl font-bold text-indigo-900 mb-2">{{ number_format($totalUsers ?? 0) }}</div>
+                            <p class="text-sm text-indigo-700">Total registered users</p>
+                        </div>
+                        
+                        <!-- Roles Card -->
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-green-900">Roles & Permissions</h3>
+                                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                            <div class="text-3xl font-bold text-green-900 mb-2">{{ number_format($totalRoles ?? 0) }}</div>
+                            <p class="text-sm text-green-700">Active roles defined</p>
+                        </div>
+                        
+                        <!-- Departments Card -->
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-blue-900">Departments</h3>
+                                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
+                            <div class="text-3xl font-bold text-blue-900 mb-2">{{ number_format($totalDepartments ?? 0) }}</div>
+                            <p class="text-sm text-blue-700">Organizational departments</p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity Section -->
+                    <div class="bg-white rounded-xl p-6 border border-gray-200 mb-8">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                                <div class="p-2 bg-indigo-100 rounded-lg mr-4">
+                                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">User Management Dashboard</p>
+                                    <p class="text-sm text-gray-500">Welcome to the user management system</p>
+                                </div>
+                                <span class="text-xs text-gray-400">Just now</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+                            <div class="flex items-center mb-4">
+                                <div class="p-3 bg-indigo-100 rounded-lg mr-4">
+                                    <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-900">Add New User</h4>
+                            </div>
+                            <p class="text-gray-600 mb-4">Create a new user account with appropriate roles and permissions.</p>
+                            <button wire:click="$set('section', 'users')" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
+                                Get Started
+                            </button>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+                            <div class="flex items-center mb-4">
+                                <div class="p-3 bg-green-100 rounded-lg mr-4">
+                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-900">Manage Roles</h4>
+                            </div>
+                            <p class="text-gray-600 mb-4">Define and manage user roles with specific permissions and access levels.</p>
+                            <button wire:click="$set('section', 'roles')" class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+                                Manage Roles
+                            </button>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+                            <div class="flex items-center mb-4">
+                                <div class="p-3 bg-blue-100 rounded-lg mr-4">
+                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-900">Departments</h4>
+                            </div>
+                            <p class="text-gray-600 mb-4">Organize users into departments for better management and reporting.</p>
+                            <button wire:click="$set('section', 'departments')" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                                View Departments
+                            </button>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Google Material Icons CDN -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> 

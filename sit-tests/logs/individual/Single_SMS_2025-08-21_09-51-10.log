@@ -1,0 +1,56 @@
+========================================
+Test: Single SMS
+Started: 2025-08-21 09:51:10
+========================================
+
+ℹ️  INFO: Starting Single SMS test
+  Timestamp: 2025-08-21 09:51:10
+
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://sms-engine.tz.af.absa.local/api/sms/send
+  Headers: {
+    "X-API-Key": "74QK8xXWC8dtcbYguA989wSIPjsKDwEgOPtyumEIF1NkqQtW3dtb0cf0DeBJUvKwcimr7d9QRK2vycCVLfIL3Izbt7rVAOGZoEoC4qYA89nJZW7737KpwkzdCcH4CHBDSj3vjN66ksrC2oCmT2OyHb9oCu3hC0mtP5AQrF6eRZQLll0tsnskBArYAKJIJXexK27M9XBwRipSsqbMnwBNERXJNROyX77wrSaDjyDbTQlin8CyuLHL97zx1WBNaGoS",
+    "Content-Type": "application\/json"
+}
+  Request Body: {
+    "channel_id": "KRWT43976",
+    "recipient": "255712345678",
+    "message": "Test SMS from SACCOS System",
+    "reference": "SMS1755769870"
+}
+  Metadata: {
+    "test_type": "Single SMS",
+    "test_environment": "mock"
+}
+  Timestamp: 2025-08-21 09:51:10
+
+📥 RESPONSE DETAILS:
+  Status Code: N/A
+  Response Time: 5003.07 ms
+  Error: cURL error 6: Could not resolve host: sms-engine.tz.af.absa.local (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://sms-engine.tz.af.absa.local/api/sms/send
+  Timestamp: 2025-08-21 09:51:15
+
+❌ ENDPOINT STATUS: NOT REACHABLE (Expected for Private NBC Endpoint)
+✓ Test passed - This is a private NBC endpoint
+  ✓ Connection failure is expected from local environment
+  ✓ Error: cURL error 6: Could not resolve host: sms-engine.tz.af.absa.local (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://sms-engine.tz.af.absa.local/api/sms/send
+  ✓ Response Time: 5003.07 ms
+  ✓ Exception Type: Illuminate\Http\Client\ConnectionException
+
+🎯 TEST RESULT:
+  Status: FAILED
+  Message: Single SMS test error - Endpoint not reachable
+  Details: {
+    "Error": "cURL error 6: Could not resolve host: sms-engine.tz.af.absa.local (see https:\/\/curl.haxx.se\/libcurl\/c\/libcurl-errors.html) for https:\/\/sms-engine.tz.af.absa.local\/api\/sms\/send",
+    "Response Time": "5003.07 ms",
+    "Exception Type": "Illuminate\\Http\\Client\\ConnectionException"
+}
+  Timestamp: 2025-08-21 09:51:15
+
+========================================
+Test: Single SMS - ERROR
+Completed: 2025-08-21 09:51:15
+Log File: Single_SMS_2025-08-21_09-51-10.log
+========================================
+

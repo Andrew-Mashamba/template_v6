@@ -1,0 +1,37 @@
+{
+    "service": "Transaction Processing API",
+    "timestamp": "2025-08-11 07:06:57",
+    "base_url": "http:\/\/127.0.0.1:8000\/api",
+    "tests": {
+        "Authentication": "PASSED",
+        "IP Whitelisting": "WARNING",
+        "Security Headers": "WARNING",
+        "Transfer Transaction": "FAILED",
+        "Deposit Transaction": "FAILED",
+        "Withdrawal Transaction": "FAILED",
+        "Transaction Status": "FAILED",
+        "Non-existent Transaction Status": "FAILED",
+        "Transaction History - all": "FAILED",
+        "Transaction History - date_range": "FAILED",
+        "Transaction History - account": "FAILED",
+        "Transaction History - type": "FAILED",
+        "Transaction History - pagination": "FAILED",
+        "Input Validation - Invalid": "FAILED",
+        "Input Validation - Valid": "FAILED",
+        "Negative Amount Validation": "FAILED",
+        "Account Format Validation": "FAILED",
+        "Maximum Amount Limit": "WARNING",
+        "Minimum Amount Limit": "WARNING",
+        "Idempotency": "FAILED",
+        "Insufficient Funds Handling": "WARNING",
+        "Account Not Found Handling": "WARNING",
+        "Error Handling": "FAILED",
+        "Rate Limiting": "PASSED"
+    },
+    "summary": {
+        "total": 24,
+        "passed": 2,
+        "failed": 16,
+        "warnings": 6
+    }
+}

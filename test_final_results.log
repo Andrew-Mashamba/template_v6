@@ -1,0 +1,17 @@
+Warning: TTY mode requires /dev/tty to be read/writable.
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\Livewire\ClientsSaveTestSimple[39m
+  [32;1m✓[39;22m[39m [2mit validates required fields on save[22m[39m
+  [32;1m✓[39;22m[39m [2mit formats names correctly for individual members[22m[39m
+  [32;1m✓[39;22m[39m [2mit uses nbc account when provided[22m[39m
+  [32;1m✓[39;22m[39m [2mit validates step 1 personal information[22m[39m
+  [32;1m✓[39;22m[39m [2mit validates step 2 contact details[22m[39m
+  [32;1m✓[39;22m[39m [2mit validates step 3 financial information[22m[39m
+  [32;1m✓[39;22m[39m [2mit generates control numbers array[22m[39m
+  [32;1m✓[39;22m[39m [2mit builds correct account name[22m[39m
+  [32;1m✓[39;22m[39m [2mit prepares client data structure[22m[39m
+
+  [37;1mTests:  [39;22m[32;1m9 passed[39;22m
+  [37;1mTime:   [39;22m[39m0.61s[39m
+
+

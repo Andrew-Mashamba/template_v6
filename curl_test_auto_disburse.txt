@@ -1,0 +1,93 @@
+# Simple CURL Test for Auto Loan Disbursement API
+# Client Number: 10003
+# Amount: 1,000,000 TZS
+
+# Basic test (replace YOUR_API_KEY with actual API key):
+curl -X POST 'http://localhost:8000/api/v1/loans/auto-disburse' \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: YOUR_API_KEY' \
+  -d '{"client_number":"10003","amount":1000000}'
+
+# With pretty printing (if you have jq installed):
+curl -X POST 'http://localhost:8000/api/v1/loans/auto-disburse' \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: YOUR_API_KEY' \
+  -d '{"client_number":"10003","amount":1000000}' | jq '.'
+
+# Verbose mode for debugging:
+curl -v -X POST 'http://localhost:8000/api/v1/loans/auto-disburse' \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: YOUR_API_KEY' \
+  -d '{"client_number":"10003","amount":1000000}'
+
+# Test minimum loan amount (100,000 TZS):
+curl -X POST 'http://localhost:8000/api/v1/loans/auto-disburse' \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: YOUR_API_KEY' \
+  -d '{"client_number":"10003","amount":100000}'
+
+# Test with different client numbers:
+# Client 10001:
+curl -X POST 'http://localhost:8000/api/v1/loans/auto-disburse' \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: YOUR_API_KEY' \
+  -d '{"client_number":"10001","amount":500000}'
+
+# Client 10002:
+curl -X POST 'http://localhost:8000/api/v1/loans/auto-disburse' \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: YOUR_API_KEY' \
+  -d '{"client_number":"10002","amount":750000}'
+
+# Test validation errors:
+# 1. Missing client_number:
+curl -X POST 'http://localhost:8000/api/v1/loans/auto-disburse' \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: YOUR_API_KEY' \
+  -d '{"amount":1000000}'
+
+# 2. Invalid amount (below minimum):
+curl -X POST 'http://localhost:8000/api/v1/loans/auto-disburse' \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: YOUR_API_KEY' \
+  -d '{"client_number":"10003","amount":50000}'
+
+# 3. Invalid client number:
+curl -X POST 'http://localhost:8000/api/v1/loans/auto-disburse' \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: YOUR_API_KEY' \
+  -d '{"client_number":"99999","amount":1000000}'
+
+# Expected Successful Response:
+# {
+#   "success": true,
+#   "message": "Loan created and disbursed successfully",
+#   "data": {
+#     "transaction_id": "AUTO_DISB_xxx",
+#     "loan_id": "LOAN_xxx",
+#     "loan_account": "xxx",
+#     "client": {
+#       "number": "10003",
+#       "name": "Client Name",
+#       "nbc_account": "xxx"
+#     },
+#     "loan_details": {
+#       "amount": 1000000,
+#       "tenure_months": 12,
+#       "interest_rate": "18%",
+#       "monthly_installment": 91679.88,
+#       "total_payable": 1100158.56
+#     },
+#     "disbursement": {
+#       "gross_amount": 1000000,
+#       "deductions": {
+#         "total": 50000,
+#         "breakdown": {...}
+#       },
+#       "net_disbursed": 950000,
+#       "status": "COMPLETED",
+#       "payment_method": "NBC_ACCOUNT",
+#       "reference": "xxx"
+#     }
+#   }
+# }

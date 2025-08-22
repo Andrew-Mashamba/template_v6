@@ -1,0 +1,40 @@
+
+  Dropping all tables .............................................. 37ms DONE
+
+   INFO  Preparing database.  
+
+  Creating migration table .......................................... 7ms DONE
+
+   INFO  Running migrations.  
+
+  2014_10_12_100000_create_password_resets_table .................... 5ms DONE
+  2019_08_19_000000_create_failed_jobs_table ........................ 5ms DONE
+  2019_12_14_000001_create_personal_access_tokens_table ............. 4ms DONE
+  2022_03_23_163443_create_sessions_table ........................... 4ms DONE
+  2022_05_11_154250_create_datafeeds_table .......................... 2ms DONE
+  2023_10_06_130528_create_employeefiles_table ...................... 3ms DONE
+  2024_01_10_000001_create_users_table .............................. 3ms DONE
+  2024_01_10_000002_create_institutions_table ....................... 7ms FAIL
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[42P07]: Duplicate table: 7 ERROR:  relation "institutions_code_index" already exists (SQL: create index "institutions_code_index" on "institutions" ("code"))
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:760
+    756▕         // If an exception occurs when attempting to run a query, we'll format the error
+    757▕         // message to include the bindings with SQL, which will make this exception a
+    758▕         // lot more helpful to the developer instead of just the database's errors.
+    759▕         catch (Exception $e) {
+  ➜ 760▕             throw new QueryException(
+    761▕                 $query, $this->prepareBindings($bindings), $e
+    762▕             );
+    763▕         }
+    764▕     }
+
+      [2m+9 vendor frames [22m
+  10  database/migrations/2024_01_10_000002_create_institutions_table.php:25
+      Illuminate\Support\Facades\Facade::__callStatic("create")
+
+      [2m+37 vendor frames [22m
+  48  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))

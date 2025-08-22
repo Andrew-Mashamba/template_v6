@@ -1,0 +1,36 @@
+Warning: TTY mode requires /dev/tty to be read/writable.
+
+  [37;41;1m FAIL [39;49;22m[39m Tests\Feature\Livewire\ClientsSaveTestSimple[39m
+  [31;1m⨯[39;22m[39m [2mit validates required fields on save[22m[39m
+  [32;1m✓[39;22m[39m [2mit formats names correctly for individual members[22m[39m
+  [32;1m✓[39;22m[39m [2mit uses nbc account when provided[22m[39m
+  [32;1m✓[39;22m[39m [2mit validates step 1 personal information[22m[39m
+  [32;1m✓[39;22m[39m [2mit validates step 2 contact details[22m[39m
+  [32;1m✓[39;22m[39m [2mit validates step 3 financial information[22m[39m
+  [32;1m✓[39;22m[39m [2mit generates control numbers array[22m[39m
+  [32;1m✓[39;22m[39m [2mit builds correct account name[22m[39m
+  [32;1m✓[39;22m[39m [2mit prepares client data structure[22m[39m
+
+  [2m---[22m
+
+  [31;1m• Tests\Feature\Livewire\ClientsSaveTestSimple [39;22m> [31;1mit validates required fields on save[39;22m
+  [41;1m PHPUnit\Framework\ExceptionWrapper [49;22m
+
+[39;1m  At least one document is required.[39;22m
+
+  at [32mapp/Http/Livewire/Clients/Clients.php[39m:[32m1239[39m
+    1235▕                     'has_first_document' => isset($this->additionalDocuments[0]['file'])
+    1236▕                 ]);
+    1237▕                 if (empty($this->additionalDocuments) || !isset($this->additionalDocuments[0]['file'])) {
+    1238▕                     Log::error('Document validation failed - no documents uploaded');
+  ➜ 1239▕                     throw new \Exception('At least one document is required.');
+    1240▕                 }
+    1241▕                 break;
+    1242▕         }
+    1243▕
+
+
+  [37;1mTests:  [39;22m[31;1m1 failed[39;22m[39m, [39m[32;1m8 passed[39;22m
+  [37;1mTime:   [39;22m[39m0.62s[39m
+
+

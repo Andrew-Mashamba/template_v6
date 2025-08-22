@@ -1,0 +1,36 @@
+
+  Dropping all tables ............................................. 137ms DONE
+
+   INFO  Preparing database.  
+
+  Creating migration table .......................................... 5ms DONE
+
+   INFO  Running migrations.  
+
+  2019_12_14_000001_create_personal_access_tokens_table ............. 5ms DONE
+  2023_01_01_000001_create_datafeeds_table .......................... 1ms DONE
+  2023_01_01_000002_create_employeefiles_table ...................... 1ms DONE
+  2023_01_01_000003_create_banks_table .............................. 1ms FAIL
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[42701]: Duplicate column: 7 ERROR:  column "created_at" specified more than once (SQL: create table "banks" ("id" bigint not null, "bank_number" varchar(255) null, "bank_name" varchar(255) null, "created_at" timestamp(0) without time zone null, "updated_at" timestamp(0) without time zone null, "created_at" timestamp(0) without time zone null, "updated_at" timestamp(0) without time zone null))
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:760
+    756▕         // If an exception occurs when attempting to run a query, we'll format the error
+    757▕         // message to include the bindings with SQL, which will make this exception a
+    758▕         // lot more helpful to the developer instead of just the database's errors.
+    759▕         catch (Exception $e) {
+  ➜ 760▕             throw new QueryException(
+    761▕                 $query, $this->prepareBindings($bindings), $e
+    762▕             );
+    763▕         }
+    764▕     }
+
+      [2m+9 vendor frames [22m
+  10  database/migrations/2023_01_01_000003_create_banks_table.php:11
+      Illuminate\Support\Facades\Facade::__callStatic("create")
+
+      [2m+37 vendor frames [22m
+  48  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))

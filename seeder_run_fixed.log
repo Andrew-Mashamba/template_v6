@@ -1,0 +1,47 @@
+
+   INFO  Seeding database.  
+
+  Database\Seeders\InstitutionsSeeder ................................ RUNNING  
+  Database\Seeders\InstitutionsSeeder .......................... 58.81 ms DONE  
+
+  Database\Seeders\BranchesSeeder .................................... RUNNING  
+  Database\Seeders\BranchesSeeder .............................. 20.23 ms DONE  
+
+  Database\Seeders\DepartmentsSeeder ................................. RUNNING  
+  Database\Seeders\DepartmentsSeeder ........................... 21.81 ms DONE  
+
+  Database\Seeders\RolesSeeder ....................................... RUNNING  
+  Database\Seeders\RolesSeeder .................................. 7.05 ms DONE  
+
+  Database\Seeders\PermissionsSeeder ................................. RUNNING  
+  Database\Seeders\PermissionsSeeder ............................ 4.86 ms DONE  
+
+  Database\Seeders\UsersSeeder ....................................... RUNNING  
+  Database\Seeders\UsersSeeder ................................. 37.15 ms DONE  
+
+  Database\Seeders\ConsolidatedMenuSeeder ............................ RUNNING  
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[42703]: Undefined column: 7 ERROR:  column "icon" of relation "menus" does not exist
+LINE 1: insert into "menus" ("icon", "id", "name", "order", "parent_...
+                             ^ (SQL: insert into "menus" ("icon", "id", "name", "order", "parent_id", "route") values (home, 1, Dashboard, 1, ?, dashboard), (users, 2, Members, 2, ?, members), (dollar-sign, 3, Loans, 3, ?, loans), (piggy-bank, 4, Savings, 4, ?, savings), (chart-line, 5, Shares, 5, ?, shares), (calculator, 6, Accounting, 6, ?, accounting), (file-text, 7, Reports, 7, ?, reports), (settings, 8, Settings, 8, ?, settings), (dollar-sign, 9, Cash Management, 9, ?, cash-management), (credit-card, 10, Billing, 10, ?, billing), (activity, 11, Transactions, 11, ?, transactions))
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:760
+    756▕         // If an exception occurs when attempting to run a query, we'll format the error
+    757▕         // message to include the bindings with SQL, which will make this exception a
+    758▕         // lot more helpful to the developer instead of just the database's errors.
+    759▕         catch (Exception $e) {
+  ➜ 760▕             throw new QueryException(
+    761▕                 $query, $this->prepareBindings($bindings), $e
+    762▕             );
+    763▕         }
+    764▕     }
+
+      [2m+7 vendor frames [22m
+  8   database/seeders/ConsolidatedMenuSeeder.php:40
+      Illuminate\Database\Query\Builder::insert()
+
+      [2m+8 vendor frames [22m
+  17  database/seeders/DatabaseSeeder.php:14
+      Illuminate\Database\Seeder::call("Database\Seeders\ConsolidatedMenuSeeder")

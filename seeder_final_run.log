@@ -1,0 +1,49 @@
+
+   INFO  Seeding database.  
+
+  Database\Seeders\InstitutionsSeeder ................................ RUNNING  
+  Database\Seeders\InstitutionsSeeder ......................... 128.54 ms DONE  
+
+  Database\Seeders\BranchesSeeder .................................... RUNNING  
+  Database\Seeders\BranchesSeeder .............................. 18.84 ms DONE  
+
+  Database\Seeders\DepartmentsSeeder ................................. RUNNING  
+  Database\Seeders\DepartmentsSeeder ........................... 21.21 ms DONE  
+
+  Database\Seeders\RolesSeeder ....................................... RUNNING  
+  Database\Seeders\RolesSeeder .................................. 6.80 ms DONE  
+
+  Database\Seeders\PermissionsSeeder ................................. RUNNING  
+  Database\Seeders\PermissionsSeeder ............................ 4.99 ms DONE  
+
+  Database\Seeders\UsersSeeder ....................................... RUNNING  
+  Database\Seeders\UsersSeeder ................................. 38.37 ms DONE  
+
+  Database\Seeders\ConsolidatedMenuSeeder ............................ RUNNING  
+  Database\Seeders\ConsolidatedMenuSeeder ....................... 2.06 ms DONE  
+
+  Database\Seeders\RoleMenuActionsSeeder ............................. RUNNING  
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "role_menu_actions" violates foreign key constraint "role_menu_actions_menu_id_foreign"
+DETAIL:  Key (menu_id)=(12) is not present in table "menus". (SQL: insert into "role_menu_actions" ("id", "role_id", "sub_role", "menu_id", "allowed_actions", "created_at", "updated_at") values (12, 1, System Administrator, 12, {"value":"[\"view\",\"create\",\"edit\",\"delete\",\"approve\",\"reject\",\"manage\",\"configure\",\"audit\"]"}, 2025-07-17 16:25:46, 2025-07-17 16:25:46))
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:760
+    756▕         // If an exception occurs when attempting to run a query, we'll format the error
+    757▕         // message to include the bindings with SQL, which will make this exception a
+    758▕         // lot more helpful to the developer instead of just the database's errors.
+    759▕         catch (Exception $e) {
+  ➜ 760▕             throw new QueryException(
+    761▕                 $query, $this->prepareBindings($bindings), $e
+    762▕             );
+    763▕         }
+    764▕     }
+
+      [2m+7 vendor frames [22m
+  8   database/seeders/RoleMenuActionsSeeder.php:583
+      Illuminate\Database\Query\Builder::insert()
+
+      [2m+8 vendor frames [22m
+  17  database/seeders/DatabaseSeeder.php:14
+      Illuminate\Database\Seeder::call("Database\Seeders\RoleMenuActionsSeeder")

@@ -1,0 +1,4177 @@
+================================================================================
+Test: Bank Transaction Service
+Timestamp: 2025-08-21 07:43:24
+Duration: 0.017 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Bank Transaction Service API Tests
+========================================
+
+[TEST] IFT Transaction...
+✓ IFT Transaction test passed
+  ✓ Response received: YES
+  ✓ Status Code: 200
+  ✓ Transaction ID: IFT123456
+  ✓ Response Time: 15.76 ms
+
+[TEST] EFT Transaction...
+✓ EFT Transaction test passed
+
+[TEST] Mobile Transaction...
+✓ Mobile Transaction test passed
+
+[TEST] Invalid Transaction Type...
+✓ Invalid Transaction Type test passed
+
+[TEST] Connection Failure Handling...
+✗ Connection Failure test failed: Error not handled properly
+
+========================================
+Test Results Summary
+========================================
+IFT Transaction               : PASSED
+EFT Transaction               : PASSED
+Mobile Transaction            : PASSED
+Invalid Transaction Type      : PASSED
+Connection Failure            : FAILED
+----------------------------------------
+Total: 5 tests
+Passed: 4 | Failed: 1 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: GEPG Gateway
+Timestamp: 2025-08-21 07:43:24
+Duration: 0 seconds
+--------------------------------------------------------------------------------
+
+========================================
+GEPG Gateway API Tests
+========================================
+
+[TEST] Bill Query (Control Number Verification)...
+✓ Bill Query test passed - Control Number: 991700123456
+
+[TEST] Bill Payment Processing...
+✓ Bill Payment test passed - Reference: PAY1755762204
+
+[TEST] Prepaid Payment (Quote)...
+✓ Prepaid Payment test passed - Token: 12345678901234567890
+
+[TEST] Transaction Status Check...
+✓ Status Check test passed - Status: SUCCESS
+
+[TEST] XML Signing and Verification...
+✓ XML Signing test passed
+
+[TEST] Error Handling...
+  ✓ Error scenario handled: 4001 - Invalid control number
+  ✓ Error scenario handled: 4002 - Expired bill
+  ✓ Error scenario handled: 4003 - Insufficient funds
+  ✓ Error scenario handled: 5001 - System error
+
+========================================
+Test Results Summary
+========================================
+Bill Query                    : PASSED
+Bill Payment                  : PASSED
+Prepaid Payment               : PASSED
+Status Check                  : PASSED
+XML Signing                   : PASSED
+Error Handling                : PASSED
+----------------------------------------
+Total: 6 tests
+Passed: 6 | Failed: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: Luku Gateway
+Timestamp: 2025-08-21 07:43:24
+Duration: 0.153 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Luku Gateway API Tests
+========================================
+
+[TEST] Token Query...
+✓ Token Query test passed - Meter: 04123456789
+
+[TEST] Token Purchase...
+✓ Token Purchase test passed - Token: 12345-67890-12345-67890
+  Units: 125.5 kWh
+
+[TEST] Meter Validation...
+  ✓ Meter 04123456789 validation: Valid (as expected)
+  ✗ Meter 04999999999 validation failed
+  ✗ Meter INVALID validation failed
+
+[TEST] Transaction Status Check...
+✗ Transaction Status test error: cURL error 6: Could not resolve host: nbc-gateway-uat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://nbc-gateway-uat.intra.nbc.co.tz/api/transaction/status?transaction_id=TRX1755762204
+
+[TEST] SSL Configuration...
+⚠ SSL Configuration warning - SSL verification disabled
+
+[TEST] Error Handling...
+  ✓ Error 400 handled: Invalid meter number
+  ✗ Error 401 not handled properly
+  ✗ Error 403 not handled properly
+  ✗ Error 500 not handled properly
+  ✗ Error 503 not handled properly
+
+========================================
+Test Results Summary
+========================================
+Token Query                   : PASSED
+Token Purchase                : PASSED
+Meter Validation              : FAILED
+Transaction Status            : ERROR
+SSL Configuration             : WARNING
+Error Handling                : FAILED
+----------------------------------------
+Total: 6 tests
+Passed: 2 | Failed: 2 | Warnings: 1 | Errors: 1
+========================================
+
+================================================================================
+
+================================================================================
+Test: NBC SMS
+Timestamp: 2025-08-21 07:43:24
+Duration: 0.001 seconds
+--------------------------------------------------------------------------------
+
+========================================
+NBC SMS API Tests
+========================================
+
+[TEST] Single SMS Send...
+✓ Single SMS test passed - Message ID: MSG1755762204
+
+[TEST] Bulk SMS Send...
+✓ Bulk SMS test passed - Batch ID: BATCH1755762204
+  Sent: 3 messages
+
+[TEST] SMS Status Check...
+✓ SMS Status test passed - Status: DELIVERED
+
+[TEST] Rate Limiting...
+✗ Rate Limiting test failed - limit not enforced
+
+[TEST] Invalid Phone Number Handling...
+✗ Invalid Phone Number test error: A request was made, but the response sequence is empty.
+
+[TEST] Long Message Handling...
+✗ Long Message test error: A request was made, but the response sequence is empty.
+
+========================================
+Test Results Summary
+========================================
+Single SMS                    : PASSED
+Bulk SMS                      : PASSED
+SMS Status                    : PASSED
+Rate Limiting                 : FAILED
+Invalid Phone Number          : ERROR
+Long Message                  : ERROR
+----------------------------------------
+Total: 6 tests
+Passed: 3 | Failed: 1 | Errors: 2
+========================================
+
+================================================================================
+
+================================================================================
+Test: AI Services
+Timestamp: 2025-08-21 07:43:24
+Duration: 0.001 seconds
+--------------------------------------------------------------------------------
+
+========================================
+AI Services API Tests
+========================================
+
+[TEST] Groq API...
+✓ Groq API test passed - Model: llama3-8b-8192
+
+[TEST] OpenAI API...
+✓ OpenAI API test passed - Model: gpt-3.5-turbo
+
+[TEST] Together AI API...
+✓ Together AI API test passed - Model: meta-llama/Llama-2-70b-chat-hf
+
+[TEST] Claude API...
+✓ Claude API test passed
+
+========================================
+Test Results Summary
+========================================
+Groq API                      : PASSED
+OpenAI API                    : PASSED
+Together AI API               : PASSED
+Claude API                    : PASSED
+----------------------------------------
+Total: 4 tests
+Passed: 4 | Failed: 0 | Skipped: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: Bank Transaction Service
+Timestamp: 2025-08-21 08:05:44
+Duration: 0.013 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Bank Transaction Service API Tests
+========================================
+
+[TEST] IFT Transaction...
+✗ IFT Transaction test failed - Validation errors:
+  ✗ Status code should be 200, got: undefined
+  ✗ Missing transaction_id in response data
+  ✗ Missing reference in response data
+  ✗ Missing amount in response data
+  ✗ Actual Response: {
+    "status": "success",
+    "message": "Transaction data sent successfully.",
+    "data": {
+        "status": "success",
+        "status_code": 200,
+        "message": "Transaction processed successfully",
+        "data": {
+            "transaction_id": "IFT123456",
+            "reference": "IFT1755763544",
+            "amount": 10000,
+            "currency": "TZS",
+            "status": "completed",
+            "timestamp": "2025-08-21 08:05:44",
+            "processing_time_ms": 15.76
+        },
+        "metadata": {
+            "api_version": "1.0",
+            "request_id": "req-68a6d3583417c"
+        }
+    }
+}
+
+[TEST] EFT Transaction...
+✗ EFT Transaction test failed - Validation errors:
+  ✗ Status code should be 200, got: undefined
+  ✗ Missing transaction_id in response data
+  ✗ Transaction status should be "queued" for EFT
+
+[TEST] Mobile Transaction...
+✗ Mobile Transaction test failed - Validation errors:
+  ✗ Status code should be 200, got: undefined
+  ✗ Missing transaction_id in response data
+  ✗ Missing mobile_network in response data
+  ✗ Transaction status should be "sent" for mobile
+
+[TEST] Invalid Transaction Type...
+✓ Invalid Transaction Type test passed
+
+[TEST] Connection Failure Handling...
+✗ Connection Failure test failed: Error not handled properly
+
+========================================
+Test Results Summary
+========================================
+IFT Transaction               : FAILED
+EFT Transaction               : FAILED
+Mobile Transaction            : FAILED
+Invalid Transaction Type      : PASSED
+Connection Failure            : FAILED
+----------------------------------------
+Total: 5 tests
+Passed: 1 | Failed: 4 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: GEPG Gateway
+Timestamp: 2025-08-21 08:05:44
+Duration: 0 seconds
+--------------------------------------------------------------------------------
+
+========================================
+GEPG Gateway API Tests
+========================================
+
+[TEST] Bill Query (Control Number Verification)...
+✓ Bill Query test passed - Control Number: 991700123456
+
+[TEST] Bill Payment Processing...
+✓ Bill Payment test passed - Reference: PAY1755763544
+
+[TEST] Prepaid Payment (Quote)...
+✓ Prepaid Payment test passed - Token: 12345678901234567890
+
+[TEST] Transaction Status Check...
+✓ Status Check test passed - Status: SUCCESS
+
+[TEST] XML Signing and Verification...
+✓ XML Signing test passed
+
+[TEST] Error Handling...
+  ✓ Error scenario handled: 4001 - Invalid control number
+  ✓ Error scenario handled: 4002 - Expired bill
+  ✓ Error scenario handled: 4003 - Insufficient funds
+  ✓ Error scenario handled: 5001 - System error
+
+========================================
+Test Results Summary
+========================================
+Bill Query                    : PASSED
+Bill Payment                  : PASSED
+Prepaid Payment               : PASSED
+Status Check                  : PASSED
+XML Signing                   : PASSED
+Error Handling                : PASSED
+----------------------------------------
+Total: 6 tests
+Passed: 6 | Failed: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: Luku Gateway
+Timestamp: 2025-08-21 08:05:44
+Duration: 0.108 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Luku Gateway API Tests
+========================================
+
+[TEST] Token Query...
+✓ Token Query test passed - Meter: 04123456789
+
+[TEST] Token Purchase...
+✓ Token Purchase test passed - Token: 12345-67890-12345-67890
+  Units: 125.5 kWh
+
+[TEST] Meter Validation...
+  ✓ Meter 04123456789 validation: Valid (as expected)
+  ✗ Meter 04999999999 validation failed
+  ✗ Meter INVALID validation failed
+
+[TEST] Transaction Status Check...
+✗ Transaction Status test error: cURL error 6: Could not resolve host: nbc-gateway-uat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://nbc-gateway-uat.intra.nbc.co.tz/api/transaction/status?transaction_id=TRX1755763544
+
+[TEST] SSL Configuration...
+⚠ SSL Configuration warning - SSL verification disabled
+
+[TEST] Error Handling...
+  ✓ Error 400 handled: Invalid meter number
+  ✗ Error 401 not handled properly
+  ✗ Error 403 not handled properly
+  ✗ Error 500 not handled properly
+  ✗ Error 503 not handled properly
+
+========================================
+Test Results Summary
+========================================
+Token Query                   : PASSED
+Token Purchase                : PASSED
+Meter Validation              : FAILED
+Transaction Status            : ERROR
+SSL Configuration             : WARNING
+Error Handling                : FAILED
+----------------------------------------
+Total: 6 tests
+Passed: 2 | Failed: 2 | Warnings: 1 | Errors: 1
+========================================
+
+================================================================================
+
+================================================================================
+Test: NBC SMS
+Timestamp: 2025-08-21 08:05:44
+Duration: 0.001 seconds
+--------------------------------------------------------------------------------
+
+========================================
+NBC SMS API Tests
+========================================
+
+[TEST] Single SMS Send...
+✓ Single SMS test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Message ID: MSG1755763544
+  ✓ Recipient: 255712345678
+  ✓ Status: queued
+  ✓ Response Time: 0.11 ms
+  ✓ Message: SMS sent successfully
+
+[TEST] Bulk SMS Send...
+✓ Bulk SMS test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Batch ID: BATCH1755763544
+  ✓ Accepted: 3 messages
+  ✓ Rejected: 0 messages
+  ✓ Response Time: 0.1 ms
+  ✓ Message: Bulk SMS sent successfully
+
+[TEST] SMS Status Check...
+✓ SMS Status test passed - Status: DELIVERED
+
+[TEST] Rate Limiting...
+✗ Rate Limiting test failed - limit not enforced
+
+[TEST] Invalid Phone Number Handling...
+✗ Invalid Phone Number test error: A request was made, but the response sequence is empty.
+
+[TEST] Long Message Handling...
+✗ Long Message test error: A request was made, but the response sequence is empty.
+
+========================================
+Test Results Summary
+========================================
+Single SMS                    : PASSED
+Bulk SMS                      : PASSED
+SMS Status                    : PASSED
+Rate Limiting                 : FAILED
+Invalid Phone Number          : ERROR
+Long Message                  : ERROR
+----------------------------------------
+Total: 6 tests
+Passed: 3 | Failed: 1 | Errors: 2
+========================================
+
+================================================================================
+
+================================================================================
+Test: AI Services
+Timestamp: 2025-08-21 08:05:44
+Duration: 0 seconds
+--------------------------------------------------------------------------------
+
+========================================
+AI Services API Tests
+========================================
+
+[TEST] Groq API...
+✓ Groq API test passed - Model: llama3-8b-8192
+
+[TEST] OpenAI API...
+✓ OpenAI API test passed - Model: gpt-3.5-turbo
+
+[TEST] Together AI API...
+✓ Together AI API test passed - Model: meta-llama/Llama-2-70b-chat-hf
+
+[TEST] Claude API...
+✓ Claude API test passed
+
+========================================
+Test Results Summary
+========================================
+Groq API                      : PASSED
+OpenAI API                    : PASSED
+Together AI API               : PASSED
+Claude API                    : PASSED
+----------------------------------------
+Total: 4 tests
+Passed: 4 | Failed: 0 | Skipped: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: Bank Transaction Service
+Timestamp: 2025-08-21 08:07:38
+Duration: 0.006 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Bank Transaction Service API Tests
+========================================
+
+[TEST] IFT Transaction...
+✓ IFT Transaction test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Nested Status Code: 200
+  ✓ Transaction ID: IFT123456
+  ✓ Reference: IFT1755763658
+  ✓ Amount: 10000 TZS
+  ✓ Transaction Status: completed
+  ✓ Response Time: 5.19 ms
+  ✓ Message: Transaction data sent successfully.
+
+[TEST] EFT Transaction...
+✓ EFT Transaction test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Nested Status Code: 200
+  ✓ Transaction ID: EFT789012
+  ✓ Transaction Status: queued
+  ✓ Response Time: 0.12 ms
+  ✓ Message: Transaction data sent successfully.
+
+[TEST] Mobile Transaction...
+✓ Mobile Transaction test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Nested Status Code: 200
+  ✓ Transaction ID: MOB345678
+  ✓ Mobile Network: MTN
+  ✓ Transaction Status: sent
+  ✓ Response Time: 0.08 ms
+  ✓ Message: Transaction data sent successfully.
+
+[TEST] Invalid Transaction Type...
+✓ Invalid Transaction Type test passed
+
+[TEST] Connection Failure Handling...
+✗ Connection Failure test failed: Error not handled properly
+
+========================================
+Test Results Summary
+========================================
+IFT Transaction               : PASSED
+EFT Transaction               : PASSED
+Mobile Transaction            : PASSED
+Invalid Transaction Type      : PASSED
+Connection Failure            : FAILED
+----------------------------------------
+Total: 5 tests
+Passed: 4 | Failed: 1 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: GEPG Gateway
+Timestamp: 2025-08-21 08:07:38
+Duration: 0 seconds
+--------------------------------------------------------------------------------
+
+========================================
+GEPG Gateway API Tests
+========================================
+
+[TEST] Bill Query (Control Number Verification)...
+✓ Bill Query test passed - Control Number: 991700123456
+
+[TEST] Bill Payment Processing...
+✓ Bill Payment test passed - Reference: PAY1755763658
+
+[TEST] Prepaid Payment (Quote)...
+✓ Prepaid Payment test passed - Token: 12345678901234567890
+
+[TEST] Transaction Status Check...
+✓ Status Check test passed - Status: SUCCESS
+
+[TEST] XML Signing and Verification...
+✓ XML Signing test passed
+
+[TEST] Error Handling...
+  ✓ Error scenario handled: 4001 - Invalid control number
+  ✓ Error scenario handled: 4002 - Expired bill
+  ✓ Error scenario handled: 4003 - Insufficient funds
+  ✓ Error scenario handled: 5001 - System error
+
+========================================
+Test Results Summary
+========================================
+Bill Query                    : PASSED
+Bill Payment                  : PASSED
+Prepaid Payment               : PASSED
+Status Check                  : PASSED
+XML Signing                   : PASSED
+Error Handling                : PASSED
+----------------------------------------
+Total: 6 tests
+Passed: 6 | Failed: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: Luku Gateway
+Timestamp: 2025-08-21 08:07:38
+Duration: 0.003 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Luku Gateway API Tests
+========================================
+
+[TEST] Token Query...
+✓ Token Query test passed - Meter: 04123456789
+
+[TEST] Token Purchase...
+✓ Token Purchase test passed - Token: 12345-67890-12345-67890
+  Units: 125.5 kWh
+
+[TEST] Meter Validation...
+  ✓ Meter 04123456789 validation: Valid (as expected)
+  ✗ Meter 04999999999 validation failed
+  ✗ Meter INVALID validation failed
+
+[TEST] Transaction Status Check...
+✗ Transaction Status test error: cURL error 6: Could not resolve host: nbc-gateway-uat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://nbc-gateway-uat.intra.nbc.co.tz/api/transaction/status?transaction_id=TRX1755763658
+
+[TEST] SSL Configuration...
+⚠ SSL Configuration warning - SSL verification disabled
+
+[TEST] Error Handling...
+  ✓ Error 400 handled: Invalid meter number
+  ✗ Error 401 not handled properly
+  ✗ Error 403 not handled properly
+  ✗ Error 500 not handled properly
+  ✗ Error 503 not handled properly
+
+========================================
+Test Results Summary
+========================================
+Token Query                   : PASSED
+Token Purchase                : PASSED
+Meter Validation              : FAILED
+Transaction Status            : ERROR
+SSL Configuration             : WARNING
+Error Handling                : FAILED
+----------------------------------------
+Total: 6 tests
+Passed: 2 | Failed: 2 | Warnings: 1 | Errors: 1
+========================================
+
+================================================================================
+
+================================================================================
+Test: NBC SMS
+Timestamp: 2025-08-21 08:07:38
+Duration: 0.001 seconds
+--------------------------------------------------------------------------------
+
+========================================
+NBC SMS API Tests
+========================================
+
+[TEST] Single SMS Send...
+✓ Single SMS test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Message ID: MSG1755763658
+  ✓ Recipient: 255712345678
+  ✓ Status: queued
+  ✓ Response Time: 0.1 ms
+  ✓ Message: SMS sent successfully
+
+[TEST] Bulk SMS Send...
+✓ Bulk SMS test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Batch ID: BATCH1755763658
+  ✓ Accepted: 3 messages
+  ✓ Rejected: 0 messages
+  ✓ Response Time: 0.09 ms
+  ✓ Message: Bulk SMS sent successfully
+
+[TEST] SMS Status Check...
+✓ SMS Status test passed - Status: DELIVERED
+
+[TEST] Rate Limiting...
+✗ Rate Limiting test failed - limit not enforced
+
+[TEST] Invalid Phone Number Handling...
+✗ Invalid Phone Number test error: A request was made, but the response sequence is empty.
+
+[TEST] Long Message Handling...
+✗ Long Message test error: A request was made, but the response sequence is empty.
+
+========================================
+Test Results Summary
+========================================
+Single SMS                    : PASSED
+Bulk SMS                      : PASSED
+SMS Status                    : PASSED
+Rate Limiting                 : FAILED
+Invalid Phone Number          : ERROR
+Long Message                  : ERROR
+----------------------------------------
+Total: 6 tests
+Passed: 3 | Failed: 1 | Errors: 2
+========================================
+
+================================================================================
+
+================================================================================
+Test: AI Services
+Timestamp: 2025-08-21 08:07:38
+Duration: 0.001 seconds
+--------------------------------------------------------------------------------
+
+========================================
+AI Services API Tests
+========================================
+
+[TEST] Groq API...
+✓ Groq API test passed - Model: llama3-8b-8192
+
+[TEST] OpenAI API...
+✓ OpenAI API test passed - Model: gpt-3.5-turbo
+
+[TEST] Together AI API...
+✓ Together AI API test passed - Model: meta-llama/Llama-2-70b-chat-hf
+
+[TEST] Claude API...
+✓ Claude API test passed
+
+========================================
+Test Results Summary
+========================================
+Groq API                      : PASSED
+OpenAI API                    : PASSED
+Together AI API               : PASSED
+Claude API                    : PASSED
+----------------------------------------
+Total: 4 tests
+Passed: 4 | Failed: 0 | Skipped: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: Bank Transaction Service
+Timestamp: 2025-08-21 08:11:11
+Duration: 0.006 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Bank Transaction Service API Tests
+========================================
+
+[TEST] IFT Transaction...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://api.bank.com/ift-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "account_from": "1234567890",
+    "account_to": "0987654321",
+    "amount": 10000,
+    "currency": "TZS",
+    "description": "IFT Test Transaction",
+    "reference": "IFT1755763871"
+}
+  Transaction Type: IFT
+  Timestamp: 2025-08-21 08:11:11
+
+📥 RESPONSE DETAILS:
+  Status Code: 200
+  Response Time: 4.77 ms
+  Response Body: {
+    "status": "success",
+    "message": "Transaction data sent successfully.",
+    "data": {
+        "status": "success",
+        "status_code": 200,
+        "message": "Transaction processed successfully",
+        "data": {
+            "transaction_id": "IFT123456",
+            "reference": "IFT1755763871",
+            "amount": 10000,
+            "currency": "TZS",
+            "status": "completed",
+            "timestamp": "2025-08-21 08:11:11",
+            "processing_time_ms": 15.76
+        },
+        "metadata": {
+            "api_version": "1.0",
+            "request_id": "req-68a6d49f0183a"
+        }
+    }
+}
+  Timestamp: 2025-08-21 08:11:11
+
+✓ IFT Transaction test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Nested Status Code: 200
+  ✓ Transaction ID: IFT123456
+  ✓ Reference: IFT1755763871
+  ✓ Amount: 10000 TZS
+  ✓ Transaction Status: completed
+  ✓ Response Time: 4.77 ms
+  ✓ Message: Transaction data sent successfully.
+
+[TEST] EFT Transaction...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://api.bank.com/eft-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "account_from": "1234567890",
+    "account_to": "0987654321",
+    "amount": 25000,
+    "currency": "TZS",
+    "bank_code": "NBC001",
+    "description": "EFT Test Transaction",
+    "reference": "EFT1755763871"
+}
+  Transaction Type: EFT
+  Timestamp: 2025-08-21 08:11:11
+
+📥 RESPONSE DETAILS:
+  Status Code: 200
+  Response Time: 0.11 ms
+  Response Body: {
+    "status": "success",
+    "message": "Transaction data sent successfully.",
+    "data": {
+        "status": "success",
+        "status_code": 200,
+        "message": "EFT transaction queued for processing",
+        "data": {
+            "transaction_id": "EFT789012",
+            "reference": "EFT1755763871",
+            "amount": 25000,
+            "currency": "TZS",
+            "bank_code": "NBC001",
+            "status": "queued",
+            "timestamp": "2025-08-21 08:11:11",
+            "estimated_processing_time": "2-3 business days"
+        },
+        "metadata": {
+            "api_version": "1.0",
+            "request_id": "req-68a6d49f02cbe"
+        }
+    }
+}
+  Timestamp: 2025-08-21 08:11:11
+
+✓ EFT Transaction test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Nested Status Code: 200
+  ✓ Transaction ID: EFT789012
+  ✓ Transaction Status: queued
+  ✓ Response Time: 0.11 ms
+  ✓ Message: Transaction data sent successfully.
+
+[TEST] Mobile Transaction...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://api.bank.com/mobile-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "phone_number": "255712345678",
+    "amount": 5000,
+    "currency": "TZS",
+    "description": "Mobile Test Transaction",
+    "reference": "MOB1755763871"
+}
+  Transaction Type: MOBILE
+  Timestamp: 2025-08-21 08:11:11
+
+📥 RESPONSE DETAILS:
+  Status Code: 200
+  Response Time: 0.08 ms
+  Response Body: {
+    "status": "success",
+    "message": "Transaction data sent successfully.",
+    "data": {
+        "status": "success",
+        "status_code": 200,
+        "message": "Mobile transaction sent to network",
+        "data": {
+            "transaction_id": "MOB345678",
+            "phone_number": "255712345678",
+            "amount": 5000,
+            "currency": "TZS",
+            "mobile_network": "MTN",
+            "status": "sent",
+            "timestamp": "2025-08-21 08:11:11",
+            "reference": "MOB1755763871"
+        },
+        "metadata": {
+            "api_version": "1.0",
+            "request_id": "req-68a6d49f02d2e"
+        }
+    }
+}
+  Timestamp: 2025-08-21 08:11:11
+
+✓ Mobile Transaction test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Nested Status Code: 200
+  ✓ Transaction ID: MOB345678
+  ✓ Mobile Network: MTN
+  ✓ Transaction Status: sent
+  ✓ Response Time: 0.08 ms
+  ✓ Message: Transaction data sent successfully.
+
+[TEST] Invalid Transaction Type...
+✓ Invalid Transaction Type test passed
+
+[TEST] Connection Failure Handling...
+✗ Connection Failure test failed: Error not handled properly
+
+========================================
+Test Results Summary
+========================================
+IFT Transaction               : PASSED
+EFT Transaction               : PASSED
+Mobile Transaction            : PASSED
+Invalid Transaction Type      : PASSED
+Connection Failure            : FAILED
+----------------------------------------
+Total: 5 tests
+Passed: 4 | Failed: 1 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: GEPG Gateway
+Timestamp: 2025-08-21 08:11:11
+Duration: 0 seconds
+--------------------------------------------------------------------------------
+
+========================================
+GEPG Gateway API Tests
+========================================
+
+[TEST] Bill Query (Control Number Verification)...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://gepg-gateway.test/api/bill/query
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "GepgGatewayBillQryReq": {
+        "GepgGatewayHdr": {
+            "ChannelID": "TEST_CHANNEL",
+            "ChannelName": "TEST_SACCOS",
+            "Service": "GEPG_INQ"
+        },
+        "gepgBillQryReq": {
+            "ChannelRef": "inq_68a6d49f03124",
+            "CustCtrNum": "991700123456",
+            "DebitAccountNo": "01J01234567890",
+            "DebitAccountCurrency": "TZS"
+        }
+    }
+}
+  Test Type: Bill Query
+  Control Number: 991700123456
+  Timestamp: 2025-08-21 08:11:11
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayBillQryResp>
+                    <BillHdr>
+                        <BillStsCode>0000</BillStsCode>
+                        <BillStsDesc>Success</BillStsDesc>
+                        <BillId>BILL123456</BillId>
+                        <CustCtrNum>991700123456</CustCtrNum>
+                        <BillAmt>100000.00</BillAmt>
+                        <PaidAmt>0.00</PaidAmt>
+                        <BillExpDt>2024-12-31</BillExpDt>
+                    </BillHdr>
+                    <BillDtls>
+                        <BillDtl>
+                            <ItemRef>ITEM001</ItemRef>
+                            <ItemDesc>Loan Payment</ItemDesc>
+                            <ItemAmt>100000.00</ItemAmt>
+                        </BillDtl>
+                    </BillDtls>
+                </GepgGatewayBillQryResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 08:11:11
+
+✓ Bill Query test passed - Control Number: 991700123456
+
+[TEST] Bill Payment Processing...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://gepg-gateway.test/api/bill/payment
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "channel_ref": "PAY1755763871",
+    "cbp_gw_ref": "CBP1755763871",
+    "control_number": "991700123456",
+    "status_code": "0000",
+    "debit_account_no": "01J01234567890",
+    "debit_account_currency": "TZS",
+    "items": [
+        {
+            "channel_trx_id": "TRX1755763871",
+            "sp_code": "SP001",
+            "pay_ref_id": "REF1755763871",
+            "bill_ctr_num": "991700123456",
+            "paid_amt": "100000.00",
+            "trx_dt_tm": "2025-08-21T08:11:11",
+            "bill_amt": "100000.00",
+            "ccy": "TZS",
+            "pyr_name": "John Doe",
+            "pyr_cell_num": "255712345678",
+            "pyr_email": "john@example.com"
+        }
+    ]
+}
+  Test Type: Bill Payment
+  Control Number: 991700123456
+  Timestamp: 2025-08-21 08:11:11
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayPaymentResp>
+                    <PmtRespHdr>
+                        <ChannelRef>PAY1755763871</ChannelRef>
+                        <CbpGwRef>CBP1755763871</CbpGwRef>
+                        <ResultCode>0000</ResultCode>
+                        <ResultDesc>Payment successful</ResultDesc>
+                    </PmtRespHdr>
+                </GepgGatewayPaymentResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 08:11:11
+
+✓ Bill Payment test passed - Reference: PAY1755763871
+
+[TEST] Prepaid Payment (Quote)...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://gepg-gateway.test/api/bill/prepaid
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "channel_ref": "PREPAY1755763871",
+    "cbp_gw_ref": "CBP1755763871",
+    "control_number": "991700789012",
+    "status_code": "0000",
+    "debit_account_no": "01J09876543210",
+    "debit_account_currency": "TZS",
+    "items": [
+        {
+            "channel_trx_id": "TRX1755763871",
+            "sp_code": "LUKU",
+            "pay_ref_id": "TOKEN123456",
+            "bill_ctr_num": "991700789012",
+            "paid_amt": "50000.00",
+            "trx_dt_tm": "2025-08-21T08:11:11",
+            "bill_amt": "50000.00",
+            "ccy": "TZS"
+        }
+    ]
+}
+  Test Type: Prepaid Payment
+  Control Number: 991700789012
+  Timestamp: 2025-08-21 08:11:11
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayPaymentResp>
+                    <PmtRespHdr>
+                        <ChannelRef>PREPAY1755763871</ChannelRef>
+                        <CbpGwRef>CBP1755763871</CbpGwRef>
+                        <ResultCode>0000</ResultCode>
+                        <ResultDesc>Prepaid quote generated</ResultDesc>
+                    </PmtRespHdr>
+                    <QuoteInfo>
+                        <Token>12345678901234567890</Token>
+                        <Units>150.5</Units>
+                        <Amount>50000.00</Amount>
+                    </QuoteInfo>
+                </GepgGatewayPaymentResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 08:11:11
+
+✓ Prepaid Payment test passed - Token: 12345678901234567890
+
+[TEST] Transaction Status Check...
+📤 REQUEST DETAILS:
+  Method: GET
+  URL: https://gepg-gateway.test/api/status/check
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "ChannelRef": "PAY1755763871",
+    "CbpGwRef": "CBP1755763871"
+}
+  Test Type: Status Check
+  Channel Ref: PAY1755763871
+  Timestamp: 2025-08-21 08:11:11
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayStatusCheckResp>
+                    <StatusCheckRespHdr>
+                        <ChannelRef>PAY1755763871</ChannelRef>
+                        <CbpGwRef>CBP1755763871</CbpGwRef>
+                        <TrxStatus>SUCCESS</TrxStatus>
+                        <TrxStatusDesc>Transaction completed successfully</TrxStatusDesc>
+                        <TrxDtTm>2025-08-21T08:11:11</TrxDtTm>
+                    </StatusCheckRespHdr>
+                </GepgGatewayStatusCheckResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 08:11:11
+
+✓ Status Check test passed - Status: SUCCESS
+
+[TEST] XML Signing and Verification...
+✓ XML Signing test passed
+
+[TEST] Error Handling...
+  ✓ Error scenario handled: 4001 - Invalid control number
+  ✓ Error scenario handled: 4002 - Expired bill
+  ✓ Error scenario handled: 4003 - Insufficient funds
+  ✓ Error scenario handled: 5001 - System error
+
+========================================
+Test Results Summary
+========================================
+Bill Query                    : PASSED
+Bill Payment                  : PASSED
+Prepaid Payment               : PASSED
+Status Check                  : PASSED
+XML Signing                   : PASSED
+Error Handling                : PASSED
+----------------------------------------
+Total: 6 tests
+Passed: 6 | Failed: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: Luku Gateway
+Timestamp: 2025-08-21 08:11:11
+Duration: 0.003 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Luku Gateway API Tests
+========================================
+
+[TEST] Token Query...
+✓ Token Query test passed - Meter: 04123456789
+
+[TEST] Token Purchase...
+✓ Token Purchase test passed - Token: 12345-67890-12345-67890
+  Units: 125.5 kWh
+
+[TEST] Meter Validation...
+  ✓ Meter 04123456789 validation: Valid (as expected)
+  ✗ Meter 04999999999 validation failed
+  ✗ Meter INVALID validation failed
+
+[TEST] Transaction Status Check...
+✗ Transaction Status test error: cURL error 6: Could not resolve host: nbc-gateway-uat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://nbc-gateway-uat.intra.nbc.co.tz/api/transaction/status?transaction_id=TRX1755763871
+
+[TEST] SSL Configuration...
+⚠ SSL Configuration warning - SSL verification disabled
+
+[TEST] Error Handling...
+  ✓ Error 400 handled: Invalid meter number
+  ✗ Error 401 not handled properly
+  ✗ Error 403 not handled properly
+  ✗ Error 500 not handled properly
+  ✗ Error 503 not handled properly
+
+========================================
+Test Results Summary
+========================================
+Token Query                   : PASSED
+Token Purchase                : PASSED
+Meter Validation              : FAILED
+Transaction Status            : ERROR
+SSL Configuration             : WARNING
+Error Handling                : FAILED
+----------------------------------------
+Total: 6 tests
+Passed: 2 | Failed: 2 | Warnings: 1 | Errors: 1
+========================================
+
+================================================================================
+
+================================================================================
+Test: NBC SMS
+Timestamp: 2025-08-21 08:11:11
+Duration: 0.001 seconds
+--------------------------------------------------------------------------------
+
+========================================
+NBC SMS API Tests
+========================================
+
+[TEST] Single SMS Send...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://sms-engine.tz.af.absa.local/api/sms/send
+  Headers: {
+    "X-API-Key": "74QK8xXWC8dtcbYguA989wSIPjsKDwEgOPtyumEIF1NkqQtW3dtb0cf0DeBJUvKwcimr7d9QRK2vycCVLfIL3Izbt7rVAOGZoEoC4qYA89nJZW7737KpwkzdCcH4CHBDSj3vjN66ksrC2oCmT2OyHb9oCu3hC0mtP5AQrF6eRZQLll0tsnskBArYAKJIJXexK27M9XBwRipSsqbMnwBNERXJNROyX77wrSaDjyDbTQlin8CyuLHL97zx1WBNaGoS",
+    "Content-Type": "application\/json"
+}
+  Request Body: {
+    "channel_id": "KRWT43976",
+    "recipient": "255712345678",
+    "message": "Test SMS from SACCOS System",
+    "reference": "SMS1755763871"
+}
+  Test Type: Single SMS
+  Timestamp: 2025-08-21 08:11:11
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Time: 0.14 ms
+  Response Headers: {
+    "Content-Type": [
+        "application\/json"
+    ],
+    "X-Request-ID": [
+        "test-68a6d49f04396"
+    ]
+}
+  Response Body: {
+    "status": "success",
+    "status_code": 200,
+    "message": "SMS sent successfully",
+    "data": {
+        "message_id": "MSG1755763871",
+        "reference": "SMS1755763871",
+        "recipient": "255712345678",
+        "channel_id": "KRWT43976",
+        "status": "queued",
+        "timestamp": "2025-08-21 08:11:11",
+        "message_length": 27,
+        "cost": 0.05
+    },
+    "metadata": {
+        "api_version": "1.0",
+        "request_id": "req-68a6d49f04395"
+    }
+}
+  Timestamp: 2025-08-21 08:11:11
+
+✓ Single SMS test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Message ID: MSG1755763871
+  ✓ Recipient: 255712345678
+  ✓ Status: queued
+  ✓ Response Time: 0.14 ms
+  ✓ Message: SMS sent successfully
+
+[TEST] Bulk SMS Send...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://sms-engine.tz.af.absa.local/api/sms/bulk
+  Headers: {
+    "X-API-Key": "74QK8xXWC8dtcbYguA989wSIPjsKDwEgOPtyumEIF1NkqQtW3dtb0cf0DeBJUvKwcimr7d9QRK2vycCVLfIL3Izbt7rVAOGZoEoC4qYA89nJZW7737KpwkzdCcH4CHBDSj3vjN66ksrC2oCmT2OyHb9oCu3hC0mtP5AQrF6eRZQLll0tsnskBArYAKJIJXexK27M9XBwRipSsqbMnwBNERXJNROyX77wrSaDjyDbTQlin8CyuLHL97zx1WBNaGoS",
+    "Content-Type": "application\/json"
+}
+  Request Body: {
+    "channel_id": "KRWT43976",
+    "messages": [
+        {
+            "recipient": "255712345678",
+            "message": "Bulk message 1",
+            "reference": "BULK1_1755763871"
+        },
+        {
+            "recipient": "255798765432",
+            "message": "Bulk message 2",
+            "reference": "BULK2_1755763871"
+        },
+        {
+            "recipient": "255754321098",
+            "message": "Bulk message 3",
+            "reference": "BULK3_1755763871"
+        }
+    ]
+}
+  Test Type: Bulk SMS
+  Messages Count: 3
+  Timestamp: 2025-08-21 08:11:11
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Time: 0.11 ms
+  Response Headers: {
+    "Content-Type": [
+        "application\/json"
+    ],
+    "X-Request-ID": [
+        "test-68a6d49f04431"
+    ]
+}
+  Response Body: {
+    "status": "success",
+    "status_code": 200,
+    "message": "Bulk SMS sent successfully",
+    "data": {
+        "batch_id": "BATCH1755763871",
+        "total_messages": 3,
+        "accepted": 3,
+        "rejected": 0,
+        "channel_id": "KRWT43976",
+        "status": "queued",
+        "timestamp": "2025-08-21 08:11:11",
+        "messages": [
+            {
+                "reference": "BULK1_1755763871",
+                "recipient": "255712345678",
+                "status": "queued",
+                "message_id": "MSG6435"
+            },
+            {
+                "reference": "BULK2_1755763871",
+                "recipient": "255798765432",
+                "status": "queued",
+                "message_id": "MSG7773"
+            },
+            {
+                "reference": "BULK3_1755763871",
+                "recipient": "255754321098",
+                "status": "queued",
+                "message_id": "MSG1308"
+            }
+        ]
+    },
+    "metadata": {
+        "api_version": "1.0",
+        "request_id": "req-68a6d49f04430"
+    }
+}
+  Timestamp: 2025-08-21 08:11:11
+
+✓ Bulk SMS test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Batch ID: BATCH1755763871
+  ✓ Accepted: 3 messages
+  ✓ Rejected: 0 messages
+  ✓ Response Time: 0.11 ms
+  ✓ Message: Bulk SMS sent successfully
+
+[TEST] SMS Status Check...
+📤 REQUEST DETAILS:
+  Method: GET
+  URL: https://sms-engine.tz.af.absa.local/api/sms/status/MSG123456
+  Headers: {
+    "X-API-Key": "74QK8xXWC8dtcbYguA989wSIPjsKDwEgOPtyumEIF1NkqQtW3dtb0cf0DeBJUvKwcimr7d9QRK2vycCVLfIL3Izbt7rVAOGZoEoC4qYA89nJZW7737KpwkzdCcH4CHBDSj3vjN66ksrC2oCmT2OyHb9oCu3hC0mtP5AQrF6eRZQLll0tsnskBArYAKJIJXexK27M9XBwRipSsqbMnwBNERXJNROyX77wrSaDjyDbTQlin8CyuLHL97zx1WBNaGoS"
+}
+  Request Body: None (GET request)
+  Test Type: SMS Status Check
+  Message ID: MSG123456
+  Timestamp: 2025-08-21 08:11:11
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": [
+        "application\/json"
+    ]
+}
+  Response Body: {
+    "status": "success",
+    "message_id": "MSG123456",
+    "delivery_status": "DELIVERED",
+    "delivered_at": "2025-08-21 08:11:11",
+    "recipient": "255712345678",
+    "attempts": 1
+}
+  Timestamp: 2025-08-21 08:11:11
+
+✓ SMS Status test passed - Status: DELIVERED
+
+[TEST] Rate Limiting...
+✗ Rate Limiting test failed - limit not enforced
+
+[TEST] Invalid Phone Number Handling...
+✗ Invalid Phone Number test error: A request was made, but the response sequence is empty.
+
+[TEST] Long Message Handling...
+✗ Long Message test error: A request was made, but the response sequence is empty.
+
+========================================
+Test Results Summary
+========================================
+Single SMS                    : PASSED
+Bulk SMS                      : PASSED
+SMS Status                    : PASSED
+Rate Limiting                 : FAILED
+Invalid Phone Number          : ERROR
+Long Message                  : ERROR
+----------------------------------------
+Total: 6 tests
+Passed: 3 | Failed: 1 | Errors: 2
+========================================
+
+================================================================================
+
+================================================================================
+Test: AI Services
+Timestamp: 2025-08-21 08:11:11
+Duration: 0.001 seconds
+--------------------------------------------------------------------------------
+
+========================================
+AI Services API Tests
+========================================
+
+[TEST] Groq API...
+✓ Groq API test passed - Model: llama3-8b-8192
+
+[TEST] OpenAI API...
+✓ OpenAI API test passed - Model: gpt-3.5-turbo
+
+[TEST] Together AI API...
+✓ Together AI API test passed - Model: meta-llama/Llama-2-70b-chat-hf
+
+[TEST] Claude API...
+✓ Claude API test passed
+
+========================================
+Test Results Summary
+========================================
+Groq API                      : PASSED
+OpenAI API                    : PASSED
+Together AI API               : PASSED
+Claude API                    : PASSED
+----------------------------------------
+Total: 4 tests
+Passed: 4 | Failed: 0 | Skipped: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: Bank Transaction Service
+Timestamp: 2025-08-21 09:14:32
+Duration: 0.312 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Bank Transaction Service API Tests
+========================================
+
+[TEST] IFT Transaction...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/ift-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "account_from": "1234567890",
+    "account_to": "0987654321",
+    "amount": 10000,
+    "currency": "TZS",
+    "description": "IFT Test Transaction",
+    "reference": "IFT1755767672"
+}
+  Transaction Type: IFT
+  Timestamp: 2025-08-21 09:14:32
+
+✗ IFT Transaction test error: cURL error 6: Could not resolve host: api.bank.com (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://api.bank.com/ift-transaction
+  ✗ Response received: NO
+  ✗ Error Type: Illuminate\Http\Client\ConnectionException
+
+[TEST] EFT Transaction...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/eft-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "account_from": "1234567890",
+    "account_to": "0987654321",
+    "amount": 25000,
+    "currency": "TZS",
+    "bank_code": "NBC001",
+    "description": "EFT Test Transaction",
+    "reference": "EFT1755767672"
+}
+  Transaction Type: EFT
+  Timestamp: 2025-08-21 09:14:32
+
+✗ EFT Transaction test error: cURL error 6: Could not resolve host: api.bank.com (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://api.bank.com/eft-transaction
+
+[TEST] Mobile Transaction...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/mobile-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "phone_number": "255712345678",
+    "amount": 5000,
+    "currency": "TZS",
+    "description": "Mobile Test Transaction",
+    "reference": "MOB1755767672"
+}
+  Transaction Type: MOBILE
+  Timestamp: 2025-08-21 09:14:32
+
+✗ Mobile Transaction test error: cURL error 6: Could not resolve host: api.bank.com (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://api.bank.com/mobile-transaction
+
+[TEST] Invalid Transaction Type...
+✓ Invalid Transaction Type test passed
+
+[TEST] Connection Failure Handling...
+✗ Connection Failure test error: cURL error 6: Could not resolve host: api.bank.com (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://api.bank.com/ift-transaction
+
+========================================
+Test Results Summary
+========================================
+IFT Transaction               : ERROR
+EFT Transaction               : ERROR
+Mobile Transaction            : ERROR
+Invalid Transaction Type      : PASSED
+Connection Failure            : ERROR
+----------------------------------------
+Total: 5 tests
+Passed: 1 | Failed: 0 | Errors: 4
+========================================
+
+================================================================================
+
+================================================================================
+Test: GEPG Gateway
+Timestamp: 2025-08-21 09:14:32
+Duration: 0.001 seconds
+--------------------------------------------------------------------------------
+
+========================================
+GEPG Gateway API Tests
+========================================
+
+[TEST] Bill Query (Control Number Verification)...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://nbc-gateway-uat.intra.nbc.co.tz/api/bill/query
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "GepgGatewayBillQryReq": {
+        "GepgGatewayHdr": {
+            "ChannelID": "SACCOSNBC",
+            "ChannelName": "TR",
+            "Service": "GEPG_INQ"
+        },
+        "gepgBillQryReq": {
+            "ChannelRef": "inq_68a6e3786e639",
+            "CustCtrNum": "991700123456",
+            "DebitAccountNo": "01J01234567890",
+            "DebitAccountCurrency": "TZS"
+        }
+    }
+}
+  Test Type: Bill Query
+  Control Number: 991700123456
+  Timestamp: 2025-08-21 09:14:32
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayBillQryResp>
+                    <BillHdr>
+                        <BillStsCode>0000</BillStsCode>
+                        <BillStsDesc>Success</BillStsDesc>
+                        <BillId>BILL123456</BillId>
+                        <CustCtrNum>991700123456</CustCtrNum>
+                        <BillAmt>100000.00</BillAmt>
+                        <PaidAmt>0.00</PaidAmt>
+                        <BillExpDt>2024-12-31</BillExpDt>
+                    </BillHdr>
+                    <BillDtls>
+                        <BillDtl>
+                            <ItemRef>ITEM001</ItemRef>
+                            <ItemDesc>Loan Payment</ItemDesc>
+                            <ItemAmt>100000.00</ItemAmt>
+                        </BillDtl>
+                    </BillDtls>
+                </GepgGatewayBillQryResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 09:14:32
+
+✓ Bill Query test passed - Control Number: 991700123456
+
+[TEST] Bill Payment Processing...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://nbc-gateway-uat.intra.nbc.co.tz/api/bill/payment
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "channel_ref": "PAY1755767672",
+    "cbp_gw_ref": "CBP1755767672",
+    "control_number": "991700123456",
+    "status_code": "0000",
+    "debit_account_no": "01J01234567890",
+    "debit_account_currency": "TZS",
+    "items": [
+        {
+            "channel_trx_id": "TRX1755767672",
+            "sp_code": "SP001",
+            "pay_ref_id": "REF1755767672",
+            "bill_ctr_num": "991700123456",
+            "paid_amt": "100000.00",
+            "trx_dt_tm": "2025-08-21T09:14:32",
+            "bill_amt": "100000.00",
+            "ccy": "TZS",
+            "pyr_name": "John Doe",
+            "pyr_cell_num": "255712345678",
+            "pyr_email": "john@example.com"
+        }
+    ]
+}
+  Test Type: Bill Payment
+  Control Number: 991700123456
+  Timestamp: 2025-08-21 09:14:32
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayPaymentResp>
+                    <PmtRespHdr>
+                        <ChannelRef>PAY1755767672</ChannelRef>
+                        <CbpGwRef>CBP1755767672</CbpGwRef>
+                        <ResultCode>0000</ResultCode>
+                        <ResultDesc>Payment successful</ResultDesc>
+                    </PmtRespHdr>
+                </GepgGatewayPaymentResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 09:14:32
+
+✓ Bill Payment test passed - Reference: PAY1755767672
+
+[TEST] Prepaid Payment (Quote)...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://nbc-gateway-uat.intra.nbc.co.tz/api/bill/prepaid
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "channel_ref": "PREPAY1755767672",
+    "cbp_gw_ref": "CBP1755767672",
+    "control_number": "991700789012",
+    "status_code": "0000",
+    "debit_account_no": "01J09876543210",
+    "debit_account_currency": "TZS",
+    "items": [
+        {
+            "channel_trx_id": "TRX1755767672",
+            "sp_code": "LUKU",
+            "pay_ref_id": "TOKEN123456",
+            "bill_ctr_num": "991700789012",
+            "paid_amt": "50000.00",
+            "trx_dt_tm": "2025-08-21T09:14:32",
+            "bill_amt": "50000.00",
+            "ccy": "TZS"
+        }
+    ]
+}
+  Test Type: Prepaid Payment
+  Control Number: 991700789012
+  Timestamp: 2025-08-21 09:14:32
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayPaymentResp>
+                    <PmtRespHdr>
+                        <ChannelRef>PREPAY1755767672</ChannelRef>
+                        <CbpGwRef>CBP1755767672</CbpGwRef>
+                        <ResultCode>0000</ResultCode>
+                        <ResultDesc>Prepaid quote generated</ResultDesc>
+                    </PmtRespHdr>
+                    <QuoteInfo>
+                        <Token>12345678901234567890</Token>
+                        <Units>150.5</Units>
+                        <Amount>50000.00</Amount>
+                    </QuoteInfo>
+                </GepgGatewayPaymentResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 09:14:32
+
+✓ Prepaid Payment test passed - Token: 12345678901234567890
+
+[TEST] Transaction Status Check...
+📤 REQUEST DETAILS:
+  Method: GET
+  URL: https://nbc-gateway-uat.intra.nbc.co.tz/api/status/check
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "ChannelRef": "PAY1755767672",
+    "CbpGwRef": "CBP1755767672"
+}
+  Test Type: Status Check
+  Channel Ref: PAY1755767672
+  Timestamp: 2025-08-21 09:14:32
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayStatusCheckResp>
+                    <StatusCheckRespHdr>
+                        <ChannelRef>PAY1755767672</ChannelRef>
+                        <CbpGwRef>CBP1755767672</CbpGwRef>
+                        <TrxStatus>SUCCESS</TrxStatus>
+                        <TrxStatusDesc>Transaction completed successfully</TrxStatusDesc>
+                        <TrxDtTm>2025-08-21T09:14:32</TrxDtTm>
+                    </StatusCheckRespHdr>
+                </GepgGatewayStatusCheckResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 09:14:32
+
+✓ Status Check test passed - Status: SUCCESS
+
+[TEST] XML Signing and Verification...
+✓ XML Signing test passed
+
+[TEST] Error Handling...
+  ✓ Error scenario handled: 4001 - Invalid control number
+  ✓ Error scenario handled: 4002 - Expired bill
+  ✓ Error scenario handled: 4003 - Insufficient funds
+  ✓ Error scenario handled: 5001 - System error
+
+========================================
+Test Results Summary
+========================================
+Bill Query                    : PASSED
+Bill Payment                  : PASSED
+Prepaid Payment               : PASSED
+Status Check                  : PASSED
+XML Signing                   : PASSED
+Error Handling                : PASSED
+----------------------------------------
+Total: 6 tests
+Passed: 6 | Failed: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: Luku Gateway
+Timestamp: 2025-08-21 09:14:32
+Duration: 0.215 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Luku Gateway API Tests
+========================================
+
+[TEST] Token Query...
+✓ Token Query test passed - Meter: 04123456789
+
+[TEST] Token Purchase...
+✓ Token Purchase test passed - Token: 12345-67890-12345-67890
+  Units: 125.5 kWh
+
+[TEST] Meter Validation...
+  ✓ Meter 04123456789 validation: Valid (as expected)
+  ✗ Meter 04999999999 validation failed
+  ✗ Meter INVALID validation failed
+
+[TEST] Transaction Status Check...
+✗ Transaction Status test error: cURL error 6: Could not resolve host: nbc-gateway-uat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://nbc-gateway-uat.intra.nbc.co.tz/api/transaction/status?transaction_id=TRX1755767672
+
+[TEST] SSL Configuration...
+⚠ SSL Configuration warning - SSL verification disabled
+
+[TEST] Error Handling...
+  ✓ Error 400 handled: Invalid meter number
+  ✗ Error 401 not handled properly
+  ✗ Error 403 not handled properly
+  ✗ Error 500 not handled properly
+  ✗ Error 503 not handled properly
+
+========================================
+Test Results Summary
+========================================
+Token Query                   : PASSED
+Token Purchase                : PASSED
+Meter Validation              : FAILED
+Transaction Status            : ERROR
+SSL Configuration             : WARNING
+Error Handling                : FAILED
+----------------------------------------
+Total: 6 tests
+Passed: 2 | Failed: 2 | Warnings: 1 | Errors: 1
+========================================
+
+================================================================================
+
+================================================================================
+Test: NBC SMS
+Timestamp: 2025-08-21 09:14:32
+Duration: 0.002 seconds
+--------------------------------------------------------------------------------
+
+========================================
+NBC SMS API Tests
+========================================
+
+[TEST] Single SMS Send...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://sms-engine.tz.af.absa.local/api/sms/send
+  Headers: {
+    "X-API-Key": "74QK8xXWC8dtcbYguA989wSIPjsKDwEgOPtyumEIF1NkqQtW3dtb0cf0DeBJUvKwcimr7d9QRK2vycCVLfIL3Izbt7rVAOGZoEoC4qYA89nJZW7737KpwkzdCcH4CHBDSj3vjN66ksrC2oCmT2OyHb9oCu3hC0mtP5AQrF6eRZQLll0tsnskBArYAKJIJXexK27M9XBwRipSsqbMnwBNERXJNROyX77wrSaDjyDbTQlin8CyuLHL97zx1WBNaGoS",
+    "Content-Type": "application\/json"
+}
+  Request Body: {
+    "channel_id": "KRWT43976",
+    "recipient": "255712345678",
+    "message": "Test SMS from SACCOS System",
+    "reference": "SMS1755767672"
+}
+  Test Type: Single SMS
+  Timestamp: 2025-08-21 09:14:32
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Time: 0.39 ms
+  Response Headers: {
+    "Content-Type": [
+        "application\/json"
+    ],
+    "X-Request-ID": [
+        "test-68a6e378a37e9"
+    ]
+}
+  Response Body: {
+    "status": "success",
+    "status_code": 200,
+    "message": "SMS sent successfully",
+    "data": {
+        "message_id": "MSG1755767672",
+        "reference": "SMS1755767672",
+        "recipient": "255712345678",
+        "channel_id": "KRWT43976",
+        "status": "queued",
+        "timestamp": "2025-08-21 09:14:32",
+        "message_length": 27,
+        "cost": 0.05
+    },
+    "metadata": {
+        "api_version": "1.0",
+        "request_id": "req-68a6e378a37e7"
+    }
+}
+  Timestamp: 2025-08-21 09:14:32
+
+✓ Single SMS test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Message ID: MSG1755767672
+  ✓ Recipient: 255712345678
+  ✓ Status: queued
+  ✓ Response Time: 0.39 ms
+  ✓ Message: SMS sent successfully
+
+[TEST] Bulk SMS Send...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://sms-engine.tz.af.absa.local/api/sms/bulk
+  Headers: {
+    "X-API-Key": "74QK8xXWC8dtcbYguA989wSIPjsKDwEgOPtyumEIF1NkqQtW3dtb0cf0DeBJUvKwcimr7d9QRK2vycCVLfIL3Izbt7rVAOGZoEoC4qYA89nJZW7737KpwkzdCcH4CHBDSj3vjN66ksrC2oCmT2OyHb9oCu3hC0mtP5AQrF6eRZQLll0tsnskBArYAKJIJXexK27M9XBwRipSsqbMnwBNERXJNROyX77wrSaDjyDbTQlin8CyuLHL97zx1WBNaGoS",
+    "Content-Type": "application\/json"
+}
+  Request Body: {
+    "channel_id": "KRWT43976",
+    "messages": [
+        {
+            "recipient": "255712345678",
+            "message": "Bulk message 1",
+            "reference": "BULK1_1755767672"
+        },
+        {
+            "recipient": "255798765432",
+            "message": "Bulk message 2",
+            "reference": "BULK2_1755767672"
+        },
+        {
+            "recipient": "255754321098",
+            "message": "Bulk message 3",
+            "reference": "BULK3_1755767672"
+        }
+    ]
+}
+  Test Type: Bulk SMS
+  Messages Count: 3
+  Timestamp: 2025-08-21 09:14:32
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Time: 0.25 ms
+  Response Headers: {
+    "Content-Type": [
+        "application\/json"
+    ],
+    "X-Request-ID": [
+        "test-68a6e378a399f"
+    ]
+}
+  Response Body: {
+    "status": "success",
+    "status_code": 200,
+    "message": "Bulk SMS sent successfully",
+    "data": {
+        "batch_id": "BATCH1755767672",
+        "total_messages": 3,
+        "accepted": 3,
+        "rejected": 0,
+        "channel_id": "KRWT43976",
+        "status": "queued",
+        "timestamp": "2025-08-21 09:14:32",
+        "messages": [
+            {
+                "reference": "BULK1_1755767672",
+                "recipient": "255712345678",
+                "status": "queued",
+                "message_id": "MSG4668"
+            },
+            {
+                "reference": "BULK2_1755767672",
+                "recipient": "255798765432",
+                "status": "queued",
+                "message_id": "MSG4626"
+            },
+            {
+                "reference": "BULK3_1755767672",
+                "recipient": "255754321098",
+                "status": "queued",
+                "message_id": "MSG8916"
+            }
+        ]
+    },
+    "metadata": {
+        "api_version": "1.0",
+        "request_id": "req-68a6e378a399e"
+    }
+}
+  Timestamp: 2025-08-21 09:14:32
+
+✓ Bulk SMS test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Batch ID: BATCH1755767672
+  ✓ Accepted: 3 messages
+  ✓ Rejected: 0 messages
+  ✓ Response Time: 0.25 ms
+  ✓ Message: Bulk SMS sent successfully
+
+[TEST] SMS Status Check...
+📤 REQUEST DETAILS:
+  Method: GET
+  URL: https://sms-engine.tz.af.absa.local/api/sms/status/MSG123456
+  Headers: {
+    "X-API-Key": "74QK8xXWC8dtcbYguA989wSIPjsKDwEgOPtyumEIF1NkqQtW3dtb0cf0DeBJUvKwcimr7d9QRK2vycCVLfIL3Izbt7rVAOGZoEoC4qYA89nJZW7737KpwkzdCcH4CHBDSj3vjN66ksrC2oCmT2OyHb9oCu3hC0mtP5AQrF6eRZQLll0tsnskBArYAKJIJXexK27M9XBwRipSsqbMnwBNERXJNROyX77wrSaDjyDbTQlin8CyuLHL97zx1WBNaGoS"
+}
+  Request Body: None (GET request)
+  Test Type: SMS Status Check
+  Message ID: MSG123456
+  Timestamp: 2025-08-21 09:14:32
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": [
+        "application\/json"
+    ]
+}
+  Response Body: {
+    "status": "success",
+    "message_id": "MSG123456",
+    "delivery_status": "DELIVERED",
+    "delivered_at": "2025-08-21 09:14:32",
+    "recipient": "255712345678",
+    "attempts": 1
+}
+  Timestamp: 2025-08-21 09:14:32
+
+✓ SMS Status test passed - Status: DELIVERED
+
+[TEST] Rate Limiting...
+✗ Rate Limiting test failed - limit not enforced
+
+[TEST] Invalid Phone Number Handling...
+✗ Invalid Phone Number test error: A request was made, but the response sequence is empty.
+
+[TEST] Long Message Handling...
+✗ Long Message test error: A request was made, but the response sequence is empty.
+
+========================================
+Test Results Summary
+========================================
+Single SMS                    : PASSED
+Bulk SMS                      : PASSED
+SMS Status                    : PASSED
+Rate Limiting                 : FAILED
+Invalid Phone Number          : ERROR
+Long Message                  : ERROR
+----------------------------------------
+Total: 6 tests
+Passed: 3 | Failed: 1 | Errors: 2
+========================================
+
+================================================================================
+
+================================================================================
+Test: AI Services
+Timestamp: 2025-08-21 09:14:32
+Duration: 0.001 seconds
+--------------------------------------------------------------------------------
+
+========================================
+AI Services API Tests
+========================================
+
+[TEST] Groq API...
+✓ Groq API test passed - Model: meta-llama/llama-4-scout-17b-16e-instruct
+
+[TEST] OpenAI API...
+✓ OpenAI API test passed - Model: gpt-3.5-turbo
+
+[TEST] Together AI API...
+✓ Together AI API test passed - Model: meta-llama/Llama-2-70b-chat-hf
+
+[TEST] Claude API...
+✓ Claude API test passed
+
+========================================
+Test Results Summary
+========================================
+Groq API                      : PASSED
+OpenAI API                    : PASSED
+Together AI API               : PASSED
+Claude API                    : PASSED
+----------------------------------------
+Total: 4 tests
+Passed: 4 | Failed: 0 | Skipped: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: Bank Transaction Service
+Timestamp: 2025-08-21 09:14:58
+Duration: 0.005 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Bank Transaction Service API Tests
+========================================
+
+[TEST] IFT Transaction...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/ift-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "account_from": "1234567890",
+    "account_to": "0987654321",
+    "amount": 10000,
+    "currency": "TZS",
+    "description": "IFT Test Transaction",
+    "reference": "IFT1755767698"
+}
+  Transaction Type: IFT
+  Timestamp: 2025-08-21 09:14:58
+
+📥 RESPONSE DETAILS:
+  Status Code: 200
+  Response Time: 4.05 ms
+  Response Body: {
+    "status": "success",
+    "message": "Transaction data sent successfully.",
+    "data": {
+        "status": "success",
+        "status_code": 200,
+        "message": "Transaction processed successfully",
+        "data": {
+            "transaction_id": "IFT123456",
+            "reference": "IFT1755767698",
+            "amount": 10000,
+            "currency": "TZS",
+            "status": "completed",
+            "timestamp": "2025-08-21 09:14:58",
+            "processing_time_ms": 15.76
+        },
+        "metadata": {
+            "api_version": "1.0",
+            "request_id": "req-68a6e392e79c9"
+        }
+    }
+}
+  Timestamp: 2025-08-21 09:14:58
+
+✓ IFT Transaction test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Nested Status Code: 200
+  ✓ Transaction ID: IFT123456
+  ✓ Reference: IFT1755767698
+  ✓ Amount: 10000 TZS
+  ✓ Transaction Status: completed
+  ✓ Response Time: 4.05 ms
+  ✓ Message: Transaction data sent successfully.
+
+[TEST] EFT Transaction...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/eft-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "account_from": "1234567890",
+    "account_to": "0987654321",
+    "amount": 25000,
+    "currency": "TZS",
+    "bank_code": "NBC001",
+    "description": "EFT Test Transaction",
+    "reference": "EFT1755767698"
+}
+  Transaction Type: EFT
+  Timestamp: 2025-08-21 09:14:58
+
+📥 RESPONSE DETAILS:
+  Status Code: 200
+  Response Time: 0.1 ms
+  Response Body: {
+    "status": "success",
+    "message": "Transaction data sent successfully.",
+    "data": {
+        "status": "success",
+        "status_code": 200,
+        "message": "EFT transaction queued for processing",
+        "data": {
+            "transaction_id": "EFT789012",
+            "reference": "EFT1755767698",
+            "amount": 25000,
+            "currency": "TZS",
+            "bank_code": "NBC001",
+            "status": "queued",
+            "timestamp": "2025-08-21 09:14:58",
+            "estimated_processing_time": "2-3 business days"
+        },
+        "metadata": {
+            "api_version": "1.0",
+            "request_id": "req-68a6e392e8961"
+        }
+    }
+}
+  Timestamp: 2025-08-21 09:14:58
+
+✓ EFT Transaction test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Nested Status Code: 200
+  ✓ Transaction ID: EFT789012
+  ✓ Transaction Status: queued
+  ✓ Response Time: 0.1 ms
+  ✓ Message: Transaction data sent successfully.
+
+[TEST] Mobile Transaction...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/mobile-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "phone_number": "255712345678",
+    "amount": 5000,
+    "currency": "TZS",
+    "description": "Mobile Test Transaction",
+    "reference": "MOB1755767698"
+}
+  Transaction Type: MOBILE
+  Timestamp: 2025-08-21 09:14:58
+
+📥 RESPONSE DETAILS:
+  Status Code: 200
+  Response Time: 0.08 ms
+  Response Body: {
+    "status": "success",
+    "message": "Transaction data sent successfully.",
+    "data": {
+        "status": "success",
+        "status_code": 200,
+        "message": "Mobile transaction sent to network",
+        "data": {
+            "transaction_id": "MOB345678",
+            "phone_number": "255712345678",
+            "amount": 5000,
+            "currency": "TZS",
+            "mobile_network": "MTN",
+            "status": "sent",
+            "timestamp": "2025-08-21 09:14:58",
+            "reference": "MOB1755767698"
+        },
+        "metadata": {
+            "api_version": "1.0",
+            "request_id": "req-68a6e392e89ca"
+        }
+    }
+}
+  Timestamp: 2025-08-21 09:14:58
+
+✓ Mobile Transaction test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Nested Status Code: 200
+  ✓ Transaction ID: MOB345678
+  ✓ Mobile Network: MTN
+  ✓ Transaction Status: sent
+  ✓ Response Time: 0.08 ms
+  ✓ Message: Transaction data sent successfully.
+
+[TEST] Invalid Transaction Type...
+✓ Invalid Transaction Type test passed
+
+[TEST] Connection Failure Handling...
+✗ Connection Failure test failed: Error not handled properly
+
+========================================
+Test Results Summary
+========================================
+IFT Transaction               : PASSED
+EFT Transaction               : PASSED
+Mobile Transaction            : PASSED
+Invalid Transaction Type      : PASSED
+Connection Failure            : FAILED
+----------------------------------------
+Total: 5 tests
+Passed: 4 | Failed: 1 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: GEPG Gateway
+Timestamp: 2025-08-21 09:14:58
+Duration: 0 seconds
+--------------------------------------------------------------------------------
+
+========================================
+GEPG Gateway API Tests
+========================================
+
+[TEST] Bill Query (Control Number Verification)...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://nbc-gateway-uat.intra.nbc.co.tz/api/bill/query
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "GepgGatewayBillQryReq": {
+        "GepgGatewayHdr": {
+            "ChannelID": "SACCOSNBC",
+            "ChannelName": "TR",
+            "Service": "GEPG_INQ"
+        },
+        "gepgBillQryReq": {
+            "ChannelRef": "inq_68a6e392e8dd6",
+            "CustCtrNum": "991700123456",
+            "DebitAccountNo": "01J01234567890",
+            "DebitAccountCurrency": "TZS"
+        }
+    }
+}
+  Test Type: Bill Query
+  Control Number: 991700123456
+  Timestamp: 2025-08-21 09:14:58
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayBillQryResp>
+                    <BillHdr>
+                        <BillStsCode>0000</BillStsCode>
+                        <BillStsDesc>Success</BillStsDesc>
+                        <BillId>BILL123456</BillId>
+                        <CustCtrNum>991700123456</CustCtrNum>
+                        <BillAmt>100000.00</BillAmt>
+                        <PaidAmt>0.00</PaidAmt>
+                        <BillExpDt>2024-12-31</BillExpDt>
+                    </BillHdr>
+                    <BillDtls>
+                        <BillDtl>
+                            <ItemRef>ITEM001</ItemRef>
+                            <ItemDesc>Loan Payment</ItemDesc>
+                            <ItemAmt>100000.00</ItemAmt>
+                        </BillDtl>
+                    </BillDtls>
+                </GepgGatewayBillQryResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 09:14:58
+
+✓ Bill Query test passed - Control Number: 991700123456
+
+[TEST] Bill Payment Processing...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://nbc-gateway-uat.intra.nbc.co.tz/api/bill/payment
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "channel_ref": "PAY1755767698",
+    "cbp_gw_ref": "CBP1755767698",
+    "control_number": "991700123456",
+    "status_code": "0000",
+    "debit_account_no": "01J01234567890",
+    "debit_account_currency": "TZS",
+    "items": [
+        {
+            "channel_trx_id": "TRX1755767698",
+            "sp_code": "SP001",
+            "pay_ref_id": "REF1755767698",
+            "bill_ctr_num": "991700123456",
+            "paid_amt": "100000.00",
+            "trx_dt_tm": "2025-08-21T09:14:58",
+            "bill_amt": "100000.00",
+            "ccy": "TZS",
+            "pyr_name": "John Doe",
+            "pyr_cell_num": "255712345678",
+            "pyr_email": "john@example.com"
+        }
+    ]
+}
+  Test Type: Bill Payment
+  Control Number: 991700123456
+  Timestamp: 2025-08-21 09:14:58
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayPaymentResp>
+                    <PmtRespHdr>
+                        <ChannelRef>PAY1755767698</ChannelRef>
+                        <CbpGwRef>CBP1755767698</CbpGwRef>
+                        <ResultCode>0000</ResultCode>
+                        <ResultDesc>Payment successful</ResultDesc>
+                    </PmtRespHdr>
+                </GepgGatewayPaymentResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 09:14:58
+
+✓ Bill Payment test passed - Reference: PAY1755767698
+
+[TEST] Prepaid Payment (Quote)...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://nbc-gateway-uat.intra.nbc.co.tz/api/bill/prepaid
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "channel_ref": "PREPAY1755767698",
+    "cbp_gw_ref": "CBP1755767698",
+    "control_number": "991700789012",
+    "status_code": "0000",
+    "debit_account_no": "01J09876543210",
+    "debit_account_currency": "TZS",
+    "items": [
+        {
+            "channel_trx_id": "TRX1755767698",
+            "sp_code": "LUKU",
+            "pay_ref_id": "TOKEN123456",
+            "bill_ctr_num": "991700789012",
+            "paid_amt": "50000.00",
+            "trx_dt_tm": "2025-08-21T09:14:58",
+            "bill_amt": "50000.00",
+            "ccy": "TZS"
+        }
+    ]
+}
+  Test Type: Prepaid Payment
+  Control Number: 991700789012
+  Timestamp: 2025-08-21 09:14:58
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayPaymentResp>
+                    <PmtRespHdr>
+                        <ChannelRef>PREPAY1755767698</ChannelRef>
+                        <CbpGwRef>CBP1755767698</CbpGwRef>
+                        <ResultCode>0000</ResultCode>
+                        <ResultDesc>Prepaid quote generated</ResultDesc>
+                    </PmtRespHdr>
+                    <QuoteInfo>
+                        <Token>12345678901234567890</Token>
+                        <Units>150.5</Units>
+                        <Amount>50000.00</Amount>
+                    </QuoteInfo>
+                </GepgGatewayPaymentResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 09:14:58
+
+✓ Prepaid Payment test passed - Token: 12345678901234567890
+
+[TEST] Transaction Status Check...
+📤 REQUEST DETAILS:
+  Method: GET
+  URL: https://nbc-gateway-uat.intra.nbc.co.tz/api/status/check
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "ChannelRef": "PAY1755767698",
+    "CbpGwRef": "CBP1755767698"
+}
+  Test Type: Status Check
+  Channel Ref: PAY1755767698
+  Timestamp: 2025-08-21 09:14:58
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayStatusCheckResp>
+                    <StatusCheckRespHdr>
+                        <ChannelRef>PAY1755767698</ChannelRef>
+                        <CbpGwRef>CBP1755767698</CbpGwRef>
+                        <TrxStatus>SUCCESS</TrxStatus>
+                        <TrxStatusDesc>Transaction completed successfully</TrxStatusDesc>
+                        <TrxDtTm>2025-08-21T09:14:58</TrxDtTm>
+                    </StatusCheckRespHdr>
+                </GepgGatewayStatusCheckResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 09:14:58
+
+✓ Status Check test passed - Status: SUCCESS
+
+[TEST] XML Signing and Verification...
+✓ XML Signing test passed
+
+[TEST] Error Handling...
+  ✓ Error scenario handled: 4001 - Invalid control number
+  ✓ Error scenario handled: 4002 - Expired bill
+  ✓ Error scenario handled: 4003 - Insufficient funds
+  ✓ Error scenario handled: 5001 - System error
+
+========================================
+Test Results Summary
+========================================
+Bill Query                    : PASSED
+Bill Payment                  : PASSED
+Prepaid Payment               : PASSED
+Status Check                  : PASSED
+XML Signing                   : PASSED
+Error Handling                : PASSED
+----------------------------------------
+Total: 6 tests
+Passed: 6 | Failed: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: Luku Gateway
+Timestamp: 2025-08-21 09:14:58
+Duration: 0.002 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Luku Gateway API Tests
+========================================
+
+[TEST] Token Query...
+✓ Token Query test passed - Meter: 04123456789
+
+[TEST] Token Purchase...
+✓ Token Purchase test passed - Token: 12345-67890-12345-67890
+  Units: 125.5 kWh
+
+[TEST] Meter Validation...
+  ✓ Meter 04123456789 validation: Valid (as expected)
+  ✗ Meter 04999999999 validation failed
+  ✗ Meter INVALID validation failed
+
+[TEST] Transaction Status Check...
+✗ Transaction Status test error: cURL error 6: Could not resolve host: nbc-gateway-uat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://nbc-gateway-uat.intra.nbc.co.tz/api/transaction/status?transaction_id=TRX1755767698
+
+[TEST] SSL Configuration...
+⚠ SSL Configuration warning - SSL verification disabled
+
+[TEST] Error Handling...
+  ✓ Error 400 handled: Invalid meter number
+  ✗ Error 401 not handled properly
+  ✗ Error 403 not handled properly
+  ✗ Error 500 not handled properly
+  ✗ Error 503 not handled properly
+
+========================================
+Test Results Summary
+========================================
+Token Query                   : PASSED
+Token Purchase                : PASSED
+Meter Validation              : FAILED
+Transaction Status            : ERROR
+SSL Configuration             : WARNING
+Error Handling                : FAILED
+----------------------------------------
+Total: 6 tests
+Passed: 2 | Failed: 2 | Warnings: 1 | Errors: 1
+========================================
+
+================================================================================
+
+================================================================================
+Test: NBC SMS
+Timestamp: 2025-08-21 09:14:58
+Duration: 0.001 seconds
+--------------------------------------------------------------------------------
+
+========================================
+NBC SMS API Tests
+========================================
+
+[TEST] Single SMS Send...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://sms-engine.tz.af.absa.local/api/sms/send
+  Headers: {
+    "X-API-Key": "74QK8xXWC8dtcbYguA989wSIPjsKDwEgOPtyumEIF1NkqQtW3dtb0cf0DeBJUvKwcimr7d9QRK2vycCVLfIL3Izbt7rVAOGZoEoC4qYA89nJZW7737KpwkzdCcH4CHBDSj3vjN66ksrC2oCmT2OyHb9oCu3hC0mtP5AQrF6eRZQLll0tsnskBArYAKJIJXexK27M9XBwRipSsqbMnwBNERXJNROyX77wrSaDjyDbTQlin8CyuLHL97zx1WBNaGoS",
+    "Content-Type": "application\/json"
+}
+  Request Body: {
+    "channel_id": "KRWT43976",
+    "recipient": "255712345678",
+    "message": "Test SMS from SACCOS System",
+    "reference": "SMS1755767698"
+}
+  Test Type: Single SMS
+  Timestamp: 2025-08-21 09:14:58
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Time: 0.18 ms
+  Response Headers: {
+    "Content-Type": [
+        "application\/json"
+    ],
+    "X-Request-ID": [
+        "test-68a6e392e995d"
+    ]
+}
+  Response Body: {
+    "status": "success",
+    "status_code": 200,
+    "message": "SMS sent successfully",
+    "data": {
+        "message_id": "MSG1755767698",
+        "reference": "SMS1755767698",
+        "recipient": "255712345678",
+        "channel_id": "KRWT43976",
+        "status": "queued",
+        "timestamp": "2025-08-21 09:14:58",
+        "message_length": 27,
+        "cost": 0.05
+    },
+    "metadata": {
+        "api_version": "1.0",
+        "request_id": "req-68a6e392e995c"
+    }
+}
+  Timestamp: 2025-08-21 09:14:58
+
+✓ Single SMS test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Message ID: MSG1755767698
+  ✓ Recipient: 255712345678
+  ✓ Status: queued
+  ✓ Response Time: 0.18 ms
+  ✓ Message: SMS sent successfully
+
+[TEST] Bulk SMS Send...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://sms-engine.tz.af.absa.local/api/sms/bulk
+  Headers: {
+    "X-API-Key": "74QK8xXWC8dtcbYguA989wSIPjsKDwEgOPtyumEIF1NkqQtW3dtb0cf0DeBJUvKwcimr7d9QRK2vycCVLfIL3Izbt7rVAOGZoEoC4qYA89nJZW7737KpwkzdCcH4CHBDSj3vjN66ksrC2oCmT2OyHb9oCu3hC0mtP5AQrF6eRZQLll0tsnskBArYAKJIJXexK27M9XBwRipSsqbMnwBNERXJNROyX77wrSaDjyDbTQlin8CyuLHL97zx1WBNaGoS",
+    "Content-Type": "application\/json"
+}
+  Request Body: {
+    "channel_id": "KRWT43976",
+    "messages": [
+        {
+            "recipient": "255712345678",
+            "message": "Bulk message 1",
+            "reference": "BULK1_1755767698"
+        },
+        {
+            "recipient": "255798765432",
+            "message": "Bulk message 2",
+            "reference": "BULK2_1755767698"
+        },
+        {
+            "recipient": "255754321098",
+            "message": "Bulk message 3",
+            "reference": "BULK3_1755767698"
+        }
+    ]
+}
+  Test Type: Bulk SMS
+  Messages Count: 3
+  Timestamp: 2025-08-21 09:14:58
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Time: 0.1 ms
+  Response Headers: {
+    "Content-Type": [
+        "application\/json"
+    ],
+    "X-Request-ID": [
+        "test-68a6e392e9a20"
+    ]
+}
+  Response Body: {
+    "status": "success",
+    "status_code": 200,
+    "message": "Bulk SMS sent successfully",
+    "data": {
+        "batch_id": "BATCH1755767698",
+        "total_messages": 3,
+        "accepted": 3,
+        "rejected": 0,
+        "channel_id": "KRWT43976",
+        "status": "queued",
+        "timestamp": "2025-08-21 09:14:58",
+        "messages": [
+            {
+                "reference": "BULK1_1755767698",
+                "recipient": "255712345678",
+                "status": "queued",
+                "message_id": "MSG8578"
+            },
+            {
+                "reference": "BULK2_1755767698",
+                "recipient": "255798765432",
+                "status": "queued",
+                "message_id": "MSG3675"
+            },
+            {
+                "reference": "BULK3_1755767698",
+                "recipient": "255754321098",
+                "status": "queued",
+                "message_id": "MSG7027"
+            }
+        ]
+    },
+    "metadata": {
+        "api_version": "1.0",
+        "request_id": "req-68a6e392e9a1f"
+    }
+}
+  Timestamp: 2025-08-21 09:14:58
+
+✓ Bulk SMS test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Batch ID: BATCH1755767698
+  ✓ Accepted: 3 messages
+  ✓ Rejected: 0 messages
+  ✓ Response Time: 0.1 ms
+  ✓ Message: Bulk SMS sent successfully
+
+[TEST] SMS Status Check...
+📤 REQUEST DETAILS:
+  Method: GET
+  URL: https://sms-engine.tz.af.absa.local/api/sms/status/MSG123456
+  Headers: {
+    "X-API-Key": "74QK8xXWC8dtcbYguA989wSIPjsKDwEgOPtyumEIF1NkqQtW3dtb0cf0DeBJUvKwcimr7d9QRK2vycCVLfIL3Izbt7rVAOGZoEoC4qYA89nJZW7737KpwkzdCcH4CHBDSj3vjN66ksrC2oCmT2OyHb9oCu3hC0mtP5AQrF6eRZQLll0tsnskBArYAKJIJXexK27M9XBwRipSsqbMnwBNERXJNROyX77wrSaDjyDbTQlin8CyuLHL97zx1WBNaGoS"
+}
+  Request Body: None (GET request)
+  Test Type: SMS Status Check
+  Message ID: MSG123456
+  Timestamp: 2025-08-21 09:14:58
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": [
+        "application\/json"
+    ]
+}
+  Response Body: {
+    "status": "success",
+    "message_id": "MSG123456",
+    "delivery_status": "DELIVERED",
+    "delivered_at": "2025-08-21 09:14:58",
+    "recipient": "255712345678",
+    "attempts": 1
+}
+  Timestamp: 2025-08-21 09:14:58
+
+✓ SMS Status test passed - Status: DELIVERED
+
+[TEST] Rate Limiting...
+✗ Rate Limiting test failed - limit not enforced
+
+[TEST] Invalid Phone Number Handling...
+✗ Invalid Phone Number test error: A request was made, but the response sequence is empty.
+
+[TEST] Long Message Handling...
+✗ Long Message test error: A request was made, but the response sequence is empty.
+
+========================================
+Test Results Summary
+========================================
+Single SMS                    : PASSED
+Bulk SMS                      : PASSED
+SMS Status                    : PASSED
+Rate Limiting                 : FAILED
+Invalid Phone Number          : ERROR
+Long Message                  : ERROR
+----------------------------------------
+Total: 6 tests
+Passed: 3 | Failed: 1 | Errors: 2
+========================================
+
+================================================================================
+
+================================================================================
+Test: AI Services
+Timestamp: 2025-08-21 09:14:58
+Duration: 0 seconds
+--------------------------------------------------------------------------------
+
+========================================
+AI Services API Tests
+========================================
+
+[TEST] Groq API...
+✓ Groq API test passed - Model: meta-llama/llama-4-scout-17b-16e-instruct
+
+[TEST] OpenAI API...
+✓ OpenAI API test passed - Model: gpt-3.5-turbo
+
+[TEST] Together AI API...
+✓ Together AI API test passed - Model: meta-llama/Llama-2-70b-chat-hf
+
+[TEST] Claude API...
+✓ Claude API test passed
+
+========================================
+Test Results Summary
+========================================
+Groq API                      : PASSED
+OpenAI API                    : PASSED
+Together AI API               : PASSED
+Claude API                    : PASSED
+----------------------------------------
+Total: 4 tests
+Passed: 4 | Failed: 0 | Skipped: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: Bank Transaction Service
+Timestamp: 2025-08-21 09:27:12
+Duration: 0.304 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Bank Transaction Service API Tests
+========================================
+📝 Individual log file created: IFT_Transaction_2025-08-21_09-27-12.log
+
+[TEST] IFT Transaction...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/ift-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "account_from": "1234567890",
+    "account_to": "0987654321",
+    "amount": 10000,
+    "currency": "TZS",
+    "description": "IFT Test Transaction",
+    "reference": "IFT1755768432"
+}
+  Transaction Type: IFT
+  Timestamp: 2025-08-21 09:27:12
+
+❌ ENDPOINT STATUS: NOT REACHABLE (Expected for Private NBC Endpoint)
+✓ IFT Transaction test passed
+  ✓ This is a private NBC endpoint
+  ✓ Connection failure is expected from local environment
+  ✓ Error: cURL error 6: Could not resolve host: cbpuat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/ift-transaction
+  ✓ Response Time: 294.25 ms
+📄 Test completed. Log saved to: IFT_Transaction_2025-08-21_09-27-12.log
+📝 Individual log file created: EFT_Transaction_2025-08-21_09-27-12.log
+
+[TEST] EFT Transaction...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/eft-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "account_from": "1234567890",
+    "account_to": "0987654321",
+    "amount": 25000,
+    "currency": "TZS",
+    "bank_code": "NBC001",
+    "description": "EFT Test Transaction",
+    "reference": "EFT1755768432"
+}
+  Transaction Type: EFT
+  Timestamp: 2025-08-21 09:27:12
+
+❌ ENDPOINT STATUS: NOT REACHABLE (Expected for Private NBC Endpoint)
+✓ EFT Transaction test passed
+  ✓ This is a private NBC endpoint
+  ✓ Connection failure is expected from local environment
+  ✓ Error: cURL error 6: Could not resolve host: cbpuat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/eft-transaction
+  ✓ Response Time: 2.28 ms
+📄 Test completed. Log saved to: EFT_Transaction_2025-08-21_09-27-12.log
+📝 Individual log file created: Mobile_Transaction_2025-08-21_09-27-12.log
+
+[TEST] Mobile Transaction...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/mobile-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "phone_number": "255712345678",
+    "amount": 5000,
+    "currency": "TZS",
+    "description": "Mobile Test Transaction",
+    "reference": "MOB1755768432"
+}
+  Transaction Type: MOBILE
+  Timestamp: 2025-08-21 09:27:12
+
+❌ ENDPOINT STATUS: NOT REACHABLE (Expected for Private NBC Endpoint)
+✓ Mobile Transaction test passed
+  ✓ This is a private NBC endpoint
+  ✓ Connection failure is expected from local environment
+  ✓ Error: cURL error 6: Could not resolve host: cbpuat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/mobile-transaction
+  ✓ Response Time: 2.37 ms
+📄 Test completed. Log saved to: Mobile_Transaction_2025-08-21_09-27-12.log
+
+[TEST] Invalid Transaction Type...
+✓ Invalid Transaction Type test passed
+
+[TEST] Connection Failure Handling...
+✓ Connection Failure test passed
+
+========================================
+Test Results Summary
+========================================
+IFT Transaction               : PASSED
+EFT Transaction               : PASSED
+Mobile Transaction            : PASSED
+Invalid Transaction Type      : PASSED
+Connection Failure            : PASSED
+----------------------------------------
+Total: 5 tests
+Passed: 5 | Failed: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: GEPG Gateway
+Timestamp: 2025-08-21 09:27:12
+Duration: 0 seconds
+--------------------------------------------------------------------------------
+
+========================================
+GEPG Gateway API Tests
+========================================
+
+[TEST] Bill Query (Control Number Verification)...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://nbc-gateway-uat.intra.nbc.co.tz/api/bill/query
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "GepgGatewayBillQryReq": {
+        "GepgGatewayHdr": {
+            "ChannelID": "SACCOSNBC",
+            "ChannelName": "TR",
+            "Service": "GEPG_INQ"
+        },
+        "gepgBillQryReq": {
+            "ChannelRef": "inq_68a6e67055c40",
+            "CustCtrNum": "991700123456",
+            "DebitAccountNo": "01J01234567890",
+            "DebitAccountCurrency": "TZS"
+        }
+    }
+}
+  Test Type: Bill Query
+  Control Number: 991700123456
+  Timestamp: 2025-08-21 09:27:12
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayBillQryResp>
+                    <BillHdr>
+                        <BillStsCode>0000</BillStsCode>
+                        <BillStsDesc>Success</BillStsDesc>
+                        <BillId>BILL123456</BillId>
+                        <CustCtrNum>991700123456</CustCtrNum>
+                        <BillAmt>100000.00</BillAmt>
+                        <PaidAmt>0.00</PaidAmt>
+                        <BillExpDt>2024-12-31</BillExpDt>
+                    </BillHdr>
+                    <BillDtls>
+                        <BillDtl>
+                            <ItemRef>ITEM001</ItemRef>
+                            <ItemDesc>Loan Payment</ItemDesc>
+                            <ItemAmt>100000.00</ItemAmt>
+                        </BillDtl>
+                    </BillDtls>
+                </GepgGatewayBillQryResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 09:27:12
+
+✓ Bill Query test passed - Control Number: 991700123456
+
+[TEST] Bill Payment Processing...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://nbc-gateway-uat.intra.nbc.co.tz/api/bill/payment
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "channel_ref": "PAY1755768432",
+    "cbp_gw_ref": "CBP1755768432",
+    "control_number": "991700123456",
+    "status_code": "0000",
+    "debit_account_no": "01J01234567890",
+    "debit_account_currency": "TZS",
+    "items": [
+        {
+            "channel_trx_id": "TRX1755768432",
+            "sp_code": "SP001",
+            "pay_ref_id": "REF1755768432",
+            "bill_ctr_num": "991700123456",
+            "paid_amt": "100000.00",
+            "trx_dt_tm": "2025-08-21T09:27:12",
+            "bill_amt": "100000.00",
+            "ccy": "TZS",
+            "pyr_name": "John Doe",
+            "pyr_cell_num": "255712345678",
+            "pyr_email": "john@example.com"
+        }
+    ]
+}
+  Test Type: Bill Payment
+  Control Number: 991700123456
+  Timestamp: 2025-08-21 09:27:12
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayPaymentResp>
+                    <PmtRespHdr>
+                        <ChannelRef>PAY1755768432</ChannelRef>
+                        <CbpGwRef>CBP1755768432</CbpGwRef>
+                        <ResultCode>0000</ResultCode>
+                        <ResultDesc>Payment successful</ResultDesc>
+                    </PmtRespHdr>
+                </GepgGatewayPaymentResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 09:27:12
+
+✓ Bill Payment test passed - Reference: PAY1755768432
+
+[TEST] Prepaid Payment (Quote)...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://nbc-gateway-uat.intra.nbc.co.tz/api/bill/prepaid
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "channel_ref": "PREPAY1755768432",
+    "cbp_gw_ref": "CBP1755768432",
+    "control_number": "991700789012",
+    "status_code": "0000",
+    "debit_account_no": "01J09876543210",
+    "debit_account_currency": "TZS",
+    "items": [
+        {
+            "channel_trx_id": "TRX1755768432",
+            "sp_code": "LUKU",
+            "pay_ref_id": "TOKEN123456",
+            "bill_ctr_num": "991700789012",
+            "paid_amt": "50000.00",
+            "trx_dt_tm": "2025-08-21T09:27:12",
+            "bill_amt": "50000.00",
+            "ccy": "TZS"
+        }
+    ]
+}
+  Test Type: Prepaid Payment
+  Control Number: 991700789012
+  Timestamp: 2025-08-21 09:27:12
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayPaymentResp>
+                    <PmtRespHdr>
+                        <ChannelRef>PREPAY1755768432</ChannelRef>
+                        <CbpGwRef>CBP1755768432</CbpGwRef>
+                        <ResultCode>0000</ResultCode>
+                        <ResultDesc>Prepaid quote generated</ResultDesc>
+                    </PmtRespHdr>
+                    <QuoteInfo>
+                        <Token>12345678901234567890</Token>
+                        <Units>150.5</Units>
+                        <Amount>50000.00</Amount>
+                    </QuoteInfo>
+                </GepgGatewayPaymentResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 09:27:12
+
+✓ Prepaid Payment test passed - Token: 12345678901234567890
+
+[TEST] Transaction Status Check...
+📤 REQUEST DETAILS:
+  Method: GET
+  URL: https://nbc-gateway-uat.intra.nbc.co.tz/api/status/check
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "ChannelRef": "PAY1755768432",
+    "CbpGwRef": "CBP1755768432"
+}
+  Test Type: Status Check
+  Channel Ref: PAY1755768432
+  Timestamp: 2025-08-21 09:27:12
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayStatusCheckResp>
+                    <StatusCheckRespHdr>
+                        <ChannelRef>PAY1755768432</ChannelRef>
+                        <CbpGwRef>CBP1755768432</CbpGwRef>
+                        <TrxStatus>SUCCESS</TrxStatus>
+                        <TrxStatusDesc>Transaction completed successfully</TrxStatusDesc>
+                        <TrxDtTm>2025-08-21T09:27:12</TrxDtTm>
+                    </StatusCheckRespHdr>
+                </GepgGatewayStatusCheckResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 09:27:12
+
+✓ Status Check test passed - Status: SUCCESS
+
+[TEST] XML Signing and Verification...
+✓ XML Signing test passed
+
+[TEST] Error Handling...
+  ✓ Error scenario handled: 4001 - Invalid control number
+  ✓ Error scenario handled: 4002 - Expired bill
+  ✓ Error scenario handled: 4003 - Insufficient funds
+  ✓ Error scenario handled: 5001 - System error
+
+========================================
+Test Results Summary
+========================================
+Bill Query                    : PASSED
+Bill Payment                  : PASSED
+Prepaid Payment               : PASSED
+Status Check                  : PASSED
+XML Signing                   : PASSED
+Error Handling                : PASSED
+----------------------------------------
+Total: 6 tests
+Passed: 6 | Failed: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: Luku Gateway
+Timestamp: 2025-08-21 09:27:12
+Duration: 0.435 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Luku Gateway API Tests
+========================================
+
+[TEST] Token Query...
+✓ Token Query test passed - Meter: 04123456789
+
+[TEST] Token Purchase...
+✓ Token Purchase test passed - Token: 12345-67890-12345-67890
+  Units: 125.5 kWh
+
+[TEST] Meter Validation...
+  ✓ Meter 04123456789 validation: Valid (as expected)
+  ✗ Meter 04999999999 validation failed
+  ✗ Meter INVALID validation failed
+
+[TEST] Transaction Status Check...
+✗ Transaction Status test error: cURL error 6: Could not resolve host: nbc-gateway-uat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://nbc-gateway-uat.intra.nbc.co.tz/api/transaction/status?transaction_id=TRX1755768432
+
+[TEST] SSL Configuration...
+⚠ SSL Configuration warning - SSL verification disabled
+
+[TEST] Error Handling...
+  ✓ Error 400 handled: Invalid meter number
+  ✗ Error 401 not handled properly
+  ✗ Error 403 not handled properly
+  ✗ Error 500 not handled properly
+  ✗ Error 503 not handled properly
+
+========================================
+Test Results Summary
+========================================
+Token Query                   : PASSED
+Token Purchase                : PASSED
+Meter Validation              : FAILED
+Transaction Status            : ERROR
+SSL Configuration             : WARNING
+Error Handling                : FAILED
+----------------------------------------
+Total: 6 tests
+Passed: 2 | Failed: 2 | Warnings: 1 | Errors: 1
+========================================
+
+================================================================================
+
+================================================================================
+Test: NBC SMS
+Timestamp: 2025-08-21 09:27:12
+Duration: 0.002 seconds
+--------------------------------------------------------------------------------
+
+========================================
+NBC SMS API Tests
+========================================
+
+[TEST] Single SMS Send...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://sms-engine.tz.af.absa.local/api/sms/send
+  Headers: {
+    "X-API-Key": "74QK8xXWC8dtcbYguA989wSIPjsKDwEgOPtyumEIF1NkqQtW3dtb0cf0DeBJUvKwcimr7d9QRK2vycCVLfIL3Izbt7rVAOGZoEoC4qYA89nJZW7737KpwkzdCcH4CHBDSj3vjN66ksrC2oCmT2OyHb9oCu3hC0mtP5AQrF6eRZQLll0tsnskBArYAKJIJXexK27M9XBwRipSsqbMnwBNERXJNROyX77wrSaDjyDbTQlin8CyuLHL97zx1WBNaGoS",
+    "Content-Type": "application\/json"
+}
+  Request Body: {
+    "channel_id": "KRWT43976",
+    "recipient": "255712345678",
+    "message": "Test SMS from SACCOS System",
+    "reference": "SMS1755768432"
+}
+  Test Type: Single SMS
+  Timestamp: 2025-08-21 09:27:12
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Time: 0.35 ms
+  Response Headers: {
+    "Content-Type": [
+        "application\/json"
+    ],
+    "X-Request-ID": [
+        "test-68a6e670c07f6"
+    ]
+}
+  Response Body: {
+    "status": "success",
+    "status_code": 200,
+    "message": "SMS sent successfully",
+    "data": {
+        "message_id": "MSG1755768432",
+        "reference": "SMS1755768432",
+        "recipient": "255712345678",
+        "channel_id": "KRWT43976",
+        "status": "queued",
+        "timestamp": "2025-08-21 09:27:12",
+        "message_length": 27,
+        "cost": 0.05
+    },
+    "metadata": {
+        "api_version": "1.0",
+        "request_id": "req-68a6e670c07f2"
+    }
+}
+  Timestamp: 2025-08-21 09:27:12
+
+✓ Single SMS test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Message ID: MSG1755768432
+  ✓ Recipient: 255712345678
+  ✓ Status: queued
+  ✓ Response Time: 0.35 ms
+  ✓ Message: SMS sent successfully
+
+[TEST] Bulk SMS Send...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://sms-engine.tz.af.absa.local/api/sms/bulk
+  Headers: {
+    "X-API-Key": "74QK8xXWC8dtcbYguA989wSIPjsKDwEgOPtyumEIF1NkqQtW3dtb0cf0DeBJUvKwcimr7d9QRK2vycCVLfIL3Izbt7rVAOGZoEoC4qYA89nJZW7737KpwkzdCcH4CHBDSj3vjN66ksrC2oCmT2OyHb9oCu3hC0mtP5AQrF6eRZQLll0tsnskBArYAKJIJXexK27M9XBwRipSsqbMnwBNERXJNROyX77wrSaDjyDbTQlin8CyuLHL97zx1WBNaGoS",
+    "Content-Type": "application\/json"
+}
+  Request Body: {
+    "channel_id": "KRWT43976",
+    "messages": [
+        {
+            "recipient": "255712345678",
+            "message": "Bulk message 1",
+            "reference": "BULK1_1755768432"
+        },
+        {
+            "recipient": "255798765432",
+            "message": "Bulk message 2",
+            "reference": "BULK2_1755768432"
+        },
+        {
+            "recipient": "255754321098",
+            "message": "Bulk message 3",
+            "reference": "BULK3_1755768432"
+        }
+    ]
+}
+  Test Type: Bulk SMS
+  Messages Count: 3
+  Timestamp: 2025-08-21 09:27:12
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Time: 0.24 ms
+  Response Headers: {
+    "Content-Type": [
+        "application\/json"
+    ],
+    "X-Request-ID": [
+        "test-68a6e670c0983"
+    ]
+}
+  Response Body: {
+    "status": "success",
+    "status_code": 200,
+    "message": "Bulk SMS sent successfully",
+    "data": {
+        "batch_id": "BATCH1755768432",
+        "total_messages": 3,
+        "accepted": 3,
+        "rejected": 0,
+        "channel_id": "KRWT43976",
+        "status": "queued",
+        "timestamp": "2025-08-21 09:27:12",
+        "messages": [
+            {
+                "reference": "BULK1_1755768432",
+                "recipient": "255712345678",
+                "status": "queued",
+                "message_id": "MSG7344"
+            },
+            {
+                "reference": "BULK2_1755768432",
+                "recipient": "255798765432",
+                "status": "queued",
+                "message_id": "MSG6746"
+            },
+            {
+                "reference": "BULK3_1755768432",
+                "recipient": "255754321098",
+                "status": "queued",
+                "message_id": "MSG6037"
+            }
+        ]
+    },
+    "metadata": {
+        "api_version": "1.0",
+        "request_id": "req-68a6e670c0982"
+    }
+}
+  Timestamp: 2025-08-21 09:27:12
+
+✓ Bulk SMS test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Batch ID: BATCH1755768432
+  ✓ Accepted: 3 messages
+  ✓ Rejected: 0 messages
+  ✓ Response Time: 0.24 ms
+  ✓ Message: Bulk SMS sent successfully
+
+[TEST] SMS Status Check...
+📤 REQUEST DETAILS:
+  Method: GET
+  URL: https://sms-engine.tz.af.absa.local/api/sms/status/MSG123456
+  Headers: {
+    "X-API-Key": "74QK8xXWC8dtcbYguA989wSIPjsKDwEgOPtyumEIF1NkqQtW3dtb0cf0DeBJUvKwcimr7d9QRK2vycCVLfIL3Izbt7rVAOGZoEoC4qYA89nJZW7737KpwkzdCcH4CHBDSj3vjN66ksrC2oCmT2OyHb9oCu3hC0mtP5AQrF6eRZQLll0tsnskBArYAKJIJXexK27M9XBwRipSsqbMnwBNERXJNROyX77wrSaDjyDbTQlin8CyuLHL97zx1WBNaGoS"
+}
+  Request Body: None (GET request)
+  Test Type: SMS Status Check
+  Message ID: MSG123456
+  Timestamp: 2025-08-21 09:27:12
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": [
+        "application\/json"
+    ]
+}
+  Response Body: {
+    "status": "success",
+    "message_id": "MSG123456",
+    "delivery_status": "DELIVERED",
+    "delivered_at": "2025-08-21 09:27:12",
+    "recipient": "255712345678",
+    "attempts": 1
+}
+  Timestamp: 2025-08-21 09:27:12
+
+✓ SMS Status test passed - Status: DELIVERED
+
+[TEST] Rate Limiting...
+✗ Rate Limiting test failed - limit not enforced
+
+[TEST] Invalid Phone Number Handling...
+✗ Invalid Phone Number test error: A request was made, but the response sequence is empty.
+
+[TEST] Long Message Handling...
+✗ Long Message test error: A request was made, but the response sequence is empty.
+
+========================================
+Test Results Summary
+========================================
+Single SMS                    : PASSED
+Bulk SMS                      : PASSED
+SMS Status                    : PASSED
+Rate Limiting                 : FAILED
+Invalid Phone Number          : ERROR
+Long Message                  : ERROR
+----------------------------------------
+Total: 6 tests
+Passed: 3 | Failed: 1 | Errors: 2
+========================================
+
+================================================================================
+
+================================================================================
+Test: AI Services
+Timestamp: 2025-08-21 09:27:12
+Duration: 0.001 seconds
+--------------------------------------------------------------------------------
+
+========================================
+AI Services API Tests
+========================================
+
+[TEST] Groq API...
+✓ Groq API test passed - Model: meta-llama/llama-4-scout-17b-16e-instruct
+
+[TEST] OpenAI API...
+✓ OpenAI API test passed - Model: gpt-3.5-turbo
+
+[TEST] Together AI API...
+✓ Together AI API test passed - Model: meta-llama/Llama-2-70b-chat-hf
+
+[TEST] Claude API...
+✓ Claude API test passed
+
+========================================
+Test Results Summary
+========================================
+Groq API                      : PASSED
+OpenAI API                    : PASSED
+Together AI API               : PASSED
+Claude API                    : PASSED
+----------------------------------------
+Total: 4 tests
+Passed: 4 | Failed: 0 | Skipped: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: Bank Transaction Service
+Timestamp: 2025-08-21 09:51:09
+Duration: 0.123 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Bank Transaction Service API Tests
+========================================
+📝 Individual log file created: IFT_Transaction_2025-08-21_09-51-09.log
+
+[TEST] IFT Transaction...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/ift-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "account_from": "1234567890",
+    "account_to": "0987654321",
+    "amount": 10000,
+    "currency": "TZS",
+    "description": "IFT Test Transaction",
+    "reference": "IFT1755769869"
+}
+  Transaction Type: IFT
+  Timestamp: 2025-08-21 09:51:09
+
+🔌 CONNECTION FAILURE DETECTED
+✗ IFT Transaction test failed
+  ✗ Endpoint Type: Private NBC Endpoint
+  ✗ Error: cURL error 6: Could not resolve host: cbpuat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/ift-transaction
+  ✗ Response Time: 117.25 ms
+  ✗ Exception Type: Illuminate\Http\Client\ConnectionException
+📄 Test completed. Log saved to: IFT_Transaction_2025-08-21_09-51-09.log
+📝 Individual log file created: EFT_Transaction_2025-08-21_09-51-09.log
+
+[TEST] EFT Transaction...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/eft-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "account_from": "1234567890",
+    "account_to": "0987654321",
+    "amount": 25000,
+    "currency": "TZS",
+    "bank_code": "NBC001",
+    "description": "EFT Test Transaction",
+    "reference": "EFT1755769869"
+}
+  Transaction Type: EFT
+  Timestamp: 2025-08-21 09:51:09
+
+🔌 CONNECTION FAILURE DETECTED
+✗ EFT Transaction test failed
+  ✗ Endpoint Type: Private NBC Endpoint
+  ✗ Error: cURL error 6: Could not resolve host: cbpuat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/eft-transaction
+  ✗ Response Time: 1.47 ms
+  ✗ Exception Type: Illuminate\Http\Client\ConnectionException
+📄 Test completed. Log saved to: EFT_Transaction_2025-08-21_09-51-09.log
+📝 Individual log file created: Mobile_Transaction_2025-08-21_09-51-09.log
+
+[TEST] Mobile Transaction...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/mobile-transaction
+  Headers: {
+    "Content-Type": "application\/json",
+    "Accept": "application\/json"
+}
+  Request Body: {
+    "phone_number": "255712345678",
+    "amount": 5000,
+    "currency": "TZS",
+    "description": "Mobile Test Transaction",
+    "reference": "MOB1755769869"
+}
+  Transaction Type: MOBILE
+  Timestamp: 2025-08-21 09:51:09
+
+❌ ENDPOINT STATUS: NOT REACHABLE (Expected for Private NBC Endpoint)
+✓ Mobile Transaction test passed
+  ✓ This is a private NBC endpoint
+  ✓ Connection failure is expected from local environment
+  ✓ Error: cURL error 6: Could not resolve host: cbpuat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://cbpuat.intra.nbc.co.tz:6666/api/nbc-sg/internal_ft/mobile-transaction
+  ✓ Response Time: 0.95 ms
+📄 Test completed. Log saved to: Mobile_Transaction_2025-08-21_09-51-09.log
+
+[TEST] Invalid Transaction Type...
+✓ Invalid Transaction Type test passed
+
+[TEST] Connection Failure Handling...
+✓ Connection Failure test passed
+
+========================================
+Test Results Summary
+========================================
+IFT Transaction               : FAILED
+EFT Transaction               : FAILED
+Mobile Transaction            : PASSED
+Invalid Transaction Type      : PASSED
+Connection Failure            : PASSED
+----------------------------------------
+Total: 5 tests
+Passed: 3 | Failed: 2 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: GEPG Gateway
+Timestamp: 2025-08-21 09:51:09
+Duration: 0 seconds
+--------------------------------------------------------------------------------
+
+========================================
+GEPG Gateway API Tests
+========================================
+
+[TEST] Bill Query (Control Number Verification)...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://nbc-gateway-uat.intra.nbc.co.tz/api/bill/query
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "GepgGatewayBillQryReq": {
+        "GepgGatewayHdr": {
+            "ChannelID": "SACCOSNBC",
+            "ChannelName": "TR",
+            "Service": "GEPG_INQ"
+        },
+        "gepgBillQryReq": {
+            "ChannelRef": "inq_68a6ec0db981b",
+            "CustCtrNum": "991700123456",
+            "DebitAccountNo": "01J01234567890",
+            "DebitAccountCurrency": "TZS"
+        }
+    }
+}
+  Test Type: Bill Query
+  Control Number: 991700123456
+  Timestamp: 2025-08-21 09:51:09
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayBillQryResp>
+                    <BillHdr>
+                        <BillStsCode>0000</BillStsCode>
+                        <BillStsDesc>Success</BillStsDesc>
+                        <BillId>BILL123456</BillId>
+                        <CustCtrNum>991700123456</CustCtrNum>
+                        <BillAmt>100000.00</BillAmt>
+                        <PaidAmt>0.00</PaidAmt>
+                        <BillExpDt>2024-12-31</BillExpDt>
+                    </BillHdr>
+                    <BillDtls>
+                        <BillDtl>
+                            <ItemRef>ITEM001</ItemRef>
+                            <ItemDesc>Loan Payment</ItemDesc>
+                            <ItemAmt>100000.00</ItemAmt>
+                        </BillDtl>
+                    </BillDtls>
+                </GepgGatewayBillQryResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 09:51:09
+
+✓ Bill Query test passed - Control Number: 991700123456
+
+[TEST] Bill Payment Processing...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://nbc-gateway-uat.intra.nbc.co.tz/api/bill/payment
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "channel_ref": "PAY1755769869",
+    "cbp_gw_ref": "CBP1755769869",
+    "control_number": "991700123456",
+    "status_code": "0000",
+    "debit_account_no": "01J01234567890",
+    "debit_account_currency": "TZS",
+    "items": [
+        {
+            "channel_trx_id": "TRX1755769869",
+            "sp_code": "SP001",
+            "pay_ref_id": "REF1755769869",
+            "bill_ctr_num": "991700123456",
+            "paid_amt": "100000.00",
+            "trx_dt_tm": "2025-08-21T09:51:09",
+            "bill_amt": "100000.00",
+            "ccy": "TZS",
+            "pyr_name": "John Doe",
+            "pyr_cell_num": "255712345678",
+            "pyr_email": "john@example.com"
+        }
+    ]
+}
+  Test Type: Bill Payment
+  Control Number: 991700123456
+  Timestamp: 2025-08-21 09:51:09
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayPaymentResp>
+                    <PmtRespHdr>
+                        <ChannelRef>PAY1755769869</ChannelRef>
+                        <CbpGwRef>CBP1755769869</CbpGwRef>
+                        <ResultCode>0000</ResultCode>
+                        <ResultDesc>Payment successful</ResultDesc>
+                    </PmtRespHdr>
+                </GepgGatewayPaymentResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 09:51:09
+
+✓ Bill Payment test passed - Reference: PAY1755769869
+
+[TEST] Prepaid Payment (Quote)...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://nbc-gateway-uat.intra.nbc.co.tz/api/bill/prepaid
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "channel_ref": "PREPAY1755769869",
+    "cbp_gw_ref": "CBP1755769869",
+    "control_number": "991700789012",
+    "status_code": "0000",
+    "debit_account_no": "01J09876543210",
+    "debit_account_currency": "TZS",
+    "items": [
+        {
+            "channel_trx_id": "TRX1755769869",
+            "sp_code": "LUKU",
+            "pay_ref_id": "TOKEN123456",
+            "bill_ctr_num": "991700789012",
+            "paid_amt": "50000.00",
+            "trx_dt_tm": "2025-08-21T09:51:09",
+            "bill_amt": "50000.00",
+            "ccy": "TZS"
+        }
+    ]
+}
+  Test Type: Prepaid Payment
+  Control Number: 991700789012
+  Timestamp: 2025-08-21 09:51:09
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayPaymentResp>
+                    <PmtRespHdr>
+                        <ChannelRef>PREPAY1755769869</ChannelRef>
+                        <CbpGwRef>CBP1755769869</CbpGwRef>
+                        <ResultCode>0000</ResultCode>
+                        <ResultDesc>Prepaid quote generated</ResultDesc>
+                    </PmtRespHdr>
+                    <QuoteInfo>
+                        <Token>12345678901234567890</Token>
+                        <Units>150.5</Units>
+                        <Amount>50000.00</Amount>
+                    </QuoteInfo>
+                </GepgGatewayPaymentResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 09:51:09
+
+✓ Prepaid Payment test passed - Token: 12345678901234567890
+
+[TEST] Transaction Status Check...
+📤 REQUEST DETAILS:
+  Method: GET
+  URL: https://nbc-gateway-uat.intra.nbc.co.tz/api/status/check
+  Headers: {
+    "Content-Type": "application\/xml",
+    "Accept": "application\/xml"
+}
+  Request Body: {
+    "ChannelRef": "PAY1755769869",
+    "CbpGwRef": "CBP1755769869"
+}
+  Test Type: Status Check
+  Channel Ref: PAY1755769869
+  Timestamp: 2025-08-21 09:51:09
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": "application\/xml"
+}
+  Response Body (XML): <?xml version="1.0" encoding="UTF-8"?>
+            <GepgGateway>
+                <GepgGatewayStatusCheckResp>
+                    <StatusCheckRespHdr>
+                        <ChannelRef>PAY1755769869</ChannelRef>
+                        <CbpGwRef>CBP1755769869</CbpGwRef>
+                        <TrxStatus>SUCCESS</TrxStatus>
+                        <TrxStatusDesc>Transaction completed successfully</TrxStatusDesc>
+                        <TrxDtTm>2025-08-21T09:51:09</TrxDtTm>
+                    </StatusCheckRespHdr>
+                </GepgGatewayStatusCheckResp>
+                <gepggatewaySignature>dGVzdFNpZ25hdHVyZQ==</gepggatewaySignature>
+            </GepgGateway>
+  Timestamp: 2025-08-21 09:51:09
+
+✓ Status Check test passed - Status: SUCCESS
+
+[TEST] XML Signing and Verification...
+✓ XML Signing test passed
+
+[TEST] Error Handling...
+  ✓ Error scenario handled: 4001 - Invalid control number
+  ✓ Error scenario handled: 4002 - Expired bill
+  ✓ Error scenario handled: 4003 - Insufficient funds
+  ✓ Error scenario handled: 5001 - System error
+
+========================================
+Test Results Summary
+========================================
+Bill Query                    : PASSED
+Bill Payment                  : PASSED
+Prepaid Payment               : PASSED
+Status Check                  : PASSED
+XML Signing                   : PASSED
+Error Handling                : PASSED
+----------------------------------------
+Total: 6 tests
+Passed: 6 | Failed: 0 | Errors: 0
+========================================
+
+================================================================================
+
+================================================================================
+Test: Luku Gateway
+Timestamp: 2025-08-21 09:51:10
+Duration: 0.377 seconds
+--------------------------------------------------------------------------------
+
+========================================
+Luku Gateway API Tests
+========================================
+
+[TEST] Token Query...
+✓ Token Query test passed - Meter: 04123456789
+
+[TEST] Token Purchase...
+✓ Token Purchase test passed - Token: 12345-67890-12345-67890
+  Units: 125.5 kWh
+
+[TEST] Meter Validation...
+  ✓ Meter 04123456789 validation: Valid (as expected)
+  ✗ Meter 04999999999 validation failed
+  ✗ Meter INVALID validation failed
+
+[TEST] Transaction Status Check...
+✗ Transaction Status test error: cURL error 6: Could not resolve host: nbc-gateway-uat.intra.nbc.co.tz (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://nbc-gateway-uat.intra.nbc.co.tz/api/transaction/status?transaction_id=TRX1755769869
+
+[TEST] SSL Configuration...
+⚠ SSL Configuration warning - SSL verification disabled
+
+[TEST] Error Handling...
+  ✓ Error 400 handled: Invalid meter number
+  ✗ Error 401 not handled properly
+  ✗ Error 403 not handled properly
+  ✗ Error 500 not handled properly
+  ✗ Error 503 not handled properly
+
+========================================
+Test Results Summary
+========================================
+Token Query                   : PASSED
+Token Purchase                : PASSED
+Meter Validation              : FAILED
+Transaction Status            : ERROR
+SSL Configuration             : WARNING
+Error Handling                : FAILED
+----------------------------------------
+Total: 6 tests
+Passed: 2 | Failed: 2 | Warnings: 1 | Errors: 1
+========================================
+
+================================================================================
+
+================================================================================
+Test: NBC SMS
+Timestamp: 2025-08-21 09:51:15
+Duration: 5.008 seconds
+--------------------------------------------------------------------------------
+
+========================================
+NBC SMS API Tests
+========================================
+📝 Individual log file created: Single_SMS_2025-08-21_09-51-10.log
+
+[TEST] Single SMS Send...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://sms-engine.tz.af.absa.local/api/sms/send
+  Headers: {
+    "X-API-Key": "74QK8xXWC8dtcbYguA989wSIPjsKDwEgOPtyumEIF1NkqQtW3dtb0cf0DeBJUvKwcimr7d9QRK2vycCVLfIL3Izbt7rVAOGZoEoC4qYA89nJZW7737KpwkzdCcH4CHBDSj3vjN66ksrC2oCmT2OyHb9oCu3hC0mtP5AQrF6eRZQLll0tsnskBArYAKJIJXexK27M9XBwRipSsqbMnwBNERXJNROyX77wrSaDjyDbTQlin8CyuLHL97zx1WBNaGoS",
+    "Content-Type": "application\/json"
+}
+  Request Body: {
+    "channel_id": "KRWT43976",
+    "recipient": "255712345678",
+    "message": "Test SMS from SACCOS System",
+    "reference": "SMS1755769870"
+}
+  Test Type: Single SMS
+  Timestamp: 2025-08-21 09:51:10
+
+❌ ENDPOINT STATUS: NOT REACHABLE
+✗ Single SMS test error: cURL error 6: Could not resolve host: sms-engine.tz.af.absa.local (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://sms-engine.tz.af.absa.local/api/sms/send
+📄 Test completed. Log saved to: Single_SMS_2025-08-21_09-51-10.log
+
+[TEST] Bulk SMS Send...
+📤 REQUEST DETAILS:
+  Method: POST
+  URL: https://sms-engine.tz.af.absa.local/api/sms/bulk
+  Headers: {
+    "X-API-Key": "74QK8xXWC8dtcbYguA989wSIPjsKDwEgOPtyumEIF1NkqQtW3dtb0cf0DeBJUvKwcimr7d9QRK2vycCVLfIL3Izbt7rVAOGZoEoC4qYA89nJZW7737KpwkzdCcH4CHBDSj3vjN66ksrC2oCmT2OyHb9oCu3hC0mtP5AQrF6eRZQLll0tsnskBArYAKJIJXexK27M9XBwRipSsqbMnwBNERXJNROyX77wrSaDjyDbTQlin8CyuLHL97zx1WBNaGoS",
+    "Content-Type": "application\/json"
+}
+  Request Body: {
+    "channel_id": "KRWT43976",
+    "messages": [
+        {
+            "recipient": "255712345678",
+            "message": "Bulk message 1",
+            "reference": "BULK1_1755769875"
+        },
+        {
+            "recipient": "255798765432",
+            "message": "Bulk message 2",
+            "reference": "BULK2_1755769875"
+        },
+        {
+            "recipient": "255754321098",
+            "message": "Bulk message 3",
+            "reference": "BULK3_1755769875"
+        }
+    ]
+}
+  Test Type: Bulk SMS
+  Messages Count: 3
+  Timestamp: 2025-08-21 09:51:15
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Time: 0.83 ms
+  Response Headers: {
+    "Content-Type": [
+        "application\/json"
+    ],
+    "X-Request-ID": [
+        "test-68a6ec13230c0"
+    ]
+}
+  Response Body: {
+    "status": "success",
+    "status_code": 200,
+    "message": "Bulk SMS sent successfully",
+    "data": {
+        "batch_id": "BATCH1755769875",
+        "total_messages": 3,
+        "accepted": 3,
+        "rejected": 0,
+        "channel_id": "KRWT43976",
+        "status": "queued",
+        "timestamp": "2025-08-21 09:51:15",
+        "messages": [
+            {
+                "reference": "BULK1_1755769875",
+                "recipient": "255712345678",
+                "status": "queued",
+                "message_id": "MSG4621"
+            },
+            {
+                "reference": "BULK2_1755769875",
+                "recipient": "255798765432",
+                "status": "queued",
+                "message_id": "MSG7065"
+            },
+            {
+                "reference": "BULK3_1755769875",
+                "recipient": "255754321098",
+                "status": "queued",
+                "message_id": "MSG2855"
+            }
+        ]
+    },
+    "metadata": {
+        "api_version": "1.0",
+        "request_id": "req-68a6ec13230b4"
+    }
+}
+  Timestamp: 2025-08-21 09:51:15
+
+✓ Bulk SMS test passed
+  ✓ HTTP Status Code: 200
+  ✓ Response Status: success
+  ✓ Batch ID: BATCH1755769875
+  ✓ Accepted: 3 messages
+  ✓ Rejected: 0 messages
+  ✓ Response Time: 0.83 ms
+  ✓ Message: Bulk SMS sent successfully
+
+[TEST] SMS Status Check...
+📤 REQUEST DETAILS:
+  Method: GET
+  URL: https://sms-engine.tz.af.absa.local/api/sms/status/MSG123456
+  Headers: {
+    "X-API-Key": "74QK8xXWC8dtcbYguA989wSIPjsKDwEgOPtyumEIF1NkqQtW3dtb0cf0DeBJUvKwcimr7d9QRK2vycCVLfIL3Izbt7rVAOGZoEoC4qYA89nJZW7737KpwkzdCcH4CHBDSj3vjN66ksrC2oCmT2OyHb9oCu3hC0mtP5AQrF6eRZQLll0tsnskBArYAKJIJXexK27M9XBwRipSsqbMnwBNERXJNROyX77wrSaDjyDbTQlin8CyuLHL97zx1WBNaGoS"
+}
+  Request Body: None (GET request)
+  Test Type: SMS Status Check
+  Message ID: MSG123456
+  Timestamp: 2025-08-21 09:51:15
+
+📥 RESPONSE DETAILS:
+  HTTP Status Code: 200
+  Response Headers: {
+    "Content-Type": [
+        "application\/json"
+    ]
+}
+  Response Body: {
+    "status": "success",
+    "message_id": "MSG123456",
+    "delivery_status": "DELIVERED",
+    "delivered_at": "2025-08-21 09:51:15",
+    "recipient": "255712345678",
+    "attempts": 1
+}
+  Timestamp: 2025-08-21 09:51:15
+
+✓ SMS Status test passed - Status: DELIVERED
+
+[TEST] Rate Limiting...
+  Rate limit hit after 3 requests (as expected)
+✓ Rate Limiting test passed
+
+[TEST] Invalid Phone Number Handling...
+✗ Invalid Phone Number test error: A request was made, but the response sequence is empty.
+
+[TEST] Long Message Handling...
+✗ Long Message test error: A request was made, but the response sequence is empty.
+
+========================================
+Test Results Summary
+========================================
+Single SMS                    : ERROR
+Bulk SMS                      : PASSED
+SMS Status                    : PASSED
+Rate Limiting                 : PASSED
+Invalid Phone Number          : ERROR
+Long Message                  : ERROR
+----------------------------------------
+Total: 6 tests
+Passed: 3 | Failed: 0 | Errors: 3
+========================================
+
+================================================================================
+
+================================================================================
+Test: AI Services
+Timestamp: 2025-08-21 09:51:15
+Duration: 0.001 seconds
+--------------------------------------------------------------------------------
+
+========================================
+AI Services API Tests
+========================================
+
+[TEST] Groq API...
+✓ Groq API test passed - Model: meta-llama/llama-4-scout-17b-16e-instruct
+
+[TEST] OpenAI API...
+✓ OpenAI API test passed - Model: gpt-3.5-turbo
+
+[TEST] Together AI API...
+✓ Together AI API test passed - Model: meta-llama/Llama-2-70b-chat-hf
+
+[TEST] Claude API...
+✓ Claude API test passed
+
+========================================
+Test Results Summary
+========================================
+Groq API                      : PASSED
+OpenAI API                    : PASSED
+Together AI API               : PASSED
+Claude API                    : PASSED
+----------------------------------------
+Total: 4 tests
+Passed: 4 | Failed: 0 | Skipped: 0 | Errors: 0
+========================================
+
+================================================================================
+

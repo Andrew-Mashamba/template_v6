@@ -1,0 +1,126 @@
+
+  Dropping all tables .............................................. 53ms DONE
+
+   INFO  Preparing database.  
+
+  Creating migration table .......................................... 6ms DONE
+
+   INFO  Running migrations.  
+
+  2019_12_14_000001_create_personal_access_tokens_table ............. 9ms DONE
+  2023_01_01_000001_create_datafeeds_table .......................... 2ms DONE
+  2023_01_01_000002_create_employeefiles_table ...................... 4ms DONE
+  2023_01_01_000003_create_banks_table .............................. 2ms DONE
+  2023_01_01_000004_create_currencies_table ......................... 3ms DONE
+  2023_01_01_000005_create_document_types_table ..................... 3ms DONE
+  2023_01_01_000006_create_member_categories_table .................. 2ms DONE
+  2023_01_01_000007_create_payment_methods_table .................... 3ms DONE
+  2023_01_01_000008_create_mnos_table ............................... 2ms DONE
+  2023_01_01_000009_create_cash_in_transit_providers_table .......... 9ms DONE
+  2023_01_01_000010_create_complaint_categories_table ............... 4ms DONE
+  2023_01_01_000011_create_complaint_statuses_table ................. 3ms DONE
+  2023_01_01_000012_create_leaderships_table ........................ 3ms DONE
+  2023_01_02_000001_create_institutions_table ....................... 4ms DONE
+  2023_01_02_000002_create_users_table .............................. 3ms DONE
+  2023_01_02_000003_create_permissions_table ........................ 3ms DONE
+  2023_01_03_000001_create_departments_table ........................ 5ms DONE
+  2023_01_03_000002_create_roles_table .............................. 4ms DONE
+  2023_01_03_000003_create_branches_table ........................... 3ms DONE
+  2023_01_03_000004_create_accounts_table ........................... 5ms DONE
+  2023_01_03_000005_create_clients_table ............................ 4ms DONE
+  2023_01_03_000006_create_employees_table .......................... 2ms DONE
+  2023_01_03_000007_create_committees_table ......................... 4ms DONE
+  2023_01_03_000008_create_menus_table .............................. 1ms DONE
+  2023_01_03_000009_create_sub_products_table ....................... 2ms DONE
+  2023_01_03_000010_create_services_table ........................... 3ms DONE
+  2023_01_03_000011_create_vaults_table ............................. 3ms DONE
+  2023_01_03_000012_create_tills_table .............................. 4ms FAIL
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[42P07]: Duplicate table: 7 ERROR:  relation "tills_till_number_index" already exists (SQL: create index "tills_till_number_index" on "tills" ("till_number"))
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:760
+    756▕         // If an exception occurs when attempting to run a query, we'll format the error
+    757▕         // message to include the bindings with SQL, which will make this exception a
+    758▕         // lot more helpful to the developer instead of just the database's errors.
+    759▕         catch (Exception $e) {
+  ➜ 760▕             throw new QueryException(
+    761▕                 $query, $this->prepareBindings($bindings), $e
+    762▕             );
+    763▕         }
+    764▕     }
+
+      [2m+9 vendor frames [22m
+  10  database/migrations/2023_01_03_000012_create_tills_table.php:23
+      Illuminate\Support\Facades\Facade::__callStatic("create")
+
+      [2m+37 vendor frames [22m
+  48  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
+  Dropping all tables .............................................. 52ms DONE
+
+   INFO  Preparing database.  
+
+  Creating migration table .......................................... 3ms DONE
+
+   INFO  Running migrations.  
+
+  2019_12_14_000001_create_personal_access_tokens_table ............. 2ms DONE
+  2023_01_01_000001_create_datafeeds_table .......................... 1ms DONE
+  2023_01_01_000002_create_employeefiles_table ...................... 1ms DONE
+  2023_01_01_000003_create_banks_table .............................. 1ms DONE
+  2023_01_01_000004_create_currencies_table ......................... 1ms DONE
+  2023_01_01_000005_create_document_types_table ..................... 1ms DONE
+  2023_01_01_000006_create_member_categories_table .................. 1ms DONE
+  2023_01_01_000007_create_payment_methods_table .................... 1ms DONE
+  2023_01_01_000008_create_mnos_table ............................... 1ms DONE
+  2023_01_01_000009_create_cash_in_transit_providers_table .......... 3ms DONE
+  2023_01_01_000010_create_complaint_categories_table ............... 2ms DONE
+  2023_01_01_000011_create_complaint_statuses_table ................. 2ms DONE
+  2023_01_01_000012_create_leaderships_table ........................ 1ms DONE
+  2023_01_02_000001_create_institutions_table ....................... 2ms DONE
+  2023_01_02_000002_create_users_table .............................. 2ms DONE
+  2023_01_02_000003_create_permissions_table ........................ 2ms DONE
+  2023_01_03_000001_create_departments_table ........................ 3ms DONE
+  2023_01_03_000002_create_roles_table .............................. 3ms DONE
+  2023_01_03_000003_create_branches_table ........................... 2ms DONE
+  2023_01_03_000004_create_accounts_table ........................... 4ms DONE
+  2023_01_03_000005_create_clients_table ............................ 3ms DONE
+  2023_01_03_000006_create_employees_table .......................... 2ms DONE
+  2023_01_03_000007_create_committees_table ......................... 4ms DONE
+  2023_01_03_000008_create_menus_table .............................. 1ms DONE
+  2023_01_03_000009_create_sub_products_table ....................... 2ms DONE
+  2023_01_03_000010_create_services_table ........................... 2ms DONE
+  2023_01_03_000011_create_vaults_table ............................. 3ms DONE
+  2023_01_03_000012_create_tills_table .............................. 4ms DONE
+  2023_01_04_000001_create_menu_actions_table ....................... 2ms DONE
+  2023_01_04_000002_create_sub_roles_table .......................... 2ms DONE
+  2023_01_04_000003_create_role_permissions_table ................... 3ms DONE
+  2023_01_04_000004_create_bank_accounts_table ...................... 3ms DONE
+  2023_01_04_000005_create_loans_table .............................. 4ms DONE
+  2023_01_04_000006_create_transactions_table ....................... 4ms FAIL
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[42703]: Undefined column: 7 ERROR:  column "created_at" does not exist (SQL: create index "transactions_status_created_at_index" on "transactions" ("status", "created_at"))
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:760
+    756▕         // If an exception occurs when attempting to run a query, we'll format the error
+    757▕         // message to include the bindings with SQL, which will make this exception a
+    758▕         // lot more helpful to the developer instead of just the database's errors.
+    759▕         catch (Exception $e) {
+  ➜ 760▕             throw new QueryException(
+    761▕                 $query, $this->prepareBindings($bindings), $e
+    762▕             );
+    763▕         }
+    764▕     }
+
+      [2m+9 vendor frames [22m
+  10  database/migrations/2023_01_04_000006_create_transactions_table.php:21
+      Illuminate\Support\Facades\Facade::__callStatic("create")
+
+      [2m+37 vendor frames [22m
+  48  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))

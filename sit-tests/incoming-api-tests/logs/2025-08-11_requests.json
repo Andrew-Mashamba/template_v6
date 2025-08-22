@@ -1,0 +1,4324 @@
+[
+    {
+        "timestamp": "2025-08-11 07:04:52",
+        "test_name": "Billing Inquiry",
+        "endpoint": "\/billing\/inquiry",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/inquiry",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "payer_name": "John Doe",
+            "payer_phone": "255712345678",
+            "amount": 50000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:04:52",
+        "test_name": "Payment Notification",
+        "endpoint": "\/billing\/payment-notify",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/payment-notify",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "transaction_id": "TXN1754895892",
+            "amount_paid": 50000,
+            "currency": "TZS",
+            "payment_date": "2025-08-11 07:04:52",
+            "payment_method": "MOBILE",
+            "payer_details": {
+                "name": "John Doe",
+                "phone": "255712345678",
+                "email": "john@example.com"
+            }
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:04:52",
+        "test_name": "Status Check",
+        "endpoint": "\/billing\/status-check",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/status-check",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "transaction_id": "TXN123456"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:04:52",
+        "test_name": "Invalid Data",
+        "endpoint": "\/billing\/inquiry",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/inquiry",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "amount": 50000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:04:52",
+        "test_name": "Valid Data",
+        "endpoint": "\/billing\/inquiry",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/inquiry",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "amount": 50000,
+            "currency": "TZS",
+            "payer_name": "Test User"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:04:52",
+        "test_name": "Invalid Amount",
+        "endpoint": "\/billing\/inquiry",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/inquiry",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "amount": -1000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:04:52",
+        "test_name": "Invalid Control Number",
+        "endpoint": "\/billing\/inquiry",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/inquiry",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "INVALID",
+            "amount": 50000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:04:52",
+        "test_name": "First Payment",
+        "endpoint": "\/billing\/payment-notify",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/payment-notify",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "transaction_id": "DUP123456",
+            "amount_paid": 50000,
+            "currency": "TZS",
+            "payment_date": "2025-08-11 07:04:52"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:04:52",
+        "test_name": "Duplicate Payment",
+        "endpoint": "\/billing\/payment-notify",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/payment-notify",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "transaction_id": "DUP123456",
+            "amount_paid": 50000,
+            "currency": "TZS",
+            "payment_date": "2025-08-11 07:04:52"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:04:52",
+        "test_name": "Non-existent Control Number",
+        "endpoint": "\/billing\/status-check",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/status-check",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "999999999999",
+            "transaction_id": "TXN1754895892"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:04:52",
+        "test_name": "No Auth",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "amount": 1000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:04:52",
+        "test_name": "IP Whitelist Test",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-Forwarded-For": "192.168.1.1",
+            "X-Real-IP": "10.0.0.1",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 1000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:04:52",
+        "test_name": "Transfer Transaction",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 10000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321",
+            "description": "Test transfer",
+            "reference": "TRF1754895892"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:04:52",
+        "test_name": "Deposit Transaction",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "deposit",
+            "amount": 5000,
+            "currency": "TZS",
+            "to_account": "1234567890",
+            "deposit_method": "cash",
+            "reference": "DEP1754895892"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:04:52",
+        "test_name": "Withdrawal Transaction",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "withdrawal",
+            "amount": 3000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "withdrawal_method": "atm",
+            "reference": "WTH1754895892"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:04:52",
+        "test_name": "Create Transaction for Status",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 1000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321",
+            "reference": "STATUS_TEST_1754895892"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Billing Inquiry",
+        "endpoint": "\/billing\/inquiry",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/inquiry",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "payer_name": "John Doe",
+            "payer_phone": "255712345678",
+            "amount": 50000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Payment Notification",
+        "endpoint": "\/billing\/payment-notify",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/payment-notify",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "transaction_id": "TXN1754896005",
+            "amount_paid": 50000,
+            "currency": "TZS",
+            "payment_date": "2025-08-11 07:06:45",
+            "payment_method": "MOBILE",
+            "payer_details": {
+                "name": "John Doe",
+                "phone": "255712345678",
+                "email": "john@example.com"
+            }
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Status Check",
+        "endpoint": "\/billing\/status-check",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/status-check",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "transaction_id": "TXN123456"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Invalid Data",
+        "endpoint": "\/billing\/inquiry",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/inquiry",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "amount": 50000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Valid Data",
+        "endpoint": "\/billing\/inquiry",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/inquiry",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "amount": 50000,
+            "currency": "TZS",
+            "payer_name": "Test User"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Invalid Amount",
+        "endpoint": "\/billing\/inquiry",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/inquiry",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "amount": -1000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Invalid Control Number",
+        "endpoint": "\/billing\/inquiry",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/inquiry",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "INVALID",
+            "amount": 50000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "First Payment",
+        "endpoint": "\/billing\/payment-notify",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/payment-notify",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "transaction_id": "DUP123456",
+            "amount_paid": 50000,
+            "currency": "TZS",
+            "payment_date": "2025-08-11 07:06:45"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Duplicate Payment",
+        "endpoint": "\/billing\/payment-notify",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/payment-notify",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "transaction_id": "DUP123456",
+            "amount_paid": 50000,
+            "currency": "TZS",
+            "payment_date": "2025-08-11 07:06:45"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Non-existent Control Number",
+        "endpoint": "\/billing\/status-check",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/status-check",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "999999999999",
+            "transaction_id": "TXN1754896005"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "No Auth",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "amount": 1000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "IP Whitelist Test",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-Forwarded-For": "192.168.1.1",
+            "X-Real-IP": "10.0.0.1",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 1000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Transfer Transaction",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 10000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321",
+            "description": "Test transfer",
+            "reference": "TRF1754896005"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Deposit Transaction",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "deposit",
+            "amount": 5000,
+            "currency": "TZS",
+            "to_account": "1234567890",
+            "deposit_method": "cash",
+            "reference": "DEP1754896005"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Withdrawal Transaction",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "withdrawal",
+            "amount": 3000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "withdrawal_method": "atm",
+            "reference": "WTH1754896005"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Create Transaction for Status",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 1000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321",
+            "reference": "STATUS_TEST_1754896005"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Non-existent Transaction",
+        "endpoint": "\/secure\/transactions\/NONEXISTENT123\/status",
+        "method": "GET",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/NONEXISTENT123\/status",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": []
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "History - all",
+        "endpoint": "\/secure\/transactions",
+        "method": "GET",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": []
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "History - date_range",
+        "endpoint": "\/secure\/transactions",
+        "method": "GET",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "from_date": "2025-08-04",
+            "to_date": "2025-08-11"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "History - account",
+        "endpoint": "\/secure\/transactions",
+        "method": "GET",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "1234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "History - type",
+        "endpoint": "\/secure\/transactions",
+        "method": "GET",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "History - pagination",
+        "endpoint": "\/secure\/transactions",
+        "method": "GET",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "page": 1,
+            "per_page": 10
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Invalid Data",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "amount": 1000
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Valid Data",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 1000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Negative Amount",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": -1000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Invalid Account",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 1000,
+            "currency": "TZS",
+            "from_account": "INVALID",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Max Amount",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 1000000001,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Min Amount",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 0.01,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Idempotency Test 1",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-Idempotency-Key": "test_idempotency_68999685c842b",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 5000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321",
+            "reference": "IDEM_1754896005"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Insufficient Funds",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 999999999,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321",
+            "reference": "INSUFF_1754896005"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Account Not Found",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 1000,
+            "currency": "TZS",
+            "from_account": "9999999999",
+            "to_account": "8888888888",
+            "reference": "NOACCT_1754896005"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Rate Limit Test 1",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 100,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Rate Limit Test 2",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 100,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Rate Limit Test 3",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 100,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Rate Limit Test 4",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 100,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Rate Limit Test 5",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 100,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Rate Limit Test 6",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 100,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Rate Limit Test 7",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 100,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Rate Limit Test 8",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 100,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Rate Limit Test 9",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 100,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Rate Limit Test 10",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 100,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Rate Limit Test 11",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 100,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:45",
+        "test_name": "Rate Limit Test 12",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 100,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Billing Inquiry",
+        "endpoint": "\/billing\/inquiry",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/inquiry",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "payer_name": "John Doe",
+            "payer_phone": "255712345678",
+            "amount": 50000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Payment Notification",
+        "endpoint": "\/billing\/payment-notify",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/payment-notify",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "transaction_id": "TXN1754896017",
+            "amount_paid": 50000,
+            "currency": "TZS",
+            "payment_date": "2025-08-11 07:06:57",
+            "payment_method": "MOBILE",
+            "payer_details": {
+                "name": "John Doe",
+                "phone": "255712345678",
+                "email": "john@example.com"
+            }
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Status Check",
+        "endpoint": "\/billing\/status-check",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/status-check",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "transaction_id": "TXN123456"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Invalid Data",
+        "endpoint": "\/billing\/inquiry",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/inquiry",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "amount": 50000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Valid Data",
+        "endpoint": "\/billing\/inquiry",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/inquiry",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "amount": 50000,
+            "currency": "TZS",
+            "payer_name": "Test User"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Invalid Amount",
+        "endpoint": "\/billing\/inquiry",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/inquiry",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "amount": -1000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Invalid Control Number",
+        "endpoint": "\/billing\/inquiry",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/inquiry",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "INVALID",
+            "amount": 50000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "First Payment",
+        "endpoint": "\/billing\/payment-notify",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/payment-notify",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "transaction_id": "DUP123456",
+            "amount_paid": 50000,
+            "currency": "TZS",
+            "payment_date": "2025-08-11 07:06:57"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Duplicate Payment",
+        "endpoint": "\/billing\/payment-notify",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/payment-notify",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "991700123456",
+            "transaction_id": "DUP123456",
+            "amount_paid": 50000,
+            "currency": "TZS",
+            "payment_date": "2025-08-11 07:06:57"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Non-existent Control Number",
+        "endpoint": "\/billing\/status-check",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/billing\/status-check",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "control_number": "999999999999",
+            "transaction_id": "TXN1754896017"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "No Auth",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "amount": 1000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "IP Whitelist Test",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-Forwarded-For": "192.168.1.1",
+            "X-Real-IP": "10.0.0.1",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 1000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Transfer Transaction",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 10000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321",
+            "description": "Test transfer",
+            "reference": "TRF1754896017"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Deposit Transaction",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "deposit",
+            "amount": 5000,
+            "currency": "TZS",
+            "to_account": "1234567890",
+            "deposit_method": "cash",
+            "reference": "DEP1754896017"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Withdrawal Transaction",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "withdrawal",
+            "amount": 3000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "withdrawal_method": "atm",
+            "reference": "WTH1754896017"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Create Transaction for Status",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 1000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321",
+            "reference": "STATUS_TEST_1754896017"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Non-existent Transaction",
+        "endpoint": "\/secure\/transactions\/NONEXISTENT123\/status",
+        "method": "GET",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/NONEXISTENT123\/status",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": []
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "History - all",
+        "endpoint": "\/secure\/transactions",
+        "method": "GET",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": []
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "History - date_range",
+        "endpoint": "\/secure\/transactions",
+        "method": "GET",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "from_date": "2025-08-04",
+            "to_date": "2025-08-11"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "History - account",
+        "endpoint": "\/secure\/transactions",
+        "method": "GET",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "1234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "History - type",
+        "endpoint": "\/secure\/transactions",
+        "method": "GET",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "History - pagination",
+        "endpoint": "\/secure\/transactions",
+        "method": "GET",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "page": 1,
+            "per_page": 10
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Invalid Data",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "amount": 1000
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Valid Data",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 1000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Negative Amount",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": -1000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Invalid Account",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 1000,
+            "currency": "TZS",
+            "from_account": "INVALID",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Max Amount",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 1000000001,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Min Amount",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 0.01,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Idempotency Test 1",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-Idempotency-Key": "test_idempotency_6899969170d1d",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 5000,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321",
+            "reference": "IDEM_1754896017"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Insufficient Funds",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 999999999,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321",
+            "reference": "INSUFF_1754896017"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Account Not Found",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 1000,
+            "currency": "TZS",
+            "from_account": "9999999999",
+            "to_account": "8888888888",
+            "reference": "NOACCT_1754896017"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 1",
+        "endpoint": "\/secure\/transactions\/process",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/secure\/transactions\/process",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_type": "transfer",
+            "amount": 100,
+            "currency": "TZS",
+            "from_account": "1234567890",
+            "to_account": "0987654321"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Connectivity Test",
+        "endpoint": "\/v1\/account-details\/test",
+        "method": "GET",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details\/test",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": []
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Savings Account",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890",
+            "account_type": "savings"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Current Account",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "02C09876543210",
+            "account_type": "current"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Loan Account",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "03L11223344556",
+            "account_type": "loan"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Multiple Accounts",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_numbers": [
+                "01J01234567890",
+                "02C09876543210",
+                "03L11223344556"
+            ]
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Statistics",
+        "endpoint": "\/v1\/account-details\/stats",
+        "method": "GET",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details\/stats",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": []
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Invalid Format",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "INVALID123"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Missing Account",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_type": "savings"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Non-existent Account",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "99999999999999"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "No Auth",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Data Masking",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890",
+            "include_sensitive": false
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 1",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 2",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 3",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 4",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 5",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 6",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 7",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 8",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 9",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 10",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 11",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 12",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 13",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 14",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 15",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 16",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 17",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 18",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 19",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 20",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 21",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 22",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 23",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 24",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 25",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 26",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 27",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 28",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 29",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 30",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 31",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 32",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 33",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 34",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 35",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 36",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 37",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 38",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 39",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 40",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 41",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 42",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 43",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 44",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 45",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 46",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 47",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 48",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 49",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 50",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 51",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 52",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 53",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 54",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 55",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 56",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 57",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 58",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 59",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 60",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 61",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 62",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 63",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 64",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 65",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 66",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 67",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 68",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 69",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 70",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 71",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:57",
+        "test_name": "Rate Limit Test 72",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 73",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 74",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 75",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 76",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 77",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 78",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 79",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 80",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 81",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 82",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 83",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 84",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 85",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 86",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 87",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 88",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 89",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 90",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 91",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 92",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 93",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 94",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 95",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 96",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 97",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 98",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 99",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 100",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 101",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 102",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 103",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 104",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 105",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01J01234567890"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Closed Account",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "00X99999999999"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Dormant Account",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01D88888888888"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Frozen Account",
+        "endpoint": "\/v1\/account-details",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/account-details",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "account_number": "01F77777777777"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "No Auth",
+        "endpoint": "\/luku-gateway\/meter\/lookup",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/meter\/lookup",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "meter_number": "12345678"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Rate Limit Test 1",
+        "endpoint": "\/luku-gateway\/payment",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/payment",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "meter_number": "12345678",
+            "amount": 10000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Meter Lookup",
+        "endpoint": "\/luku-gateway\/meter\/lookup",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/meter\/lookup",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "meter_number": "12345678901234",
+            "provider": "TANESCO"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "LUKU Meter Lookup",
+        "endpoint": "\/luku-gateway\/meter\/lookup",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/meter\/lookup",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "meter_number": "98765432109876",
+            "provider": "LUKU"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Small amount",
+        "endpoint": "\/luku-gateway\/payment",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/payment",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "meter_number": "12345678901234",
+            "amount": 5000,
+            "currency": "TZS",
+            "customer_phone": "255712345678",
+            "payment_reference": "LUKU_1754896018"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Large amount",
+        "endpoint": "\/luku-gateway\/payment",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/payment",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "meter_number": "12345678901234",
+            "amount": 100000,
+            "currency": "TZS",
+            "customer_phone": "255712345678",
+            "payment_reference": "LUKU_LARGE_1754896018"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "With callback",
+        "endpoint": "\/luku-gateway\/payment",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/payment",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "meter_number": "12345678901234",
+            "amount": 20000,
+            "currency": "TZS",
+            "customer_phone": "255712345678",
+            "payment_reference": "LUKU_CB_1754896018",
+            "callback_url": "https:\/\/example.com\/luku\/callback"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Payment for Status Check",
+        "endpoint": "\/luku-gateway\/payment",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/payment",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "meter_number": "12345678901234",
+            "amount": 10000,
+            "currency": "TZS",
+            "customer_phone": "255712345678",
+            "payment_reference": "STATUS_TEST_1754896018"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Non-existent Transaction",
+        "endpoint": "\/luku-gateway\/token\/status",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/token\/status",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_id": "NONEXISTENT123",
+            "meter_number": "12345678901234"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Payment Callback",
+        "endpoint": "\/luku-gateway\/callback",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/callback",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_id": "TXN_1754896018",
+            "payment_status": "SUCCESS",
+            "token": "***REDACTED***",
+            "units": "50.5",
+            "meter_number": "12345678901234",
+            "amount": 10000,
+            "receipt_number": "RCP_1754896018",
+            "timestamp": "2025-08-11 07:06:58"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Failed Payment Callback",
+        "endpoint": "\/luku-gateway\/callback",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/callback",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_id": "TXN_FAILED_1754896018",
+            "payment_status": "FAILED",
+            "error_code": "INSUFFICIENT_FUNDS",
+            "error_message": "Not enough balance",
+            "meter_number": "12345678901234",
+            "timestamp": "2025-08-11 07:06:58"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Invalid Meter Format",
+        "endpoint": "\/luku-gateway\/meter\/lookup",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/meter\/lookup",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "meter_number": "INVALID",
+            "provider": "TANESCO"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Invalid Amount",
+        "endpoint": "\/luku-gateway\/payment",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/payment",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "meter_number": "12345678901234",
+            "amount": -1000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Missing Fields",
+        "endpoint": "\/luku-gateway\/payment",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/payment",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "amount": 10000
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Invalid Provider",
+        "endpoint": "\/luku-gateway\/meter\/lookup",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/meter\/lookup",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "meter_number": "12345678901234",
+            "provider": "INVALID_PROVIDER"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Blacklisted Meter",
+        "endpoint": "\/luku-gateway\/payment",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/payment",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "meter_number": "00000000000000",
+            "amount": 10000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Max Amount Exceeded",
+        "endpoint": "\/luku-gateway\/payment",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/luku-gateway\/payment",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "meter_number": "12345678901234",
+            "amount": 10000000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "No Signature",
+        "endpoint": "\/v1\/nbc-payments\/callback",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/nbc-payments\/callback",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_id": "NBC_TXN_1754896018",
+            "reference_number": "REF_1754896018",
+            "status": "SUCCESS",
+            "amount": 50000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Invalid Signature",
+        "endpoint": "\/v1\/nbc-payments\/callback",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/nbc-payments\/callback",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-NBC-Signature": "invalid_signature_123",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_id": "NBC_TXN_1754896018",
+            "reference_number": "REF_1754896018",
+            "status": "SUCCESS",
+            "amount": 50000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Valid Signature",
+        "endpoint": "\/v1\/nbc-payments\/callback",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/nbc-payments\/callback",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-NBC-Signature": "45bd1ec54c2c549217fa57694f55fcceee5cd9dc89160561b318339418e750f7",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_id": "NBC_TXN_1754896018",
+            "reference_number": "REF_1754896018",
+            "status": "SUCCESS",
+            "amount": 50000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Successful Payment",
+        "endpoint": "\/v1\/nbc-payments\/callback",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/nbc-payments\/callback",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-NBC-Signature": "9ca0ebf0778c5a73c3e7f8912c17e7f9db4cf69ca78d91eec38acf22801e02e1",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_id": "NBC_SUCCESS_1754896018",
+            "reference_number": "REF_SUCCESS_1754896018",
+            "status": "SUCCESS",
+            "amount": 100000,
+            "currency": "TZS",
+            "payer_details": {
+                "name": "John Doe",
+                "account": "1234567890",
+                "phone": "255712345678"
+            },
+            "payment_method": "BANK_TRANSFER",
+            "timestamp": "2025-08-11 07:06:58",
+            "receipt_number": "RCP_1754896018"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Failed Payment",
+        "endpoint": "\/v1\/nbc-payments\/callback",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/nbc-payments\/callback",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-NBC-Signature": "2201773ea1139f1e52c132395edbe258f44569d06005373285daa99df5170e00",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_id": "NBC_FAILED_1754896018",
+            "reference_number": "REF_FAILED_1754896018",
+            "status": "FAILED",
+            "amount": 50000,
+            "currency": "TZS",
+            "error_code": "INSUFFICIENT_FUNDS",
+            "error_message": "The account has insufficient funds",
+            "timestamp": "2025-08-11 07:06:58"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Pending Payment",
+        "endpoint": "\/v1\/nbc-payments\/callback",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/nbc-payments\/callback",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-NBC-Signature": "d320e389a0b8b27b4e43d54638043f17cefcb7fc32bfb67a08f9226be3aef14e",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_id": "NBC_PENDING_1754896018",
+            "reference_number": "REF_PENDING_1754896018",
+            "status": "PENDING",
+            "amount": 75000,
+            "currency": "TZS",
+            "message": "Payment is being processed",
+            "expected_completion": "2025-08-11 08:06:58",
+            "timestamp": "2025-08-11 07:06:58"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Missing Transaction ID",
+        "endpoint": "\/v1\/nbc-payments\/callback",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/nbc-payments\/callback",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-NBC-Signature": "4b95462f8061686e114e37b5b2ca7eab1b9e46f6c22da9d38dbceb0a5daf7077",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "reference_number": "REF_1754896018",
+            "status": "SUCCESS",
+            "amount": 50000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Invalid Status",
+        "endpoint": "\/v1\/nbc-payments\/callback",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/nbc-payments\/callback",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-NBC-Signature": "0ae432caa2ca7aaa3a8a2cbaee3beaa3d57a2fd5beb0451a8c4e375679b8e6a2",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_id": "NBC_INVALID_1754896018",
+            "reference_number": "REF_1754896018",
+            "status": "INVALID_STATUS",
+            "amount": 50000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Negative Amount",
+        "endpoint": "\/v1\/nbc-payments\/callback",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/nbc-payments\/callback",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-NBC-Signature": "f3ded44f055314378bfb1bbdd96304d802cd347ec8e44d3be350f4efd08b5e72",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_id": "NBC_NEG_1754896018",
+            "reference_number": "REF_1754896018",
+            "status": "SUCCESS",
+            "amount": -1000,
+            "currency": "TZS"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Idempotency Test 1",
+        "endpoint": "\/v1\/nbc-payments\/callback",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/nbc-payments\/callback",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-NBC-Signature": "367f67959a0b7fe85d9822f95e3699ffa61865cc5d97411e0e5361ef565841ba",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_id": "NBC_IDEM_1754896018",
+            "reference_number": "REF_IDEM_1754896018",
+            "status": "SUCCESS",
+            "amount": 25000,
+            "currency": "TZS",
+            "timestamp": "2025-08-11 07:06:58"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Timeout Callback",
+        "endpoint": "\/v1\/nbc-payments\/callback",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/nbc-payments\/callback",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-NBC-Signature": "8060571d662d73e36045bc9f92f0dd8edc1929c01e472d88e5604dce9fe142ab",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_id": "NBC_TIMEOUT_1754896018",
+            "reference_number": "REF_TIMEOUT_1754896018",
+            "status": "TIMEOUT",
+            "amount": 30000,
+            "currency": "TZS",
+            "error_message": "Transaction timed out",
+            "timestamp": "2025-08-11 07:06:58"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Reversal Callback",
+        "endpoint": "\/v1\/nbc-payments\/callback",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/v1\/nbc-payments\/callback",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-NBC-Signature": "780c47ac35a5587dcc66a5f519ccd8ab6493a62a0d3c10d85e37643bad43a039",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "transaction_id": "NBC_REVERSAL_1754896018",
+            "original_transaction_id": "NBC_ORIGINAL_123456",
+            "reference_number": "REF_REVERSAL_1754896018",
+            "status": "REVERSED",
+            "amount": 45000,
+            "currency": "TZS",
+            "reversal_reason": "Customer request",
+            "timestamp": "2025-08-11 07:06:58"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "No Auth",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "What is my account balance?",
+            "context": {
+                "account_number": "1234567890"
+            }
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Invalid Token",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "Authorization": "***REDACTED***",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "What is my account balance?",
+            "context": {
+                "account_number": "1234567890"
+            }
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Account balance",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "Authorization": "***REDACTED***",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "What is my current account balance?",
+            "context": {
+                "user_id": "USER123",
+                "account_number": "1234567890"
+            }
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Transaction history",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "Authorization": "***REDACTED***",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "Show me my last 5 transactions",
+            "context": {
+                "user_id": "USER123",
+                "limit": 5
+            }
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Loan eligibility",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "Authorization": "***REDACTED***",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "Am I eligible for a loan?",
+            "context": {
+                "user_id": "USER123",
+                "loan_type": "personal"
+            }
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "General Inquiry",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "Authorization": "***REDACTED***",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "What are your business hours?",
+            "context": []
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Calculation Request",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "Authorization": "***REDACTED***",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "Calculate the interest on 1000000 TZS at 12% for 6 months",
+            "context": {
+                "calculation_type": "simple_interest"
+            }
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Policy Question",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "Authorization": "***REDACTED***",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "What is the minimum balance for a savings account?",
+            "context": {
+                "account_type": "savings"
+            }
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Swahili Question",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "Authorization": "***REDACTED***",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "Naomba kuona salio langu",
+            "context": {
+                "language": "sw",
+                "user_id": "USER123"
+            }
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Session Context",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "Authorization": "***REDACTED***",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "What about the previous transaction?",
+            "context": {
+                "session_id": "SESSION_1754896018",
+                "previous_question": "Show me my last transaction",
+                "previous_answer": "Your last transaction was..."
+            }
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "No Context",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "Authorization": "***REDACTED***",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "Help me with my account"
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Empty Question",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "Authorization": "***REDACTED***",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "",
+            "context": []
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:58",
+        "test_name": "Long Question",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "Authorization": "***REDACTED***",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. This is a very long question. ",
+            "context": []
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:59",
+        "test_name": "SQL Injection",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "Authorization": "***REDACTED***",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "What is my balance'; DROP TABLE users; --",
+            "context": []
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:59",
+        "test_name": "Rate Limit Test 1",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "Authorization": "***REDACTED***",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "What is the weather?",
+            "context": []
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:59",
+        "test_name": "Inappropriate Content",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "Authorization": "***REDACTED***",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "How can I hack the system?",
+            "context": []
+        }
+    },
+    {
+        "timestamp": "2025-08-11 07:06:59",
+        "test_name": "Timeout Test",
+        "endpoint": "\/ai-agent\/ask",
+        "method": "POST",
+        "url": "http:\/\/127.0.0.1:8000\/api\/ai-agent\/ask",
+        "headers": {
+            "Accept": "application\/json",
+            "Content-Type": "application\/json",
+            "Authorization": "***REDACTED***",
+            "X-API-Key": "***REDACTED***"
+        },
+        "body": {
+            "question": "Generate a comprehensive report of all transactions, balances, loans, and investments for the last 10 years with detailed analysis",
+            "context": {
+                "timeout_test": true
+            }
+        }
+    }
+]
