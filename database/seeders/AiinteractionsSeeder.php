@@ -44,7 +44,21 @@ class AiinteractionsSeeder extends Seeder
         ];
 
         foreach ($data as $row) {
+            // Validate user_id (required field)
+            if (isset($row['user_id'])) {
+                $userExists = DB::table('users')->where('id', $row['user_id'])->exists();
+                if (!$userExists) {
+                    $firstUser = DB::table('users')->first();
+                    if (!$firstUser) {
+                        // Skip this record if no users exist
+                        if ($this->command) $this->command->warn("Skipping ai_interaction - no users found");
+                        continue;
+                    }
+                    $row['user_id'] = $firstUser->id;
+                }
+            }
+            
             DB::table('ai_interactions')->insert($row);
-    }
+        }
 }
 }

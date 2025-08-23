@@ -20,38 +20,46 @@ class TillCashManagementSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create sample users if they don't exist
-        $adminUser = User::firstOrCreate(
-            ['email' => 'admin@example.com'],
-            [
+        // Get existing users or create if they don't exist
+        $adminUser = User::where('email', 'admin@example.com')->first();
+        if (!$adminUser) {
+            $adminUser = User::create([
+                'email' => 'admin@example.com',
                 'name' => 'System Administrator',
                 'password' => bcrypt('password'),
-                'email_verified_at' => now()]
-        );
+                'email_verified_at' => now()
+            ]);
+        }
 
-        $teller1 = User::firstOrCreate(
-            ['email' => 'teller1@example.com'],
-            [
+        $teller1 = User::where('email', 'teller1@example.com')->first();
+        if (!$teller1) {
+            $teller1 = User::create([
+                'email' => 'teller1@example.com',
                 'name' => 'John Teller',
                 'password' => bcrypt('password'),
-                'email_verified_at' => now()]
-        );
+                'email_verified_at' => now()
+            ]);
+        }
 
-        $teller2 = User::firstOrCreate(
-            ['email' => 'teller2@example.com'],
-            [
+        $teller2 = User::where('email', 'teller2@example.com')->first();
+        if (!$teller2) {
+            $teller2 = User::create([
+                'email' => 'teller2@example.com',
                 'name' => 'Jane Teller',
                 'password' => bcrypt('password'),
-                'email_verified_at' => now()]
-        );
+                'email_verified_at' => now()
+            ]);
+        }
 
-        $supervisor = User::firstOrCreate(
-            ['email' => 'supervisor@example.com'],
-            [
+        $supervisor = User::where('email', 'supervisor@example.com')->first();
+        if (!$supervisor) {
+            $supervisor = User::create([
+                'email' => 'supervisor@example.com',
                 'name' => 'Mike Supervisor',
                 'password' => bcrypt('password'),
-                'email_verified_at' => now()]
-        );
+                'email_verified_at' => now()
+            ]);
+        }
 
         // Create tellers
         $teller1Record = Teller::firstOrCreate(

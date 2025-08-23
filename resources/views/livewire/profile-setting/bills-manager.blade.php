@@ -175,8 +175,8 @@
                             <select wire:model="debit_category" id="debit_category"
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                 <option value="">Select Category</option>
-                                @foreach(DB::table('GL_accounts')->get() as $category)
-                                    <option value="{{ $category->account_code }}">{{ $category->account_name }}</option>
+                                @foreach(DB::table('accounts')->whereNotNull('account_name')->distinct()->get() as $category)
+                                    <option value="{{ $category->major_category_code }}">{{ $category->account_name }}</option>
                                 @endforeach
                             </select>
                             @error('debit_category') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
@@ -231,8 +231,8 @@
                             <select wire:model="right_category" id="right_category"
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                                 <option value="">Select Category</option>
-                                @foreach(DB::table('GL_accounts')->get() as $category)
-                                    <option value="{{ $category->account_code }}">{{ $category->account_name }}</option>
+                                @foreach(DB::table('accounts')->whereNotNull('account_name')->distinct()->get() as $category)
+                                    <option value="{{ $category->major_category_code }}">{{ $category->account_name }}</option>
                                 @endforeach
                             </select>
                             @error('right_category') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror

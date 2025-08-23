@@ -168,8 +168,9 @@ class BillsManager extends Component
                     ->where('account_number', $service->debit_account)
                     ->first();
                 if ($account) {
-                    $this->debit_category = DB::table('GL_accounts')
-                        ->where('account_code', $account->major_category_code)
+                    $this->debit_category = DB::table('accounts')
+                        ->where('major_category_code', $account->major_category_code)
+                        ->whereNotNull('account_name')
                         ->value('account_name');
                     $this->debit_category_code = $account->major_category_code;
                     $this->debit_subcategory = DB::table('accounts')
@@ -185,8 +186,9 @@ class BillsManager extends Component
                     ->where('account_number', $service->credit_account)
                     ->first();
                 if ($account) {
-                    $this->right_category = DB::table('GL_accounts')
-                        ->where('account_code', $account->major_category_code)
+                    $this->right_category = DB::table('accounts')
+                        ->where('major_category_code', $account->major_category_code)
+                        ->whereNotNull('account_name')
                         ->value('account_name');
                     $this->right_category_code = $account->major_category_code;
                     $this->right_account = $account->account_number;

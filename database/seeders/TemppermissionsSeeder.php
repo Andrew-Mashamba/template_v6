@@ -434,7 +434,19 @@ class TemppermissionsSeeder extends Seeder
         ];
 
         foreach ($data as $row) {
+            // Validate optional user references
+            $userFields = ['user_id', 'created_by', 'updated_by', 'approved_by'];
+            foreach ($userFields as $field) {
+                if (isset($row[$field]) && $row[$field]) {
+                    $userExists = DB::table('users')->where('id', $row[$field])->exists();
+                    if (!$userExists) {
+                        $firstUser = DB::table('users')->first();
+                        $row[$field] = $firstUser ? $firstUser->id : null;
+                    }
+                }
+            }
+            
             DB::table('temp_permissions')->insert($row);
-    }
+        }
 }
 }

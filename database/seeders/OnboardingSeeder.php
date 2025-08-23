@@ -88,6 +88,23 @@ class OnboardingSeeder extends Seeder
         ];
 
         foreach ($data as $row) {
+            // Validate user references
+            $userFields = ['user_id', 'created_by', 'approved_by'];
+            foreach ($userFields as $field) {
+                if (isset($row[$field]) && $row[$field]) {
+                    $userExists = DB::table('users')->where('id', $row[$field])->exists();
+                    if (!$userExists) {
+                        $firstUser = DB::table('users')->first();
+                        if (!$firstUser) {
+                            // Skip this record if no users exist
+                            if ($this->command) $this->command->warn("Skipping onboarding record - no users found");
+                            continue 2; // Continue outer loop
+                        }
+                        $row[$field] = $firstUser->id;
+                    }
+                }
+            }
+            
             // Use updateOrInsert to avoid foreign key conflicts
             DB::table('onboarding')->updateOrInsert(
                 ['id' => $row['id']],

@@ -154,6 +154,24 @@ class ApprovalsSeeder extends Seeder
         ];
 
         foreach ($data as $row) {
+            // Validate user references
+            $userFields = ['first_checker_id', 'second_checker_id', 'user_id', 'approver_id', 'last_action_by'];
+            foreach ($userFields as $field) {
+                if (isset($row[$field]) && $row[$field]) {
+                    $userExists = DB::table('users')->where('id', $row[$field])->exists();
+                    if (!$userExists) {
+                        // Use first user or null
+                        $firstUser = DB::table('users')->first();
+                        $row[$field] = $firstUser ? $firstUser->id : null;
+                    }
+                }
+            }
+            
+            // Validate team_id - set to null since teams table doesn't exist
+            if (isset($row['team_id'])) {
+                $row['team_id'] = null;
+            }
+            
             DB::table('approvals')->insert($row);
     }
 }

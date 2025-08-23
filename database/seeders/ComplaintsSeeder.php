@@ -21,7 +21,7 @@ class ComplaintsSeeder extends Seeder
         $data = [
             [
                 'id' => 1,
-                'client_id' => 3,
+                'client_id' => 1,
                 'category_id' => 5,
                 'status_id' => 1,
                 'title' => 'Account Access Issues',
@@ -75,7 +75,7 @@ class ComplaintsSeeder extends Seeder
             ],
             [
                 'id' => 4,
-                'client_id' => 3,
+                'client_id' => 1,
                 'category_id' => 6,
                 'status_id' => 4,
                 'title' => 'Poor Customer Service',
@@ -111,7 +111,7 @@ class ComplaintsSeeder extends Seeder
             ],
             [
                 'id' => 6,
-                'client_id' => 3,
+                'client_id' => 1,
                 'category_id' => 6,
                 'status_id' => 1,
                 'title' => 'Security Concern',
@@ -147,7 +147,7 @@ class ComplaintsSeeder extends Seeder
             ],
             [
                 'id' => 8,
-                'client_id' => 3,
+                'client_id' => 1,
                 'category_id' => 4,
                 'status_id' => 3,
                 'title' => 'Statement Errors',

@@ -58,7 +58,21 @@ class ScheduledreportsSeeder extends Seeder
         ];
 
         foreach ($data as $row) {
+            // Validate user_id (required field)
+            if (isset($row['user_id'])) {
+                $userExists = DB::table('users')->where('id', $row['user_id'])->exists();
+                if (!$userExists) {
+                    $firstUser = DB::table('users')->first();
+                    if (!$firstUser) {
+                        // Skip this record if no users exist and user_id is required
+                        if ($this->command) $this->command->warn("Skipping scheduled_report - no users found");
+                        continue;
+                    }
+                    $row['user_id'] = $firstUser->id;
+                }
+            }
+            
             DB::table('scheduled_reports')->insert($row);
-    }
+        }
 }
 }

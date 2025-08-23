@@ -2946,8 +2946,38 @@ class DatafeedsSeeder extends Seeder
             ],
         ];
 
-        foreach ($data as $row) {
+                foreach ($data as $row) {
+            // Validate user references
+            $userFields = ['user_id', 'created_by', 'updated_by', 'deleted_by', 'approved_by', 'rejected_by'];
+            foreach ($userFields as $field) {
+                if (isset($row[$field]) && $row[$field]) {
+                    $userExists = DB::table('users')->where('id', $row[$field])->exists();
+                    if (!$userExists) {
+                        $firstUser = DB::table('users')->first();
+                        $row[$field] = $firstUser ? $firstUser->id : null;
+                    }
+                }
+            }
+            
+            // Validate client references
+            if (isset($row['client_id']) && $row['client_id']) {
+                $clientExists = DB::table('clients')->where('id', $row['client_id'])->exists();
+                if (!$clientExists) {
+                    $firstClient = DB::table('clients')->first();
+                    $row['client_id'] = $firstClient ? $firstClient->id : null;
+                }
+            }
+            
+            // Validate account references
+            if (isset($row['account_id']) && $row['account_id']) {
+                $accountExists = DB::table('accounts')->where('id', $row['account_id'])->exists();
+                if (!$accountExists) {
+                    $firstAccount = DB::table('accounts')->first();
+                    $row['account_id'] = $firstAccount ? $firstAccount->id : null;
+                }
+            }
+            
             DB::table('datafeeds')->insert($row);
-    }
+        }
 }
 }

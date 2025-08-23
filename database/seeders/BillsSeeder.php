@@ -212,6 +212,32 @@ class BillsSeeder extends Seeder
         ];
 
         foreach ($data as $row) {
+            // Check if service exists
+            $serviceExists = DB::table('services')->where('id', $row['service_id'])->exists();
+            if (!$serviceExists) {
+                // Use first available service or skip
+                $firstService = DB::table('services')->first();
+                if ($firstService) {
+                    $row['service_id'] = $firstService->id;
+                } else {
+                    if ($this->command) $this->command->warn("Skipping bill - no services found");
+                    continue;
+                }
+            }
+            
+            // Check if client exists
+            $clientExists = DB::table('clients')->where('client_number', $row['client_number'])->exists();
+            if (!$clientExists) {
+                $firstClient = DB::table('clients')->first();
+                if ($firstClient) {
+                    $row['client_number'] = $firstClient->client_number;
+                    $row['member_id'] = $firstClient->client_number;
+                } else {
+                    if ($this->command) $this->command->warn("Skipping bill - no clients found");
+                    continue;
+                }
+            }
+            
             DB::table('bills')->insert($row);
         }
     }

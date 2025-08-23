@@ -28,7 +28,7 @@ class VaultsSeeder extends Seeder
         // Get the first branch ID
         $branch = DB::table('branches')->first();
         if (!$branch) {
-            $this->command->warn('No branches found. Skipping VaultsSeeder.');
+            if ($this->command) $this->command->warn('No branches found. Skipping VaultsSeeder.');
             return;
         }
 

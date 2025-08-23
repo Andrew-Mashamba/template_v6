@@ -31,15 +31,11 @@ class ApprovalcommentsSeeder extends Seeder
                 'id' => 1,
                 'approval_id' => 1,
                 'comment' => 'Sample comment 1',
-                'created_at' => '2025-07-23 10:38:32',
-                'updated_at' => now(),
             ],
             [
                 'id' => 2,
                 'approval_id' => 2,
                 'comment' => 'Sample comment 2',
-                'created_at' => '2025-07-23 11:38:32',
-                'updated_at' => now(),
             ],
         ];
 

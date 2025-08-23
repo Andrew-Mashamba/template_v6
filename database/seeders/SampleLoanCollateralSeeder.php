@@ -20,11 +20,11 @@ class SampleLoanCollateralSeeder extends Seeder
             ->first();
             
         if (!$loan) {
-            $this->command->info('No active loans found. Creating a sample loan first...');
+            if ($this->command) $this->command->info('No active loans found. Creating a sample loan first...');
             return;
         }
         
-        $this->command->info("Adding sample collateral for loan ID: {$loan->id}");
+        if ($this->command) $this->command->info("Adding sample collateral for loan ID: {$loan->id}");
         
         // Get a sample client to use as guarantor
         $guarantorClient = DB::table('clients')
@@ -32,7 +32,7 @@ class SampleLoanCollateralSeeder extends Seeder
             ->first();
             
         if (!$guarantorClient) {
-            $this->command->error('No other clients found to use as guarantor');
+            if ($this->command) $this->command->error('No other clients found to use as guarantor');
             return;
         }
         
@@ -50,7 +50,7 @@ class SampleLoanCollateralSeeder extends Seeder
             'updated_at' => now(),
         ]);
         
-        $this->command->info("Created guarantor with ID: {$guarantorId}");
+        if ($this->command) $this->command->info("Created guarantor with ID: {$guarantorId}");
         
         // Create sample collateral
         DB::table('loan_collaterals')->insert([
@@ -68,7 +68,7 @@ class SampleLoanCollateralSeeder extends Seeder
             'updated_at' => now(),
         ]);
         
-        $this->command->info("Sample collateral data added successfully for loan ID: {$loan->id}");
-        $this->command->info("You can now test Top-up functionality with this loan.");
+        if ($this->command) $this->command->info("Sample collateral data added successfully for loan ID: {$loan->id}");
+        if ($this->command) $this->command->info("You can now test Top-up functionality with this loan.");
     }
 }

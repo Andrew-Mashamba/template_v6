@@ -14,8 +14,8 @@ class BranchesSeeder extends Seeder
      */
     public function run()
     {
-        // Clear existing data
-        DB::table('branches')->truncate();
+        // Clear existing data - delete instead of truncate to avoid foreign key issues
+        DB::table('branches')->delete();
 
         // Insert existing data
         $data = [
@@ -45,6 +45,6 @@ class BranchesSeeder extends Seeder
 
         foreach ($data as $row) {
             DB::table('branches')->insert($row);
+        }
     }
-}
 }

@@ -21,8 +21,8 @@ class GuarantorsSeeder extends Seeder
         $data = [
             [
                 'id' => 1,
-                'client_id' => 4,
-                'guarantor_member_id' => 1,
+                'client_id' => 1,
+                'guarantor_member_id' => 2,
                 'relationship' => 'JHIKJ',
                 'notes' => null,
                 'is_active' => true,
@@ -34,8 +34,8 @@ class GuarantorsSeeder extends Seeder
             ],
             [
                 'id' => 2,
-                'client_id' => 5,
-                'guarantor_member_id' => 4,
+                'client_id' => 2,
+                'guarantor_member_id' => 1,
                 'relationship' => 'GHFGHFGH',
                 'notes' => null,
                 'is_active' => true,

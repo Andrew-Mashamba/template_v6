@@ -76,6 +76,24 @@ class BudgetmanagementsSeeder extends Seeder
         ];
 
         foreach ($data as $row) {
+            // Check if expense_account exists
+            if (isset($row['expense_account_id'])) {
+                $accountExists = DB::table('accounts')->where('id', $row['expense_account_id'])->exists();
+                if (!$accountExists) {
+                    // Find any expense account or use null
+                    $expenseAccount = DB::table('accounts')
+                        ->where('account_name', 'like', '%expense%')
+                        ->orWhere('account_name', 'like', '%budget%')
+                        ->first();
+                    
+                    if ($expenseAccount) {
+                        $row['expense_account_id'] = $expenseAccount->id;
+                    } else {
+                        $row['expense_account_id'] = null;
+                    }
+                }
+            }
+            
             DB::table('budget_managements')->insert($row);
     }
 }

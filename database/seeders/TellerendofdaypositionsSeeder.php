@@ -21,6 +21,7 @@ class TellerendofdaypositionsSeeder extends Seeder
         $data = [
             [
                 'id' => 1,
+                'institution_id' => 1,
                 'employee_id' => 1,
                 'branch_id' => 1,
                 'til_number' => 000001,
@@ -35,8 +36,9 @@ class TellerendofdaypositionsSeeder extends Seeder
             ],
             [
                 'id' => 2,
+                'institution_id' => 1,
                 'employee_id' => 2,
-                'branch_id' => 2,
+                'branch_id' => 1,
                 'til_number' => 000002,
                 'til_account' => 20,
                 'til_balance' => 2000,

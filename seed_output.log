@@ -1,0 +1,631 @@
+
+   INFO  Seeding database.  
+
+  Database\Seeders\InstitutionsSeeder ................................ RUNNING  
+  Database\Seeders\InstitutionsSeeder .......................... 64.05 ms DONE  
+
+  Database\Seeders\BranchesSeeder .................................... RUNNING  
+  Database\Seeders\BranchesSeeder ............................. 217.22 ms DONE  
+
+  Database\Seeders\DepartmentsSeeder ................................. RUNNING  
+  Database\Seeders\DepartmentsSeeder ........................... 23.41 ms DONE  
+
+  Database\Seeders\RolesSeeder ....................................... RUNNING  
+  Database\Seeders\RolesSeeder .................................. 6.98 ms DONE  
+
+  Database\Seeders\SubrolesSeeder .................................... RUNNING  
+  Database\Seeders\SubrolesSeeder ............................... 2.99 ms DONE  
+
+  Database\Seeders\PermissionsSeeder ................................. RUNNING  
+  Database\Seeders\PermissionsSeeder ............................ 6.56 ms DONE  
+
+  Database\Seeders\UsersSeeder ....................................... RUNNING  
+  Database\Seeders\UsersSeeder ................................. 76.39 ms DONE  
+
+  Database\Seeders\UserrolesSeeder ................................... RUNNING  
+  Database\Seeders\UserrolesSeeder .............................. 2.61 ms DONE  
+
+  Database\Seeders\UserpermissionsSeeder ............................. RUNNING  
+  Database\Seeders\UserpermissionsSeeder ........................ 2.78 ms DONE  
+
+  Database\Seeders\SubrolepermissionsSeeder .......................... RUNNING  
+  Database\Seeders\SubrolepermissionsSeeder ..................... 2.27 ms DONE  
+
+  Database\Seeders\RolepermissionsSeeder ............................. RUNNING  
+  Database\Seeders\RolepermissionsSeeder ........................ 2.34 ms DONE  
+
+  Database\Seeders\UsersubmenusSeeder ................................ RUNNING  
+  Database\Seeders\UsersubmenusSeeder ........................... 1.66 ms DONE  
+
+  Database\Seeders\UsersubrolesSeeder ................................ RUNNING  
+  Database\Seeders\UsersubrolesSeeder ........................... 1.91 ms DONE  
+
+  Database\Seeders\UserprofilesSeeder ................................ RUNNING  
+  Database\Seeders\UserprofilesSeeder ........................... 3.41 ms DONE  
+
+  Database\Seeders\UsersecurityprofilesSeeder ........................ RUNNING  
+  Database\Seeders\UsersecurityprofilesSeeder ................... 1.80 ms DONE  
+
+  Database\Seeders\PasswordpoliciesSeeder ............................ RUNNING  
+  Database\Seeders\PasswordpoliciesSeeder ....................... 1.16 ms DONE  
+
+  Database\Seeders\PasswordPolicySeeder .............................. RUNNING  
+  Database\Seeders\PasswordPolicySeeder ......................... 1.00 ms DONE  
+
+  Database\Seeders\MenulistSeeder .................................... RUNNING  
+  Database\Seeders\MenulistSeeder ............................... 1.65 ms DONE  
+
+  Database\Seeders\ConsolidatedMenuSeeder ............................ RUNNING  
+  Database\Seeders\ConsolidatedMenuSeeder ....................... 2.49 ms DONE  
+
+  Database\Seeders\SubMenusSeeder .................................... RUNNING  
+  Database\Seeders\SubMenusSeeder .............................. 24.05 ms DONE  
+
+  Database\Seeders\MenuActionsSeeder ................................. RUNNING  
+  Database\Seeders\MenuActionsSeeder ........................... 35.15 ms DONE  
+
+  Database\Seeders\RoleMenuActionsSeeder ............................. RUNNING  
+  Database\Seeders\RoleMenuActionsSeeder ....................... 11.28 ms DONE  
+
+  Database\Seeders\ClientsSeeder ..................................... RUNNING  
+  Database\Seeders\ClientsSeeder ............................... 38.93 ms DONE  
+
+  Database\Seeders\ExampleMembersSeeder .............................. RUNNING  
+  Database\Seeders\ExampleMembersSeeder ........................ 24.66 ms DONE  
+
+  Database\Seeders\MembercategoriesSeeder ............................ RUNNING  
+  Database\Seeders\MembercategoriesSeeder ....................... 2.44 ms DONE  
+
+  Database\Seeders\ClientdocumentsSeeder ............................. RUNNING  
+  Database\Seeders\ClientdocumentsSeeder ........................ 2.45 ms DONE  
+
+  Database\Seeders\PendingregistrationsSeeder ........................ RUNNING  
+  Database\Seeders\PendingregistrationsSeeder ................... 1.31 ms DONE  
+
+  Database\Seeders\WebportalusersSeeder .............................. RUNNING  
+  Database\Seeders\WebportalusersSeeder ......................... 4.77 ms DONE  
+
+  Database\Seeders\ServicesSeeder .................................... RUNNING  
+  Database\Seeders\ServicesSeeder ............................... 8.31 ms DONE  
+
+  Database\Seeders\SubProductsSeeder ................................. RUNNING  
+  Database\Seeders\SubProductsSeeder ............................ 1.93 ms DONE  
+
+  Database\Seeders\LoanSubProductsSeeder ............................. RUNNING  
+Inserted: NBCSaccos butua
+Inserted: ONJA
+Inserted: MKOKO WA DHARURA
+Inserted: MKOKO WA MAENDELEO MDOGO
+Inserted: MKOKO WA MAENDELEO MKUBWA
+Inserted: MKOKO WA BIDHAA ZA NYUMBANI
+Inserted: MKOKO WA WASTAAFU
+Inserted: MKOKO WA WASTAAFU (DHARURA)
+Inserted: MKOKO WA CHAPCHAP
+Inserted: MKOKO WA BIASHARA
+Inserted: MKOKO WA SIKUKUUU
+
+Loan sub-products seeding completed successfully!
+  Database\Seeders\LoanSubProductsSeeder ........................ 7.60 ms DONE  
+
+  Database\Seeders\ProducthaschargesSeeder ........................... RUNNING  
+  Database\Seeders\ProducthaschargesSeeder ...................... 2.47 ms DONE  
+
+  Database\Seeders\ProducthasinsuranceSeeder ......................... RUNNING  
+  Database\Seeders\ProducthasinsuranceSeeder .................... 2.08 ms DONE  
+
+  Database\Seeders\SavingstypesSeeder ................................ RUNNING  
+  Database\Seeders\SavingstypesSeeder ........................... 2.58 ms DONE  
+
+  Database\Seeders\DeposittypesSeeder ................................ RUNNING  
+  Database\Seeders\DeposittypesSeeder ........................... 2.40 ms DONE  
+
+  Database\Seeders\AccountsSeeder .................................... RUNNING  
+  Database\Seeders\AccountsSeeder ............................. 116.38 ms DONE  
+
+  Database\Seeders\GeneralledgerSeeder ............................... RUNNING  
+  Database\Seeders\GeneralledgerSeeder .......................... 2.59 ms DONE  
+
+  Database\Seeders\SubaccountsSeeder ................................. RUNNING  
+  Database\Seeders\SubaccountsSeeder ............................ 3.30 ms DONE  
+
+  Database\Seeders\AssetaccountsSeeder ............................... RUNNING  
+  Database\Seeders\AssetaccountsSeeder .......................... 2.24 ms DONE  
+
+  Database\Seeders\CapitalaccountsSeeder ............................. RUNNING  
+  Database\Seeders\CapitalaccountsSeeder ........................ 3.10 ms DONE  
+
+  Database\Seeders\ExpenseaccountsSeeder ............................. RUNNING  
+  Database\Seeders\ExpenseaccountsSeeder ........................ 1.82 ms DONE  
+
+  Database\Seeders\IncomeaccountsSeeder .............................. RUNNING  
+  Database\Seeders\IncomeaccountsSeeder ......................... 1.71 ms DONE  
+
+  Database\Seeders\LiabilityaccountsSeeder ........................... RUNNING  
+  Database\Seeders\LiabilityaccountsSeeder ...................... 1.87 ms DONE  
+
+  Database\Seeders\BudgetaccountsSeeder .............................. RUNNING  
+  Database\Seeders\BudgetaccountsSeeder ......................... 1.64 ms DONE  
+
+  Database\Seeders\AccounthistoricalbalancesSeeder ................... RUNNING  
+  Database\Seeders\AccounthistoricalbalancesSeeder .............. 2.89 ms DONE  
+
+  Database\Seeders\HistoricalbalancesSeeder .......................... RUNNING  
+  Database\Seeders\HistoricalbalancesSeeder ..................... 2.67 ms DONE  
+
+  Database\Seeders\SetupAccountsSeeder ............................... RUNNING  
+  Database\Seeders\SetupAccountsSeeder .......................... 1.53 ms DONE  
+
+  Database\Seeders\LoansSeeder ....................................... RUNNING  
+  Database\Seeders\LoansSeeder ................................. 16.80 ms DONE  
+
+  Database\Seeders\LoanssummarySeeder ................................ RUNNING  
+  Database\Seeders\LoanssummarySeeder ........................... 1.77 ms DONE  
+
+  Database\Seeders\LoansschedulesSeeder .............................. RUNNING  
+  Database\Seeders\LoansschedulesSeeder ......................... 2.23 ms DONE  
+
+  Database\Seeders\LoansarreasSeeder ................................. RUNNING  
+  Database\Seeders\LoansarreasSeeder ............................ 2.57 ms DONE  
+
+  Database\Seeders\LoansoriginatedSeeder ............................. RUNNING  
+  Database\Seeders\LoansoriginatedSeeder ........................ 1.84 ms DONE  
+
+  Database\Seeders\LoanapprovalsSeeder ............................... RUNNING  
+  Database\Seeders\LoanapprovalsSeeder .......................... 2.68 ms DONE  
+
+  Database\Seeders\LoanauditlogsSeeder ............................... RUNNING  
+  Database\Seeders\LoanauditlogsSeeder .......................... 2.45 ms DONE  
+
+  Database\Seeders\LoanstagesSeeder .................................. RUNNING  
+  Database\Seeders\LoanstagesSeeder ............................. 1.36 ms DONE  
+
+  Database\Seeders\CurrentloansstagesSeeder .......................... RUNNING  
+  Database\Seeders\CurrentloansstagesSeeder ..................... 1.67 ms DONE  
+
+  Database\Seeders\LoanprocessprogressSeeder ......................... RUNNING  
+  Database\Seeders\LoanprocessprogressSeeder .................... 2.27 ms DONE  
+
+  Database\Seeders\LoanproductchargesSeeder .......................... RUNNING  
+  Database\Seeders\LoanproductchargesSeeder ..................... 2.20 ms DONE  
+
+  Database\Seeders\LoanprovisionsettingsSeeder ....................... RUNNING  
+  Database\Seeders\LoanprovisionsettingsSeeder .................. 1.67 ms DONE  
+
+  Database\Seeders\LoanimagesSeeder .................................. RUNNING  
+  Database\Seeders\LoanimagesSeeder ............................. 1.44 ms DONE  
+
+  Database\Seeders\LoancollateralSeeder .............................. RUNNING  
+  Database\Seeders\LoancollateralSeeder ......................... 2.46 ms DONE  
+
+  Database\Seeders\LoancollateralsSeeder ............................. RUNNING  
+Skipping loan collateral with loan_guarantor_id 1 - guarantor doesn't exist
+  Database\Seeders\LoancollateralsSeeder ........................ 2.63 ms DONE  
+
+  Database\Seeders\LoanguarantorsSeeder .............................. RUNNING  
+  Database\Seeders\LoanguarantorsSeeder ......................... 4.04 ms DONE  
+
+  Database\Seeders\GuarantorsSeeder .................................. RUNNING  
+  Database\Seeders\GuarantorsSeeder ............................. 2.08 ms DONE  
+
+  Database\Seeders\CollateralsSeeder ................................. RUNNING  
+  Database\Seeders\CollateralsSeeder ............................ 2.34 ms DONE  
+
+  Database\Seeders\CollateralTypesSeeder ............................. RUNNING  
+  Database\Seeders\CollateralTypesSeeder ........................ 4.55 ms DONE  
+
+  Database\Seeders\MaincollateraltypesSeeder ......................... RUNNING  
+  Database\Seeders\MaincollateraltypesSeeder .................... 1.31 ms DONE  
+
+  Database\Seeders\CustomcollateralsSeeder ........................... RUNNING  
+  Database\Seeders\CustomcollateralsSeeder ...................... 1.64 ms DONE  
+
+  Database\Seeders\SampleLoanCollateralSeeder ........................ RUNNING  
+No active loans found. Creating a sample loan first...
+  Database\Seeders\SampleLoanCollateralSeeder ................... 0.41 ms DONE  
+
+  Database\Seeders\MaendeleoloansSeeder .............................. RUNNING  
+  Database\Seeders\MaendeleoloansSeeder ......................... 2.01 ms DONE  
+
+  Database\Seeders\SettledloansSeeder ................................ RUNNING  
+  Database\Seeders\SettledloansSeeder ........................... 1.75 ms DONE  
+
+  Database\Seeders\ShortlongtermloansSeeder .......................... RUNNING  
+  Database\Seeders\ShortlongtermloansSeeder ..................... 2.51 ms DONE  
+
+  Database\Seeders\ApproversofloansstagesSeeder ...................... RUNNING  
+  Database\Seeders\ApproversofloansstagesSeeder ................. 1.86 ms DONE  
+
+  Database\Seeders\BanksSeeder ....................................... RUNNING  
+  Database\Seeders\BanksSeeder .................................. 2.50 ms DONE  
+
+  Database\Seeders\BankaccountsSeeder ................................ RUNNING  
+  Database\Seeders\BankaccountsSeeder ........................... 4.56 ms DONE  
+
+  Database\Seeders\BanktransactionsSeeder ............................ RUNNING  
+  Database\Seeders\BanktransactionsSeeder ....................... 4.59 ms DONE  
+
+  Database\Seeders\BanktransfersSeeder ............................... RUNNING  
+  Database\Seeders\BanktransfersSeeder .......................... 5.52 ms DONE  
+
+  Database\Seeders\BankstatementsstagingtableSeeder .................. RUNNING  
+  Database\Seeders\BankstatementsstagingtableSeeder ............. 1.69 ms DONE  
+
+  Database\Seeders\TransactionsSeeder ................................ RUNNING  
+  Database\Seeders\TransactionsSeeder .......................... 15.74 ms DONE  
+
+  Database\Seeders\TransactionauditlogsSeeder ........................ RUNNING  
+  Database\Seeders\TransactionauditlogsSeeder ................... 3.68 ms DONE  
+
+  Database\Seeders\TransactionreversalsSeeder ........................ RUNNING  
+  Database\Seeders\TransactionreversalsSeeder ................... 5.99 ms DONE  
+
+  Database\Seeders\ImbanktransactionsSeeder .......................... RUNNING  
+  Database\Seeders\ImbanktransactionsSeeder ..................... 1.62 ms DONE  
+
+  Database\Seeders\GepgtransactionsSeeder ............................ RUNNING  
+  Database\Seeders\GepgtransactionsSeeder ...................... 19.64 ms DONE  
+
+  Database\Seeders\InternaltransfersSeeder ........................... RUNNING  
+  Database\Seeders\InternaltransfersSeeder ..................... 10.10 ms DONE  
+
+  Database\Seeders\TillsSeeder ....................................... RUNNING  
+  Database\Seeders\TillsSeeder .................................. 8.47 ms DONE  
+
+  Database\Seeders\TilltransactionsSeeder ............................ RUNNING  
+  Database\Seeders\TilltransactionsSeeder ....................... 4.02 ms DONE  
+
+  Database\Seeders\TillreconciliationsSeeder ......................... RUNNING  
+  Database\Seeders\TillreconciliationsSeeder .................... 3.67 ms DONE  
+
+  Database\Seeders\TellerendofdaypositionsSeeder ..................... RUNNING  
+  Database\Seeders\TellerendofdaypositionsSeeder ................ 1.66 ms DONE  
+
+  Database\Seeders\TellersSeeder ..................................... RUNNING  
+  Database\Seeders\TellersSeeder ................................ 6.52 ms DONE  
+
+  Database\Seeders\CashmovementsSeeder ............................... RUNNING  
+  Database\Seeders\CashmovementsSeeder .......................... 2.83 ms DONE  
+
+  Database\Seeders\CashflowconfigurationsSeeder ...................... RUNNING  
+  Database\Seeders\CashflowconfigurationsSeeder ................. 2.58 ms DONE  
+
+  Database\Seeders\CashInTransitProvidersSeeder ...................... RUNNING  
+  Database\Seeders\CashInTransitProvidersSeeder ............... 269.39 ms DONE  
+
+  Database\Seeders\VaultsSeeder ...................................... RUNNING  
+No branches found. Skipping VaultsSeeder.
+  Database\Seeders\VaultsSeeder ................................ 11.79 ms DONE  
+
+  Database\Seeders\StrongroomledgersSeeder ........................... RUNNING  
+  Database\Seeders\StrongroomledgersSeeder ...................... 5.74 ms DONE  
+
+  Database\Seeders\SecuritytransportlogsSeeder ....................... RUNNING  
+  Database\Seeders\SecuritytransportlogsSeeder .................. 3.85 ms DONE  
+
+  Database\Seeders\PaymentmethodsSeeder .............................. RUNNING  
+  Database\Seeders\PaymentmethodsSeeder ......................... 1.50 ms DONE  
+
+  Database\Seeders\PaymentsSeeder .................................... RUNNING  
+  Database\Seeders\PaymentsSeeder ............................... 3.80 ms DONE  
+
+  Database\Seeders\PaymentnotificationsSeeder ........................ RUNNING  
+  Database\Seeders\PaymentnotificationsSeeder ................... 2.43 ms DONE  
+
+  Database\Seeders\BillsSeeder ....................................... RUNNING  
+Skipping bill - no services found
+Skipping bill - no services found
+Skipping bill - no services found
+Skipping bill - no services found
+Skipping bill - no services found
+Skipping bill - no services found
+Skipping bill - no services found
+Skipping bill - no services found
+Skipping bill - no services found
+Skipping bill - no services found
+  Database\Seeders\BillsSeeder .................................. 6.46 ms DONE  
+
+  Database\Seeders\BillingcyclesSeeder ............................... RUNNING  
+  Database\Seeders\BillingcyclesSeeder .......................... 1.82 ms DONE  
+
+  Database\Seeders\OrdersSeeder ...................................... RUNNING  
+  Database\Seeders\OrdersSeeder ................................. 2.23 ms DONE  
+
+  Database\Seeders\ChequesSeeder ..................................... RUNNING  
+  Database\Seeders\ChequesSeeder ................................ 1.88 ms DONE  
+
+  Database\Seeders\ChequebooksSeeder ................................. RUNNING  
+  Database\Seeders\ChequebooksSeeder ............................ 1.62 ms DONE  
+
+  Database\Seeders\ShareownershipSeeder .............................. RUNNING  
+  Database\Seeders\ShareownershipSeeder ......................... 1.61 ms DONE  
+
+  Database\Seeders\SharetransfersSeeder .............................. RUNNING  
+  Database\Seeders\SharetransfersSeeder ......................... 3.82 ms DONE  
+
+  Database\Seeders\SharewithdrawalsSeeder ............................ RUNNING  
+  Database\Seeders\SharewithdrawalsSeeder ....................... 2.36 ms DONE  
+
+  Database\Seeders\IssuedsharesSeeder ................................ RUNNING  
+  Database\Seeders\IssuedsharesSeeder ........................... 3.76 ms DONE  
+
+  Database\Seeders\InvestmentslistSeeder ............................. RUNNING  
+  Database\Seeders\InvestmentslistSeeder ........................ 2.17 ms DONE  
+
+  Database\Seeders\InvestmenttypesSeeder ............................. RUNNING  
+  Database\Seeders\InvestmenttypesSeeder ........................ 1.60 ms DONE  
+
+  Database\Seeders\DividendsSeeder ................................... RUNNING  
+  Database\Seeders\DividendsSeeder .............................. 3.65 ms DONE  
+
+  Database\Seeders\ExpensesSeeder .................................... RUNNING  
+Skipping expense - no suitable account found
+Skipping expense - no suitable account found
+  Database\Seeders\ExpensesSeeder ............................... 2.78 ms DONE  
+
+  Database\Seeders\ExpenseapprovalsSeeder ............................ RUNNING  
+  Database\Seeders\ExpenseapprovalsSeeder ....................... 1.86 ms DONE  
+
+  Database\Seeders\BudgetmanagementsSeeder ........................... RUNNING  
+  Database\Seeders\BudgetmanagementsSeeder ...................... 4.67 ms DONE  
+
+  Database\Seeders\BudgetapproversSeeder ............................. RUNNING  
+  Database\Seeders\BudgetapproversSeeder ........................ 2.34 ms DONE  
+
+  Database\Seeders\MainbudgetSeeder .................................. RUNNING  
+  Database\Seeders\MainbudgetSeeder ............................. 1.89 ms DONE  
+
+  Database\Seeders\MainbudgetpendingSeeder ........................... RUNNING  
+  Database\Seeders\MainbudgetpendingSeeder ...................... 1.85 ms DONE  
+
+  Database\Seeders\EmployeesSeeder ................................... RUNNING  
+  Database\Seeders\EmployeesSeeder .............................. 6.54 ms DONE  
+
+  Database\Seeders\EmployeerolesSeeder ............................... RUNNING  
+  Database\Seeders\EmployeerolesSeeder .......................... 1.62 ms DONE  
+
+  Database\Seeders\EmployeerequestsSeeder ............................ RUNNING  
+  Database\Seeders\EmployeerequestsSeeder ....................... 1.52 ms DONE  
+
+  Database\Seeders\EmployeefilesSeeder ............................... RUNNING  
+  Database\Seeders\EmployeefilesSeeder .......................... 1.67 ms DONE  
+
+  Database\Seeders\PayrollsSeeder .................................... RUNNING  
+  Database\Seeders\PayrollsSeeder ............................... 1.96 ms DONE  
+
+  Database\Seeders\LeavesSeeder ...................................... RUNNING  
+  Database\Seeders\LeavesSeeder ................................. 1.82 ms DONE  
+
+  Database\Seeders\LeavemanagementSeeder ............................. RUNNING  
+  Database\Seeders\LeavemanagementSeeder ........................ 2.45 ms DONE  
+
+  Database\Seeders\BenefitsSeeder .................................... RUNNING  
+  Database\Seeders\BenefitsSeeder ............................... 2.16 ms DONE  
+
+  Database\Seeders\HiresapprovalsSeeder .............................. RUNNING  
+Skipping hires_approval - no users found
+Skipping hires_approval - no users found
+  Database\Seeders\HiresapprovalsSeeder ......................... 2.49 ms DONE  
+
+  Database\Seeders\InterviewsSeeder .................................. RUNNING  
+  Database\Seeders\InterviewsSeeder ............................. 1.36 ms DONE  
+
+  Database\Seeders\JobpostingsSeeder ................................. RUNNING  
+  Database\Seeders\JobpostingsSeeder ............................ 5.33 ms DONE  
+
+  Database\Seeders\ApprovalsSeeder ................................... RUNNING  
+  Database\Seeders\ApprovalsSeeder ............................. 10.34 ms DONE  
+
+  Database\Seeders\ApprovalactionsSeeder ............................. RUNNING  
+  Database\Seeders\ApprovalactionsSeeder ........................ 1.49 ms DONE  
+
+  Database\Seeders\ApprovalcommentsSeeder ............................ RUNNING  
+  Database\Seeders\ApprovalcommentsSeeder ....................... 1.43 ms DONE  
+
+  Database\Seeders\ApprovalmatrixconfigsSeeder ....................... RUNNING  
+  Database\Seeders\ApprovalmatrixconfigsSeeder .................. 1.52 ms DONE  
+
+  Database\Seeders\CommitteesSeeder .................................. RUNNING  
+  Database\Seeders\CommitteesSeeder ............................. 7.93 ms DONE  
+
+  Database\Seeders\CommitteemembersSeeder ............................ RUNNING  
+  Database\Seeders\CommitteemembersSeeder ....................... 2.70 ms DONE  
+
+  Database\Seeders\CommitteeapprovalsSeeder .......................... RUNNING  
+  Database\Seeders\CommitteeapprovalsSeeder ..................... 3.18 ms DONE  
+
+  Database\Seeders\ComplaintCategoriesSeeder ......................... RUNNING  
+  Database\Seeders\ComplaintCategoriesSeeder .................... 5.92 ms DONE  
+
+  Database\Seeders\ComplaintStatusesSeeder ........................... RUNNING  
+  Database\Seeders\ComplaintStatusesSeeder ...................... 5.95 ms DONE  
+
+  Database\Seeders\ComplaintsSeeder .................................. RUNNING  
+  Database\Seeders\ComplaintsSeeder ............................. 5.73 ms DONE  
+
+  Database\Seeders\ReportsSeeder ..................................... RUNNING  
+  Database\Seeders\ReportsSeeder ................................ 1.84 ms DONE  
+
+  Database\Seeders\ScheduledreportsSeeder ............................ RUNNING  
+Skipping scheduled_report - no users found
+Skipping scheduled_report - no users found
+  Database\Seeders\ScheduledreportsSeeder ....................... 3.02 ms DONE  
+
+  Database\Seeders\DatafeedsSeeder ................................... RUNNING  
+  Database\Seeders\DatafeedsSeeder ............................. 58.71 ms DONE  
+
+  Database\Seeders\FinancialdataSeeder ............................... RUNNING  
+  Database\Seeders\FinancialdataSeeder .......................... 1.43 ms DONE  
+
+  Database\Seeders\FinancialpositionSeeder ........................... RUNNING  
+  Database\Seeders\FinancialpositionSeeder ...................... 1.24 ms DONE  
+
+  Database\Seeders\FinancialratiosSeeder ............................. RUNNING  
+  Database\Seeders\FinancialratiosSeeder ........................ 1.22 ms DONE  
+
+  Database\Seeders\AnalysissessionsSeeder ............................ RUNNING  
+  Database\Seeders\AnalysissessionsSeeder ....................... 3.26 ms DONE  
+
+  Database\Seeders\ScoresSeeder ...................................... RUNNING  
+  Database\Seeders\ScoresSeeder ................................. 2.23 ms DONE  
+
+  Database\Seeders\ChargesSeeder ..................................... RUNNING  
+  Database\Seeders\ChargesSeeder ................................ 1.63 ms DONE  
+
+  Database\Seeders\ChargeslistSeeder ................................. RUNNING  
+  Database\Seeders\ChargeslistSeeder ............................ 0.98 ms DONE  
+
+  Database\Seeders\InsurancesSeeder .................................. RUNNING  
+  Database\Seeders\InsurancesSeeder ............................. 1.87 ms DONE  
+
+  Database\Seeders\InsurancelistSeeder ............................... RUNNING  
+  Database\Seeders\InsurancelistSeeder .......................... 1.07 ms DONE  
+
+  Database\Seeders\InterestpayablesSeeder ............................ RUNNING  
+  Database\Seeders\InterestpayablesSeeder ....................... 1.42 ms DONE  
+
+  Database\Seeders\AssetslistSeeder .................................. RUNNING  
+  Database\Seeders\AssetslistSeeder ............................. 1.15 ms DONE  
+
+  Database\Seeders\AsseturlSeeder .................................... RUNNING  
+  Database\Seeders\AsseturlSeeder ............................... 0.98 ms DONE  
+
+  Database\Seeders\PpesSeeder ........................................ RUNNING  
+  Database\Seeders\PpesSeeder ................................... 2.47 ms DONE  
+
+  Database\Seeders\InventoriesSeeder ................................. RUNNING  
+  Database\Seeders\InventoriesSeeder ............................ 2.03 ms DONE  
+
+  Database\Seeders\LandedpropertytypesSeeder ......................... RUNNING  
+  Database\Seeders\LandedpropertytypesSeeder .................... 1.18 ms DONE  
+
+  Database\Seeders\MovablepropertytypesSeeder ........................ RUNNING  
+  Database\Seeders\MovablepropertytypesSeeder ................... 1.22 ms DONE  
+
+  Database\Seeders\VendorsSeeder ..................................... RUNNING  
+  Database\Seeders\VendorsSeeder ................................ 1.34 ms DONE  
+
+  Database\Seeders\ContractmanagementsSeeder ......................... RUNNING  
+  Database\Seeders\ContractmanagementsSeeder .................... 1.62 ms DONE  
+
+  Database\Seeders\TendersSeeder ..................................... RUNNING  
+  Database\Seeders\TendersSeeder ................................ 1.81 ms DONE  
+
+  Database\Seeders\PurchasesSeeder ................................... RUNNING  
+  Database\Seeders\PurchasesSeeder .............................. 1.44 ms DONE  
+
+  Database\Seeders\NotificationsSeeder ............................... RUNNING  
+  Database\Seeders\NotificationsSeeder .......................... 4.50 ms DONE  
+
+  Database\Seeders\NotificationlogsSeeder ............................ RUNNING  
+  Database\Seeders\NotificationlogsSeeder ....................... 4.10 ms DONE  
+
+  Database\Seeders\MandatorysavingsnotificationsSeeder ............... RUNNING  
+  Database\Seeders\MandatorysavingsnotificationsSeeder .......... 2.83 ms DONE  
+
+  Database\Seeders\QueryresponsesSeeder .............................. RUNNING  
+  Database\Seeders\QueryresponsesSeeder ......................... 1.77 ms DONE  
+
+  Database\Seeders\AuditlogsSeeder ................................... RUNNING  
+Skipping audit_log - no users found
+Skipping audit_log - no users found
+  Database\Seeders\AuditlogsSeeder .............................. 1.91 ms DONE  
+
+  Database\Seeders\UseractionlogsSeeder .............................. RUNNING  
+Skipping user_action_log - no users found
+Skipping user_action_log - no users found
+  Database\Seeders\UseractionlogsSeeder ......................... 1.92 ms DONE  
+
+  Database\Seeders\ApikeysSeeder ..................................... RUNNING  
+Skipping api_key - no users found
+Skipping api_key - no users found
+  Database\Seeders\ApikeysSeeder ................................ 2.41 ms DONE  
+
+  Database\Seeders\ProcessCodeConfigsSeeder .......................... RUNNING  
+  Database\Seeders\ProcessCodeConfigsSeeder .................... 12.66 ms DONE  
+
+  Database\Seeders\CallbackSeeder .................................... RUNNING  
+  Database\Seeders\CallbackSeeder ............................... 1.55 ms DONE  
+
+  Database\Seeders\OnboardingSeeder .................................. RUNNING  
+Skipping onboarding record - no users found
+Skipping onboarding record - no users found
+  Database\Seeders\OnboardingSeeder ............................. 0.73 ms DONE  
+
+  Database\Seeders\AiinteractionsSeeder .............................. RUNNING  
+Skipping ai_interaction - no users found
+Skipping ai_interaction - no users found
+  Database\Seeders\AiinteractionsSeeder ......................... 2.76 ms DONE  
+
+  Database\Seeders\CurrenciesSeeder .................................. RUNNING  
+  Database\Seeders\CurrenciesSeeder ............................. 1.53 ms DONE  
+
+  Database\Seeders\DocumenttypesSeeder ............................... RUNNING  
+  Database\Seeders\DocumenttypesSeeder .......................... 1.50 ms DONE  
+
+  Database\Seeders\MobileNetworksSeeder .............................. RUNNING  
+  Database\Seeders\MobileNetworksSeeder ......................... 2.58 ms DONE  
+
+  Database\Seeders\MnosSeeder ........................................ RUNNING  
+  Database\Seeders\MnosSeeder ................................... 8.70 ms DONE  
+
+  Database\Seeders\TaxesSeeder ....................................... RUNNING  
+  Database\Seeders\TaxesSeeder .................................. 8.17 ms DONE  
+
+  Database\Seeders\StandinginstructionsSeeder ........................ RUNNING  
+  Database\Seeders\StandinginstructionsSeeder ................... 2.08 ms DONE  
+
+  Database\Seeders\LockedamountsSeeder ............................... RUNNING  
+Skipping locked amount with account_id 262 - account doesn't exist
+  Database\Seeders\LockedamountsSeeder .......................... 3.35 ms DONE  
+
+  Database\Seeders\LossreservesSeeder ................................ RUNNING  
+  Database\Seeders\LossreservesSeeder ........................... 1.31 ms DONE  
+
+  Database\Seeders\MandatorySavingsSettingsSeeder .................... RUNNING  
+  Database\Seeders\MandatorySavingsSettingsSeeder ............... 1.48 ms DONE  
+
+  Database\Seeders\MandatorysavingstrackingSeeder .................... RUNNING  
+  Database\Seeders\MandatorysavingstrackingSeeder ............... 2.83 ms DONE  
+
+  Database\Seeders\UnearneddeferredrevenueSeeder ..................... RUNNING  
+  Database\Seeders\UnearneddeferredrevenueSeeder ................ 1.66 ms DONE  
+
+  Database\Seeders\PayablesSeeder .................................... RUNNING  
+  Database\Seeders\PayablesSeeder ............................... 1.39 ms DONE  
+
+  Database\Seeders\ReceivablesSeeder ................................. RUNNING  
+  Database\Seeders\ReceivablesSeeder ............................ 2.35 ms DONE  
+
+  Database\Seeders\TemppermissionsSeeder ............................. RUNNING  
+  Database\Seeders\TemppermissionsSeeder ........................ 2.81 ms DONE  
+
+  Database\Seeders\GroupsSeeder ...................................... RUNNING  
+  Database\Seeders\GroupsSeeder ................................. 1.49 ms DONE  
+
+  Database\Seeders\MeetingsSeeder .................................... RUNNING  
+  Database\Seeders\MeetingsSeeder ............................... 3.53 ms DONE  
+
+  Database\Seeders\MeetingattendanceSeeder ........................... RUNNING  
+  Database\Seeders\MeetingattendanceSeeder ...................... 2.30 ms DONE  
+
+  Database\Seeders\MeetingdocumentsSeeder ............................ RUNNING  
+  Database\Seeders\MeetingdocumentsSeeder ....................... 2.01 ms DONE  
+
+  Database\Seeders\LeadershipsSeeder ................................. RUNNING  
+  Database\Seeders\LeadershipsSeeder ............................ 4.43 ms DONE  
+
+  Database\Seeders\ApplicantsSeeder .................................. RUNNING  
+  Database\Seeders\ApplicantsSeeder ............................. 3.66 ms DONE  
+
+  Database\Seeders\InstitutionfilesSeeder ............................ RUNNING  
+  Database\Seeders\InstitutionfilesSeeder ....................... 1.38 ms DONE  
+
+  Database\Seeders\ProjectSeeder ..................................... RUNNING  
+  Database\Seeders\ProjectSeeder ................................ 1.21 ms DONE  
+
+  Database\Seeders\EntriesSeeder ..................................... RUNNING  
+  Database\Seeders\EntriesSeeder ................................ 1.84 ms DONE  
+
+  Database\Seeders\EntriesamountSeeder ............................... RUNNING  
+  Database\Seeders\EntriesamountSeeder .......................... 1.65 ms DONE  
+

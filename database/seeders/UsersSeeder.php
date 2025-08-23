@@ -14,11 +14,11 @@ class UsersSeeder extends Seeder
      */
     public function run()
     {
-        // Clear existing data
-        DB::table('users')->truncate();
+        // Clear existing data - delete instead of truncate to avoid foreign key issues
+        DB::table('users')->delete();
 
         // Insert existing data
-        $data = [
+            $data = [
             [
                 'id' => 2,
                 'institution_user_id' => null,
@@ -38,7 +38,7 @@ class UsersSeeder extends Seeder
                 'employeeId' => null,
                 'department_code' => 'GOV',
                 'sub_role' => null,
-                'branch' => 1,
+                'branch_id' => 1,
                 'created_at' => '2025-07-17 16:25:47',
                 'updated_at' => '2025-07-17 16:25:47',
                 'last_update_password' => '2025-07-17 19:25:42',
@@ -73,7 +73,7 @@ class UsersSeeder extends Seeder
                 'employeeId' => null,
                 'department_code' => 'ICT',
                 'sub_role' => null,
-                'branch' => 1,
+                'branch_id' => 1,
                 'created_at' => '2025-07-17 16:25:47',
                 'updated_at' => '2025-07-18 03:33:03',
                 'last_update_password' => '2025-07-17 19:25:42',
@@ -93,6 +93,6 @@ class UsersSeeder extends Seeder
 
         foreach ($data as $row) {
             DB::table('users')->insert($row);
+        }
     }
-}
 }

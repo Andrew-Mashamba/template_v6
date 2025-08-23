@@ -41,8 +41,6 @@ class LockedamountsSeeder extends Seeder
                 'expires_at' => null,
                 'locked_by' => 1,
                 'released_by' => null,
-                'created_at' => '2025-07-18 06:56:42',
-                'updated_at' => '2025-07-18 06:56:42',
             ],
         ];
 
@@ -51,7 +49,7 @@ class LockedamountsSeeder extends Seeder
             $accountExists = DB::table('accounts')->where('id', $row['account_id'])->exists();
             if (!$accountExists) {
                 // Skip this locked amount if account doesn't exist
-                $this->command->warn("Skipping locked amount with account_id {$row['account_id']} - account doesn't exist");
+                if ($this->command) $this->command->warn("Skipping locked amount with account_id {$row['account_id']} - account doesn't exist");
                 continue;
             }
             

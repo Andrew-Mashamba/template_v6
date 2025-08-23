@@ -76,20 +76,32 @@ class PpePermissionsSeeder extends Seeder
 
         // Insert permissions if they don't exist
         foreach ($permissions as $permission) {
-            DB::table('permissions')
-                ->updateOrInsert(
-                    ['name' => $permission['name'], 'guard_name' => $permission['guard_name']],
-                    $permission
-                );
+            $exists = DB::table('permissions')
+                ->where('name', $permission['name'])
+                ->where('guard_name', $permission['guard_name'])
+                ->exists();
+            
+            if (!$exists) {
+                DB::table('permissions')->insert($permission);
+            }
         }
 
         // Create PPE Manager role if it doesn't exist
-        $roleId = DB::table('roles')->insertGetId([
-            'name' => 'ppe-manager',
-            'guard_name' => 'web',
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
+        $existingRole = DB::table('roles')
+            ->where('name', 'ppe-manager')
+            ->where('guard_name', 'web')
+            ->first();
+        
+        if ($existingRole) {
+            $roleId = $existingRole->id;
+        } else {
+            $roleId = DB::table('roles')->insertGetId([
+                'name' => 'ppe-manager',
+                'guard_name' => 'web',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+        }
 
         // Get permission IDs
         $permissionIds = DB::table('permissions')

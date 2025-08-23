@@ -52,6 +52,20 @@ class ApikeysSeeder extends Seeder
         ];
 
         foreach ($data as $row) {
+            // Validate created_by user reference
+            if (isset($row['created_by'])) {
+                $userExists = DB::table('users')->where('id', $row['created_by'])->exists();
+                if (!$userExists) {
+                    $firstUser = DB::table('users')->first();
+                    if (!$firstUser) {
+                        // Skip this record if no users exist
+                        if ($this->command) $this->command->warn("Skipping api_key - no users found");
+                        continue;
+                    }
+                    $row['created_by'] = $firstUser->id;
+                }
+            }
+            
             DB::table('api_keys')->insert($row);
     }
 }

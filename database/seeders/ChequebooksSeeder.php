@@ -21,6 +21,7 @@ class ChequebooksSeeder extends Seeder
         $data = [
             [
                 'id' => 1,
+                'institution_id' => 1,
                 'bank' => 1,
                 'chequeBook_id' => 1,
                 'remaining_leaves' => 50,
@@ -32,11 +33,12 @@ class ChequebooksSeeder extends Seeder
             ],
             [
                 'id' => 2,
+                'institution_id' => 1,
                 'bank' => 2,
                 'chequeBook_id' => 2,
                 'remaining_leaves' => 100,
                 'leave_number' => '000002',
-                'branch_id' => 2,
+                'branch_id' => 1,
                 'status' => 'ACTIVE',
                 'created_at' => '2025-07-23 11:38:33',
                 'updated_at' => now(),

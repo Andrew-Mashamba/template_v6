@@ -48,7 +48,7 @@ class ExpensesSeeder extends Seeder
                 'payment_type' => 'money_transfer',
                 'user_id' => 1,
                 'status' => 'PENDING_APPROVAL',
-                'approval_id' => 4,
+                'approval_id' => null,
                 'retirement_receipt_path' => null,
                 'created_at' => '2025-07-22 08:43:51',
                 'updated_at' => '2025-07-22 08:43:51',
@@ -75,7 +75,7 @@ class ExpensesSeeder extends Seeder
                 if ($expenseAccount) {
                     $row['account_id'] = $expenseAccount->id;
                 } else {
-                    $this->command->warn("Skipping expense - no suitable account found");
+                    if ($this->command) $this->command->warn("Skipping expense - no suitable account found");
                     continue;
                 }
             }
@@ -86,7 +86,7 @@ class ExpensesSeeder extends Seeder
                 if ($firstUser) {
                     $row['user_id'] = $firstUser->id;
                 } else {
-                    $this->command->warn("Skipping expense - no users found");
+                    if ($this->command) $this->command->warn("Skipping expense - no users found");
                     continue;
                 }
             }

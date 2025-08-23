@@ -67,7 +67,9 @@ class LoancollateralsSeeder extends Seeder
             $guarantorExists = DB::table('loan_guarantors')->where('id', $row['loan_guarantor_id'])->exists();
             if (!$guarantorExists) {
                 // Skip this collateral if guarantor doesn't exist
-                $this->command->warn("Skipping loan collateral with loan_guarantor_id {$row['loan_guarantor_id']} - guarantor doesn't exist");
+                if ($this->command) {
+                    $this->command->warn("Skipping loan collateral with loan_guarantor_id {$row['loan_guarantor_id']} - guarantor doesn't exist");
+                }
                 continue;
             }
             
@@ -76,7 +78,9 @@ class LoancollateralsSeeder extends Seeder
                 $accountExists = DB::table('accounts')->where('id', $row['account_id'])->exists();
                 if (!$accountExists) {
                     // Skip this collateral if account doesn't exist
-                    $this->command->warn("Skipping loan collateral with account_id {$row['account_id']} - account doesn't exist");
+                    if ($this->command) {
+                        $this->command->warn("Skipping loan collateral with account_id {$row['account_id']} - account doesn't exist");
+                    }
                     continue;
                 }
             }

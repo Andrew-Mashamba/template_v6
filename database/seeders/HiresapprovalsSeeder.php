@@ -40,6 +40,30 @@ class HiresapprovalsSeeder extends Seeder
         ];
 
         foreach ($data as $row) {
+            // Validate user_id and employee_id (both required)
+            $userExists = DB::table('users')->where('id', $row['user_id'])->exists();
+            if (!$userExists) {
+                $firstUser = DB::table('users')->first();
+                if (!$firstUser) {
+                    if ($this->command) $this->command->warn("Skipping hires_approval - no users found");
+                    continue;
+                }
+                $row['user_id'] = $firstUser->id;
+            }
+            
+            // Check employee_id (required field)
+            $employeeExists = DB::table('employees')->where('id', $row['employee_id'])->exists();
+            if (!$employeeExists) {
+                // Try to find any employee or use user_id as fallback
+                $firstEmployee = DB::table('employees')->first();
+                if ($firstEmployee) {
+                    $row['employee_id'] = $firstEmployee->id;
+                } else {
+                    // Use user_id as employee_id since it's required
+                    $row['employee_id'] = $row['user_id'];
+                }
+            }
+            
             DB::table('hires_approvals')->insert($row);
     }
 }
