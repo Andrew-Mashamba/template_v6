@@ -391,132 +391,411 @@
             </div>
           </div>
 
-          <!-- Shares Table -->
+          <!-- Enhanced Professional Shares Table -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-visible">
-            <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h2 class="font-medium text-gray-900">Share Accounts</h2>
-              <div class="flex items-center gap-3">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                  Total: {{ $shareAccounts->total() }}
-                </span>
-                {{--<button class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="-ml-0.5 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Refresh
-                </button>--}}
+            <div class="px-6 py-4 border-b border-gray-200">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h2 class="text-lg font-semibold text-gray-900">Share Capital Management</h2>
+                  <p class="text-sm text-gray-500 mt-1">Comprehensive share ownership and dividend tracking</p>
+                </div>
+                <div class="flex items-center gap-4">
+                  <!-- Summary Statistics -->
+                  <div class="flex items-center space-x-6">
+                    <div class="text-center">
+                      <div class="text-2xl font-bold text-indigo-600">{{ number_format($totalSharesIssued) }}</div>
+                      <div class="text-xs text-gray-500">Total Shares</div>
+                    </div>
+                    <div class="text-center">
+                      <div class="text-2xl font-bold text-green-600">TZS {{ number_format($totalShareCapital, 0) }}</div>
+                      <div class="text-xs text-gray-500">Share Capital</div>
+                    </div>
+                    <div class="text-center">
+                      <div class="text-2xl font-bold text-blue-600">{{ number_format($totalMembers) }}</div>
+                      <div class="text-xs text-gray-500">Members</div>
+                    </div>
+                  </div>
+                  
+                  <!-- Action Buttons -->
+                  <div class="flex items-center gap-2">
+                    <button 
+                      wire:click="showAddSharesAccountModal" 
+                      class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                    >
+                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                      </svg>
+                      Issue Shares
+                    </button>
+                    <button 
+                      wire:click="showDeclareDividend" 
+                      class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                    >
+                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                      </svg>
+                      Declare Dividend
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
             
+            <!-- Enhanced Table with Comprehensive Share Information -->
             <div class="overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account #</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
-                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Shares</th>
-                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Share Value</th>
-                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Share Account
+                      </div>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        Member Details
+                      </div>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                        Share Type
+                      </div>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <div class="flex items-center justify-end">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                        Share Holdings
+                      </div>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <div class="flex items-center justify-end">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                        Financial Value
+                      </div>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <div class="flex items-center justify-end">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Dividends
+                      </div>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <div class="flex items-center justify-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Status & Actions
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                   @forelse($shareAccounts as $account)
-                    <tr class="hover:bg-gray-100 transition-colors">
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="font-medium text-gray-900">{{ $account->account_number }}</div>
-                      </td>
+                    @php
+                                             // Get comprehensive share register data
+                       $shareRegister = DB::table('share_registers')
+                           ->where('share_account_number', $account->account_number)
+                           ->first();
+                       
+                       // Get member details
+                       $member = DB::table('clients')
+                           ->where('client_number', $account->client_number)
+                           ->first();
+                       
+                       // Get share product details
+                       $product = null;
+                       if ($shareRegister && $shareRegister->product_id) {
+                           $product = DB::table('sub_products')
+                               ->where('id', $shareRegister->product_id)
+                               ->first();
+                       }
+                      
+                      // Calculate additional metrics
+                      $totalIssued = $shareRegister->total_shares_issued ?? 0;
+                      $totalRedeemed = $shareRegister->total_shares_redeemed ?? 0;
+                      $totalTransferredIn = $shareRegister->total_shares_transferred_in ?? 0;
+                      $totalTransferredOut = $shareRegister->total_shares_transferred_out ?? 0;
+                      $currentBalance = $shareRegister->current_share_balance ?? 0;
+                      $nominalPrice = $shareRegister->nominal_price ?? 0;
+                      $currentPrice = $shareRegister->current_price ?? 0;
+                      $totalValue = $shareRegister->total_share_value ?? 0;
+                      $accumulatedDividends = $shareRegister->accumulated_dividends ?? 0;
+                      $totalPaidDividends = $shareRegister->total_paid_dividends ?? 0;
+                      $lastDividendDate = $shareRegister->last_dividend_date ?? null;
+                      $lastDividendRate = $shareRegister->last_dividend_rate ?? 0;
+                      $lastDividendAmount = $shareRegister->last_dividend_amount ?? 0;
+                      $openingDate = $shareRegister->opening_date ?? null;
+                      $lastActivityDate = $shareRegister->last_activity_date ?? null;
+                      $isRestricted = $shareRegister->is_restricted ?? false;
+                      $requiresApproval = $shareRegister->requires_approval ?? false;
+                    @endphp
+                    
+                    <tr class="hover:bg-gray-50 transition-colors duration-200">
+                      <!-- Share Account Information -->
                       <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
-                          <div class="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                            <span class="text-indigo-600 font-medium">
-                              {{ substr($account->first_name, 0, 1) }}{{ substr($account->last_name, 0, 1) }}
+                          <div class="flex-shrink-0 h-10 w-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                          </div>
+                          <div class="ml-4">
+                            <div class="text-sm font-semibold text-gray-900">{{ $account->account_number }}</div>
+                            <div class="text-xs text-gray-500">
+                              @if($openingDate)
+                                Opened: {{ \Carbon\Carbon::parse($openingDate)->format('M d, Y') }}
+                              @else
+                                Account Active
+                              @endif
+                            </div>
+                            @if($lastActivityDate)
+                              <div class="text-xs text-blue-600">
+                                Last Activity: {{ \Carbon\Carbon::parse($lastActivityDate)->diffForHumans() }}
+                              </div>
+                            @endif
+                          </div>
+                        </div>
+                      </td>
+                      
+                      <!-- Member Details -->
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                          <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                            <span class="text-white font-medium text-sm">
+                              {{ $member ? (substr($member->first_name ?? 'N', 0, 1) . substr($member->last_name ?? 'A', 0, 1)) : 'NA' }}
                             </span>
                           </div>
                           <div class="ml-4">
                             <div class="text-sm font-medium text-gray-900">
-                              {{ trim($account->first_name . ' ' . $account->last_name) ?: 'N/A' }}
+                              {{ $member ? (trim(($member->first_name ?? '') . ' ' . ($member->last_name ?? '')) ?: 'N/A') : 'Member Not Found' }}
                             </div>
-                            <div class="text-sm text-gray-500">{{ $account->email }}</div>
+                            <div class="text-xs text-gray-500">{{ $member->client_number ?? 'N/A' }}</div>
+                            <div class="text-xs text-gray-400">{{ $member->email ?? 'No email' }}</div>
+                            @if($member && $member->phone_number)
+                              <div class="text-xs text-gray-400">{{ $member->phone_number }}</div>
+                            @endif
                           </div>
                         </div>
                       </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                        {{ number_format($account->number_of_shares ?? 0) }}
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                        TZS {{ number_format($account->price ?? 0, 2) }}
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
-                      TZS {{ number_format($account->total_value ?? 0, 2) }}
-                      </td>
+                      
+                      <!-- Share Type Information -->
                       <td class="px-6 py-4 whitespace-nowrap">
-                        @php
-                          $statusColors = [
-                            'approved' => 'bg-green-100 text-green-800',
-                            'pending' => 'bg-yellow-100 text-yellow-800',
-                            'blocked' => 'bg-red-100 text-red-800'
-                          ];
-                        @endphp
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusColors[$account->status] ?? 'bg-gray-100 text-gray-800' }}">
-                          {{ ucfirst($account->status) }}
-                        </span>
+                        <div class="text-sm">
+                          <div class="font-medium text-gray-900">
+                            {{ $product->product_name ?? 'Standard Shares' }}
+                          </div>
+                                                     <div class="text-xs text-gray-500">
+                             @if($shareRegister && $shareRegister->product_type)
+                               <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                                 @if($shareRegister->product_type === 'MANDATORY') bg-red-100 text-red-800
+                                 @elseif($shareRegister->product_type === 'VOLUNTARY') bg-green-100 text-green-800
+                                 @elseif($shareRegister->product_type === 'PREFERENCE') bg-purple-100 text-purple-800
+                                 @else bg-gray-100 text-gray-800
+                                 @endif">
+                                 {{ $shareRegister->product_type }}
+                               </span>
+                             @else
+                               <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                 STANDARD
+                               </span>
+                             @endif
+                           </div>
+                           @if($shareRegister && $isRestricted)
+                             <div class="text-xs text-amber-600 mt-1">
+                               <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                               </svg>
+                               Restricted
+                             </div>
+                           @endif
+                           @if($shareRegister && $requiresApproval)
+                             <div class="text-xs text-blue-600 mt-1">
+                               <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                               </svg>
+                               Approval Required
+                             </div>
+                           @endif
+                        </div>
                       </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div class="flex items-center justify-end space-x-2">                         
+                      
+                      <!-- Share Holdings -->
+                      <td class="px-6 py-4 whitespace-nowrap text-right">
+                        <div class="text-sm">
+                          <div class="font-semibold text-gray-900">
+                            {{ number_format($currentBalance) }} shares
+                          </div>
+                          <div class="text-xs text-gray-500 space-y-1">
+                            <div>Issued: {{ number_format($totalIssued) }}</div>
+                            <div>Redeemed: {{ number_format($totalRedeemed) }}</div>
+                            @if($totalTransferredIn > 0)
+                              <div class="text-green-600">+{{ number_format($totalTransferredIn) }} transferred in</div>
+                            @endif
+                            @if($totalTransferredOut > 0)
+                              <div class="text-red-600">-{{ number_format($totalTransferredOut) }} transferred out</div>
+                            @endif
+                          </div>
+                        </div>
+                      </td>
+                      
+                      <!-- Financial Value -->
+                      <td class="px-6 py-4 whitespace-nowrap text-right">
+                        <div class="text-sm">
+                          <div class="font-semibold text-gray-900">
+                            TZS {{ number_format($totalValue, 2) }}
+                          </div>
+                          <div class="text-xs text-gray-500 space-y-1">
+                            <div>Price: TZS {{ number_format($currentPrice, 2) }}</div>
+                            @if($nominalPrice != $currentPrice)
+                              <div class="text-blue-600">
+                                Nominal: TZS {{ number_format($nominalPrice, 2) }}
+                              </div>
+                            @endif
+                            @if($currentPrice > $nominalPrice)
+                              <div class="text-green-600">
+                                +{{ number_format((($currentPrice - $nominalPrice) / $nominalPrice) * 100, 1) }}% gain
+                              </div>
+                            @elseif($currentPrice < $nominalPrice)
+                              <div class="text-red-600">
+                                {{ number_format((($currentPrice - $nominalPrice) / $nominalPrice) * 100, 1) }}% loss
+                              </div>
+                            @endif
+                          </div>
+                        </div>
+                      </td>
+                      
+                      <!-- Dividend Information -->
+                      <td class="px-6 py-4 whitespace-nowrap text-right">
+                        <div class="text-sm">
+                          <div class="font-semibold text-gray-900">
+                            TZS {{ number_format($accumulatedDividends, 2) }}
+                          </div>
+                          <div class="text-xs text-gray-500 space-y-1">
+                            <div>Paid: TZS {{ number_format($totalPaidDividends, 2) }}</div>
+                            @if($lastDividendDate)
+                              <div>Last: {{ \Carbon\Carbon::parse($lastDividendDate)->format('M d, Y') }}</div>
+                            @endif
+                            @if($lastDividendRate > 0)
+                              <div class="text-green-600">{{ number_format($lastDividendRate, 2) }}% rate</div>
+                            @endif
+                            @if($lastDividendAmount > 0)
+                              <div class="text-blue-600">TZS {{ number_format($lastDividendAmount, 2) }}</div>
+                            @endif
+                          </div>
+                        </div>
+                      </td>
+                      
+                      <!-- Status & Actions -->
+                      <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <div class="flex flex-col items-center space-y-2">
+                          <!-- Status Badge -->
+                          @php
+                            $statusColors = [
+                              'ACTIVE' => 'bg-green-100 text-green-800',
+                              'INACTIVE' => 'bg-gray-100 text-gray-800',
+                              'FROZEN' => 'bg-red-100 text-red-800',
+                              'CLOSED' => 'bg-black-100 text-black-800',
+                              'approved' => 'bg-green-100 text-green-800',
+                              'pending' => 'bg-yellow-100 text-yellow-800',
+                              'blocked' => 'bg-red-100 text-red-800'
+                            ];
+                            $status = $shareRegister->status ?? $account->status ?? 'ACTIVE';
+                          @endphp
+                          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $statusColors[$status] ?? 'bg-gray-100 text-gray-800' }}">
+                            @if($status === 'ACTIVE')
+                              <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                              </svg>
+                            @elseif($status === 'FROZEN')
+                              <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                              </svg>
+                            @endif
+                            {{ ucfirst($status) }}
+                          </span>
                           
-                          <button 
-                            wire:click="viewAccount({{ $account->id }})" 
-                            class="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors duration-200"
-                            title="View Account"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          </button>
-                          
-                          <button 
-                            wire:click="blockSharesAccountModal({{ $account->id }})" 
-                            class="p-2 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition-colors duration-200"
-                            title="{{ $account->status === 'blocked' ? 'Unblock Account' : 'Block Account' }}"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                            </svg>
-                          </button>
-                          
-                          {{--<button 
-                            wire:click="deleteConfirm({{ $account->id }})" 
-                            class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                            title="Delete Account"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>--}}
+                          <!-- Action Buttons -->
+                          <div class="flex items-center space-x-1">
+                            <button 
+                              wire:click="viewAccount({{ $account->id }})" 
+                              class="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors duration-200"
+                              title="View Detailed Account"
+                            >
+                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                              </svg>
+                            </button>
+                            
+                            <button 
+                              wire:click="blockSharesAccountModal({{ $account->id }})" 
+                              class="p-1.5 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded transition-colors duration-200"
+                              title="{{ $status === 'FROZEN' ? 'Unfreeze Account' : 'Freeze Account' }}"
+                            >
+                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                              </svg>
+                            </button>
+                            
+                            <button 
+                              wire:click="showShareStatement" 
+                              class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors duration-200"
+                              title="Generate Statement"
+                            >
+                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                       </td>
                     </tr>
                   @empty
                     <tr>
-                      <td colspan="7" class="px-6 py-8 text-center">
+                      <td colspan="7" class="px-6 py-12 text-center">
                         <div class="flex flex-col items-center justify-center text-gray-400">
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          <h3 class="text-lg font-medium text-gray-500 mb-1">No share accounts found</h3>
-                          <p class="max-w-xs">Try adjusting your search or filter to find what you're looking for.</p>
-                          <button 
-                            wire:click="showAddSharesAccountModal" 
-                            class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
-                            Create New Account
-                          </button>
+                          </div>
+                          <h3 class="text-lg font-medium text-gray-500 mb-2">No share accounts found</h3>
+                          <p class="text-sm text-gray-400 max-w-md mb-6">No share accounts have been created yet. Start by issuing shares to members or importing existing share data.</p>
+                          <div class="flex items-center space-x-3">
+                            <button 
+                              wire:click="showAddSharesAccountModal" 
+                              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                            >
+                              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                              </svg>
+                              Issue New Shares
+                            </button>
+                            <button 
+                              wire:click="showBulkUpload" 
+                              class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                            >
+                              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                              </svg>
+                              Bulk Upload
+                            </button>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -645,7 +924,7 @@
     <div class="overflow-y-auto scrollbar-hide fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl">
             <div class="flex justify-between items-center p-4 border-b">
-                <h3 class="text-lg font-semibold text-gray-900">Issue New Shares</h3>
+                <h3 class="text-lg font-semibold text-gray-900">Issue New Shares </h3>
                 <button wire:click="closeShowIssueNewShares" class="text-gray-400 hover:text-gray-500">
                     <span class="sr-only">Close</span>
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -696,10 +975,6 @@
                                 <div>
                                     <p class="text-sm text-gray-600">Available Shares:</p>
                                     <p class="text-sm font-medium text-gray-900">{{ number_format($selectedProduct['available_shares']) }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Shares Per Member:</p>
-                                    <p class="text-sm font-medium text-gray-900">{{ number_format($selectedProduct['shares_per_member']) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -2366,7 +2641,7 @@
                             <div class="space-y-6">
                                 @php
                                     $issuedShares = DB::table('issued_shares')->where('id', $SharesAccountSelected)->first();
-                                    $selectedAccount = DB::table('share_registers')->where('product_id', $issuedShares->product)
+                                    $selectedAccount = DB::table('share_registers')->where('product_id', $issuedShares->share_id)
                                     ->where('member_number', $issuedShares->client_number)
                                     ->first();
                                     $memberDetails = null;
@@ -2526,6 +2801,12 @@
             </div>
         </div>
     @endif                               
+
+    {{-- Include Share Statement Modal --}}
+    @include('livewire.shares.partials.share-statement-modal')
+    
+    {{-- Include Share Receipt Modal --}}
+    @include('livewire.shares.partials.share-receipt-modal')
 
 </div>
 

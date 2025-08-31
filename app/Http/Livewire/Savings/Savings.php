@@ -167,6 +167,10 @@ class Savings extends Component
     public $withdrawSelectedBankDetails = null;
     public $withdrawSelectedAccountBalance = 0;
 
+    // Receipt Properties
+    public $showReceiptModal = false;
+    public $receiptData = null;
+
     // Additional withdrawal properties for different methods
     public $withdrawNbcAccount;
     public $withdrawAccountHolderName;
@@ -246,7 +250,7 @@ class Savings extends Component
                 ->whereNotNull('client_number')
                 ->where('product_number', 2000)
                 ->where('client_number', '!=', '0000')
-                ->sum('balance');
+                ->sum(DB::raw('CAST(balance AS DECIMAL(15,2))'));
 
             // Active Accounts
             $this->activeAccounts = DB::table('accounts')
@@ -300,13 +304,12 @@ class Savings extends Component
                 ->take(5)
                 ->get();
 
-            // Savings by Product - Fixed: Use sub_product_id instead of product_number
-            $this->savingsByProduct = DB::table('accounts')
-                ->join('sub_products', 'accounts.product_number', '=', 'sub_products.product_type')
-                ->where('accounts.product_number', 2000)
-                ->select('sub_products.product_name', DB::raw('SUM(accounts.balance) as total_balance'))
-                ->groupBy('sub_products.product_name')
-                ->get();            
+            // Savings by Product - Fixed: Get product info without join since sub_product fields are NULL
+            $this->savingsByProduct = DB::table('sub_products')
+                ->where('product_type', 2000)
+                ->where('status', 'ACTIVE')
+                ->select('product_name', DB::raw('(SELECT SUM(CAST(balance AS DECIMAL(15,2))) FROM accounts WHERE product_number = \'2000\') as total_balance'))
+                ->get();
            
 
         } catch (Exception $e) {
@@ -1180,16 +1183,62 @@ class Savings extends Component
             ? $this->handleBankDeposit($memberAccount)
             : $this->handleCashDeposit($memberAccount);
             
+            // Generate receipt after successful transaction
+            $this->receiptData = $this->generateReceiptData($memberAccount);
+            
             session()->flash('successMessage', 'Savings received successfully.');  
             DB::commit();   
             $this->showReceiveSavingsModal = false;
-            $this->resetForm();
+            $this->showReceiptModal = true;
+            
         }catch(\Exception $e){
             DB::rollBack();           
             Log::error('Error receiving savings: ' . $e->getMessage());
             Session::flash('errorMessage', 'Error receiving savings');
             Session::flash('alert-class', 'alert-warning');
             return;
+        }
+    }
+    
+    private function generateReceiptData($memberAccount)
+    {
+        $receiptNumber = 'RCP-' . strtoupper(uniqid());
+        $transactionDate = now();
+        
+        return [
+            'receipt_number' => $receiptNumber,
+            'transaction_date' => $transactionDate->format('d/m/Y H:i:s'),
+            'member_name' => $this->verifiedMember['name'] ?? 'N/A',
+            'member_number' => $this->membershipNumber,
+            'account_number' => $this->selectedAccount,
+            'account_name' => $memberAccount->account_name,
+            'amount' => number_format($this->amount, 2),
+            'payment_method' => ucfirst($this->paymentMethod),
+            'depositor_name' => $this->depositorName,
+            'narration' => $this->narration,
+            'reference_number' => $this->referenceNumber,
+            'bank_name' => $this->selectedBankDetails->bank_name ?? 'Cash',
+            'processed_by' => auth()->user()->name,
+            'branch' => auth()->user()->branch ?? 'Main Branch',
+            'currency' => 'TZS',
+            'transaction_type' => 'Savings Deposit',
+            'balance_after' => number_format($memberAccount->balance + $this->amount, 2)
+        ];
+    }
+    
+    public function closeReceiptModal()
+    {
+        $this->showReceiptModal = false;
+        $this->receiptData = null;
+        $this->resetForm();
+    }
+    
+    public function printReceipt()
+    {
+        if ($this->receiptData) {
+            $this->dispatchBrowserEvent('printReceipt', [
+                'receiptData' => $this->receiptData
+            ]);
         }
     }
 
@@ -1383,6 +1432,9 @@ class Savings extends Component
             'risk_level' => 'low'
         ]);
 
+        // Create receipt record
+        $this->createReceiptRecord($transaction, $account, $amount);
+
         // Log the audit trail
         $transaction->logAudit(
             'created',
@@ -1408,6 +1460,41 @@ class Savings extends Component
         ]);
 
         return $transaction;
+    }
+    
+    private function createReceiptRecord($transaction, $account, $amount)
+    {
+        $receiptNumber = 'RCP-' . strtoupper(uniqid());
+        
+        \App\Models\Receipt::create([
+            'receipt_number' => $receiptNumber,
+            'transaction_id' => $transaction->id,
+            'account_id' => $account->id,
+            'member_number' => $this->membershipNumber,
+            'member_name' => $this->verifiedMember['name'] ?? 'N/A',
+            'amount' => $amount,
+            'currency' => 'TZS',
+            'payment_method' => $this->paymentMethod,
+            'depositor_name' => $this->depositorName,
+            'narration' => $this->narration,
+            'reference_number' => $this->referenceNumber,
+            'bank_name' => $this->selectedBankDetails->bank_name ?? 'Cash',
+            'processed_by' => auth()->id(),
+            'branch' => auth()->user()->branch ?? 'Main Branch',
+            'transaction_type' => 'Savings Deposit',
+            'status' => 'GENERATED',
+            'generated_at' => now(),
+            'printed_at' => null,
+            'metadata' => [
+                'balance_before' => $account->balance,
+                'balance_after' => $account->balance + $amount,
+                'deposit_date' => $this->depositDate ?? now()->format('Y-m-d'),
+                'deposit_time' => $this->depositTime ?? now()->format('H:i'),
+            ]
+        ]);
+        
+        // Update the receipt number in the receipt data
+        $this->receiptData['receipt_number'] = $receiptNumber;
     }
 
     public function showWithdrawSavingsModal()

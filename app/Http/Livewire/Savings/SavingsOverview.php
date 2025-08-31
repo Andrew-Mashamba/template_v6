@@ -45,7 +45,7 @@ class SavingsOverview extends Component
             // Load recent transactions
             $this->recentTransactions = general_ledger::with(['account.client'])
                 ->whereHas('account', function ($query) {
-                    $query->where('major_category_code', 2000);
+                    $query->where('product_number', 2000);
                 })
                 ->latest()
                 ->take(5)
@@ -54,7 +54,7 @@ class SavingsOverview extends Component
             // Load top savers
             $this->topSavers = AccountsModel::with('client')
                 ->whereNotNull('client_number')
-                ->where('major_category_code', 2000)
+                ->where('product_number', 2000)
                 ->where('status', 'ACTIVE')
                 ->where('client_number', '!=', '0000')
                 ->where('balance', '>=', 0)
@@ -63,11 +63,10 @@ class SavingsOverview extends Component
                 ->get();
 
             // Load savings by product
-            $this->savingsByProduct = DB::table('accounts')
-                ->join('sub_products', 'accounts.product_number', '=', 'sub_products.product_type')
-                ->where('accounts.major_category_code', 2000)
-                ->select('sub_products.product_name', DB::raw('SUM(accounts.balance) as total_balance'))
-                ->groupBy('sub_products.product_name')
+            $this->savingsByProduct = DB::table('sub_products')
+                ->where('product_type', 2000)
+                ->where('status', 'ACTIVE')
+                ->select('product_name', DB::raw('(SELECT SUM(CAST(balance AS DECIMAL(15,2))) FROM accounts WHERE product_number = \'2000\') as total_balance'))
                 ->get();
 
             // Load monthly savings data - Fixed: Use credit instead of amount and EXTRACT for PostgreSQL

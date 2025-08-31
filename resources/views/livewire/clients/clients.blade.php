@@ -11,8 +11,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-3xl font-bold tracking-tight text-gray-900">Clients Management</h1>
-                        <p class="mt-1 text-gray-600">Manage, track, and analyze your members and clients</p>
+                        <h1 class="text-3xl font-bold tracking-tight text-gray-900">Members Management</h1>
+                        <p class="mt-1 text-gray-600">Manage, track, and analyze your members</p>
                     </div>
                 </div>
                 <!-- Optionally, add quick stats or actions here later -->
@@ -95,6 +95,12 @@
                                     'label' => 'Member Groups',
                                     'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
                                     'description' => 'Manage member groups',
+                                ],
+                                [
+                                    'id' => 'member-exit',
+                                    'label' => 'Member Exit',
+                                    'icon' => 'M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1',
+                                    'description' => 'Process member exits',
                                 ],
                             ];
                         @endphp
@@ -203,6 +209,10 @@
                                                 Member Groups
                                             @break
 
+                                            @case('member-exit')
+                                                Member Exit
+                                            @break
+
                                             @default
                                                 Dashboard Overview
                                         @endswitch
@@ -239,6 +249,10 @@
 
                                             @case('member-groups')
                                                 View and manage member groups
+                                            @break
+
+                                            @case('member-exit')
+                                                Process member exits and account closures
                                             @break
 
                                             @default
@@ -300,6 +314,10 @@
 
                                                         @case('member-groups')
                                                             Member Groups
+                                                        @break
+
+                                                        @case('member-exit')
+                                                            Member Exit
                                                         @break
 
                                                         @default
@@ -408,7 +426,7 @@
                                             <!-- Progress Steps -->
                                             <div class="mb-8">
                                                 <div class="flex items-center justify-between">
-                                                    @foreach (['Personal Info', 'Contact Details', 'Financial Info', 'Documents', 'Review & Submit'] as $index => $step)
+                                                    @foreach (['Personal Info', 'Contact Details', 'Financial Info', 'Documents (Optional)', 'Review & Submit'] as $index => $step)
                                                         <div class="flex flex-col items-center">
                                                             <div class="relative">
                                                                 <div
@@ -497,6 +515,22 @@
                                                                 @enderror
                                                             </div>
 
+                                                            <div>
+                                                                <label class="mb-1 block text-sm font-medium text-gray-700">Member Group</label>
+                                                                <select type="text" wire:model.defer="member_group_id"
+                                                                    class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                                                    <option value="">Select Member Group</option>
+                                                                    @foreach (App\Models\MemberGroup::where('status', 'active')->orderBy('group_name')->get() as $group)
+                                                                        <option value="{{ $group->id }}">
+                                                                            {{ $group->group_name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                                @error('member_group_id')
+                                                                    <p class="mt-1 text-xs text-red-600">
+                                                                        {{ $message }}</p>
+                                                                @enderror
+                                                            </div>
+
                                                             @if ($membership_type === 'Individual')
                                                                 <div>
                                                                     <label class="mb-1 block text-sm font-medium text-gray-700">First
@@ -556,6 +590,48 @@
                                                                             {{ $message }}</p>
                                                                     @enderror
                                                                 </div>
+
+                                                                <div>
+                                                                    <label class="mb-1 block text-sm font-medium text-gray-700">ID Type
+                                                                        <span class="text-red-500">*</span></label>
+                                                                    <select wire:model="id_type" 
+                                                                        class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                                                        <option value="">Select ID Type</option>
+                                                                        <option value="nida">NIDA</option>
+                                                                        <option value="driving_license">Driving License</option>
+                                                                    </select>
+                                                                    @error('id_type')
+                                                                        <p class="mt-1 text-xs text-red-600">
+                                                                            {{ $message }}</p>
+                                                                    @enderror
+                                                                </div>
+
+                                                                @if($id_type == 'nida')
+                                                                <div>
+                                                                    <label class="mb-1 block text-sm font-medium text-gray-700">NIDA Number
+                                                                        <span class="text-red-500">*</span></label>
+                                                                    <input type="text" wire:model.defer="nida_number" 
+                                                                        placeholder="19990101-12345-12345-12"
+                                                                        maxlength="24"
+                                                                        class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                                                    @error('nida_number')
+                                                                        <p class="mt-1 text-xs text-red-600">
+                                                                            {{ $message }}</p>
+                                                                    @enderror
+                                                                </div>
+                                                                @elseif($id_type == 'driving_license')
+                                                                <div>
+                                                                    <label class="mb-1 block text-sm font-medium text-gray-700">Driving License Number
+                                                                        <span class="text-red-500">*</span></label>
+                                                                    <input type="text" wire:model.defer="driving_license_number" 
+                                                                        placeholder="Enter driving license number"
+                                                                        class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                                                    @error('driving_license_number')
+                                                                        <p class="mt-1 text-xs text-red-600">
+                                                                            {{ $message }}</p>
+                                                                    @enderror
+                                                                </div>
+                                                                @endif
 
                                                                 <div>
                                                                     <label class="mb-1 block text-sm font-medium text-gray-700">Marital
@@ -692,8 +768,9 @@
                                                     <div class="space-y-6">
                                                         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                                             <div>
-                                                                <label class="mb-1 block text-sm font-medium text-gray-700">Income
-                                                                    Available <span class="text-red-500">*</span></label>
+                                                                <label class="mb-1 block text-sm font-medium text-gray-700">Estimated
+                                                                    Income
+                                                                     <span class="text-red-500">*</span></label>
                                                                 <input placeholder="TZS" type="number" wire:model.defer="income_available"
                                                                     class="block w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
                                                                 @error('income_available')
@@ -713,49 +790,7 @@
                                                                 @enderror
                                                             </div>
 
-                                                            <div>
-                                                                <label class="mb-1 block text-sm font-medium text-gray-700">TIN
-                                                                    Number</label>
-                                                                <input type="text" wire:model.defer="tin_number"
-                                                                    class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                                                @error('tin_number')
-                                                                    <p class="mt-1 text-xs text-red-600">
-                                                                        {{ $message }}</p>
-                                                                @enderror
-                                                            </div>
-
-                                                            <div>
-                                                                <label class="mb-1 block text-sm font-medium text-gray-700">Hisa
-                                                                    Amount <span class="text-red-500">*</span></label>
-                                                                <input placeholder="TZS" type="number" wire:model.defer="hisa"
-                                                                    class="block w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                                                                @error('hisa')
-                                                                    <p class="mt-1 text-xs text-red-600">
-                                                                        {{ $message }}</p>
-                                                                @enderror
-                                                            </div>
-
-                                                            <div>
-                                                                <label class="mb-1 block text-sm font-medium text-gray-700">Akiba
-                                                                    Amount <span class="text-red-500">*</span></label>
-                                                                <input placeholder="TZS" type="number" wire:model.defer="akiba"
-                                                                    class="block w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                                                                @error('akiba')
-                                                                    <p class="mt-1 text-xs text-red-600">
-                                                                        {{ $message }}</p>
-                                                                @enderror
-                                                            </div>
-
-                                                            <div>
-                                                                <label class="mb-1 block text-sm font-medium text-gray-700">Amana
-                                                                    Amount <span class="text-red-500">*</span></label>
-                                                                <input placeholder="TZS" type="number" wire:model.defer="amana"
-                                                                    class="block w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                                                                @error('amana')
-                                                                    <p class="mt-1 text-xs text-red-600">
-                                                                        {{ $message }}</p>
-                                                                @enderror
-                                                            </div>
+                                                   
 
                                                             <div>
                                                                 <label class="mb-1 block text-sm font-medium text-gray-700">NBC Bank
@@ -771,14 +806,31 @@
                                                     </div>
                                                 @endif
 
-                                                <!-- Step 4: Documents and Guarantor Information -->
+                                                <!-- Step 4: Documents and Guarantor Information (Optional) -->
                                                 @if ($currentStep === 4)
                                                     <div class="space-y-6">
+                                                        <!-- Optional Step Notice -->
+                                                        <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                                            <div class="flex">
+                                                                <div class="flex-shrink-0">
+                                                                    <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                                                    </svg>
+                                                                </div>
+                                                                <div class="ml-3">
+                                                                    <h3 class="text-sm font-medium text-blue-800">Optional Step</h3>
+                                                                    <p class="mt-1 text-sm text-blue-700">
+                                                                        Documents and guarantor information are optional. You can skip this step if not available now and add them later.
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
                                                         <!-- Guarantor Information Section -->
                                                         <div class="mb-4">
                                                             <h3 class="mb-4 text-lg font-semibold">Guarantor
-                                                                Information</h3>
-                                                            <p class="mb-4 text-sm text-gray-600">Please provide
+                                                                Information <span class="text-sm font-normal text-gray-500">(Optional)</span></h3>
+                                                            <p class="mb-4 text-sm text-gray-600">You may provide
                                                                 details of an existing member who will guarantee this
                                                                 application.</p>
 
@@ -848,7 +900,7 @@
                                                         <!-- Documents Section -->
                                                         <div>
                                                             <label class="mb-1 block text-sm font-medium text-gray-700">Documents
-                                                                <span class="text-red-500">*</span></label>
+                                                                <span class="text-sm font-normal text-gray-500">(Optional)</span></label>
                                                             <div class="space-y-4">
                                                                 <!-- File Upload List -->
                                                                 <div class="space-y-2">
@@ -988,11 +1040,31 @@
                                                         <div></div>
                                                     @endif
 
-                                                    @if ($currentStep < 5)
+                                                    @if ($currentStep === 4)
+                                                        <!-- Special buttons for optional Step 4 -->
+                                                        <div class="flex space-x-3">
+                                                            <button type="button" wire:click="nextStep"
+                                                                class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                                                Skip to Review
+                                                                <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                        d="M13 5l7 7-7 7M5 12h14" />
+                                                                </svg>
+                                                            </button>
+                                                            <button type="button" wire:click="nextStep"
+                                                                class="inline-flex items-center rounded-lg border border-transparent bg-blue-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                                                Continue to Review
+                                                                <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                        d="M9 5l7 7-7 7" />
+                                                                </svg>
+                                                            </button>
+                                                        </div>
+                                                    @elseif ($currentStep < 5)
                                                         <button type="button" wire:click="nextStep"
                                                             class="inline-flex items-center rounded-lg border border-transparent bg-blue-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                                                             Continue to
-                                                            {{ $currentStep === 1 ? 'Contact Details' : ($currentStep === 2 ? 'Financial Info' : ($currentStep === 3 ? 'Documents' : 'Review')) }}
+                                                            {{ $currentStep === 1 ? 'Contact Details' : ($currentStep === 2 ? 'Financial Info' : ($currentStep === 3 ? 'Documents (Optional)' : 'Review')) }}
                                                             <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                     d="M9 5l7 7-7 7" />
@@ -1035,6 +1107,257 @@
                                     <div class="space-y-6">
                                         <div class="overflow-x-auto">
                                             <livewire:clients.member-groups />
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if ($activeTab === 'member-exit')
+                                    <div class="space-y-6">
+                                        <!-- Member Exit Search Section -->
+                                        <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                                            <h3 class="mb-4 text-lg font-semibold text-gray-900">Search Member for Exit Processing</h3>
+                                            
+                                            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                                <div>
+                                                    <label class="mb-2 block text-sm font-medium text-gray-700">Member Number</label>
+                                                    <input type="text" 
+                                                        wire:model="exitMemberNumber"
+                                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                                        placeholder="Enter member number">
+                                                </div>
+                                                
+                                                <div>
+                                                    <label class="mb-2 block text-sm font-medium text-gray-700">Phone Number</label>
+                                                    <input type="text" 
+                                                        wire:model="exitPhoneNumber"
+                                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                                        placeholder="Enter phone number">
+                                                </div>
+                                                
+                                                <div class="flex items-end">
+                                                    <button wire:click="searchMemberForExit"
+                                                        class="rounded-lg bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                                        Search Member
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Member Details and Exit Processing -->
+                                        @if($exitMemberDetails)
+                                        <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                                            <h3 class="mb-4 text-lg font-semibold text-gray-900">Member Information</h3>
+                                            
+                                            <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+                                                <div>
+                                                    <p class="text-sm text-gray-600">Member Name</p>
+                                                    <p class="font-medium">{{ $exitMemberDetails->first_name }} {{ $exitMemberDetails->last_name }}</p>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm text-gray-600">Member Number</p>
+                                                    <p class="font-medium">{{ $exitMemberDetails->client_number }}</p>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm text-gray-600">Phone Number</p>
+                                                    <p class="font-medium">{{ $exitMemberDetails->phone_number }}</p>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm text-gray-600">Current Status</p>
+                                                    <p class="font-medium">{{ $exitMemberDetails->status }}</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Comprehensive Exit Calculation -->
+                                            <div class="mb-6">
+                                                <h4 class="mb-3 font-semibold text-gray-900">Exit Calculation Summary</h4>
+                                                
+                                                <!-- Final Settlement Amount -->
+                                                <div class="mb-4">
+                                                    <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
+                                                        <div class="text-center">
+                                                            <div class="text-sm text-purple-700 mb-2">Final Settlement Amount</div>
+                                                            <div class="text-3xl font-bold text-purple-900">
+                                                                TZS {{ number_format($exitMemberDetails->exit_final_settlement ?? 0, 2) }}
+                                                            </div>
+                                                            <div class="text-xs text-purple-600 mt-1">
+                                                                @if(($exitMemberDetails->exit_final_settlement ?? 0) > 0)
+                                                                    Member will receive this amount
+                                                                @elseif(($exitMemberDetails->exit_final_settlement ?? 0) < 0)
+                                                                    Member owes this amount
+                                                                @else
+                                                                    No settlement amount
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Credits and Debits Breakdown -->
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                                    <!-- Credits Section -->
+                                                    <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                                                        <h5 class="text-lg font-semibold text-green-800 mb-3">Credits (+)</h5>
+                                                        
+                                                        <div class="space-y-2">
+                                                            <div class="flex justify-between items-center">
+                                                                <span class="text-sm text-green-700">Shares Balance</span>
+                                                                <span class="text-sm font-semibold text-green-900">TZS {{ number_format($exitMemberDetails->exit_shares_balance ?? 0, 2) }}</span>
+                                                            </div>
+                                                            <div class="flex justify-between items-center">
+                                                                <span class="text-sm text-green-700">Savings Balance</span>
+                                                                <span class="text-sm font-semibold text-green-900">TZS {{ number_format($exitMemberDetails->exit_savings_balance ?? 0, 2) }}</span>
+                                                            </div>
+                                                            <div class="flex justify-between items-center">
+                                                                <span class="text-sm text-green-700">Deposits Balance</span>
+                                                                <span class="text-sm font-semibold text-green-900">TZS {{ number_format($exitMemberDetails->exit_deposits_balance ?? 0, 2) }}</span>
+                                                            </div>
+                                                            <div class="flex justify-between items-center">
+                                                                <span class="text-sm text-green-700">Dividends</span>
+                                                                <span class="text-sm font-semibold text-green-900">TZS {{ number_format($exitMemberDetails->exit_dividends ?? 0, 2) }}</span>
+                                                            </div>
+                                                            <div class="flex justify-between items-center">
+                                                                <span class="text-sm text-green-700">Interest on Savings</span>
+                                                                <span class="text-sm font-semibold text-green-900">TZS {{ number_format($exitMemberDetails->exit_interest_on_savings ?? 0, 2) }}</span>
+                                                            </div>
+                                                            <div class="border-t border-green-300 pt-2 mt-2">
+                                                                <div class="flex justify-between items-center">
+                                                                    <span class="text-sm font-semibold text-green-800">Total Credits</span>
+                                                                    <span class="text-lg font-bold text-green-900">TZS {{ number_format($exitMemberDetails->exit_total_credits ?? 0, 2) }}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Debits Section -->
+                                                    <div class="bg-red-50 rounded-lg p-4 border border-red-200">
+                                                        <h5 class="text-lg font-semibold text-red-800 mb-3">Debits (-)</h5>
+                                                        
+                                                        <div class="space-y-2">
+                                                            <div class="flex justify-between items-center">
+                                                                <span class="text-sm text-red-700">Loan Balance</span>
+                                                                <span class="text-sm font-semibold text-red-900">TZS {{ number_format($exitMemberDetails->exit_loan_balance ?? 0, 2) }}</span>
+                                                            </div>
+                                                            <div class="flex justify-between items-center">
+                                                                <span class="text-sm text-red-700">Unpaid Bills</span>
+                                                                <span class="text-sm font-semibold text-red-900">TZS {{ number_format($exitMemberDetails->exit_unpaid_bills ?? 0, 2) }}</span>
+                                                            </div>
+                                                            <div class="border-t border-red-300 pt-2 mt-2">
+                                                                <div class="flex justify-between items-center">
+                                                                    <span class="text-sm font-semibold text-red-800">Total Debits</span>
+                                                                    <span class="text-lg font-bold text-red-900">TZS {{ number_format($exitMemberDetails->exit_total_debits ?? 0, 2) }}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Summary Statistics -->
+                                                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                                    <h5 class="text-lg font-semibold text-gray-800 mb-3">Summary</h5>
+                                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                                                        <div>
+                                                            <div class="text-2xl font-bold text-blue-600">{{ $exitMemberDetails->accounts_count ?? 0 }}</div>
+                                                            <div class="text-xs text-gray-600">Active Accounts</div>
+                                                        </div>
+                                                        <div>
+                                                            <div class="text-2xl font-bold text-orange-600">{{ $exitMemberDetails->loans_count ?? 0 }}</div>
+                                                            <div class="text-xs text-gray-600">Active Loans</div>
+                                                        </div>
+                                                        <div>
+                                                            <div class="text-2xl font-bold text-red-600">{{ $exitMemberDetails->unpaid_bills_count ?? 0 }}</div>
+                                                            <div class="text-xs text-gray-600">Unpaid Bills</div>
+                                                        </div>
+                                                        <div>
+                                                            <div class="text-2xl font-bold text-purple-600">{{ number_format($exitMemberDetails->exit_final_settlement ?? 0, 0) }}</div>
+                                                            <div class="text-xs text-gray-600">Settlement</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Exit Reason -->
+                                            <div class="mb-6">
+                                                <label class="mb-2 block text-sm font-medium text-gray-700">Exit Reason</label>
+                                                <select wire:model="exitReason"
+                                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                                                    <option value="">Select reason for exit</option>
+                                                    <option value="voluntary">Voluntary Exit</option>
+                                                    <option value="death">Death</option>
+                                                    <option value="relocation">Relocation</option>
+                                                    <option value="expulsion">Expulsion</option>
+                                                    <option value="other">Other</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Exit Notes -->
+                                            <div class="mb-6">
+                                                <label class="mb-2 block text-sm font-medium text-gray-700">Exit Notes</label>
+                                                <textarea wire:model="exitNotes"
+                                                    rows="3"
+                                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                                    placeholder="Enter any additional notes about the member exit"></textarea>
+                                            </div>
+
+                                            <!-- Action Buttons -->
+                                            <div class="flex justify-end space-x-3">
+                                                <button wire:click="cancelMemberExit"
+                                                    class="rounded-lg border border-gray-300 bg-white px-6 py-2 text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                                                    Cancel
+                                                </button>
+                                                
+                                                @if($exitMemberDetails->exit_loan_balance > 0 || $exitMemberDetails->exit_unpaid_bills > 0)
+                                                <button disabled
+                                                    class="cursor-not-allowed rounded-lg bg-gray-400 px-6 py-2 text-white opacity-50">
+                                                    Cannot Process Exit (Outstanding Obligations)
+                                                </button>
+                                                @else
+                                                <button wire:click="processMemberExit"
+                                                    onclick="return confirm('Are you sure you want to process this member exit? This action cannot be undone.')"
+                                                    class="rounded-lg bg-red-600 px-6 py-2 text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                                                    Process Member Exit
+                                                </button>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        @endif
+
+                                        <!-- Exit History Table -->
+                                        <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                                            <h3 class="mb-4 text-lg font-semibold text-gray-900">Recent Member Exits</h3>
+                                            
+                                            <div class="overflow-x-auto">
+                                                <table class="min-w-full divide-y divide-gray-200">
+                                                    <thead class="bg-gray-50">
+                                                        <tr>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Member Name</th>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Member Number</th>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Exit Date</th>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Exit Reason</th>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Final Settlement</th>
+                                                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="divide-y divide-gray-200 bg-white">
+                                                        @forelse($exitHistory ?? [] as $exit)
+                                                        <tr>
+                                                            <td class="whitespace-nowrap px-6 py-4">{{ $exit->member_name }}</td>
+                                                            <td class="whitespace-nowrap px-6 py-4">{{ $exit->client_number }}</td>
+                                                            <td class="whitespace-nowrap px-6 py-4">{{ $exit->exit_date }}</td>
+                                                            <td class="whitespace-nowrap px-6 py-4">{{ $exit->exit_reason }}</td>
+                                                            <td class="whitespace-nowrap px-6 py-4">TZS {{ number_format($exit->settlement_amount, 2) }}</td>
+                                                            <td class="whitespace-nowrap px-6 py-4">
+                                                                <button wire:click="viewExitDetails({{ $exit->id }})"
+                                                                    class="text-blue-600 hover:text-blue-900">View</button>
+                                                            </td>
+                                                        </tr>
+                                                        @empty
+                                                        <tr>
+                                                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">No recent member exits</td>
+                                                        </tr>
+                                                        @endforelse
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                 @endif

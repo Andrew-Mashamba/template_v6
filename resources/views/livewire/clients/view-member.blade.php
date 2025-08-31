@@ -41,6 +41,8 @@
                     </div>
                     <button wire:click="showAllData" class="px-2 py-1 text-xs rounded bg-gray-700 text-white hover:bg-gray-800 ml-auto">Show All Data</button>
                 </div>
+
+
                 <div class="mb-6">
                     <div class="font-semibold text-gray-700 mb-2">Accounts</div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -62,6 +64,51 @@
                         @endforelse
                     </div>
                 </div>
+
+                <div class="mb-6">
+                    <div class="font-semibold text-gray-700 mb-2">Member Revenue</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Dividends Card -->
+                        <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="text-sm font-medium text-green-800">Dividends</div>
+                                <div class="text-xs text-green-600 bg-green-200 px-2 py-1 rounded">Annual</div>
+                            </div>
+                            <div class="text-2xl font-bold text-green-900 mb-1">
+                                {{ number_format($member->dividends->sum('amount'), 2) }}
+                            </div>
+                            <div class="text-xs text-green-700">
+                                @php
+                                    $pendingDividends = $member->dividends->where('status', 'PENDING')->sum('amount');
+                                    $paidDividends = $member->dividends->where('status', 'PAID')->sum('amount');
+                                @endphp
+                                <span class="font-medium">Pending:</span> {{ number_format($pendingDividends, 2) }} | 
+                                <span class="font-medium">Paid:</span> {{ number_format($paidDividends, 2) }}
+                            </div>
+                        </div>
+
+                        <!-- Interest on Savings Card -->
+                        <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="text-sm font-medium text-blue-800">Interest on Savings</div>
+                                <div class="text-xs text-blue-600 bg-blue-200 px-2 py-1 rounded">Accrued</div>
+                            </div>
+                            <div class="text-2xl font-bold text-blue-900 mb-1">
+                                {{ number_format($member->interestPayables->sum('interest_payable'), 2) }}
+                            </div>
+                            <div class="text-xs text-blue-700">
+                                @php
+                                    $totalSavingsBalance = $member->accounts->where('account_name', 'like', '%SAVINGS%')->sum('balance');
+                                    $totalDepositsBalance = $member->accounts->where('account_name', 'like', '%DEPOSITS%')->sum('balance');
+                                @endphp
+                                <span class="font-medium">Savings:</span> {{ number_format($totalSavingsBalance, 2) }} | 
+                                <span class="font-medium">Deposits:</span> {{ number_format($totalDepositsBalance, 2) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
                 <div class="mb-6">
                     <div class="font-semibold text-gray-700 mb-2">Ongoing Loans</div>
                     <div class="overflow-x-auto">
@@ -69,22 +116,26 @@
                             <thead>
                                 <tr class="text-gray-500 text-xs">
                                     <th class="py-1 px-2 text-left">Loan #</th>
-                                    <th class="py-1 px-2 text-left">Type</th>
+                                    <th class="py-1 px-2 text-left">Product</th>
                                     <th class="py-1 px-2 text-left">Amount</th>
                                     <th class="py-1 px-2 text-left">Balance</th>
                                     <th class="py-1 px-2 text-left">Status</th>
+                                    <th class="py-1 px-2 text-left">Days In Arrears</th>
+                                    <th class="py-1 px-2 text-left">Amount In Arrears</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($member->loans as $loan)
                                     <tr>
-                                        <td class="py-1 px-2">{{ $loan->loan_number }}</td>
-                                        <td class="py-1 px-2">{{ $loan->loan_type }}</td>
-                                        <td class="py-1 px-2">{{ number_format($loan->amount,2) }}</td>
-                                        <td class="py-1 px-2">{{ number_format($loan->balance,2) }}</td>
+                                        <td class="py-1 px-2">{{ $loan->loan_id }}</td>
+                                        <td class="py-1 px-2">{{ $loan->loanProduct->sub_product_name ?? 'N/A' }}</td>
+                                        <td class="py-1 px-2">{{ number_format($loan->principle,2) }}</td>
+                                        <td class="py-1 px-2">{{ number_format($loan->loanAccount->balance ?? 0,2) }}</td>
                                         <td class="py-1 px-2">
                                             <span class="inline-block rounded px-2 py-0.5 text-xs {{ $loan->status==='active'?'bg-green-100 text-green-700':'bg-yellow-100 text-yellow-700' }}">{{ $loan->status }}</span>
                                         </td>
+                                        <td class="py-1 px-2">{{ $loan->max_days_in_arrears }}</td>
+                                        <td class="py-1 px-2">{{ number_format($loan->total_amount_in_arrears, 2) }}</td>
                                     </tr>
                                 @empty
                                     <tr><td colspan="5" class="text-center text-gray-400 py-2">No active loans</td></tr>
@@ -100,6 +151,7 @@
                             <thead>
                                 <tr class="text-gray-500 text-xs">
                                     <th class="py-1 px-2 text-left">Control #</th>
+                                    <th class="py-1 px-2 text-left">Service</th>
                                     <th class="py-1 px-2 text-left">Amount</th>
                                     <th class="py-1 px-2 text-left">Due Date</th>
                                     <th class="py-1 px-2 text-left">Status</th>
@@ -109,14 +161,15 @@
                                 @forelse($member->bills as $bill)
                                     <tr>
                                         <td class="py-1 px-2">{{ $bill->control_number }}</td>
-                                        <td class="py-1 px-2">{{ number_format($bill->amount,2) }}</td>
+                                        <td class="py-1 px-2">{{ $bill->service->name ?? 'N/A' }}</td>
+                                        <td class="py-1 px-2">{{ number_format($bill->amount_due,2) }}</td>
                                         <td class="py-1 px-2">{{ $bill->due_date }}</td>
                                         <td class="py-1 px-2">
-                                            <span class="inline-block rounded px-2 py-0.5 text-xs {{ $bill->status==='paid'?'bg-green-100 text-green-700':'bg-yellow-100 text-yellow-700' }}">{{ $bill->status }}</span>
+                                            <span class="inline-block rounded px-2 py-0.5 text-xs {{ $bill->status==='PAID'?'bg-green-100 text-green-700':'bg-yellow-100 text-yellow-700' }}">{{ $bill->status }}</span>
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="4" class="text-center text-gray-400 py-2">No control numbers</td></tr>
+                                    <tr><td colspan="5" class="text-center text-gray-400 py-2">No control numbers</td></tr>
                                 @endforelse
                             </tbody>
                         </table>

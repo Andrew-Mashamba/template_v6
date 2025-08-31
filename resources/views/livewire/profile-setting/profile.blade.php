@@ -94,6 +94,7 @@
                             ['id' => 13, 'label' => 'Bills Manager'],
                             ['id' => 14, 'label' => 'Institution Accounts'],
                             ['id' => 15, 'label' => 'Approvals Manager'],
+                            ['id' => 16, 'label' => 'Data Migration'],
                         ];
                         @endphp
                         @foreach ($menuItems as $menuItem)
@@ -153,6 +154,7 @@
                                             13 => 'Bills Manager',
                                             14 => 'Institution Accounts',
                                             15 => 'Approvals Manager',
+                                            16 => 'Data Migration',
                                         ];
                                     @endphp
                                     {{ $sectionTitles[$this->teller_tab] ?? 'Organization Settings' }}
@@ -206,6 +208,9 @@
                         @endif
                         @if($this->teller_tab==15)
                             <livewire:approvals.process-code-manager />
+                        @endif
+                        @if($this->teller_tab==16)
+                            <livewire:profile-setting.data-migration />
                         @endif
                     </div>
                 </div>

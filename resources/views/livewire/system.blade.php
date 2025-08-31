@@ -121,7 +121,7 @@
                     @break
 
                 @case('19')
-                    <livewire:approvals.approvals />
+                    @livewire('approvals.approvals', [], key('approvals-' . $menu_id . '-' . now()->timestamp))
                     @break
 
                 @case('20')

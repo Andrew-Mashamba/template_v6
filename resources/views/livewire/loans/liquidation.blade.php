@@ -239,23 +239,28 @@
 
                                 <!-- Liquidation Form -->
                                 <div class="space-y-4">
-                                    <!-- Liquidation Amount -->
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Liquidation Amount *</label>
-                                        <div class="mt-1 relative">
-                                            <span class="absolute left-3 top-2 text-sm text-gray-500">TZS</span>
-                                            <input type="number" wire:model="liquidationAmount" 
-                                                class="pl-12 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                                placeholder="0.00" step="0.01" min="0">
+                                    <!-- Liquidation Amount Breakdown -->
+                                    <div class="bg-gray-50 rounded-lg p-4">
+                                        <h4 class="text-sm font-medium text-gray-700 mb-3">Liquidation Amount Breakdown</h4>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between text-sm">
+                                                <span class="text-gray-600">Outstanding Balance:</span>
+                                                <span class="font-semibold">TZS {{ number_format($liquidationAmount, 2) }}</span>
+                                            </div>
+                                            <div class="flex justify-between text-sm">
+                                                <span class="text-gray-600">Liquidation Penalty (5%):</span>
+                                                <span class="font-semibold text-red-600">TZS {{ number_format($liquidationPenalty, 2) }}</span>
+                                            </div>
+                                            <div class="border-t pt-2">
+                                                <div class="flex justify-between text-sm">
+                                                    <span class="font-medium text-gray-700">Total Amount Due:</span>
+                                                    <span class="font-bold text-blue-900 text-base">TZS {{ number_format($totalLiquidationAmount, 2) }}</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        @error('liquidationAmount') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
-                                        
-                                        @if($earlySettlementAmount > 0 && $earlySettlementAmount < $selectedLoan->outstanding_balance)
-                                            <button type="button" wire:click="applyEarlySettlement" 
-                                                class="mt-2 text-xs text-blue-600 hover:text-blue-800 underline">
-                                                Apply Early Settlement Amount (TZS {{ number_format($earlySettlementAmount, 2) }})
-                                            </button>
-                                        @endif
+                                        <p class="mt-3 text-xs text-gray-500">
+                                            The liquidation penalty is charged for early settlement of the loan.
+                                        </p>
                                     </div>
 
                                     <!-- Payment Method -->
@@ -339,25 +344,31 @@
                                     </div>
 
                                     <!-- Penalty Waiver -->
-                                    @if($liquidationAmount < ($selectedLoan->outstanding_balance ?? 0))
+                                    @if($liquidationPenalty > 0)
                                         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                                             <div class="flex items-start">
                                                 <input type="checkbox" wire:model="penaltyWaived" 
                                                     class="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                                                 <div class="ml-3">
-                                                    <label class="text-sm font-medium text-gray-700">Waive Penalty/Interest</label>
+                                                    <label class="text-sm font-medium text-gray-700">Waive Liquidation Penalty</label>
                                                     <p class="text-xs text-gray-500 mt-1">
-                                                        Amount to be waived: TZS {{ number_format(($selectedLoan->outstanding_balance ?? 0) - $liquidationAmount, 2) }}
+                                                        Penalty amount to be waived: TZS {{ number_format($liquidationPenalty, 2) }}
                                                     </p>
+                                                    @if($penaltyWaived)
+                                                        <p class="text-xs text-green-600 mt-1 font-medium">
+                                                            New total: TZS {{ number_format($liquidationAmount, 2) }} (penalty waived)
+                                                        </p>
+                                                    @endif
                                                 </div>
                                             </div>
                                             
                                             @if($penaltyWaived)
                                                 <div class="mt-3">
-                                                    <label class="block text-xs font-medium text-gray-700">Waiver Reason</label>
-                                                    <textarea wire:model="waiverReason" rows="2"
+                                                    <label class="block text-xs font-medium text-gray-700">Waiver Reason *</label>
+                                                    <textarea wire:model="waiverReason" rows="2" required
                                                         class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                                        placeholder="Enter reason for waiver..."></textarea>
+                                                        placeholder="Enter reason for penalty waiver..."></textarea>
+                                                    @error('waiverReason') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                                                 </div>
                                             @endif
                                         </div>
@@ -371,24 +382,43 @@
                                             placeholder="Enter any additional notes..."></textarea>
                                     </div>
 
-                                    <!-- Confirmation -->
+                                    <!-- OTP Confirmation -->
                                     <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                                        <h4 class="text-sm font-medium text-red-900 mb-2">Confirm Liquidation</h4>
+                                        <h4 class="text-sm font-medium text-red-900 mb-2">Confirm Liquidation with OTP</h4>
                                         <p class="text-xs text-red-700 mb-3">
-                                            This action will close the loan permanently. Please enter the confirmation code to proceed.
+                                            This action will close the loan permanently. An OTP will be sent to the member's registered phone number for confirmation.
                                         </p>
-                                        <div class="flex items-center space-x-4">
-                                            <div>
-                                                <label class="block text-xs font-medium text-gray-700">Confirmation Code</label>
-                                                <p class="mt-1 text-lg font-bold text-red-600">{{ $generatedCode }}</p>
+                                        
+                                        @if($selectedLoan && $selectedLoan->client)
+                                            <div class="mb-3 text-xs">
+                                                <span class="text-gray-600">Member Phone:</span> 
+                                                <span class="font-medium">{{ $memberPhone ? substr($memberPhone, 0, 3) . '****' . substr($memberPhone, -2) : 'Not available' }}</span>
                                             </div>
-                                            <div class="flex-1">
-                                                <label class="block text-xs font-medium text-gray-700">Enter Code *</label>
-                                                <input type="text" wire:model="confirmationCode" 
-                                                    class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm uppercase"
-                                                    placeholder="Enter confirmation code">
-                                                @error('confirmationCode') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
-                                            </div>
+                                        @endif
+                                        
+                                        <div class="flex items-start space-x-4">
+                                            @if(!$otpSent)
+                                                <button type="button" wire:click="sendOTP" 
+                                                    class="px-4 py-2 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                                    Send OTP
+                                                </button>
+                                            @else
+                                                <div class="flex-1">
+                                                    <label class="block text-xs font-medium text-gray-700 mb-1">Enter OTP Code *</label>
+                                                    <input type="text" wire:model="confirmationCode" maxlength="6"
+                                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
+                                                        placeholder="Enter 6-digit OTP">
+                                                    @error('confirmationCode') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                                                    
+                                                    <div class="mt-2 flex justify-between items-center">
+                                                        <span class="text-xs text-gray-500">OTP valid for 5 minutes</span>
+                                                        <button type="button" wire:click="sendOTP" 
+                                                            class="text-xs text-blue-600 hover:text-blue-800 underline">
+                                                            Resend OTP
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -398,8 +428,8 @@
                     
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                         <button type="button" wire:click="processLiquidation" 
-                            @if($confirmationCode !== $generatedCode) disabled @endif
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 @if($confirmationCode === $generatedCode) bg-red-600 hover:bg-red-700 @else bg-gray-400 cursor-not-allowed @endif text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            @if(!$otpSent || strlen($confirmationCode) !== 6) disabled @endif
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 @if($otpSent && strlen($confirmationCode) === 6) bg-red-600 hover:bg-red-700 @else bg-gray-400 cursor-not-allowed @endif text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
                             <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l3-3m0 0l3 3m-3-3v12m0-12a9 9 0 110 18 9 9 0 010-18z"></path>
                             </svg>

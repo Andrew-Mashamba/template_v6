@@ -738,6 +738,362 @@
         </div>
     </div>
     @endif
+
+    {{-- Receipt Modal --}}
+    @if($showReceiptModal && $receiptData)
+    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="mb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Transaction Receipt</h3>
+                        <p class="mt-1 text-sm text-gray-500">Your deposit has been processed successfully</p>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-md mb-4">
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="font-semibold">Receipt No:</span>
+                                <p class="text-gray-600">{{ $receiptData['receipt_number'] }}</p>
+                            </div>
+                            <div>
+                                <span class="font-semibold">Date:</span>
+                                <p class="text-gray-600">{{ $receiptData['transaction_date'] }}</p>
+                            </div>
+                            <div>
+                                <span class="font-semibold">Member:</span>
+                                <p class="text-gray-600">{{ $receiptData['member_name'] }}</p>
+                            </div>
+                            <div>
+                                <span class="font-semibold">Account:</span>
+                                <p class="text-gray-600">{{ $receiptData['account_number'] }}</p>
+                            </div>
+                            <div>
+                                <span class="font-semibold">Amount:</span>
+                                <p class="text-green-600 font-bold">{{ $receiptData['currency'] }} {{ $receiptData['amount'] }}</p>
+                            </div>
+                            <div>
+                                <span class="font-semibold">Payment Method:</span>
+                                <p class="text-gray-600">{{ $receiptData['payment_method'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 p-4 rounded-md">
+                        <p class="text-sm text-blue-800">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Your receipt has been generated. You can print it or save it for your records.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" 
+                            wire:click="printReceipt"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-900 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        <i class="fas fa-print mr-2"></i>
+                        Print Receipt
+                    </button>
+                    <button type="button" 
+                            wire:click="closeReceiptModal"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
+
+<script>
+// Receipt printing functionality
+window.addEventListener('printReceipt', event => {
+    const receiptData = event.detail.receiptData;
+    
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    
+    // Generate the receipt HTML
+    const receiptHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Deposits Receipt</title>
+            <style>
+                @media print {
+                    body { margin: 0; }
+                    .no-print { display: none !important; }
+                    .receipt { box-shadow: none; border: 1px solid #000; }
+                }
+                
+                body {
+                    font-family: 'Courier New', monospace;
+                    font-size: 12px;
+                    line-height: 1.2;
+                    color: #000;
+                    margin: 0;
+                    padding: 10px;
+                    background-color: #f5f5f5;
+                }
+                
+                .receipt {
+                    max-width: 300px;
+                    margin: 0 auto;
+                    background: white;
+                    padding: 15px;
+                    border-radius: 5px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                }
+                
+                .header {
+                    text-align: center;
+                    border-bottom: 2px solid #000;
+                    padding-bottom: 10px;
+                    margin-bottom: 15px;
+                }
+                
+                .header h1 {
+                    margin: 0;
+                    font-size: 16px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                }
+                
+                .header p {
+                    margin: 5px 0;
+                    font-size: 10px;
+                }
+                
+                .receipt-title {
+                    text-align: center;
+                    font-size: 14px;
+                    font-weight: bold;
+                    margin: 10px 0;
+                    text-transform: uppercase;
+                }
+                
+                .receipt-number {
+                    text-align: center;
+                    font-size: 12px;
+                    margin-bottom: 15px;
+                }
+                
+                .info-row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 5px;
+                    border-bottom: 1px dotted #ccc;
+                    padding-bottom: 3px;
+                }
+                
+                .info-label {
+                    font-weight: bold;
+                    min-width: 80px;
+                }
+                
+                .info-value {
+                    text-align: right;
+                    flex: 1;
+                }
+                
+                .amount-section {
+                    border-top: 2px solid #000;
+                    border-bottom: 2px solid #000;
+                    padding: 10px 0;
+                    margin: 15px 0;
+                }
+                
+                .amount-row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 5px;
+                }
+                
+                .amount-label {
+                    font-weight: bold;
+                    font-size: 14px;
+                }
+                
+                .amount-value {
+                    font-weight: bold;
+                    font-size: 14px;
+                    text-align: right;
+                }
+                
+                .footer {
+                    text-align: center;
+                    margin-top: 20px;
+                    padding-top: 10px;
+                    border-top: 1px solid #000;
+                    font-size: 10px;
+                }
+                
+                .signature-line {
+                    border-top: 1px solid #000;
+                    margin-top: 30px;
+                    padding-top: 5px;
+                    text-align: center;
+                    font-size: 10px;
+                }
+                
+                .print-button {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #007bff;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 14px;
+                }
+                
+                .print-button:hover {
+                    background: #0056b3;
+                }
+                
+                .close-button {
+                    position: fixed;
+                    top: 20px;
+                    left: 20px;
+                    background: #6c757d;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 14px;
+                }
+                
+                .close-button:hover {
+                    background: #545b62;
+                }
+                
+                .barcode {
+                    text-align: center;
+                    margin: 10px 0;
+                    font-family: monospace;
+                    font-size: 20px;
+                }
+            </style>
+        </head>
+        <body>
+            <button class="print-button no-print" onclick="window.print()">
+                Print Receipt
+            </button>
+            
+            <button class="close-button no-print" onclick="window.close()">
+                Close
+            </button>
+            
+            <div class="receipt">
+                <div class="header">
+                    <h1>SACCOS CORE SYSTEM</h1>
+                    <p>Deposits Receipt</p>
+                    <p>${receiptData.branch || 'Main Branch'}</p>
+                </div>
+                
+                <div class="receipt-title">DEPOSITS RECEIPT</div>
+                
+                <div class="receipt-number">
+                    Receipt No: ${receiptData.receipt_number}
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Date:</span>
+                    <span class="info-value">${receiptData.transaction_date}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Member:</span>
+                    <span class="info-value">${receiptData.member_name}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Member No:</span>
+                    <span class="info-value">${receiptData.member_number}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Account:</span>
+                    <span class="info-value">${receiptData.account_number}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Account Name:</span>
+                    <span class="info-value">${receiptData.account_name}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Depositor:</span>
+                    <span class="info-value">${receiptData.depositor_name}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Payment Method:</span>
+                    <span class="info-value">${receiptData.payment_method}</span>
+                </div>
+                
+                ${receiptData.payment_method === 'Bank' ? `
+                <div class="info-row">
+                    <span class="info-label">Bank:</span>
+                    <span class="info-value">${receiptData.bank_name}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Reference:</span>
+                    <span class="info-value">${receiptData.reference_number}</span>
+                </div>
+                ` : ''}
+                
+                <div class="info-row">
+                    <span class="info-label">Narration:</span>
+                    <span class="info-value">${receiptData.narration}</span>
+                </div>
+                
+                <div class="amount-section">
+                    <div class="amount-row">
+                        <span class="amount-label">AMOUNT DEPOSITED:</span>
+                        <span class="amount-value">${receiptData.currency} ${receiptData.amount}</span>
+                    </div>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Balance After:</span>
+                    <span class="info-value">${receiptData.currency} ${receiptData.balance_after}</span>
+                </div>
+                
+                <div class="barcode">
+                    *${receiptData.receipt_number}*
+                </div>
+                
+                <div class="signature-line">
+                    Processed by: ${receiptData.processed_by}
+                </div>
+                
+                <div class="footer">
+                    <p>Thank you for your deposit!</p>
+                    <p>This is a computer generated receipt</p>
+                    <p>For queries, contact your branch office</p>
+                    <p>Generated on: ${receiptData.transaction_date}</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    printWindow.document.write(receiptHTML);
+    printWindow.document.close();
+    
+    // Auto-print when the window loads
+    printWindow.onload = function() {
+        printWindow.print();
+    };
+});
+</script>
 
 

@@ -774,7 +774,7 @@ class Users extends Component
             $this->nhifNumber = $this->editingUser->employee->nhif_number ?? '';
             $this->nhifRate = $this->editingUser->employee->nhif_rate ?? '';
             $this->workersCompensation = $this->editingUser->employee->workers_compensation ?? '';
-            $this->lifeInsurance = $this->editingUser->employee->life_insurance ? 'yes' : 'no';
+            $this->lifeInsurance = ($this->editingUser->employee && $this->editingUser->employee->life_insurance) ? 'yes' : 'no';
             $this->taxCategory = $this->editingUser->employee->tax_category ?? '';
             $this->payeRate = $this->editingUser->employee->paye_rate ?? '';
             

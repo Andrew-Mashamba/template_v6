@@ -1,0 +1,66 @@
+{
+  "info": {
+    "name": "Payment Notification API Sample",
+    "description": "Sample request body for POST /api/billing/payment-notify",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Payment Notification - Sync",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"channelId\": \"MOBILE_MONEY\",\n  \"spCode\": \"SACCOS001\",\n  \"requestType\": \"payment\",\n  \"approach\": \"sync\",\n  \"timestamp\": \"2024-08-30T12:00:00.000000Z\",\n  \"userId\": \"USER123456\",\n  \"branchCode\": \"BR001\",\n  \"billRef\": \"BILL20240830001\",\n  \"channelRef\": \"CHANNEL20240830001\",\n  \"amount\": 50000.00,\n  \"creditAccount\": \"1234567890\",\n  \"creditCurrency\": \"TZS\",\n  \"paymentType\": \"MOBILE_MONEY\",\n  \"channelCode\": \"MPESA\",\n  \"payerName\": \"John Doe\",\n  \"payerPhone\": \"+255712345678\",\n  \"payerEmail\": \"john.doe@example.com\",\n  \"narration\": \"Payment for SACCOS membership registration\",\n  \"extraFields\": {\n    \"transactionId\": \"TXN123456789\",\n    \"merchantId\": \"MERCH001\",\n    \"terminalId\": \"TERM001\",\n    \"receiptNumber\": \"RCPT001\",\n    \"paymentMethod\": \"MPESA\",\n    \"customerReference\": \"CUST001\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/billing/payment-notify",
+          "host": ["{{base_url}}"],
+          "path": ["api", "billing", "payment-notify"]
+        }
+      }
+    },
+    {
+      "name": "Payment Notification - Async",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"channelId\": \"BANK_TRANSFER\",\n  \"spCode\": \"SACCOS001\",\n  \"requestType\": \"payment\",\n  \"approach\": \"async\",\n  \"callbackUrl\": \"https://your-callback-url.com/api/payment-callback\",\n  \"timestamp\": \"2024-08-30T12:00:00.000000Z\",\n  \"userId\": \"USER123456\",\n  \"branchCode\": \"BR001\",\n  \"billRef\": \"BILL20240830002\",\n  \"channelRef\": \"CHANNEL20240830002\",\n  \"amount\": 100000.00,\n  \"creditAccount\": \"0987654321\",\n  \"creditCurrency\": \"TZS\",\n  \"paymentType\": \"BANK_TRANSFER\",\n  \"channelCode\": \"CRDB\",\n  \"payerName\": \"Jane Smith\",\n  \"payerPhone\": \"+255698765432\",\n  \"payerEmail\": \"jane.smith@example.com\",\n  \"narration\": \"Payment for loan repayment\",\n  \"extraFields\": {\n    \"bankName\": \"CRDB Bank\",\n    \"accountNumber\": \"1234567890\",\n    \"transactionId\": \"TXN987654321\",\n    \"referenceNumber\": \"REF001\",\n    \"customerReference\": \"CUST002\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/billing/payment-notify",
+          "host": ["{{base_url}}"],
+          "path": ["api", "billing", "payment-notify"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ]
+}

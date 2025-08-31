@@ -188,7 +188,11 @@ $penaltyAmount = abs($penaltyAmount ?? 0);
 $restructureAmount = abs($restructureAmount ?? 0);
 
 // Calculate total deductions with fresh values
-$totalDeductions = (float)($firstInstallmentInterestAmount ?? 0) + 
+// Exclude First Interest for Restructure loans
+$includeFirstInterest = !($loan && in_array($loan->loan_type_2, ['Restructure', 'Restructuring']));
+$firstInterestDeduction = $includeFirstInterest ? (float)($firstInstallmentInterestAmount ?? 0) : 0;
+
+$totalDeductions = $firstInterestDeduction + 
                    (float)($totalCharges ?? 0) + 
                    (float)($totalInsurance ?? 0) + 
                    (float)($totalAmount ?? 0) + 
@@ -364,6 +368,38 @@ function calculateFirstInterestAmount($principal, $monthlyInterestRate, $dayOfTh
                     <div class="font-semibold text-blue-900">{{ number_format($restructureAmount, 2) }} TZS</div>
                 </div>
             </div>
+
+            <div class="grid grid-cols-4 gap-2 text-xs mt-2">
+                <div class="p-2 border border-gray-200 rounded">
+                    <div class="text-gray-600">2 Months Buffer</div>
+                    <div class="font-semibold text-red-600">
+                       
+                        @php
+                            // Calculate 2 months buffer using proper monthly interest calculation
+                            // The repayment schedule uses: monthlyInterest = balance * (interestRate / 12 / 100)
+                            // But since we already have the total interest amount, we can derive the monthly interest
+                            
+                            // Get the loan product to find interest rate
+                            $loanProduct = DB::table('loan_sub_products')
+                                ->where('sub_product_id', $originalLoan->loan_sub_product)
+                                ->first();
+                            
+                            if ($loanProduct && $loanProduct->interest_value) {
+                                // Calculate monthly interest based on outstanding balance
+                                $monthlyInterestRate = $loanProduct->interest_value / 12 / 100;
+                                $outstandingBalance = $originalLoan->principle ?? 0;
+                                $monthlyInterest = $outstandingBalance * $monthlyInterestRate;
+                                $bufferAmount = $monthlyInterest * 2; // 2 months buffer
+                            } else {
+                                // Fallback: If no product found, use the simple calculation
+                                $monthlyInterest = ($originalLoan->interest ?? 0) / ($originalLoan->tenure ?? 12);
+                                $bufferAmount = $monthlyInterest * 2;
+                            }
+                        @endphp
+                        {{ number_format($bufferAmount, 2) }} TZS
+                    </div>
+                </div>
+            </div>
         </div>
         @endif
 
@@ -446,6 +482,24 @@ function calculateFirstInterestAmount($principal, $monthlyInterestRate, $dayOfTh
                     <div class="font-semibold text-green-900">{{ number_format($topupAmount, 2) }} TZS</div>
                 </div>
             </div>
+
+            <div class="grid grid-cols-4 gap-2 text-xs mt-2">
+                <div class="p-2 border border-gray-200 rounded">
+                    <div class="text-gray-600">Months on book</div>
+                    <div class="font-semibold text-red-600">
+                        @php
+                            $monthsOnBook = 0;
+                            if ($originalTopupLoan && $originalTopupLoan->created_at) {
+                                $createdDate = \Carbon\Carbon::parse($originalTopupLoan->created_at);
+                                $currentDate = \Carbon\Carbon::now();
+                                $monthsOnBook = $createdDate->diffInMonths($currentDate);
+                            }
+                        @endphp
+                        {{ $monthsOnBook }} {{ $monthsOnBook == 1 ? 'month' : 'months' }}
+                    </div>
+                </div>
+            </div>
+
         </div>
         @endif
 
@@ -554,7 +608,7 @@ function calculateFirstInterestAmount($principal, $monthlyInterestRate, $dayOfTh
                         </tr>
                     </thead>
                     <tbody>
-                        @if(($firstInstallmentInterestAmount ?? 0) > 0)
+                        @if(($firstInstallmentInterestAmount ?? 0) > 0 && !($loan && in_array($loan->loan_type_2, ['Restructure', 'Restructuring'])))
                         <tr class="border-b">
                             <td class="px-2 py-1 border-r border-gray-200 pl-6 text-gray-600">First Interest</td>
                             <td class="px-2 py-1 text-right text-gray-700">{{ number_format((float)($firstInstallmentInterestAmount ?? 0), 2) }} TZS</td>
@@ -640,7 +694,15 @@ function calculateFirstInterestAmount($principal, $monthlyInterestRate, $dayOfTh
                     <tbody>
                         <tr class="border-b">
                             <td class="px-2 py-1 font-medium border-r border-gray-200">Approved Loan Amount</td>
-                            <td class="px-2 py-1 text-right font-semibold text-blue-900">{{ number_format((float)($approved_loan_value ?? 0), 2) }} TZS</td>
+                            <td class="px-2 py-1 text-right font-semibold text-blue-900">
+                                @php
+                                    $displayApprovedAmount = (float)($approved_loan_value ?? 0);
+                                    if($loan && in_array($loan->loan_type_2, ['Restructure', 'Restructuring'])) {
+                                        $displayApprovedAmount += (float)($bufferAmount ?? 0);
+                                    }
+                                @endphp
+                                {{ number_format($displayApprovedAmount, 2) }} TZS
+                            </td>
                         </tr>
                         <tr class="border-b">
                             <td class="px-2 py-1 font-medium border-r border-gray-200">Total Deductions</td>
@@ -648,7 +710,12 @@ function calculateFirstInterestAmount($principal, $monthlyInterestRate, $dayOfTh
                         </tr>
                         <tr class="bg-gray-50 font-semibold">
                             <td class="px-2 py-1 border-r border-gray-200">Net Disbursement</td>
-                            <td class="px-2 py-1 text-right font-semibold text-blue-900">{{ number_format((float)($netDisbursement ?? 0), 2) }} TZS</td>
+                            <td class="px-2 py-1 text-right font-semibold text-blue-900">
+                                @php
+                                    $finalNetDisbursement = $displayApprovedAmount - (float)($totalDeductions ?? 0);
+                                @endphp
+                                {{ number_format($finalNetDisbursement, 2) }} TZS
+                            </td>
                         </tr>
                     </tbody>
                 </table>

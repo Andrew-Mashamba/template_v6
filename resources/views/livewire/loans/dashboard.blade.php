@@ -182,12 +182,14 @@
                                                 ->where('approval_stage', $dbStageName)
                                                 ->count();
                                             
-                                            // Add all stages to show complete workflow
-                                            $approvalStages->push((object)[
-                                                'stage_name' => $stageName,
-                                                'role_names' => $roleNames,
-                                                'count' => $stageCount
-                                            ]);
+                                            // Only add stages that have loans (count > 0)
+                                            if ($stageCount > 0) {
+                                                $approvalStages->push((object)[
+                                                    'stage_name' => $stageName,
+                                                    'role_names' => $roleNames,
+                                                    'count' => $stageCount
+                                                ]);
+                                            }
                                         }
                                     }
                                 }
@@ -294,7 +296,7 @@
                     </div>
 
                     <div class="flex items-center justify-between bg-gray-100 p-2">
-                        <p class="text-lg font-bold text-gray-500 mx-auto text-center">Restructure</p>
+                        <p class="text-lg font-bold text-gray-500 mx-auto text-center">LOAN RESTRUCTURING</p>
                     </div>
 
                     {{-- Restructure Loans Stages Table --}}
@@ -319,11 +321,14 @@
                                     ->where('approval_stage', $stageKey)
                                     ->count();
                                 
-                                $restructureApprovalStages->push((object)[
-                                    'stage_name' => $stageKey,
-                                    'display_name' => $displayName,
-                                    'count' => $stageCount
-                                ]);
+                                // Only add stages that have loans (count > 0)
+                                if ($stageCount > 0) {
+                                    $restructureApprovalStages->push((object)[
+                                        'stage_name' => $stageKey,
+                                        'display_name' => $displayName,
+                                        'count' => $stageCount
+                                    ]);
+                                }
                             }
                         @endphp
                         

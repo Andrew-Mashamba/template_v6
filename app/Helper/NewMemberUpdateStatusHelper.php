@@ -3,6 +3,7 @@
 namespace App\Helper;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class NewMemberUpdateStatusHelper{
 
@@ -51,6 +52,14 @@ class NewMemberUpdateStatusHelper{
     function updateMemberStatus($client_number){
 
         try{
+            // Check if payment processing is in progress to prevent automatic status updates
+            if (config('payment.processing', false)) {
+                Log::info('Skipping automatic client status update during payment processing', [
+                    'client_number' => $client_number,
+                    'reason' => 'Payment processing in progress'
+                ]);
+                return;
+            }
 
             $status= $this->checkRegistrationFee($client_number);
             $status_two= $this->checkMandatoryShare($client_number);

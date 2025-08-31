@@ -145,10 +145,14 @@ class BillingService
 
     public function processPayment($controlNumber, $paymentData)
     {
+        // Set flag to prevent automatic client status updates during payment processing
+        config(['payment.processing' => true]);
+        
         Log::info('Starting payment processing', [
             'control_number' => $controlNumber,
             'payment_data' => $paymentData,
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
+            'prevent_status_update' => true
         ]);
 
         $this->logger->logTransactionStart([
@@ -291,6 +295,9 @@ class BillingService
                 'final_amount_paid' => $bill->amount_paid
             ]);
 
+            // Reset payment processing flag
+            config(['payment.processing' => false]);
+            
             return [
                 'success' => true,
                 'status' => 'success',
@@ -301,6 +308,9 @@ class BillingService
 
         } catch (\Exception $e) {
             DB::rollBack();
+            // Reset payment processing flag
+            config(['payment.processing' => false]);
+            
             Log::error('Payment processing failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -701,20 +711,22 @@ class BillingService
                         'control_number' => $bill->control_number
                     ]);
     
-                    $shareIssuanceService = new ShareIssuanceService(new TransactionPostingService());
+                    // Check if sub_product exists before proceeding with share issuance
+                    if ($sub_product) {
+                        $shareIssuanceService = new ShareIssuanceService(new TransactionPostingService());
     
-                    $data = [
-                        'product_id' => $sub_product->id,
-                        'client_number' => $bill->client_number,
-                        'number_of_shares' => $sub_product->minimum_required_shares,
-                        'price_per_share' =>  $sub_product->nominal_price,
-                        'total_value' => $amount,
-                        'linked_savings_account' => $credit_account,
-                        'share_account' => $debit_account,
-                        'reference_number' => '1000'
-                    ];
+                        $data = [
+                            'product_id' => $sub_product->id,
+                            'client_number' => $bill->client_number,
+                            'number_of_shares' => $sub_product->minimum_required_shares,
+                            'price_per_share' =>  $sub_product->nominal_price,
+                            'total_value' => $amount,
+                            'linked_savings_account' => $credit_account,
+                            'share_account' => $debit_account,
+                            'reference_number' => '1000'
+                        ];
     
-                    $result = $shareIssuanceService->issueShares($data);
+                        $result = $shareIssuanceService->issueShares($data);
     
                     if ($result['success']) {
                         session()->flash('success', $result['message']);
@@ -737,7 +749,15 @@ class BillingService
                             ]);
                             session()->flash('error', $result['message']);
                         }
-                    }
+                    } // Close if ($result['success'])
+                } else {
+                    Log::warning('Sub product not found for share issuance', [
+                        'service_code' => $service->code,
+                        'product_account' => $service->debit_account,
+                        'bill_id' => $bill->id,
+                        'control_number' => $bill->control_number
+                    ]);
+                } // Close if ($sub_product)
                 }
                 
 

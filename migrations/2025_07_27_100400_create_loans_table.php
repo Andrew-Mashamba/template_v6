@@ -73,6 +73,7 @@ return new class extends Migration
             $table->string('future_interest')->nullable(); // Original type: double precision
             $table->string('total_principle')->nullable(); // Original type: double precision
             $table->string('loan_type_2', 150)->nullable();
+            $table->string('loan_purpose')->nullable();
             $table->string('stage_id')->nullable();
             $table->string('stage')->nullable();
             $table->string('loan_type_3')->nullable();

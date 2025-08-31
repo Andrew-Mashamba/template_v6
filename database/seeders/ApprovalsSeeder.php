@@ -154,6 +154,9 @@ class ApprovalsSeeder extends Seeder
         ];
 
         foreach ($data as $row) {
+            // Remove the hardcoded ID to let the database auto-increment
+            unset($row['id']);
+            
             // Validate user references
             $userFields = ['first_checker_id', 'second_checker_id', 'user_id', 'approver_id', 'last_action_by'];
             foreach ($userFields as $field) {

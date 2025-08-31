@@ -1,4 +1,8 @@
 {{-- Enhanced Approvals Manager with Modern UI --}}
+
+
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+
 <style>
     /* Custom pagination styling */
     .pagination {
@@ -52,8 +56,6 @@
         color: #374151;
     }
 </style>
-
-<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
     <div class="p-6">
         <!-- Header Section -->
         <div class="mb-8">
@@ -295,19 +297,19 @@
                 <div class="p-4 bg-gray-50">
                     <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">Quick Actions</h3>
                     <div class="space-y-2">
-                        <button wire:click="resetFilters" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
+                        <button wire:click.stop="resetFilters" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                             </svg>
                             Reset Filters
                         </button>
-                        <button wire:click="toggleFilters" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
+                        <button wire:click.stop="toggleFilters" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
                             </svg>
                             {{ $showFilters ? 'Hide' : 'Show' }} Advanced
                         </button>
-                        <button wire:click="$set('filterStatus', 'PENDING')" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
+                        <button wire:click.stop="$set('filterStatus', 'PENDING')" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
@@ -389,7 +391,7 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th wire:click="sortBy('process_name')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                                    <th wire:click.stop="sortBy('process_name')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                                         <div class="flex items-center space-x-1">
                                             <span>Process</span>
                                             @if($sortField === 'process_name')
@@ -399,7 +401,7 @@
                                             @endif
                                         </div>
                                     </th>
-                                    <th wire:click="sortBy('process_description')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                                    <th wire:click.stop="sortBy('process_description')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                                         <div class="flex items-center space-x-1">
                                             <span>Description</span>
                                             @if($sortField === 'process_description')
@@ -412,7 +414,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">First Checker</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Second Checker</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approver</th>
-                                    <th wire:click="sortBy('process_status')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                                    <th wire:click.stop="sortBy('process_status')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                                         <div class="flex items-center space-x-1">
                                             <span>Status</span>
                                             @if($sortField === 'process_status')
@@ -495,13 +497,13 @@
                                                     @if($hasRequiredRole)
                                                         <div class="mt-2">
                                                             <div class="inline-flex rounded-md shadow-xs" role="group">
-                                                                <button wire:click="showViewChangeDetailsModal('{{ $approval->process_code }}', '{{ $approval->process_id }}')" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-s-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
+                                                                <button wire:click.stop="showViewChangeDetailsModal('{{ $approval->process_code }}', '{{ $approval->process_id }}')" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-s-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
                                                                     View Details
                                                                 </button>
-                                                                <button wire:click="showApproveConfirmationModal({{ $approval->id }},'1')" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
+                                                                <button wire:click.stop="showApproveConfirmationModal({{ $approval->id }},'1')" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
                                                                     Approve
                                                                 </button>
-                                                                <button wire:click="showRejectAndCommentsConfirmationModal({{ $approval->id }})" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-e-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
+                                                                <button wire:click.stop="showRejectAndCommentsConfirmationModal({{ $approval->id }})" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-e-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
                                                                     Reject
                                                                 </button>
                                                             </div>
@@ -538,13 +540,13 @@
                                                     @if($hasRequiredRole)
                                                         <div class="mt-2">
                                                             <div class="inline-flex rounded-md shadow-xs" role="group">
-                                                                <button wire:click="showViewChangeDetailsModal('{{ $approval->process_code }}', '{{ $approval->process_id }}')" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-s-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
+                                                                <button wire:click.stop="showViewChangeDetailsModal('{{ $approval->process_code }}', '{{ $approval->process_id }}')" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-s-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
                                                                     View Details
                                                                 </button>
-                                                                <button wire:click="showApproveConfirmationModal({{ $approval->id }},'2')" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
+                                                                <button wire:click.stop="showApproveConfirmationModal({{ $approval->id }},'2')" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
                                                                     Approve
                                                                 </button>
-                                                                <button wire:click="showRejectAndCommentsConfirmationModal({{ $approval->id }})" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-e-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
+                                                                <button wire:click.stop="showRejectAndCommentsConfirmationModal({{ $approval->id }})" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-e-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
                                                                     Reject
                                                                 </button>
                                                             </div>
@@ -581,13 +583,13 @@
                                                     @if($hasRequiredRole)
                                                         <div class="mt-2">
                                                             <div class="inline-flex rounded-md shadow-xs" role="group">
-                                                                <button wire:click="showViewChangeDetailsModal('{{ $approval->process_code }}', '{{ $approval->process_id }}')" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-s-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
+                                                                <button wire:click.stop="showViewChangeDetailsModal('{{ $approval->process_code }}', '{{ $approval->process_id }}')" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-s-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
                                                                     View Details
                                                                 </button>
-                                                                <button wire:click="showApproveConfirmationModal({{ $approval->id }},'3')" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
+                                                                <button wire:click.stop="showApproveConfirmationModal({{ $approval->id }},'3')" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
                                                                     Approve
                                                                 </button>
-                                                                <button wire:click="showRejectAndCommentsConfirmationModal({{ $approval->id }})" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-e-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
+                                                                <button wire:click.stop="showRejectAndCommentsConfirmationModal({{ $approval->id }})" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-e-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
                                                                     Reject
                                                                 </button>
                                                             </div>
@@ -623,7 +625,7 @@
                     <!-- Enhanced Pagination -->
                     <div class="bg-white px-6 py-4 flex items-center justify-between border-t border-gray-200">
                         <div class="flex-1 flex justify-between sm:hidden">
-                            <button wire:click="previousPage" 
+                            <button wire:click.stop="previousPage" 
                                 class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 {{ $approvals->onFirstPage() ? 'opacity-50 cursor-not-allowed' : '' }}"
                                 {{ $approvals->onFirstPage() ? 'disabled' : '' }}>
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -631,7 +633,7 @@
                                 </svg>
                                 Previous
                             </button>
-                            <button wire:click="nextPage" 
+                            <button wire:click.stop="nextPage" 
                                 class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 {{ $approvals->hasMorePages() ? '' : 'opacity-50 cursor-not-allowed' }}"
                                 {{ $approvals->hasMorePages() ? '' : 'disabled' }}>
                                 Next
@@ -687,7 +689,7 @@
                                 <p class="text-gray-500 text-sm">Comprehensive view of approval request information</p>
                             </div>
                         </div>
-                        <button wire:click="closeViewDetailsModal" type="button" class="text-gray-900 hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 rounded-md p-1 transition-colors duration-200">
+                        <button wire:click.stop="closeViewDetailsModal" type="button" class="text-gray-900 hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 rounded-md p-1 transition-colors duration-200">
                             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
@@ -1024,7 +1026,7 @@
                 <!-- Modal Footer -->
                 <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
                     <div class="flex justify-end space-x-3">
-                        <button wire:click="closeViewDetailsModal" type="button" class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200 font-medium">
+                        <button wire:click.stop="closeViewDetailsModal" type="button" class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200 font-medium">
                             Close
                         </button>
                     </div>
@@ -1043,11 +1045,11 @@
                     Are you sure you want to approve this request? This action cannot be undone.
                 </p>
                 <div class="flex justify-end gap-3">
-                    <button wire:click="closeApproveModal"
+                    <button wire:click.stop="closeApproveModal"
                         class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 text-sm font-medium">
                         Cancel
                     </button>
-                    <button wire:click="approve"
+                    <button wire:click.stop="approve"
                         class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">
                         Approve
                     </button>
@@ -1073,11 +1075,11 @@
                 </div>
 
                 <div class="flex justify-end gap-3">
-                    <button wire:click="closeRejectModal"
+                    <button wire:click.stop="closeRejectModal"
                         class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 text-sm font-medium">
                         Cancel
                     </button>
-                    <button wire:click="reject"
+                    <button wire:click.stop="reject"
                         class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">
                         Reject
                     </button>
@@ -1111,7 +1113,7 @@
                         </div>
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="button" wire:click="$set('showCommentModal', false)"
+                        <button type="button" wire:click.stop="$set('showCommentModal', false)"
                             class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                             Close
                         </button>
@@ -1153,7 +1155,7 @@
                                     </p>
                                 </div>
                             </div>
-                            <button wire:click="closeLoanAssessmentModal" type="button"
+                            <button wire:click.stop="closeLoanAssessmentModal" type="button"
                                 class="text-white hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded-md p-1">
                                 <svg class="h-6 w-6" fill="none" stroke="red" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1385,7 +1387,7 @@
                     <!-- Close Button -->
                     <div class="ml-4 flex-shrink-0">
                         <button 
-                            wire:click="$set('showNotification', false)" 
+                            wire:click.stop="$set('showNotification', false)" 
                             class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
                         >
                             <span class="sr-only">Close</span>
@@ -1407,13 +1409,10 @@
         </div>
     </div>
     @endif
+
+
+
+
+
 </div>
 
-<script>
-    document.addEventListener('livewire:load', function () {
-        // Listen for the refresh event
-        Livewire.on('$refresh', () => {
-            console.log('Component refreshed');
-        });
-    });
-</script>

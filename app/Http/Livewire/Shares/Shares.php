@@ -272,6 +272,10 @@ class Shares extends Component
     public $showShareWithdrawalReport = false;
     public $showWithdrawalDetails = false;
     public $selectedWithdrawal = null;
+    public $shareStatementData = null;
+    public $showShareStatement = false;
+    public $shareReceiptData = null;
+    public $showShareReceiptModal = false;
     public $dateFrom = null;
     public $dateTo = null;
     public $withdrawalStatus = '';
@@ -831,9 +835,6 @@ class Shares extends Component
                 'numeric',
                 'min:1',
                 function ($attribute, $value, $fail) {
-                    if ($this->selectedProduct && $value > $this->selectedProduct['shares_per_member']) {
-                        $fail('Number of shares exceeds maximum allowed per member.');
-                    }
                     if ($this->selectedProduct && $value > $this->selectedProduct['available_shares']) {
                         $fail('Number of shares exceeds available shares in the product.');
                     }
@@ -1110,7 +1111,7 @@ class Shares extends Component
         try {
             // Get the current share account details
             $issuedShares = DB::table('issued_shares')->where('id', $this->SharesAccountSelected)->first();
-            $accountRegister = DB::table('share_registers')->where('product_id', $issuedShares->product)
+            $accountRegister = DB::table('share_registers')->where('product_id', $issuedShares->share_id)
                                 ->where('member_number', $issuedShares->client_number)
                                 ->first();
 
@@ -1169,7 +1170,7 @@ class Shares extends Component
 
     private function getAccount($id){
         $issuedShares = DB::table('issued_shares')->where('id', $id)->first();
-        $accountRegister = DB::table('share_registers')->where('product_id', $issuedShares->product)
+        $accountRegister = DB::table('share_registers')->where('product_id', $issuedShares->share_id)
                                 ->where('member_number', $issuedShares->client_number)
                                 ->first();
         return $accountRegister;
@@ -1244,7 +1245,7 @@ class Shares extends Component
                 'clients.status as member_status',
                 'sub_products.product_name'
             )
-            ->where('share_registers.product_id', $issuedShares->product)
+            ->where('share_registers.product_id', $issuedShares->share_id)
             ->first();
         
         if ($account) {
@@ -1539,8 +1540,8 @@ class Shares extends Component
                     ->where('id', $shareProduct->id)
                     ->update([
                         //'shares_allocated' => DB::raw('shares_allocated + ' . $editPackage['number_of_shares']),
-                        'issued_shares' => DB::raw('issued_shares + ' . $editPackage['number_of_shares']),
-                        'available_shares' => DB::raw('available_shares - ' . $editPackage['number_of_shares']),
+                        'issued_shares' => DB::raw('CAST(COALESCE(issued_shares, \'0\') AS INTEGER) + ' . intval($editPackage['number_of_shares'])),
+                        'available_shares' => DB::raw('CAST(COALESCE(available_shares, \'0\') AS INTEGER) - ' . intval($editPackage['number_of_shares'])),
                         'updated_at' => now()
                     ]);
 
@@ -1563,6 +1564,15 @@ class Shares extends Component
                     if ($result['status'] !== 'success') {
                         throw new \Exception('Failed to post transaction: ' . ($result['message'] ?? 'Unknown error'));
                     }
+                    
+                    // Generate receipt for share purchase
+                    $this->generateSharePurchaseReceipt(
+                        $member,
+                        $editPackage,
+                        $shareProduct,
+                        $totalAmount,
+                        $result['reference_number'] ?? $approval->reference_number
+                    );
                 }
 
                 DB::commit();
@@ -3073,13 +3083,6 @@ class Shares extends Component
             return;
         }
 
-        // Validate against maximum shares per member
-        if ($this->selectedProduct && $this->number_of_shares > $this->selectedProduct['shares_per_member']) {
-            $this->addError('number_of_shares', 'Number of shares exceeds maximum allowed per member.');
-            $this->total_value = 0;
-            return;
-        }
-
         // Validate against available shares
         if ($this->selectedProduct && $this->number_of_shares > $this->selectedProduct['available_shares']) {
             $this->addError('number_of_shares', 'Number of shares exceeds available shares in the product.');
@@ -3350,6 +3353,14 @@ class Shares extends Component
                     'transaction_reference' => $result['reference'] ?? null,
                     'amount' => $totalAmount
                 ]);
+                
+                // Generate receipt for share redemption
+                $member = ClientsModel::where('client_number', $withdrawal->member_id)->first();
+                $this->generateShareRedemptionReceipt(
+                    $member,
+                    $withdrawal,
+                    $result['reference'] ?? 'WD-' . $withdrawalId
+                );
             }
 
             // 4. Update withdrawal status
@@ -3439,6 +3450,283 @@ class Shares extends Component
         }
     }
 
+    /**
+     * Show Share Statement Modal
+     */
+    public function showShareStatementModal()
+    {
+        $this->showShareStatement = true;
+        $this->dateFrom = Carbon::now()->startOfYear()->format('Y-m-d');
+        $this->dateTo = Carbon::now()->format('Y-m-d');
+        $this->shareStatementData = null;
+    }
+
+    /**
+     * Hide Share Statement Modal
+     */
+    public function hideShareStatementModal()
+    {
+        $this->showShareStatement = false;
+        $this->shareStatementData = null;
+    }
+
+    /**
+     * Generate Share Statement for a member
+     * Shows opening balance, purchases, redemptions, and closing balance
+     */
+    public function generateShareStatement($memberId = null, $dateFrom = null, $dateTo = null)
+    {
+        try {
+            // Use provided member ID or current member
+            $memberIdToUse = $memberId ?? $this->memberDetails->id ?? null;
+            
+            if (!$memberIdToUse) {
+                throw new \Exception('Please select a member to generate statement');
+            }
+
+            // Get member details
+            $member = ClientsModel::find($memberIdToUse);
+            if (!$member) {
+                throw new \Exception('Member not found');
+            }
+
+            // Set date range (default to current year if not provided)
+            $startDate = $dateFrom ? Carbon::parse($dateFrom) : Carbon::now()->startOfYear();
+            $endDate = $dateTo ? Carbon::parse($dateTo) : Carbon::now()->endOfDay();
+
+            // Get all share registers for the member
+            $shareRegisters = DB::table('share_registers')
+                ->where('member_id', $memberIdToUse)
+                ->get();
+
+            $statementData = [];
+
+            foreach ($shareRegisters as $register) {
+                // Get opening balance (balance at start date)
+                $openingBalanceData = $this->getShareBalanceAtDate($register->id, $startDate);
+                
+                // Get all transactions within the period
+                $transactions = $this->getShareTransactions($register->id, $startDate, $endDate);
+                
+                // Calculate closing balance
+                $closingBalance = $register->current_share_balance;
+                $closingValue = $register->total_share_value;
+
+                $statementData[] = [
+                    'product_name' => $register->product_name ?? 'Share Account',
+                    'account_number' => $register->share_account_number,
+                    'opening_balance' => $openingBalanceData['shares'],
+                    'opening_value' => $openingBalanceData['value'],
+                    'transactions' => $transactions,
+                    'total_purchases' => $transactions->where('type', 'PURCHASE')->sum('shares'),
+                    'total_redemptions' => $transactions->where('type', 'REDEMPTION')->sum('shares'),
+                    'total_transfers_in' => $transactions->where('type', 'TRANSFER_IN')->sum('shares'),
+                    'total_transfers_out' => $transactions->where('type', 'TRANSFER_OUT')->sum('shares'),
+                    'closing_balance' => $closingBalance,
+                    'closing_value' => $closingValue,
+                    'period_start' => $startDate->format('Y-m-d'),
+                    'period_end' => $endDate->format('Y-m-d')
+                ];
+            }
+
+            // Store statement data for display
+            $this->shareStatementData = [
+                'member' => $member,
+                'statements' => $statementData,
+                'period_start' => $startDate,
+                'period_end' => $endDate,
+                'generated_at' => now()
+            ];
+
+            return $this->shareStatementData;
+
+        } catch (\Exception $e) {
+            Log::error('Error generating share statement: ' . $e->getMessage());
+            session()->flash('error', 'Failed to generate share statement: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Get share balance at a specific date
+     */
+    private function getShareBalanceAtDate($shareRegisterId, $date)
+    {
+        // Get all transactions before the date
+        $transactions = DB::table('general_ledger')
+            ->where('share_register_id', $shareRegisterId)
+            ->where('created_at', '<', $date)
+            ->get();
+
+        $balance = 0;
+        $value = 0;
+
+        foreach ($transactions as $transaction) {
+            if (in_array($transaction->transaction_type, ['SHARE_PURCHASE', 'TRANSFER_IN'])) {
+                $balance += $transaction->shares ?? 0;
+                $value += $transaction->credit ?? 0;
+            } elseif (in_array($transaction->transaction_type, ['SHARE_REDEMPTION', 'TRANSFER_OUT'])) {
+                $balance -= $transaction->shares ?? 0;
+                $value -= $transaction->debit ?? 0;
+            }
+        }
+
+        return [
+            'shares' => $balance,
+            'value' => $value
+        ];
+    }
+
+    /**
+     * Get share transactions within a period
+     */
+    private function getShareTransactions($shareRegisterId, $startDate, $endDate)
+    {
+        return DB::table('general_ledger')
+            ->where('share_register_id', $shareRegisterId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->map(function ($transaction) {
+                $type = 'OTHER';
+                $shares = 0;
+                $amount = 0;
+
+                switch ($transaction->transaction_type) {
+                    case 'SHARE_PURCHASE':
+                        $type = 'PURCHASE';
+                        $shares = $transaction->shares ?? 0;
+                        $amount = $transaction->credit ?? 0;
+                        break;
+                    case 'SHARE_REDEMPTION':
+                        $type = 'REDEMPTION';
+                        $shares = $transaction->shares ?? 0;
+                        $amount = $transaction->debit ?? 0;
+                        break;
+                    case 'SHARE_TRANSFER_IN':
+                        $type = 'TRANSFER_IN';
+                        $shares = $transaction->shares ?? 0;
+                        $amount = $transaction->credit ?? 0;
+                        break;
+                    case 'SHARE_TRANSFER_OUT':
+                        $type = 'TRANSFER_OUT';
+                        $shares = $transaction->shares ?? 0;
+                        $amount = $transaction->debit ?? 0;
+                        break;
+                }
+
+                return (object)[
+                    'date' => $transaction->created_at,
+                    'type' => $type,
+                    'reference' => $transaction->reference_number,
+                    'narration' => $transaction->narration,
+                    'shares' => $shares,
+                    'amount' => $amount,
+                    'balance_after' => $transaction->running_balance ?? 0
+                ];
+            });
+    }
+
+    /**
+     * Export share statement to PDF
+     */
+    public function exportShareStatementPDF($memberId = null)
+    {
+        try {
+            // Generate statement data
+            $statementData = $this->generateShareStatement($memberId, $this->dateFrom, $this->dateTo);
+            
+            if (!$statementData) {
+                return;
+            }
+
+            // Create PDF (you'll need to install a PDF package like dompdf or tcpdf)
+            // For now, we'll export as CSV
+            return $this->exportShareStatementCSV($memberId);
+
+        } catch (\Exception $e) {
+            Log::error('Error exporting share statement PDF: ' . $e->getMessage());
+            session()->flash('error', 'Failed to export share statement: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Export share statement to CSV
+     */
+    public function exportShareStatementCSV($memberId = null)
+    {
+        try {
+            // Generate statement data
+            $statementData = $this->generateShareStatement($memberId, $this->dateFrom, $this->dateTo);
+            
+            if (!$statementData) {
+                return;
+            }
+
+            $filename = 'share_statement_' . $statementData['member']->client_number . '_' . now()->format('Y-m-d') . '.csv';
+            
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ];
+
+            $callback = function() use ($statementData) {
+                $file = fopen('php://output', 'w');
+                
+                // Add header information
+                fputcsv($file, ['SHARE STATEMENT']);
+                fputcsv($file, ['Member Name:', $statementData['member']->first_name . ' ' . $statementData['member']->last_name]);
+                fputcsv($file, ['Member Number:', $statementData['member']->client_number]);
+                fputcsv($file, ['Period:', $statementData['period_start']->format('d/m/Y') . ' to ' . $statementData['period_end']->format('d/m/Y')]);
+                fputcsv($file, ['Generated:', $statementData['generated_at']->format('d/m/Y H:i:s')]);
+                fputcsv($file, []);
+                
+                foreach ($statementData['statements'] as $statement) {
+                    // Product header
+                    fputcsv($file, ['Product:', $statement['product_name']]);
+                    fputcsv($file, ['Account Number:', $statement['account_number']]);
+                    fputcsv($file, ['Opening Balance:', $statement['opening_balance'] . ' shares', 'Value: TZS ' . number_format($statement['opening_value'], 2)]);
+                    fputcsv($file, []);
+                    
+                    // Transaction headers
+                    fputcsv($file, ['Date', 'Type', 'Reference', 'Description', 'Shares', 'Amount', 'Balance']);
+                    
+                    // Transaction details
+                    foreach ($statement['transactions'] as $transaction) {
+                        fputcsv($file, [
+                            Carbon::parse($transaction->date)->format('d/m/Y'),
+                            $transaction->type,
+                            $transaction->reference,
+                            $transaction->narration,
+                            $transaction->shares,
+                            number_format($transaction->amount, 2),
+                            $transaction->balance_after
+                        ]);
+                    }
+                    
+                    fputcsv($file, []);
+                    // Summary
+                    fputcsv($file, ['Summary:']);
+                    fputcsv($file, ['Total Purchases:', $statement['total_purchases'] . ' shares']);
+                    fputcsv($file, ['Total Redemptions:', $statement['total_redemptions'] . ' shares']);
+                    fputcsv($file, ['Total Transfers In:', $statement['total_transfers_in'] . ' shares']);
+                    fputcsv($file, ['Total Transfers Out:', $statement['total_transfers_out'] . ' shares']);
+                    fputcsv($file, ['Closing Balance:', $statement['closing_balance'] . ' shares', 'Value: TZS ' . number_format($statement['closing_value'], 2)]);
+                    fputcsv($file, []);
+                    fputcsv($file, []);
+                }
+                
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+
+        } catch (\Exception $e) {
+            Log::error('Error exporting share statement CSV: ' . $e->getMessage());
+            session()->flash('error', 'Failed to export share statement: ' . $e->getMessage());
+        }
+    }
+
     public function approveTransfer($transferId)
     {
         try {
@@ -3486,6 +3774,210 @@ class Shares extends Component
         } catch (\Exception $e) {
             Log::error('Error rejecting transfer: ' . $e->getMessage());
             $this->showErrorMessage('Error rejecting transfer: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate receipt for share purchase
+     */
+    private function generateSharePurchaseReceipt($member, $shareData, $shareProduct, $amount, $referenceNumber)
+    {
+        try {
+            $receiptNumber = 'SHR-PUR-' . strtoupper(uniqid());
+            
+            \App\Models\Receipt::create([
+                'receipt_number' => $receiptNumber,
+                'transaction_id' => null, // Can be linked to transaction if needed
+                'account_id' => null, // Can be linked to account if needed
+                'member_number' => $member->client_number,
+                'member_name' => trim($member->first_name . ' ' . ($member->middle_name ?? '') . ' ' . $member->last_name),
+                'amount' => $amount,
+                'currency' => 'TZS',
+                'payment_method' => 'account_transfer',
+                'depositor_name' => auth()->user()->name,
+                'narration' => 'Purchase of ' . $shareData['number_of_shares'] . ' shares of ' . $shareProduct->product_name,
+                'reference_number' => $referenceNumber,
+                'bank_name' => 'Internal Transfer',
+                'processed_by' => auth()->id(),
+                'branch' => auth()->user()->branch ?? 'Main Branch',
+                'transaction_type' => 'Share Purchase',
+                'status' => 'GENERATED',
+                'generated_at' => now(),
+                'printed_at' => null,
+                'metadata' => [
+                    'shares_purchased' => $shareData['number_of_shares'],
+                    'price_per_share' => $shareProduct->nominal_price,
+                    'total_value' => $amount,
+                    'share_product' => $shareProduct->product_name,
+                    'share_account' => $shareData['share_account'] ?? null,
+                    'linked_savings_account' => $shareData['linked_savings_account'] ?? null
+                ]
+            ]);
+            
+            // Store receipt data for display
+            $this->shareReceiptData = [
+                'receipt_number' => $receiptNumber,
+                'transaction_date' => now()->format('d/m/Y H:i:s'),
+                'member_name' => trim($member->first_name . ' ' . ($member->middle_name ?? '') . ' ' . $member->last_name),
+                'member_number' => $member->client_number,
+                'shares_purchased' => $shareData['number_of_shares'],
+                'share_product' => $shareProduct->product_name,
+                'price_per_share' => number_format($shareProduct->nominal_price, 2),
+                'total_amount' => number_format($amount, 2),
+                'payment_method' => 'Account Transfer',
+                'reference_number' => $referenceNumber,
+                'processed_by' => auth()->user()->name,
+                'branch' => auth()->user()->branch ?? 'Main Branch',
+                'currency' => 'TZS',
+                'transaction_type' => 'Share Purchase'
+            ];
+            
+            // Trigger receipt display
+            $this->showShareReceiptModal = true;
+            
+            Log::info('Share purchase receipt generated', [
+                'receipt_number' => $receiptNumber,
+                'member' => $member->client_number,
+                'amount' => $amount
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error generating share purchase receipt: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate receipt for share redemption/withdrawal
+     */
+    private function generateShareRedemptionReceipt($member, $withdrawal, $referenceNumber)
+    {
+        try {
+            $receiptNumber = 'SHR-RED-' . strtoupper(uniqid());
+            
+            \App\Models\Receipt::create([
+                'receipt_number' => $receiptNumber,
+                'transaction_id' => null,
+                'account_id' => null,
+                'member_number' => $member->client_number,
+                'member_name' => trim($member->first_name . ' ' . ($member->middle_name ?? '') . ' ' . $member->last_name),
+                'amount' => $withdrawal->total_value,
+                'currency' => 'TZS',
+                'payment_method' => 'account_transfer',
+                'depositor_name' => auth()->user()->name,
+                'narration' => 'Redemption of ' . $withdrawal->withdrawal_amount . ' shares from ' . $withdrawal->product_name,
+                'reference_number' => $referenceNumber,
+                'bank_name' => 'Internal Transfer',
+                'processed_by' => auth()->id(),
+                'branch' => auth()->user()->branch ?? 'Main Branch',
+                'transaction_type' => 'Share Redemption',
+                'status' => 'GENERATED',
+                'generated_at' => now(),
+                'printed_at' => null,
+                'metadata' => [
+                    'shares_redeemed' => $withdrawal->withdrawal_amount,
+                    'total_value' => $withdrawal->total_value,
+                    'share_product' => $withdrawal->product_name,
+                    'source_account' => $withdrawal->source_account_number,
+                    'receiving_account' => $withdrawal->receiving_account_number,
+                    'reason' => $withdrawal->reason
+                ]
+            ]);
+            
+            // Store receipt data for display
+            $this->shareReceiptData = [
+                'receipt_number' => $receiptNumber,
+                'transaction_date' => now()->format('d/m/Y H:i:s'),
+                'member_name' => trim($member->first_name . ' ' . ($member->middle_name ?? '') . ' ' . $member->last_name),
+                'member_number' => $member->client_number,
+                'shares_redeemed' => $withdrawal->withdrawal_amount,
+                'share_product' => $withdrawal->product_name,
+                'total_amount' => number_format($withdrawal->total_value, 2),
+                'payment_method' => 'Account Transfer',
+                'reference_number' => $referenceNumber,
+                'processed_by' => auth()->user()->name,
+                'branch' => auth()->user()->branch ?? 'Main Branch',
+                'currency' => 'TZS',
+                'transaction_type' => 'Share Redemption',
+                'reason' => $withdrawal->reason
+            ];
+            
+            // Trigger receipt display
+            $this->showShareReceiptModal = true;
+            
+            Log::info('Share redemption receipt generated', [
+                'receipt_number' => $receiptNumber,
+                'member' => $member->client_number,
+                'amount' => $withdrawal->total_value
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error generating share redemption receipt: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Print share receipt
+     */
+    public function printShareReceipt()
+    {
+        if ($this->shareReceiptData) {
+            $this->dispatchBrowserEvent('printShareReceipt', [
+                'receiptData' => $this->shareReceiptData
+            ]);
+        }
+    }
+
+    /**
+     * Close share receipt modal
+     */
+    public function closeShareReceiptModal()
+    {
+        $this->showShareReceiptModal = false;
+        $this->shareReceiptData = null;
+    }
+
+    /**
+     * Mark receipt as printed
+     */
+    public function markReceiptAsPrinted()
+    {
+        if ($this->shareReceiptData) {
+            try {
+                \App\Models\Receipt::where('receipt_number', $this->shareReceiptData['receipt_number'])
+                    ->update(['printed_at' => now()]);
+                    
+                Log::info('Receipt marked as printed', [
+                    'receipt_number' => $this->shareReceiptData['receipt_number']
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Error marking receipt as printed: ' . $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Download share receipt as PDF
+     */
+    public function downloadShareReceipt()
+    {
+        if (!$this->shareReceiptData) {
+            return;
+        }
+        
+        try {
+            // For now, we'll trigger a print dialog
+            // In production, you would generate a PDF using a package like dompdf
+            $this->dispatchBrowserEvent('printShareReceipt', [
+                'receiptData' => $this->shareReceiptData
+            ]);
+            
+            Log::info('Share receipt download triggered', [
+                'receipt_number' => $this->shareReceiptData['receipt_number']
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error downloading share receipt: ' . $e->getMessage());
+            session()->flash('error', 'Failed to download receipt');
         }
     }
 }

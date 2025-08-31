@@ -16,6 +16,12 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Carbon\Carbon;
 use Exception;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SavingsFullReport extends Component
 {
@@ -824,9 +830,41 @@ class SavingsFullReport extends Component
                 ->orderBy('created_at', 'desc')
                 ->get();
             
-            // For now, we'll just show a success message
-            // In a real implementation, you would generate and download a PDF
-            $this->successMessage = "Statement for account {$accountNumber} from {$this->dateFrom} to {$this->dateTo} is ready. (PDF generation would be implemented here)";
+            // Calculate statement summary
+            $openingBalance = $this->calculateOpeningBalance($accountNumber, $this->dateFrom);
+            $closingBalance = $account->balance;
+            $totalCredits = $transactions->where('credit', '>', 0)->sum('credit');
+            $totalDebits = $transactions->where('debit', '>', 0)->sum('debit');
+            
+            // Generate PDF using DomPDF
+            $pdf = \PDF::loadView('reports.savings-statement', [
+                'account' => $account,
+                'transactions' => $transactions,
+                'dateFrom' => $this->dateFrom,
+                'dateTo' => $this->dateTo,
+                'openingBalance' => $openingBalance,
+                'closingBalance' => $closingBalance,
+                'totalCredits' => $totalCredits,
+                'totalDebits' => $totalDebits,
+                'generatedAt' => now(),
+                'generatedBy' => auth()->user()->name
+            ]);
+            
+            // Set PDF options
+            $pdf->setPaper('A4', 'portrait');
+            $pdf->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'Arial'
+            ]);
+            
+            // Generate filename
+            $filename = "Savings_Statement_{$accountNumber}_{$this->dateFrom}_to_{$this->dateTo}.pdf";
+            
+            // Download the PDF
+            return response()->streamDownload(function () use ($pdf) {
+                echo $pdf->output();
+            }, $filename);
             
         } catch (Exception $e) {
             Log::error('Error downloading account statement: ' . $e->getMessage());
@@ -834,6 +872,168 @@ class SavingsFullReport extends Component
         } finally {
             $this->isExporting = false;
         }
+    }
+    
+    private function calculateOpeningBalance($accountNumber, $dateFrom)
+    {
+        // Calculate opening balance by summing all transactions before the start date
+        $openingTransactions = general_ledger::where('record_on_account_number', $accountNumber)
+            ->where('created_at', '<', $dateFrom)
+            ->get();
+            
+        $openingBalance = 0;
+        foreach ($openingTransactions as $transaction) {
+            $openingBalance += ($transaction->credit ?? 0) - ($transaction->debit ?? 0);
+        }
+        
+        return $openingBalance;
+    }
+
+    public function exportStatement($accountNumber, $format = 'pdf')
+    {
+        try {
+            $this->isExporting = true;
+            
+            // Get account details
+            $account = AccountsModel::where('account_number', $accountNumber)
+                ->with(['client', 'shareProduct'])
+                ->first();
+                
+            if (!$account) {
+                throw new Exception('Account not found.');
+            }
+            
+            // Get transactions for the account
+            $transactions = general_ledger::where('record_on_account_number', $accountNumber)
+                ->whereBetween('created_at', [$this->dateFrom, $this->dateTo])
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            // Calculate statement summary
+            $openingBalance = $this->calculateOpeningBalance($accountNumber, $this->dateFrom);
+            $closingBalance = $account->balance;
+            $totalCredits = $transactions->where('credit', '>', 0)->sum('credit');
+            $totalDebits = $transactions->where('debit', '>', 0)->sum('debit');
+            
+            if ($format === 'excel') {
+                return $this->exportToExcel($account, $transactions, $openingBalance, $closingBalance, $totalCredits, $totalDebits);
+            } else {
+                return $this->exportToPdf($account, $transactions, $openingBalance, $closingBalance, $totalCredits, $totalDebits);
+            }
+            
+        } catch (Exception $e) {
+            Log::error('Error exporting statement: ' . $e->getMessage());
+            $this->errorMessage = 'Failed to export statement. Please try again.';
+        } finally {
+            $this->isExporting = false;
+        }
+    }
+    
+    private function exportToExcel($account, $transactions, $openingBalance, $closingBalance, $totalCredits, $totalDebits)
+    {
+        $filename = "Savings_Statement_{$account->account_number}_{$this->dateFrom}_to_{$this->dateTo}.xlsx";
+        
+        return Excel::download(new class($account, $transactions, $openingBalance, $closingBalance, $totalCredits, $totalDebits, $this->dateFrom, $this->dateTo) implements FromArray, WithHeadings, WithStyles, WithTitle {
+            private $account, $transactions, $openingBalance, $closingBalance, $totalCredits, $totalDebits, $dateFrom, $dateTo;
+            
+            public function __construct($account, $transactions, $openingBalance, $closingBalance, $totalCredits, $totalDebits, $dateFrom, $dateTo) {
+                $this->account = $account;
+                $this->transactions = $transactions;
+                $this->openingBalance = $openingBalance;
+                $this->closingBalance = $closingBalance;
+                $this->totalCredits = $totalCredits;
+                $this->totalDebits = $totalDebits;
+                $this->dateFrom = $dateFrom;
+                $this->dateTo = $dateTo;
+            }
+            
+            public function title(): string {
+                return 'Savings Statement';
+            }
+            
+            public function headings(): array {
+                return [
+                    'SACCOS CORE SYSTEM - SAVINGS ACCOUNT STATEMENT',
+                    '',
+                    'Account Information',
+                    'Account Number: ' . $this->account->account_number,
+                    'Account Name: ' . $this->account->account_name,
+                    'Member: ' . ($this->account->client->first_name ?? '') . ' ' . ($this->account->client->last_name ?? ''),
+                    'Member Number: ' . $this->account->client_number,
+                    'Statement Period: ' . \Carbon\Carbon::parse($this->dateFrom)->format('d/m/Y') . ' to ' . \Carbon\Carbon::parse($this->dateTo)->format('d/m/Y'),
+                    '',
+                    'Statement Summary',
+                    'Opening Balance: TZS ' . number_format($this->openingBalance, 2),
+                    'Total Credits: TZS ' . number_format($this->totalCredits, 2),
+                    'Total Debits: TZS ' . number_format($this->totalDebits, 2),
+                    'Closing Balance: TZS ' . number_format($this->closingBalance, 2),
+                    '',
+                    'Transaction History',
+                    'Date', 'Reference', 'Description', 'Debit', 'Credit', 'Balance'
+                ];
+            }
+            
+            public function array(): array {
+                $data = [];
+                $runningBalance = $this->openingBalance;
+                
+                foreach ($this->transactions as $transaction) {
+                    $runningBalance += ($transaction->credit ?? 0) - ($transaction->debit ?? 0);
+                    $data[] = [
+                        \Carbon\Carbon::parse($transaction->created_at)->format('d/m/Y'),
+                        $transaction->reference_number ?? 'N/A',
+                        $transaction->narration ?? 'Transaction',
+                        $transaction->debit > 0 ? number_format($transaction->debit, 2) : '',
+                        $transaction->credit > 0 ? number_format($transaction->credit, 2) : '',
+                        number_format($runningBalance, 2)
+                    ];
+                }
+                
+                return $data;
+            }
+            
+            public function styles(Worksheet $sheet) {
+                return [
+                    1 => ['font' => ['bold' => true, 'size' => 16]],
+                    3 => ['font' => ['bold' => true, 'size' => 14]],
+                    10 => ['font' => ['bold' => true, 'size' => 14]],
+                    17 => ['font' => ['bold' => true, 'size' => 12]],
+                ];
+            }
+        }, $filename);
+    }
+    
+    private function exportToPdf($account, $transactions, $openingBalance, $closingBalance, $totalCredits, $totalDebits)
+    {
+        // Generate PDF using DomPDF
+        $pdf = \PDF::loadView('reports.savings-statement', [
+            'account' => $account,
+            'transactions' => $transactions,
+            'dateFrom' => $this->dateFrom,
+            'dateTo' => $this->dateTo,
+            'openingBalance' => $openingBalance,
+            'closingBalance' => $closingBalance,
+            'totalCredits' => $totalCredits,
+            'totalDebits' => $totalDebits,
+            'generatedAt' => now(),
+            'generatedBy' => auth()->user()->name
+        ]);
+        
+        // Set PDF options
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'Arial'
+        ]);
+        
+        // Generate filename
+        $filename = "Savings_Statement_{$account->account_number}_{$this->dateFrom}_to_{$this->dateTo}.pdf";
+        
+        // Download the PDF
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->output();
+        }, $filename);
     }
 
     public function render()

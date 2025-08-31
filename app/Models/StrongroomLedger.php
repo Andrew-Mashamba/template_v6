@@ -10,40 +10,40 @@ class StrongroomLedger extends Model
     use HasFactory;
 
     protected $fillable = [
-        'date',
-        'type',
-        'amount',
+        'vault_id',
         'balance',
-        'reference',
+        'total_deposits',
+        'total_withdrawals',
+        'denomination_breakdown',
+        'branch_id',
+        'vault_code',
         'status',
-        'authorized_by',
-        'last_audit_date',
-        'last_audit_by',
-        'security_level',
-        'location',
+        'notes',
+        'last_transaction_at',
     ];
 
     protected $casts = [
-        'date' => 'date',
-        'amount' => 'decimal:2',
         'balance' => 'decimal:2',
-        'last_audit_date' => 'datetime',
+        'total_deposits' => 'decimal:2',
+        'total_withdrawals' => 'decimal:2',
+        'denomination_breakdown' => 'array',
+        'last_transaction_at' => 'datetime',
     ];
 
     /**
-     * Get the user who performed the last audit
+     * Get the vault this ledger belongs to
      */
-    public function lastAuditedBy()
+    public function vault()
     {
-        return $this->belongsTo(User::class, 'last_audit_by');
+        return $this->belongsTo(Vault::class, 'vault_id');
     }
 
     /**
-     * Get the user who authorized this entry
+     * Get the branch this ledger belongs to
      */
-    public function authorized_by()
+    public function branch()
     {
-        return $this->belongsTo(User::class, 'authorized_by');
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 
     /**
@@ -55,42 +55,69 @@ class StrongroomLedger extends Model
     }
 
     /**
-     * Check if audit is overdue (more than 30 days)
+     * Check if transaction is recent (within last 24 hours)
      */
-    public function isAuditOverdue(): bool
+    public function isRecentlyActive(): bool
     {
-        if (!$this->last_audit_date) {
-            return true;
+        if (!$this->last_transaction_at) {
+            return false;
         }
         
-        return $this->last_audit_date->diffInDays(now()) > 30;
+        return $this->last_transaction_at->diffInHours(now()) < 24;
     }
 
     /**
-     * Get days since last audit
+     * Get hours since last transaction
      */
-    public function getDaysSinceAuditAttribute(): int
+    public function getHoursSinceLastTransactionAttribute(): int
     {
-        if (!$this->last_audit_date) {
-            return 999; // Indicates never audited
+        if (!$this->last_transaction_at) {
+            return 999; // Indicates never had a transaction
         }
         
-        return $this->last_audit_date->diffInDays(now());
+        return $this->last_transaction_at->diffInHours(now());
     }
 
     /**
-     * Get audit status color for UI
+     * Get activity status color for UI
      */
-    public function getAuditStatusColorAttribute(): string
+    public function getActivityStatusColorAttribute(): string
     {
-        $days = $this->days_since_audit;
+        $hours = $this->hours_since_last_transaction;
         
-        if ($days > 30) {
-            return 'red'; // Overdue
-        } elseif ($days > 20) {
+        if ($hours > 48) {
+            return 'red'; // Inactive
+        } elseif ($hours > 24) {
             return 'yellow'; // Warning
         } else {
-            return 'green'; // Good
+            return 'green'; // Active
         }
+    }
+
+    /**
+     * Get total cash movement (deposits - withdrawals)
+     */
+    public function getTotalCashMovementAttribute(): float
+    {
+        return $this->total_deposits - $this->total_withdrawals;
+    }
+
+    /**
+     * Get formatted denomination breakdown
+     */
+    public function getFormattedDenominationBreakdownAttribute(): string
+    {
+        if (!$this->denomination_breakdown) {
+            return 'No breakdown available';
+        }
+        
+        $breakdown = $this->denomination_breakdown;
+        $formatted = [];
+        
+        foreach ($breakdown as $denomination => $count) {
+            $formatted[] = "{$count} x {$denomination}";
+        }
+        
+        return implode(', ', $formatted);
     }
 }

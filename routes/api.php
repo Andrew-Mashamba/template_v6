@@ -132,6 +132,7 @@ Route::post('/transactions/process', [TransactionProcessingController::class, 'p
 // AI Agent Routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/ai-agent/ask', [App\Http\Controllers\AiAgentController::class, 'ask']);
+    Route::post('/ai-agent/chat', [App\Http\Controllers\AiAgentController::class, 'chat']);
 });
 
 // Loan Disbursement API Routes

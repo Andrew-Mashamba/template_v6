@@ -420,9 +420,31 @@
                                     <button wire:click="viewMember({{ $member->id }})" class="text-blue-900 hover:text-blue-900" title="View">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button wire:click="approveMember({{ $member->id }})" class="text-green-600 hover:text-green-900" title="Approve">
-                                        <i class="fas fa-check"></i>
-                                    </button>
+                                    
+                                    @php
+                                        // Check if registration fee is paid (service_id = 5)
+                                        $registrationFeePaid = \DB::table('bills')
+                                            ->where('client_number', $member->client_number)
+                                            ->where('service_id', 5)
+                                            ->where('status', 'PAID')
+                                            ->exists();
+                                    @endphp
+                                    
+                                    @if($registrationFeePaid)
+                                        <button wire:click="approveMember({{ $member->id }})" class="text-green-600 hover:text-green-900" title="Approve - Registration fee paid">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    @else
+                                        <div class="relative group">
+                                            <span class="text-yellow-600 cursor-not-allowed" title="Cannot approve - Registration fee not paid">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                            </span>
+                                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                                                Registration fee pending
+                                            </div>
+                                        </div>
+                                    @endif
+                                    
                                     <button wire:click="rejectMember({{ $member->id }})" class="text-red-600 hover:text-red-900" title="Reject">
                                         <i class="fas fa-times"></i>
                                     </button>

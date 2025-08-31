@@ -28,23 +28,23 @@ return [
     | sending an e-mail. You will specify which one you are using for your
     | mailers below. You are free to add additional mailers as required.
     |
-    | Supported: "smtp", "sendmail", "mailgun", "ses",
-    |            "postmark", "log", "array", "failover"
+    | Supported: "smtp", "sendmail", "mailgun", "ses", "ses-v2",
+    |            "postmark", "log", "array", "failover", "roundrobin"
     |
     */
 
     'mailers' => [
+
         'smtp' => [
             'transport' => 'smtp',
-            'host' => env('MAIL_HOST', 'smtp.gmail.com'),
+            'url' => env('MAIL_URL'),
+            'host' => env('MAIL_HOST', 'smtp.mailgun.org'),
             'port' => env('MAIL_PORT', 587),
             'encryption' => env('MAIL_ENCRYPTION', 'tls'),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => 60,
-            'local_domain' => env('MAIL_EHLO_DOMAIN', 'localhost'),
-            'verify_peer' => false,
-            'auth_mode' => null,
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN'),
         ],
 
         'ses' => [
@@ -53,6 +53,9 @@ return [
 
         'mailgun' => [
             'transport' => 'mailgun',
+            // 'client' => [
+            //     'timeout' => 5,
+            // ],
         ],
 
         'postmark' => [
@@ -80,6 +83,15 @@ return [
                 'log',
             ],
         ],
+
+        'roundrobin' => [
+            'transport' => 'roundrobin',
+            'mailers' => [
+                'smtp',
+                'log',
+            ],
+        ],
+
     ],
 
     /*
@@ -115,6 +127,30 @@ return [
         'paths' => [
             resource_path('views/vendor/mail'),
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Report Email Settings
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for automated report email delivery
+    |
+    */
+
+    'reports' => [
+        'from' => [
+            'address' => env('REPORTS_FROM_ADDRESS', env('MAIL_FROM_ADDRESS', 'reports@saccos.com')),
+            'name' => env('REPORTS_FROM_NAME', 'SACCOS Reports System'),
+        ],
+        'reply_to' => [
+            'address' => env('REPORTS_REPLY_TO', 'support@saccos.com'),
+            'name' => env('REPORTS_REPLY_TO_NAME', 'SACCOS Support'),
+        ],
+        'subject_prefix' => env('REPORTS_SUBJECT_PREFIX', '[SACCOS Reports]'),
+        'max_attachment_size' => env('REPORTS_MAX_ATTACHMENT_SIZE', 10485760), // 10MB
+        'retry_attempts' => env('REPORTS_RETRY_ATTEMPTS', 3),
+        'retry_delay' => env('REPORTS_RETRY_DELAY', 300), // 5 minutes
     ],
 
 ];

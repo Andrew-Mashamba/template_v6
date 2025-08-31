@@ -1229,7 +1229,7 @@ class Approvals extends Component
                 'rejection_status' => 'REJECTED'
             ],
             'SHARE_ISS' => [
-                'table' => 'shares',
+                'table' => 'share_registers',
                 'approval_status' => 'ACTIVE',
                 'rejection_status' => 'REJECTED'
             ],

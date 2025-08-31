@@ -62,6 +62,7 @@ class Clients extends Component
     public $number_of_children;
     public $gender;
     public $date_of_birth;
+    public $id_type;
     public $citizenship;
     public $employer_name;
     public $education;
@@ -96,6 +97,14 @@ class Clients extends Component
     public $parentMember;
     public $showDeleteClient;
     public $clientSelected;
+    
+    // Member Exit properties
+    public $exitMemberNumber;
+    public $exitPhoneNumber;
+    public $exitMemberDetails;
+    public $exitReason;
+    public $exitNotes;
+    public $exitHistory = [];
     public $showEditClient;
     public $pendingMember;
     public $MembersList;
@@ -198,6 +207,7 @@ class Clients extends Component
     public $full_name;
 
     public $member_number;
+    public $member_group_id;
     public $contact_number;
     public $occupation;
     public $education_level;
@@ -252,6 +262,7 @@ class Clients extends Component
         'membership_type' => 'required|in:Individual,Group,Business',
         'branch' => 'required|exists:branches,id',
         'photo' => 'nullable|image|max:10240',
+        'member_group_id' => 'nullable|exists:member_groups,id',
         
         // Individual member specific fields
         'first_name' => 'required_if:membership_type,Individual|string|max:100',
@@ -260,6 +271,7 @@ class Clients extends Component
         'gender' => 'required_if:membership_type,Individual|in:male,female',
         'date_of_birth' => 'required_if:membership_type,Individual|date|before:today',
         'marital_status' => 'required_if:membership_type,Individual|in:single,married,divorced,widowed',
+        'nida_number' => 'nullable|string|unique:clients,nida_number',
         
         // Business/Group specific fields
         'business_name' => 'required_if:membership_type,Business,Group|string|max:100',
@@ -277,11 +289,7 @@ class Clients extends Component
         // Step 3: Financial Information
         'income_available' => 'required|numeric|min:0|max:999999999.99',
         'income_source' => 'required|string|max:100',
-        'tin_number' => 'nullable|string|max:100',
-        'hisa' => 'required|numeric|min:1000|max:999999999.99',
-        'akiba' => 'required|numeric|min:1000|max:999999999.99',
-        'amana' => 'required|numeric|min:1000|max:999999999.99',
-        'nbc_account_number' => 'nullable|string|max:12',
+        'nbc_account_number' => 'nullable|string|max:50',
         
         // Step 4: Guarantor & Documents
         'guarantor_member_number' => 'nullable|string|max:100',
@@ -294,6 +302,15 @@ class Clients extends Component
         // Step 1: Personal Information
         'membership_type.required' => 'Please select a membership type',
         'membership_type.in' => 'Invalid membership type selected',
+        'member_group_id.exists' => 'Selected member group does not exist',
+        'id_type.required' => 'Please select an ID type',
+        'id_type.in' => 'Invalid ID type selected',
+        'nida_number.required' => 'NIDA number is required',
+        'nida_number.regex' => 'Invalid NIDA format. Please use format: YYYYMMDD-XXXXX-XXXXX-XX',
+        'nida_number.unique' => 'Member already exists with this NIDA number',
+        'driving_license_number.required' => 'Driving license number is required',
+        'driving_license_number.unique' => 'Member already exists with this driving license number',
+        'driving_license_number.max' => 'Driving license number cannot exceed 50 characters',
         'branch.required' => 'Please select a branch',
         'branch.exists' => 'Selected branch does not exist',
         'photo.image' => 'The file must be an image',
@@ -320,8 +337,9 @@ class Clients extends Component
         'incorporation_number.max' => 'Incorporation number cannot exceed 50 characters',
         
         // Step 2: Contact Details
-        'phone_number.required' => 'Phone number is required',
+        'phone_number.required' => 'Mobile phone number is mandatory',
         'phone_number.regex' => 'Phone number must start with 0 and be 10-11 digits',
+        'phone_number.unique' => 'Member already exists with this phone number',
         'email.email' => 'Please enter a valid email address',
         'email.max' => 'Email cannot exceed 100 characters',
         'address.required' => 'Address is required',
@@ -342,20 +360,7 @@ class Clients extends Component
         'income_available.max' => 'Income available cannot exceed 999,999,999.99',
         'income_source.required' => 'Income source is required',
         'income_source.max' => 'Income source cannot exceed 100 characters',
-        'tin_number.max' => 'TIN number cannot exceed 100 characters',
-        'hisa.required' => 'Hisa amount is required',
-        'hisa.numeric' => 'Hisa amount must be a number',
-        'hisa.min' => 'Hisa amount must be at least 1,000',
-        'hisa.max' => 'Hisa amount cannot exceed 999,999,999.99',
-        'akiba.required' => 'Akiba amount is required',
-        'akiba.numeric' => 'Akiba amount must be a number',
-        'akiba.min' => 'Akiba amount must be at least 1,000',
-        'akiba.max' => 'Akiba amount cannot exceed 999,999,999.99',
-        'amana.required' => 'Amana amount is required',
-        'amana.numeric' => 'Amana amount must be a number',
-        'amana.min' => 'Amana amount must be at least 1,000',
-        'amana.max' => 'Amana amount cannot exceed 999,999,999.99',
-        'nbc_account_number.max' => 'NBC account number cannot exceed 12 characters',
+        'nbc_account_number.max' => 'NBC account number cannot exceed 50 characters',
         'nbc_account_number.string' => 'NBC account number must be a string',
 
 
@@ -640,6 +645,12 @@ class Clients extends Component
 
             $client = ClientsModel::findOrFail($this->client);
 
+            // Check for duplicates (excluding current client)
+            $duplicateCheck = $this->checkForDuplicatesOnUpdate($this->client);
+            if ($duplicateCheck['isDuplicate']) {
+                throw new \Exception($duplicateCheck['message']);
+            }
+
             // Validate based on membership type
             $this->validate($this->membershipTypeRules());
 
@@ -662,7 +673,9 @@ class Clients extends Component
                 'gender' => $this->gender,
                 'date_of_birth' => $this->date_of_birth,
                 'citizenship' => $this->citizenship,
-                'nida_number' => $this->nida_number,
+                'id_type' => $this->id_type,
+                'nida_number' => $this->id_type === 'nida' ? $this->nida_number : null,
+                'driving_license_number' => $this->id_type === 'driving_license' ? $this->driving_license_number : null,
                 'updated_by' => auth()->id()
             ];
 
@@ -717,6 +730,12 @@ class Clients extends Component
         try {
             DB::beginTransaction();
 
+            // Check for duplicates before validation
+            $duplicateCheck = $this->checkForDuplicates();
+            if ($duplicateCheck['isDuplicate']) {
+                throw new \Exception($duplicateCheck['message']);
+            }
+
             // Validate based on membership type
             $this->validate($this->membershipTypeRules());
 
@@ -734,6 +753,7 @@ class Clients extends Component
                 'account_number' => $this->account_number,
                 'membership_type' => $this->membership_type,
                 'branch' => $this->branch,
+                'member_group_id' => $this->member_group_id,
                 'phone_number' => $this->phone_number,
                 'first_name' => strtoupper($this->first_name),
                 'middle_name' => strtoupper($this->middle_name),
@@ -749,7 +769,9 @@ class Clients extends Component
                 'gender' => $this->gender,
                 'date_of_birth' => $this->date_of_birth,
                 'citizenship' => $this->citizenship,
-                'nida_number' => $this->nida_number,
+                'id_type' => $this->id_type,
+                'nida_number' => $this->id_type === 'nida' ? $this->nida_number : null,
+                'driving_license_number' => $this->id_type === 'driving_license' ? $this->driving_license_number : null,
                 'status' => 'PENDING',
                 'created_by' => auth()->id(),
                 'branch_id' => $this->branch
@@ -1159,8 +1181,16 @@ class Clients extends Component
                         'last_name' => 'required|string|max:100',
                         'gender' => 'required|in:male,female',
                         'date_of_birth' => 'required|date|before:today',
+                        'id_type' => 'required|in:nida,driving_license',
                         'marital_status' => 'required|in:single,married,divorced,widowed',
                     ]);
+                    
+                    // Add conditional validation based on ID type
+                    if ($this->id_type === 'nida') {
+                        $rules['nida_number'] = 'required|string|regex:/^[0-9]{8}-[0-9]{5}-[0-9]{5}-[0-9]{2}$/|unique:clients,nida_number';
+                    } elseif ($this->id_type === 'driving_license') {
+                        $rules['driving_license_number'] = 'required|string|max:50|unique:clients,driving_license_number';
+                    }
                 } else {
                     Log::info('Adding business/group validation rules');
                     $rules = array_merge($rules, [
@@ -1194,26 +1224,33 @@ class Clients extends Component
                 $rules = [
                     'income_available' => 'required|numeric|min:0|max:999999999.99',
                     'income_source' => 'required|string|max:100',
-                    'tin_number' => 'nullable|string|max:100',
-                    'hisa' => 'required|numeric|min:1000|max:999999999.99',
-                    'akiba' => 'required|numeric|min:1000|max:999999999.99',
-                    'amana' => 'required|numeric|min:1000|max:999999999.99',
+                    'nbc_account_number' => 'nullable|string|max:50',
                 ];
                 break;
 
             case 4:
-                Log::info('Validating step 4 - Documents and Guarantor');
+                Log::info('Validating step 4 - Documents and Guarantor (Optional)');
+                
+                // Initialize rules array for Step 4
+                $rules = [];
+                
+                // Make photo optional
                 if ($this->photo) {
                     Log::info('Validating photo upload');
-                    $rules['photo'] = 'required|image|max:10240';
+                    $rules['photo'] = 'nullable|image|max:10240';
                 }
 
-                Log::info('Validating guarantor information', [
-                    'guarantor_number' => $this->guarantor_member_number
-                ]);
-
-                // Check if guarantor exists and is active
+                // Make guarantor information optional
                 if ($this->guarantor_member_number) {
+                    Log::info('Validating guarantor information', [
+                        'guarantor_number' => $this->guarantor_member_number
+                    ]);
+
+                    // Only validate if guarantor number is provided
+                    $rules['guarantor_member_number'] = 'nullable|exists:clients,client_number,status,ACTIVE';
+                    $rules['guarantor_relationship'] = 'required_with:guarantor_member_number|string|max:255';
+                    
+                    // Check if guarantor exists and is active
                     $guarantor = ClientsModel::where('client_number', $this->guarantor_member_number)
                         ->where('status', 'ACTIVE')
                         ->first();
@@ -1222,22 +1259,22 @@ class Clients extends Component
                         'exists' => (bool)$guarantor,
                         'status' => $guarantor ? $guarantor->status : null
                     ]);
+                } else {
+                    // No guarantor provided - that's okay, it's optional
+                    Log::info('No guarantor provided - proceeding without guarantor');
                 }
 
-                $rules = array_merge($rules, [
-                    'guarantor_member_number' => 'required|exists:clients,client_number,status,ACTIVE',
-                    'guarantor_relationship' => 'required|string|max:255',
-                ]);
-
-                // Validate at least one document
-                Log::info('Checking document uploads', [
+                // Documents are also optional now
+                Log::info('Checking document uploads (optional)', [
                     'document_count' => count($this->additionalDocuments),
                     'has_first_document' => isset($this->additionalDocuments[0]['file'])
                 ]);
-                if (empty($this->additionalDocuments) || !isset($this->additionalDocuments[0]['file'])) {
-                    Log::error('Document validation failed - no documents uploaded');
-                    throw new \Exception('At least one document is required.');
-                }
+                // No longer throw exception if no documents
+                break;
+                
+            default:
+                Log::info('Unknown step - no validation', ['step' => $this->currentStep]);
+                $rules = [];
                 break;
         }
 
@@ -1246,17 +1283,22 @@ class Clients extends Component
             'rule_count' => count($rules)
         ]);
 
-        try {
-            $this->validate($rules, $this->messages);
-            Log::info('Step validation successful', ['step' => $this->currentStep]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error('Validation failed', [
-                'step' => $this->currentStep,
-                'errors' => $e->errors(),
-                'message' => $e->getMessage()
-            ]);
-            session()->flash('error', 'Please check the form for errors.');
-            throw $e;
+        // Only validate if there are rules to validate
+        if (!empty($rules)) {
+            try {
+                $this->validate($rules, $this->messages);
+                Log::info('Step validation successful', ['step' => $this->currentStep]);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                Log::error('Validation failed', [
+                    'step' => $this->currentStep,
+                    'errors' => $e->errors(),
+                    'message' => $e->getMessage()
+                ]);
+                session()->flash('error', 'Please check the form for errors.');
+                throw $e;
+            }
+        } else {
+            Log::info('No validation rules for step - proceeding', ['step' => $this->currentStep]);
         }
     }
 
@@ -1265,9 +1307,10 @@ class Clients extends Component
         $this->reset([
             'membership_type', 'branch', 'phone_number', 'email', 'address', 'nationarity',
             'citizenship', 'first_name', 'middle_name', 'last_name', 'gender', 'date_of_birth',
+            'id_type', 'nida_number', 'driving_license_number',
             'marital_status', 'next_of_kin_name', 'next_of_kin_phone', 'business_name',
-            'incorporation_number', 'income_available', 'income_source', 'tin_number',
-            'hisa', 'akiba', 'amana', 'photo', 'guarantor_first_name',
+            'incorporation_number', 'income_available', 'income_source', 'nbc_account_number',
+            'photo', 'guarantor_first_name',
             'guarantor_middle_name', 'guarantor_last_name', 'guarantor_full_name',
             'guarantor_email'
         ]);
@@ -1317,7 +1360,7 @@ class Clients extends Component
             Log::info('Preparing client data', ['membership_type' => $this->membership_type]);
             $clientData = [
                 'client_number' => $this->client_number,
-                'account_number' => $this->account_number,
+                'account_number' => $this->nbc_account_number ?: $this->account_number,
                 'membership_type' => $this->membership_type,
                 'branch' => $this->branch,
                 'phone_number' => $this->phone_number,
@@ -1327,10 +1370,6 @@ class Clients extends Component
                 'citizenship' => $this->citizenship,
                 'income_available' => $this->income_available,
                 'income_source' => $this->income_source,
-                'tin_number' => $this->tin_number,
-                'hisa' => $this->hisa,
-                'akiba' => $this->akiba,
-                'amana' => $this->amana,
                 'status' => 'PENDING',
                 'branch_id' => $this->branch,
                 'created_by' => auth()->id()
@@ -1345,6 +1384,9 @@ class Clients extends Component
                     'last_name' => strtoupper($this->last_name),
                     'gender' => $this->gender,
                     'date_of_birth' => $this->date_of_birth,
+                    'id_type' => $this->id_type,
+                    'nida_number' => $this->id_type === 'nida' ? $this->nida_number : null,
+                    'driving_license_number' => $this->id_type === 'driving_license' ? $this->driving_license_number : null,
                     'marital_status' => $this->marital_status,
                     'next_of_kin_name' => $this->next_of_kin_name,
                     'next_of_kin_phone' => $this->next_of_kin_phone,
@@ -1583,23 +1625,32 @@ class Clients extends Component
                 $bills = DB::table('bills')
                     ->join('services', 'bills.service_id', '=', 'services.id')
                     ->where('bills.client_number', $this->client_number)
-                    ->where('bills.payment_status', '!=', 'PAID') // Only unpaid bills
+                    ->where('bills.status', '!=', 'PAID') // Only unpaid bills
+                    ->whereNotNull('bills.id') // Ensure bill_id exists
                     ->select(
                         'bills.id as bill_id',
                         'bills.control_number',
-                        'bills.bill_amount',
+                        'bills.amount_due as bill_amount',
                         'bills.payment_mode',
                         'services.code as service_code',
                         'services.name as service_name'
                     )
                     ->get();
                 
+                // Check if bills exist
+                if ($bills->isEmpty()) {
+                    Log::warning('No bills found for client', [
+                        'client_number' => $this->client_number
+                    ]);
+                    $paymentUrl = null;
+                } else {
+                
                 // Prepare payment items from bills
                 $items = [];
                 foreach ($bills as $bill) {
                     $items[] = [
                         'type' => 'service',
-                        'product_service_reference' => $bill->id,
+                        'product_service_reference' => (string) $bill->bill_id, // Use bill_id from the query and convert to string
                         'product_service_name' => $bill->service_name,
                         'amount' => $bill->bill_amount,
                         'is_required' => true,
@@ -1644,26 +1695,30 @@ class Clients extends Component
                             'payment_link_items' => json_encode($paymentResponse['data']['items'] ?? [])
                         ]);
                         
-                      
+                        // Set payment URL for notifications
+                        $paymentUrl = $paymentUrl;
                     } else {
                         Log::warning('Payment link generation did not return URL', [
                             'response' => $paymentResponse
                         ]);
-                        $paymentUrl = env('PAYMENT_LINK') . '/' . $saccos . '/' . $this->client_number;
+                        // Don't send any payment link if generation fails
+                        $paymentUrl = null;
                     }
                 } else {
                     Log::info('No payment items to generate link for', [
                         'client_number' => $this->client_number
                     ]);
-                    $paymentUrl = env('PAYMENT_LINK') . '/' . $saccos . '/' . $this->client_number;
+                    // Don't send any payment link if no items
+                    $paymentUrl = null;
+                }
                 }
             } catch (\Exception $e) {
                 Log::error('Failed to generate payment link', [
                     'error' => $e->getMessage(),
                     'client_number' => $this->client_number
                 ]);
-                // Fallback to legacy URL format
-                $paymentUrl = env('PAYMENT_LINK') . '/' . $saccos . '/' . $this->client_number;
+                // Don't send any payment link if generation fails
+                $paymentUrl = null;
             }
 
 
@@ -1767,5 +1822,314 @@ class Clients extends Component
     public function updated($propertyName)
     {
         $this->validateOnly($propertyName);
+    }
+
+    /**
+     * Check for duplicate member registration
+     */
+    protected function checkForDuplicates()
+    {
+        $isDuplicate = false;
+        $message = '';
+
+        // Check NIDA number
+        if ($this->nida_number) {
+            $existingNida = ClientsModel::where('nida_number', $this->nida_number)->first();
+            if ($existingNida) {
+                $isDuplicate = true;
+                $message = "Member already exists with NIDA number: {$this->nida_number}. Name: {$existingNida->first_name} {$existingNida->last_name}";
+            }
+        }
+
+        // Check phone number
+        if (!$isDuplicate && $this->phone_number) {
+            $existingPhone = ClientsModel::where('phone_number', $this->phone_number)->first();
+            if ($existingPhone) {
+                $isDuplicate = true;
+                $message = "Member already exists with phone number: {$this->phone_number}. Name: {$existingPhone->first_name} {$existingPhone->last_name}";
+            }
+        }
+
+        return [
+            'isDuplicate' => $isDuplicate,
+            'message' => $message
+        ];
+    }
+
+    /**
+     * Check for duplicates when updating (exclude current client)
+     */
+    protected function checkForDuplicatesOnUpdate($clientId)
+    {
+        $isDuplicate = false;
+        $message = '';
+
+        // Check NIDA number
+        if ($this->nida_number) {
+            $existingNida = ClientsModel::where('nida_number', $this->nida_number)
+                ->where('id', '!=', $clientId)
+                ->first();
+            if ($existingNida) {
+                $isDuplicate = true;
+                $message = "Another member already exists with NIDA number: {$this->nida_number}. Name: {$existingNida->first_name} {$existingNida->last_name}";
+            }
+        }
+
+        // Check phone number
+        if (!$isDuplicate && $this->phone_number) {
+            $existingPhone = ClientsModel::where('phone_number', $this->phone_number)
+                ->where('id', '!=', $clientId)
+                ->first();
+            if ($existingPhone) {
+                $isDuplicate = true;
+                $message = "Another member already exists with phone number: {$this->phone_number}. Name: {$existingPhone->first_name} {$existingPhone->last_name}";
+            }
+        }
+
+        return [
+            'isDuplicate' => $isDuplicate,
+            'message' => $message
+        ];
+    }
+
+    /**
+     * Member Exit Methods
+     */
+    public function searchMemberForExit()
+    {
+        $this->exitMemberDetails = null;
+        
+        if (empty($this->exitMemberNumber) && empty($this->exitPhoneNumber)) {
+            session()->flash('error', 'Please enter either a member number or phone number');
+            return;
+        }
+        
+        $query = ClientsModel::query();
+        
+        if (!empty($this->exitMemberNumber)) {
+            $query->where('client_number', $this->exitMemberNumber);
+        }
+        
+        if (!empty($this->exitPhoneNumber)) {
+            $query->orWhere('phone_number', 'like', '%' . $this->exitPhoneNumber . '%');
+        }
+        
+        $member = $query->first();
+        
+        if (!$member) {
+            session()->flash('error', 'Member not found');
+            return;
+        }
+        
+        // Get comprehensive member financial data
+        $member = $this->calculateMemberExitData($member);
+        
+        $this->exitMemberDetails = $member;
+        
+        // Load exit history
+        $this->loadExitHistory();
+    }
+    
+    public function processMemberExit()
+    {
+        if (!$this->exitMemberDetails) {
+            session()->flash('error', 'No member selected for exit');
+            return;
+        }
+        
+        if (empty($this->exitReason)) {
+            session()->flash('error', 'Please select an exit reason');
+            return;
+        }
+        
+        // Check for outstanding obligations
+        $outstandingObligations = [];
+        
+        if ($this->exitMemberDetails->exit_loan_balance > 0) {
+            $outstandingObligations[] = 'Outstanding loan balance: TZS ' . number_format($this->exitMemberDetails->exit_loan_balance, 2);
+        }
+        
+        if ($this->exitMemberDetails->exit_unpaid_bills > 0) {
+            $outstandingObligations[] = 'Unpaid bills: TZS ' . number_format($this->exitMemberDetails->exit_unpaid_bills, 2);
+        }
+        
+        if (!empty($outstandingObligations)) {
+            session()->flash('error', 'Cannot process exit - member has outstanding obligations: ' . implode(', ', $outstandingObligations));
+            return;
+        }
+        
+        DB::beginTransaction();
+        
+        try {
+            // Use pre-calculated final settlement
+            $settlementAmount = $this->exitMemberDetails->exit_final_settlement;
+            
+            // Update member status to EXITED
+            ClientsModel::where('id', $this->exitMemberDetails->id)
+                ->update([
+                    'status' => 'EXITED',
+                    'exit_date' => now(),
+                    'exit_reason' => $this->exitReason,
+                    'exit_notes' => $this->exitNotes,
+                    'updated_at' => now()
+                ]);
+            
+            // Create comprehensive exit record
+            DB::table('member_exits')->insert([
+                'client_number' => $this->exitMemberDetails->client_number,
+                'member_name' => $this->exitMemberDetails->first_name . ' ' . $this->exitMemberDetails->last_name,
+                'exit_date' => now(),
+                'exit_reason' => $this->exitReason,
+                'exit_notes' => $this->exitNotes,
+                'shares_balance' => $this->exitMemberDetails->exit_shares_balance,
+                'savings_balance' => $this->exitMemberDetails->exit_savings_balance,
+                'deposits_balance' => $this->exitMemberDetails->exit_deposits_balance,
+                'loan_balance' => $this->exitMemberDetails->exit_loan_balance,
+                'unpaid_bills' => $this->exitMemberDetails->exit_unpaid_bills,
+                'dividends' => $this->exitMemberDetails->exit_dividends,
+                'interest_on_savings' => $this->exitMemberDetails->exit_interest_on_savings,
+                'total_credits' => $this->exitMemberDetails->exit_total_credits,
+                'total_debits' => $this->exitMemberDetails->exit_total_debits,
+                'accounts_count' => $this->exitMemberDetails->accounts_count,
+                'loans_count' => $this->exitMemberDetails->loans_count,
+                'unpaid_bills_count' => $this->exitMemberDetails->unpaid_bills_count,
+                'settlement_amount' => $settlementAmount,
+                'processed_by' => auth()->user()->id,
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            
+            // Deactivate all member accounts
+            DB::table('accounts')
+                ->where('client_number', $this->exitMemberDetails->client_number)
+                ->update(['status' => 'CLOSED', 'updated_at' => now()]);
+            
+            DB::commit();
+            
+            session()->flash('success', 'Member exit processed successfully. Settlement amount: TZS ' . number_format($settlementAmount, 2));
+            
+            // Reset form
+            $this->cancelMemberExit();
+            
+            // Reload exit history
+            $this->loadExitHistory();
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Member exit processing failed', [
+                'member_id' => $this->exitMemberDetails->id,
+                'error' => $e->getMessage()
+            ]);
+            session()->flash('error', 'Failed to process member exit: ' . $e->getMessage());
+        }
+    }
+    
+    public function cancelMemberExit()
+    {
+        $this->exitMemberNumber = null;
+        $this->exitPhoneNumber = null;
+        $this->exitMemberDetails = null;
+        $this->exitReason = null;
+        $this->exitNotes = null;
+    }
+    
+    public function viewExitDetails($exitId)
+    {
+        $exit = DB::table('member_exits')->find($exitId);
+        
+        if ($exit) {
+            session()->flash('info', 'Exit Details: ' . json_encode($exit));
+        }
+    }
+    
+    private function loadExitHistory()
+    {
+        $this->exitHistory = DB::table('member_exits')
+            ->orderBy('exit_date', 'desc')
+            ->limit(10)
+            ->get();
+    }
+
+    /**
+     * Calculate comprehensive member exit data
+     */
+    private function calculateMemberExitData($member)
+    {
+        // 1. Account Balances
+        $shares = DB::table('accounts')
+            ->where('client_number', $member->client_number)
+            ->where('product_number', '1000') // Share accounts
+            ->whereIn('status', ['ACTIVE', 'PENDING'])
+            ->sum(DB::raw('CAST(balance AS DECIMAL)'));
+            
+        $savings = DB::table('accounts')
+            ->where('client_number', $member->client_number)
+            ->where('product_number', '2000') // Savings accounts
+            ->whereIn('status', ['ACTIVE', 'PENDING'])
+            ->sum(DB::raw('CAST(balance AS DECIMAL)'));
+            
+        $deposits = DB::table('accounts')
+            ->where('client_number', $member->client_number)
+            ->where('product_number', '3000') // Deposit accounts
+            ->whereIn('status', ['ACTIVE', 'PENDING'])
+            ->sum(DB::raw('CAST(balance AS DECIMAL)'));
+
+        // 2. Loan Balances (using linked account balances for accuracy)
+        $loanBalance = DB::table('loans')
+            ->join('accounts', 'loans.loan_account_number', '=', 'accounts.account_number')
+            ->where('loans.client_number', $member->client_number)
+            ->where('loans.status', 'ACTIVE')
+            ->sum(DB::raw('CAST(accounts.balance AS DECIMAL)'));
+
+        // 3. Unpaid Bills
+        $unpaidBills = DB::table('bills')
+            ->where('client_number', $member->client_number)
+            ->where('status', '!=', 'PAID')
+            ->sum('amount_due');
+
+        // 4. Dividends
+        $dividends = DB::table('dividends')
+            ->where('member_id', $member->id)
+            ->sum('amount');
+
+        // 5. Interest on Savings
+        $interestOnSavings = DB::table('interest_payables')
+            ->where('member_id', $member->id)
+            ->sum('interest_payable');
+
+        // 6. Calculate Final Settlement
+        $totalCredits = $shares + $savings + $deposits + $dividends + $interestOnSavings;
+        $totalDebits = $loanBalance + $unpaidBills;
+        $finalSettlement = $totalCredits - $totalDebits;
+
+        // 7. Set all calculated values (using unique names to avoid relationship conflicts)
+        $member->exit_shares_balance = $shares;
+        $member->exit_savings_balance = $savings;
+        $member->exit_deposits_balance = $deposits;
+        $member->exit_loan_balance = $loanBalance;
+        $member->exit_unpaid_bills = $unpaidBills;
+        $member->exit_dividends = $dividends;
+        $member->exit_interest_on_savings = $interestOnSavings;
+        $member->exit_total_credits = $totalCredits;
+        $member->exit_total_debits = $totalDebits;
+        $member->exit_final_settlement = $finalSettlement;
+
+        // 8. Additional details for display
+        $member->accounts_count = DB::table('accounts')
+            ->where('client_number', $member->client_number)
+            ->whereIn('status', ['ACTIVE', 'PENDING'])
+            ->count();
+
+        $member->loans_count = DB::table('loans')
+            ->where('client_number', $member->client_number)
+            ->where('status', 'ACTIVE')
+            ->count();
+
+        $member->unpaid_bills_count = DB::table('bills')
+            ->where('client_number', $member->client_number)
+            ->where('status', '!=', 'PAID')
+            ->count();
+
+        return $member;
     }
 }

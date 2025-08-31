@@ -1,0 +1,3013 @@
+{
+    "UserLoginHistory": {
+        "table": "user_login_historys",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "Committee": {
+        "table": "committees",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "department",
+                "related_model": "Department::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "institution",
+                "related_model": "Institution::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "parent",
+                "related_model": "Committee::class",
+                "foreign_key": "parent_committee_id",
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "approvals",
+                "related_model": "CommitteeApproval::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "loanStages",
+                "related_model": "LoanStage::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "children",
+                "related_model": "Committee::class",
+                "foreign_key": "parent_committee_id",
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "meetings",
+                "related_model": "Meeting::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "belongsToMany",
+                "method": "members",
+                "related_model": "User::class"
+            }
+        ]
+    },
+    "NotificationLog": {
+        "table": "notification_logs",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "creator",
+                "related_model": "User::class",
+                "foreign_key": "created_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "updater",
+                "related_model": "User::class",
+                "foreign_key": "updated_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "UserProfile": {
+        "table": "user_profiles",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "reportingManager",
+                "related_model": "User::class",
+                "foreign_key": "reporting_manager_id",
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "subordinates",
+                "related_model": "UserProfile::class",
+                "foreign_key": "reporting_manager_id",
+                "local_key": "user_id"
+            }
+        ]
+    },
+    "Document": {
+        "table": "documents",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "Member::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "MeetingDocument": {
+        "table": "meeting_documents",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "meeting",
+                "related_model": "Meeting::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "uploader",
+                "related_model": "LeaderShipModel::class",
+                "foreign_key": "uploaded_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "Transaction": {
+        "table": "transactions",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "account",
+                "related_model": "AccountsModel::class",
+                "foreign_key": "account_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "originalTransaction",
+                "related_model": "Transaction::class",
+                "foreign_key": "original_transaction_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "reversalTransaction",
+                "related_model": "Transaction::class",
+                "foreign_key": "reversal_transaction_id",
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "auditLogs",
+                "related_model": "TransactionAuditLog::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "retryLogs",
+                "related_model": "TransactionRetryLog::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "reconciliations",
+                "related_model": "TransactionReconciliation::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "AccountsModel": {
+        "table": "accounts",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "client",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "client_number",
+                "owner_key": "client_number"
+            },
+            {
+                "type": "belongsTo",
+                "method": "shareProduct",
+                "related_model": "sub_products::class",
+                "foreign_key": "product_number",
+                "owner_key": "sub_product_id"
+            }
+        ]
+    },
+    "InternalTransfer": {
+        "table": "internal_transfers",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "fromAccount",
+                "related_model": "Account::class",
+                "foreign_key": "from_account_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "toAccount",
+                "related_model": "Account::class",
+                "foreign_key": "to_account_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "creator",
+                "related_model": "User::class",
+                "foreign_key": "created_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "Meeting": {
+        "table": "meetings",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "committee",
+                "related_model": "Committee::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "attendance",
+                "related_model": "MeetingAttendance::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "documents",
+                "related_model": "MeetingDocument::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "SecurityAuditLog": {
+        "table": "security_audit_logs",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "Sacco": {
+        "table": "saccos",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "members",
+                "related_model": "Member::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "bills",
+                "related_model": "Bill::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "ShareOwnership": {
+        "table": "share_ownership",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "institution",
+                "related_model": "Institution::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "Member::class",
+                "foreign_key": "client_number",
+                "owner_key": "client_number"
+            }
+        ]
+    },
+    "JobPosting": {
+        "table": "job_postings",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "applicants",
+                "related_model": "Applicant::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "onboarding",
+                "related_model": "Onboarding::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "LoanAuditLog": {
+        "table": "loan_audit_logs",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "loan",
+                "related_model": "LoansModel::class",
+                "foreign_key": "loan_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": "user_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "Guarantor": {
+        "table": "guarantors",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "client",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "client_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "LoanProduct": {
+        "table": "loan_products",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "charges",
+                "related_model": "LoanProductCharge::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "TeamInvitation": {
+        "table": "team_invitations",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "team",
+                "related_model": "Jetstream::teamModel(",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "ApiKey": {
+        "table": "api_keys",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "creator",
+                "related_model": "User::class",
+                "foreign_key": "created_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "ShareRegister": {
+        "table": "share_registers",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "member_id",
+                "owner_key": "id"
+            },
+            {
+                "type": "belongsTo",
+                "method": "product",
+                "related_model": "sub_products::class",
+                "foreign_key": "product_id",
+                "owner_key": "id"
+            },
+            {
+                "type": "belongsTo",
+                "method": "account",
+                "related_model": "AccountsModel::class",
+                "foreign_key": "share_account_number",
+                "owner_key": "account_number"
+            }
+        ]
+    },
+    "BankTransaction": {
+        "table": "bank_transactions",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "analysisSession",
+                "related_model": "AnalysisSession::class",
+                "foreign_key": "session_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "matchedTransaction",
+                "related_model": "Transaction::class",
+                "foreign_key": "matched_transaction_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "ComplaintStatus": {
+        "table": "complaint_statuss",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "complaints",
+                "related_model": "Complaint::class",
+                "foreign_key": "status_id",
+                "local_key": null
+            }
+        ]
+    },
+    "Service": {
+        "table": "services",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "bills",
+                "related_model": "Bill::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "CashInTransitProvider": {
+        "table": "cash_in_transit_providers",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "branches",
+                "related_model": "BranchesModel::class",
+                "foreign_key": "cit_provider_id",
+                "local_key": null
+            }
+        ]
+    },
+    "Teller": {
+        "table": "tellers",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "till",
+                "related_model": "Till::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "supervisor",
+                "related_model": "User::class",
+                "foreign_key": "supervisor_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "branch",
+                "related_model": "Branch::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "institution",
+                "related_model": "Institution::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "assignedBy",
+                "related_model": "User::class",
+                "foreign_key": "assigned_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "LeaderShipModel": {
+        "table": "leaderships",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "committeeMemberships",
+                "related_model": "App\\Models\\CommitteeMember::class",
+                "foreign_key": "leader_id",
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "meetingAttendance",
+                "related_model": "App\\Models\\MeetingAttendance::class",
+                "foreign_key": "leader_id",
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "uploadedMeetingDocuments",
+                "related_model": "App\\Models\\MeetingDocument::class",
+                "foreign_key": "uploaded_by",
+                "local_key": null
+            },
+            {
+                "type": "belongsToMany",
+                "method": "committees",
+                "related_model": "App\\Models\\Committee::class"
+            }
+        ]
+    },
+    "ARModel": {
+        "table": "receivables",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "customer",
+                "related_model": "Customer::class",
+                "foreign_key": "customer_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "invoice",
+                "related_model": "Invoice::class",
+                "foreign_key": "invoice_number",
+                "owner_key": null
+            }
+        ]
+    },
+    "StrongroomLedger": {
+        "table": "strongroom_ledgers",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "lastAuditedBy",
+                "related_model": "User::class",
+                "foreign_key": "last_audit_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "authorized_by",
+                "related_model": "User::class",
+                "foreign_key": "authorized_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "ComplaintCategory": {
+        "table": "complaint_categorys",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "complaints",
+                "related_model": "Complaint::class",
+                "foreign_key": "category_id",
+                "local_key": null
+            }
+        ]
+    },
+    "Vault": {
+        "table": "vaults",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "branch",
+                "related_model": "BranchesModel::class",
+                "foreign_key": "branch_id",
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "cashMovements",
+                "related_model": "CashMovement::class",
+                "foreign_key": "vault_id",
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "strongroomLedgers",
+                "related_model": "StrongroomLedger::class",
+                "foreign_key": "vault_id",
+                "local_key": null
+            }
+        ]
+    },
+    "CommitteeMember": {
+        "table": "committee_members",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "committee",
+                "related_model": "Committee::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "leader",
+                "related_model": "LeaderShipModel::class",
+                "foreign_key": "leader_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "User": {
+        "table": "users",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "department",
+                "related_model": "Department::class",
+                "foreign_key": "department_code",
+                "owner_key": "department_code"
+            },
+            {
+                "type": "belongsTo",
+                "method": "branch",
+                "related_model": "Branch::class",
+                "foreign_key": "branch",
+                "owner_key": "branch_code"
+            },
+            {
+                "type": "belongsTo",
+                "method": "employee",
+                "related_model": "Employee::class",
+                "foreign_key": "employeeId",
+                "owner_key": "id"
+            },
+            {
+                "type": "hasMany",
+                "method": "loginHistory",
+                "related_model": "UserLoginHistory::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "securityAuditLogs",
+                "related_model": "SecurityAuditLog::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasOne",
+                "method": "securityProfile",
+                "related_model": "UserSecurityProfile::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "belongsToMany",
+                "method": "committees",
+                "related_model": "Committee::class"
+            },
+            {
+                "type": "belongsToMany",
+                "method": "roles",
+                "related_model": "Role::class"
+            }
+        ]
+    },
+    "WebPortalUser": {
+        "table": "web_portal_users",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "client",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "client_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "registeredBy",
+                "related_model": "User::class",
+                "foreign_key": "registered_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "createdBy",
+                "related_model": "User::class",
+                "foreign_key": "created_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "updatedBy",
+                "related_model": "User::class",
+                "foreign_key": "updated_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "Account": {
+        "table": "accounts",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "Member::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "institution",
+                "related_model": "Institution::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "parentAccount",
+                "related_model": "Account::class",
+                "foreign_key": "parent_account_number",
+                "owner_key": "account_number"
+            },
+            {
+                "type": "belongsTo",
+                "method": "client",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "client_number",
+                "owner_key": "client_number"
+            },
+            {
+                "type": "hasMany",
+                "method": "transactions",
+                "related_model": "Transaction::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "Role": {
+        "table": "roles",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "department",
+                "related_model": "Department::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "departments",
+                "related_model": "departmentsList::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "institution",
+                "related_model": "Institution::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "parent",
+                "related_model": "Role::class",
+                "foreign_key": "parent_role_id",
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "menuActions",
+                "related_model": "RoleMenuAction::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "subRoles",
+                "related_model": "SubRole::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "children",
+                "related_model": "Role::class",
+                "foreign_key": "parent_role_id",
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "childRoles",
+                "related_model": "Role::class",
+                "foreign_key": "parent_role_id",
+                "local_key": null
+            },
+            {
+                "type": "belongsToMany",
+                "method": "users",
+                "related_model": "User::class"
+            },
+            {
+                "type": "belongsToMany",
+                "method": "permissions",
+                "related_model": "Permission::class"
+            }
+        ]
+    },
+    "Member": {
+        "table": "clients",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "bills",
+                "related_model": "Bill::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "shares",
+                "related_model": "Share::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "accounts",
+                "related_model": "Account::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "transactions",
+                "related_model": "Transaction::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "dividendPayments",
+                "related_model": "DividendPayment::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "loanApplications",
+                "related_model": "LoanApplication::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "loanRepayments",
+                "related_model": "LoanRepayment::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "savingsAccounts",
+                "related_model": "SavingsAccount::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "fixedDeposits",
+                "related_model": "FixedDeposit::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "notifications",
+                "related_model": "Notification::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "documents",
+                "related_model": "Document::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "auditLogs",
+                "related_model": "AuditLog::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "systemActivities",
+                "related_model": "SystemActivity::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasOne",
+                "method": "nextOfKin",
+                "related_model": "NextOfKin::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "approvals": {
+        "table": "approvals",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": "user_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "branch",
+                "related_model": "App\\Models\\BranchesModel::class",
+                "foreign_key": "branch_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "approver",
+                "related_model": "User::class",
+                "foreign_key": "approver_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "LockedAmount": {
+        "table": "locked_amounts",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "account",
+                "related_model": "AccountsModel::class",
+                "foreign_key": "account_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "lockedByUser",
+                "related_model": "User::class",
+                "foreign_key": "locked_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "releasedByUser",
+                "related_model": "User::class",
+                "foreign_key": "released_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "Approval": {
+        "table": "approvals",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "firstChecker",
+                "related_model": "User::class",
+                "foreign_key": "first_checker_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "secondChecker",
+                "related_model": "User::class",
+                "foreign_key": "second_checker_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "approver",
+                "related_model": "User::class",
+                "foreign_key": "approver_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "processConfig",
+                "related_model": "ProcessCodeConfig::class",
+                "foreign_key": "process_code",
+                "owner_key": "process_code"
+            }
+        ]
+    },
+    "UserActionLog": {
+        "table": "user_action_logs",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "Expense": {
+        "table": "expenses",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "account",
+                "related_model": "Account::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "approval",
+                "related_model": "Approvals::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "budgetItem",
+                "related_model": "BudgetManagement::class",
+                "foreign_key": "budget_item_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "LoanRepayment": {
+        "table": "loan_repayments",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "Member::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "BankTransfer": {
+        "table": "bank_transfers",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "vault",
+                "related_model": "Vault::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "initiatedBy",
+                "related_model": "User::class",
+                "foreign_key": "initiated_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "approvedBy",
+                "related_model": "User::class",
+                "foreign_key": "approved_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "SubRolePermission": {
+        "table": "sub_role_permissions",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "subRole",
+                "related_model": "SubRole::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "permission",
+                "related_model": "Permission::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "department",
+                "related_model": "Department::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "Applicant": {
+        "table": "applicants",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "jobPosting",
+                "related_model": "JobPosting::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "interviews",
+                "related_model": "Interview::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasOne",
+                "method": "onboarding",
+                "related_model": "Onboarding::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "LoansModel": {
+        "table": "loans",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "loanProduct",
+                "related_model": "Loan_sub_products::class",
+                "foreign_key": "loan_sub_product",
+                "owner_key": "sub_product_id"
+            },
+            {
+                "type": "belongsTo",
+                "method": "client",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "client_number",
+                "owner_key": "client_number"
+            },
+            {
+                "type": "belongsTo",
+                "method": "clientName",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "client_number",
+                "owner_key": "client_number"
+            },
+            {
+                "type": "belongsTo",
+                "method": "loanBranch",
+                "related_model": "BranchesModel::class",
+                "foreign_key": "branch_id",
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "schedules",
+                "related_model": "loans_schedules::class",
+                "foreign_key": "loan_id",
+                "local_key": "loan_id"
+            },
+            {
+                "type": "hasMany",
+                "method": "approvals",
+                "related_model": "LoanApproval::class",
+                "foreign_key": "loan_id",
+                "local_key": "id"
+            },
+            {
+                "type": "hasMany",
+                "method": "collateral",
+                "related_model": "LoanCollateral::class",
+                "foreign_key": "loan_id",
+                "local_key": "id"
+            },
+            {
+                "type": "hasMany",
+                "method": "auditLogs",
+                "related_model": "LoanAuditLog::class",
+                "foreign_key": "loan_id",
+                "local_key": "id"
+            },
+            {
+                "type": "hasMany",
+                "method": "settledLoans",
+                "related_model": "SettledLoan::class",
+                "foreign_key": "loan_id",
+                "local_key": "id"
+            }
+        ]
+    },
+    "DividendModel": {
+        "table": "dividends",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "member_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "NotificationModel": {
+        "table": "notifications",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "member_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "CommitteeApproval": {
+        "table": "committee_approvals",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "loan",
+                "related_model": "LoansModel::class",
+                "foreign_key": "loan_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "committee",
+                "related_model": "Committee::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "committeeMember",
+                "related_model": "User::class",
+                "foreign_key": "committee_member_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "ShareWithdrawal": {
+        "table": "share_withdrawals",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "member_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "product",
+                "related_model": "sub_products::class",
+                "foreign_key": "product_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "approver",
+                "related_model": "User::class",
+                "foreign_key": "approved_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "submitter",
+                "related_model": "User::class",
+                "foreign_key": "submitted_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "receivingAccount",
+                "related_model": "Account::class",
+                "foreign_key": "receiving_account_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "RoleMenuAction": {
+        "table": "role_menu_actions",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "menu",
+                "related_model": "Menu::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "department",
+                "related_model": "Department::class",
+                "foreign_key": "sub_role",
+                "owner_key": "sub_role"
+            },
+            {
+                "type": "belongsTo",
+                "method": "subRole",
+                "related_model": "SubRole::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "menuAction",
+                "related_model": "MenuAction::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "role",
+                "related_model": "Role::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "sub_products": {
+        "table": "sub_productss",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "savingsType",
+                "related_model": "SavingsType::class",
+                "foreign_key": "savings_type_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "depositType",
+                "related_model": "DepositType::class",
+                "foreign_key": "deposit_type_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "Institution": {
+        "table": "institutions",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "departments",
+                "related_model": "Department::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "roles",
+                "related_model": "Role::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "committees",
+                "related_model": "Committee::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "users",
+                "related_model": "User::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "Complaint": {
+        "table": "complaints",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "client",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "client_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "category",
+                "related_model": "ComplaintCategory::class",
+                "foreign_key": "category_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "status",
+                "related_model": "ComplaintStatus::class",
+                "foreign_key": "status_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "assignedTo",
+                "related_model": "User::class",
+                "foreign_key": "assigned_to",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "resolvedBy",
+                "related_model": "User::class",
+                "foreign_key": "resolved_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "Interview": {
+        "table": "interviews",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "applicant",
+                "related_model": "Applicant::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "interviewer",
+                "related_model": "Employee::class",
+                "foreign_key": "interviewer_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "Branch": {
+        "table": "branches",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "departments",
+                "related_model": "departmentsList::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "Menu": {
+        "table": "menus",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "roleMenuActions",
+                "related_model": "RoleMenuAction::class",
+                "foreign_key": "menu_id",
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "menuActions",
+                "related_model": "MenuAction::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "SettledLoan": {
+        "table": "settled_loans",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "loan",
+                "related_model": "LoansModel::class",
+                "foreign_key": "loan_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "BudgetManagement": {
+        "table": "budget_managements",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "department",
+                "related_model": "Department::class",
+                "foreign_key": "department",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "expenseAccount",
+                "related_model": "AccountsModel::class",
+                "foreign_key": "expense_account_id",
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "expenses",
+                "related_model": "Expense::class",
+                "foreign_key": "budget_item_id",
+                "local_key": null
+            }
+        ]
+    },
+    "LoanApproval": {
+        "table": "loan_approvals",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "loan",
+                "related_model": "LoansModel::class",
+                "foreign_key": "loan_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "approver",
+                "related_model": "User::class",
+                "foreign_key": "approver_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "ShareAccount": {
+        "table": "share_accounts",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "Member::class",
+                "foreign_key": "member_number",
+                "owner_key": "member_number"
+            },
+            {
+                "type": "belongsTo",
+                "method": "shareType",
+                "related_model": "Share::class",
+                "foreign_key": "share_type_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "institution",
+                "related_model": "Institution::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "transactions",
+                "related_model": "ShareTransaction::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "Onboarding": {
+        "table": "onboarding",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "employee",
+                "related_model": "Employee::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "applicant",
+                "related_model": "Applicant::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "jobPosting",
+                "related_model": "JobPosting::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "MandatorySavingsNotification": {
+        "table": "mandatory_savings_notifications",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "client",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "client_number",
+                "owner_key": "client_number"
+            },
+            {
+                "type": "belongsTo",
+                "method": "account",
+                "related_model": "AccountsModel::class",
+                "foreign_key": "account_number",
+                "owner_key": "account_number"
+            },
+            {
+                "type": "belongsTo",
+                "method": "tracking",
+                "related_model": "MandatorySavingsTracking::class",
+                "foreign_key": "client_number",
+                "owner_key": "client_number"
+            }
+        ]
+    },
+    "LoanApplication": {
+        "table": "loan_applications",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "Member::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "Employee": {
+        "table": "employees",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": "id",
+                "owner_key": "employeeId"
+            },
+            {
+                "type": "hasMany",
+                "method": "benefits",
+                "related_model": "ExpensesModel::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "absences",
+                "related_model": "ExpensesModel::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "ClientDocument": {
+        "table": "client_documents",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "client",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "client_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "verifier",
+                "related_model": "User::class",
+                "foreign_key": "verified_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "Receivable": {
+        "table": "receivables",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "account",
+                "related_model": "AccountsModel::class",
+                "foreign_key": "account_number",
+                "owner_key": "account_number"
+            }
+        ]
+    },
+    "NextOfKin": {
+        "table": "next_of_kins",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "Member::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "BillingCycle": {
+        "table": "billing_cycles",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "bills",
+                "related_model": "Bill::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "Department": {
+        "table": "departments",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "parent",
+                "related_model": "Department::class",
+                "foreign_key": "parent_department_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "institution",
+                "related_model": "Institution::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "children",
+                "related_model": "Department::class",
+                "foreign_key": "parent_department_id",
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "roles",
+                "related_model": "Role::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "committees",
+                "related_model": "Committee::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "users",
+                "related_model": "User::class",
+                "foreign_key": "department_code",
+                "local_key": "department_code"
+            },
+            {
+                "type": "hasMany",
+                "method": "roleMenuActions",
+                "related_model": "RoleMenuAction::class",
+                "foreign_key": "sub_role",
+                "local_key": "sub_role"
+            }
+        ]
+    },
+    "ScheduledReport": {
+        "table": "scheduled_reports",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "MandatorySavingsTracking": {
+        "table": "mandatory_savings_tracking",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "client",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "client_number",
+                "owner_key": "client_number"
+            },
+            {
+                "type": "belongsTo",
+                "method": "account",
+                "related_model": "AccountsModel::class",
+                "foreign_key": "account_number",
+                "owner_key": "account_number"
+            },
+            {
+                "type": "hasMany",
+                "method": "notifications",
+                "related_model": "MandatorySavingsNotification::class",
+                "foreign_key": "client_number",
+                "local_key": "client_number"
+            }
+        ]
+    },
+    "AnalysisSession": {
+        "table": "analysis_sessions",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "bankTransactions",
+                "related_model": "BankTransaction::class",
+                "foreign_key": "session_id",
+                "local_key": null
+            }
+        ]
+    },
+    "BranchesModel": {
+        "table": "branches",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "citProvider",
+                "related_model": "CashInTransitProvider::class",
+                "foreign_key": "cit_provider_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "manager",
+                "related_model": "User::class",
+                "foreign_key": "branch_manager",
+                "owner_key": null
+            }
+        ]
+    },
+    "Share": {
+        "table": "shares",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "Member::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "dividends",
+                "related_model": "Dividend::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "RolePermission": {
+        "table": "role_permissions",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "role",
+                "related_model": "Role::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "permission",
+                "related_model": "Permission::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "department",
+                "related_model": "Department::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "LoanGuarantor": {
+        "table": "loan_guarantors",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "loan",
+                "related_model": "LoansModel::class",
+                "foreign_key": "loan_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "guarantorMember",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "guarantor_member_id",
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "collaterals",
+                "related_model": "LoanCollateral::class",
+                "foreign_key": "loan_guarantor_id",
+                "local_key": null
+            }
+        ]
+    },
+    "LoanCollateral": {
+        "table": "loan_collaterals",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "loanGuarantor",
+                "related_model": "LoanGuarantor::class",
+                "foreign_key": "loan_guarantor_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "account",
+                "related_model": "Account::class",
+                "foreign_key": "account_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "DividendPayment": {
+        "table": "dividend_payments",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "Member::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "AccountHistoricalBalance": {
+        "table": "account_historical_balances",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "account",
+                "related_model": "Account::class",
+                "foreign_key": "account_number",
+                "owner_key": "account_number"
+            },
+            {
+                "type": "belongsTo",
+                "method": "capturedByUser",
+                "related_model": "User::class",
+                "foreign_key": "captured_by",
+                "owner_key": "id"
+            }
+        ]
+    },
+    "IssuedShares": {
+        "table": "issued_shares",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "share",
+                "related_model": "SharesModel::class",
+                "foreign_key": "share_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "Member::class",
+                "foreign_key": "client_number",
+                "owner_key": "client_number"
+            },
+            {
+                "type": "belongsTo",
+                "method": "createdBy",
+                "related_model": "User::class",
+                "foreign_key": "created_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "SavingsAccount": {
+        "table": "savings_accounts",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "Member::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "Loan": {
+        "table": "loans",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "client",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "client_number",
+                "owner_key": "client_number"
+            }
+        ]
+    },
+    "Dividend": {
+        "table": "dividends",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "Member::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "share",
+                "related_model": "Share::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "TillReconciliation": {
+        "table": "till_reconciliations",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "till",
+                "related_model": "Till::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "teller",
+                "related_model": "Teller::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "supervisor",
+                "related_model": "User::class",
+                "foreign_key": "supervisor_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "SharesModel": {
+        "table": "shares",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "member_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "shareProduct",
+                "related_model": "sub_products::class",
+                "foreign_key": "share_product_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "creator",
+                "related_model": "User::class",
+                "foreign_key": "created_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "approver",
+                "related_model": "User::class",
+                "foreign_key": "approved_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "rejecter",
+                "related_model": "User::class",
+                "foreign_key": "rejected_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "deleter",
+                "related_model": "User::class",
+                "foreign_key": "deleted_by",
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "transactions",
+                "related_model": "ShareTransaction::class",
+                "foreign_key": "share_id",
+                "local_key": null
+            }
+        ]
+    },
+    "SavingsType": {
+        "table": "savings_types",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "subProducts",
+                "related_model": "sub_products::class",
+                "foreign_key": "savings_type_id",
+                "local_key": null
+            }
+        ]
+    },
+    "SecurityTransportLog": {
+        "table": "security_transport_logs",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "sourceVault",
+                "related_model": "App\\Models\\Vault::class",
+                "foreign_key": "source_vault_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "destinationVault",
+                "related_model": "App\\Models\\Vault::class",
+                "foreign_key": "destination_vault_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "bankAccount",
+                "related_model": "App\\Models\\BankAccount::class",
+                "foreign_key": "bank_account_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "initiatedBy",
+                "related_model": "App\\Models\\User::class",
+                "foreign_key": "initiated_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "authorizedBy",
+                "related_model": "App\\Models\\User::class",
+                "foreign_key": "authorized_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "ApprovalComment": {
+        "table": "approval_comments",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "approval",
+                "related_model": "Approval::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "BankAccount": {
+        "table": "bank_accounts",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "branch",
+                "related_model": "App\\Models\\BranchesModel::class",
+                "foreign_key": "branch_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "creator",
+                "related_model": "User::class",
+                "foreign_key": "created_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "updater",
+                "related_model": "User::class",
+                "foreign_key": "updated_by",
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "transactions",
+                "related_model": "App\\Models\\general_ledger::class",
+                "foreign_key": "bank_account_id",
+                "local_key": null
+            }
+        ]
+    },
+    "LoanProductCharge": {
+        "table": "loan_product_charges",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "loanProduct",
+                "related_model": "Loan_sub_products::class",
+                "foreign_key": "loan_product_id",
+                "owner_key": "sub_product_id"
+            }
+        ]
+    },
+    "TransactionReversal": {
+        "table": "transaction_reversals",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "transaction",
+                "related_model": "Transaction::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "reversedByUser",
+                "related_model": "User::class",
+                "foreign_key": "reversed_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "Saving": {
+        "table": "savings",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "client",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "client_number",
+                "owner_key": "client_number"
+            }
+        ]
+    },
+    "Till": {
+        "table": "tills",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "branch",
+                "related_model": "Branch::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "institution",
+                "related_model": "Institution::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "teller",
+                "related_model": "Teller::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "openedBy",
+                "related_model": "User::class",
+                "foreign_key": "opened_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "closedBy",
+                "related_model": "User::class",
+                "foreign_key": "closed_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "assignedTo",
+                "related_model": "User::class",
+                "foreign_key": "assigned_to",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "assignedUser",
+                "related_model": "User::class",
+                "foreign_key": "assigned_user_id",
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "transactions",
+                "related_model": "TillTransaction::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "reconciliations",
+                "related_model": "TillReconciliation::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "UserSecurityProfile": {
+        "table": "user_security_profiles",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "AuditLog": {
+        "table": "audit_logs",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "MenuAction": {
+        "table": "menu_actions",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "menu",
+                "related_model": "Menu::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "roleMenuActions",
+                "related_model": "RoleMenuAction::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "Notification": {
+        "table": "notifications",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "Member::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "UserRole": {
+        "table": "user_roles",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "role",
+                "related_model": "Role::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "FixedDeposit": {
+        "table": "fixed_deposits",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "Member::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "PPE": {
+        "table": "ppes",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "disposalApprovedBy",
+                "related_model": "User::class",
+                "foreign_key": "disposal_approved_by",
+                "owner_key": null
+            },
+            {
+                "type": "hasOne",
+                "method": "disposalApproval",
+                "related_model": "App\\Models\\approvals::class",
+                "foreign_key": "process_id",
+                "local_key": "id"
+            }
+        ]
+    },
+    "Bill": {
+        "table": "bills",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "client_number",
+                "owner_key": "client_number"
+            },
+            {
+                "type": "belongsTo",
+                "method": "client",
+                "related_model": "ClientsModel::class",
+                "foreign_key": "client_number",
+                "owner_key": "client_number"
+            },
+            {
+                "type": "belongsTo",
+                "method": "service",
+                "related_model": "Service::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "billingCycle",
+                "related_model": "BillingCycle::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "creator",
+                "related_model": "User::class",
+                "foreign_key": "created_by",
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "payments",
+                "related_model": "Payment::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    },
+    "SystemActivity": {
+        "table": "system_activitys",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "Member::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "MandatorySavingsSettings": {
+        "table": "mandatory_savings_settings",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "institution",
+                "related_model": "Institution::class",
+                "foreign_key": "institution_id",
+                "owner_key": "id"
+            },
+            {
+                "type": "belongsTo",
+                "method": "mandatorySavingsAccount",
+                "related_model": "AccountsModel::class",
+                "foreign_key": "mandatory_savings_account",
+                "owner_key": "account_number"
+            }
+        ]
+    },
+    "TransactionReconciliation": {
+        "table": "transaction_reconciliations",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "transaction",
+                "related_model": "Transaction::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "ShareTransaction": {
+        "table": "share_transactions",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "shareAccount",
+                "related_model": "ShareAccount::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "recipientAccount",
+                "related_model": "ShareAccount::class",
+                "foreign_key": "recipient_account_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "CashMovement": {
+        "table": "cash_movements",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "fromTill",
+                "related_model": "Till::class",
+                "foreign_key": "from_till_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "toTill",
+                "related_model": "Till::class",
+                "foreign_key": "to_till_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "strongroomLedger",
+                "related_model": "StrongroomLedger::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "initiator",
+                "related_model": "User::class",
+                "foreign_key": "initiated_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": "initiated_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "approver",
+                "related_model": "User::class",
+                "foreign_key": "approved_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "general_ledger": {
+        "table": "general_ledger",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "account",
+                "related_model": "AccountsModel::class",
+                "foreign_key": "record_on_account_number",
+                "owner_key": "account_number"
+            }
+        ]
+    },
+    "SubRole": {
+        "table": "sub_roles",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "role",
+                "related_model": "Role::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "roleMenuActions",
+                "related_model": "RoleMenuAction::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "subRolePermissions",
+                "related_model": "SubRolePermission::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "belongsToMany",
+                "method": "menuActions",
+                "related_model": "MenuAction::class"
+            },
+            {
+                "type": "belongsToMany",
+                "method": "permissions",
+                "related_model": "Permission::class"
+            }
+        ]
+    },
+    "ProcessCodeConfig": {
+        "table": "process_code_configs",
+        "relations": [
+            {
+                "type": "belongsToMany",
+                "method": "firstCheckerRoles",
+                "related_model": "Role::class"
+            },
+            {
+                "type": "belongsToMany",
+                "method": "secondCheckerRoles",
+                "related_model": "Role::class"
+            },
+            {
+                "type": "belongsToMany",
+                "method": "approverRoles",
+                "related_model": "Role::class"
+            }
+        ]
+    },
+    "Permission": {
+        "table": "permissions",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "rolePermissions",
+                "related_model": "RolePermission::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "userPermissions",
+                "related_model": "UserPermission::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "subRolePermissions",
+                "related_model": "SubRolePermission::class",
+                "foreign_key": null,
+                "local_key": null
+            },
+            {
+                "type": "belongsToMany",
+                "method": "roles",
+                "related_model": "Role::class"
+            },
+            {
+                "type": "belongsToMany",
+                "method": "users",
+                "related_model": "User::class"
+            },
+            {
+                "type": "belongsToMany",
+                "method": "subRoles",
+                "related_model": "SubRole::class"
+            }
+        ]
+    },
+    "UserPermission": {
+        "table": "user_permissions",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "user",
+                "related_model": "User::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "permission",
+                "related_model": "Permission::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "department",
+                "related_model": "Department::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "TransactionAuditLog": {
+        "table": "transaction_audit_logs",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "transaction",
+                "related_model": "Transaction::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "ProductsModel": {
+        "table": "products",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "creator",
+                "related_model": "User::class",
+                "foreign_key": "created_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "approver",
+                "related_model": "User::class",
+                "foreign_key": "approved_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "rejecter",
+                "related_model": "User::class",
+                "foreign_key": "rejected_by",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "deleter",
+                "related_model": "User::class",
+                "foreign_key": "deleted_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "DepositType": {
+        "table": "deposit_types",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "subProducts",
+                "related_model": "sub_products::class",
+                "foreign_key": "deposit_type_id",
+                "local_key": null
+            }
+        ]
+    },
+    "Loan_sub_products": {
+        "table": "loan_sub_productss",
+        "relations": [
+            {
+                "type": "hasMany",
+                "method": "charges",
+                "related_model": "LoanProductCharge::class",
+                "foreign_key": "loan_product_id",
+                "local_key": "sub_product_id"
+            }
+        ]
+    },
+    "MeetingAttendance": {
+        "table": "meeting_attendance",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "meeting",
+                "related_model": "Meeting::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "leader",
+                "related_model": "LeaderShipModel::class",
+                "foreign_key": "leader_id",
+                "owner_key": null
+            }
+        ]
+    },
+    "LoanDocument": {
+        "table": "loan_images",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "loan",
+                "related_model": "LoansModel::class",
+                "foreign_key": "loan_id",
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "uploadedBy",
+                "related_model": "User::class",
+                "foreign_key": "uploaded_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "TransactionRetryLog": {
+        "table": "transaction_retry_logs",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "transaction",
+                "related_model": "Transaction::class",
+                "foreign_key": null,
+                "owner_key": null
+            }
+        ]
+    },
+    "ClientsModel": {
+        "table": "clients",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "branch",
+                "related_model": "BranchesModel::class",
+                "foreign_key": "branch_id",
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "documents",
+                "related_model": "ClientDocument::class",
+                "foreign_key": "client_id",
+                "local_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "loans",
+                "related_model": "Loan::class",
+                "foreign_key": "client_number",
+                "local_key": "client_number"
+            },
+            {
+                "type": "hasMany",
+                "method": "savings",
+                "related_model": "Saving::class",
+                "foreign_key": "client_number",
+                "local_key": "client_number"
+            },
+            {
+                "type": "hasMany",
+                "method": "shares",
+                "related_model": "Share::class",
+                "foreign_key": "client_number",
+                "local_key": "client_number"
+            },
+            {
+                "type": "hasMany",
+                "method": "bills",
+                "related_model": "Bill::class",
+                "foreign_key": "client_number",
+                "local_key": "client_number"
+            },
+            {
+                "type": "hasMany",
+                "method": "accounts",
+                "related_model": "AccountsModel::class",
+                "foreign_key": "client_number",
+                "local_key": "client_number"
+            },
+            {
+                "type": "hasOne",
+                "method": "profilePhoto",
+                "related_model": "ClientDocument::class",
+                "foreign_key": "client_id",
+                "local_key": null
+            },
+            {
+                "type": "hasOne",
+                "method": "applicationLetter",
+                "related_model": "ClientDocument::class",
+                "foreign_key": "client_id",
+                "local_key": null
+            },
+            {
+                "type": "hasOne",
+                "method": "guarantor",
+                "related_model": "Guarantor::class",
+                "foreign_key": "client_id",
+                "local_key": null
+            }
+        ]
+    },
+    "TillTransaction": {
+        "table": "till_transactions",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "till",
+                "related_model": "Till::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "member",
+                "related_model": "Member::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "account",
+                "related_model": "Account::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "belongsTo",
+                "method": "creator",
+                "related_model": "User::class",
+                "foreign_key": "created_by",
+                "owner_key": null
+            }
+        ]
+    },
+    "departmentsList": {
+        "table": "departments",
+        "relations": [
+            {
+                "type": "belongsTo",
+                "method": "branch",
+                "related_model": "Branch::class",
+                "foreign_key": null,
+                "owner_key": null
+            },
+            {
+                "type": "hasMany",
+                "method": "roles",
+                "related_model": "Role::class",
+                "foreign_key": null,
+                "local_key": null
+            }
+        ]
+    }
+}

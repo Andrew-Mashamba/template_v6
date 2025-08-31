@@ -1,0 +1,58 @@
+[1;36m╔════════════════════════════════════════════════════════════════╗
+║          Zona AI Enhanced - SACCOS Core System                ║
+╚════════════════════════════════════════════════════════════════╝
+[0m
+[1;32m✓ Directives loaded[0m
+[1;32m✓ Connected to database[0m
+[1;33m⚡ Ready to answer questions accurately...[0m
+
+[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[1;35m📨 Processing Question[0m
+[1;33mQ: Hello Claude Code! Can you confirm you're connected to the SACCOS Core System and have full project context?[0m
+[1;32mA: Hello! I'm Zona, your SACCOS AI assistant. I can help you with:
+
+• Member information and searches
+• Branch and user details
+• Loan and savings statistics
+• System information
+
+Try asking: 'Do...[0m
+[1;32m✓ Response sent![0m
+[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+
+[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[1;35m📨 Processing Question[0m
+[1;33mQ: What are the names of members?[0m
+[1;32mA: Here are the members in the system (showing first 20 of 3):
+
+• **John Doe** (Client #00001)
+• **Mary Smith** (Client #00002)
+• **ANDREW MASHAMBA** (Client #00003)
+...[0m
+[1;32m✓ Response sent![0m
+[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+
+[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[1;35m📨 Processing Question[0m
+[1;33mQ: what are the names of members[0m
+[1;32mA: Here are the members in the system (showing first 20 of 3):
+
+• **John Doe** (Client #00001)
+• **Mary Smith** (Client #00002)
+• **ANDREW MASHAMBA** (Client #00003)
+...[0m
+[1;32m✓ Response sent![0m
+[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+
+[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[1;35m📨 Processing Question[0m
+[1;33mQ: list the client numbers of available members[0m
+[1;32mA: I can help you with information about the SACCOS system. Try asking:
+
+• How many users/members/branches are there?
+• What are the names of users/branches?
+• How many active loans exist?
+• What...[0m
+[1;32m✓ Response sent![0m
+[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+

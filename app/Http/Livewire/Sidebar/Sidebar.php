@@ -70,10 +70,19 @@ class Sidebar extends Component
 
             $permissions = $this->getUserPermissions();
             foreach ($permissions as $permission) {
-                if (isset($permission['resource_type']) && 
-                    $permission['resource_type'] === 'menu' && 
-                    isset($permission['resource_id'])) {
-                    $menuItems->push($permission['resource_id']);
+                // Handle both array and object types
+                if (is_object($permission)) {
+                    if (isset($permission->resource_type) && 
+                        $permission->resource_type === 'menu' && 
+                        isset($permission->resource_id)) {
+                        $menuItems->push($permission->resource_id);
+                    }
+                } elseif (is_array($permission)) {
+                    if (isset($permission['resource_type']) && 
+                        $permission['resource_type'] === 'menu' && 
+                        isset($permission['resource_id'])) {
+                        $menuItems->push($permission['resource_id']);
+                    }
                 }
             }
 
@@ -157,7 +166,9 @@ class Sidebar extends Component
     private function getUserPermissions(): array
     {
         try {
-            return Auth::user()->getAllPermissions()->toArray();
+            // Convert Collection of objects to array, keeping objects as objects
+            $permissions = Auth::user()->getAllPermissions();
+            return $permissions->all(); // This returns array of objects
         } catch (Exception $e) {
             Log::error('Error fetching user permissions', ['error' => $e->getMessage()]);
             return [];
@@ -204,13 +215,22 @@ class Sidebar extends Component
             if (!empty($permissions)) {
                 session()->put('permissions', $permissions);
                 $this->menuGroups = $this->getGroupedMenuItems();
-                session()->put('permission_items', collect($permissions)
-                    ->pluck('allowed_actions')
-                    ->flatten()
-                    ->unique()
-                    ->values()
-                    ->toArray()
-                );
+                
+                // Handle permissions as objects
+                $permissionItems = collect($permissions)->map(function($permission) {
+                    if (is_object($permission) && isset($permission->allowed_actions)) {
+                        return $permission->allowed_actions;
+                    } elseif (is_array($permission) && isset($permission['allowed_actions'])) {
+                        return $permission['allowed_actions'];
+                    }
+                    return null;
+                })->filter()
+                  ->flatten()
+                  ->unique()
+                  ->values()
+                  ->toArray();
+                  
+                session()->put('permission_items', $permissionItems);
             }
 
             return view('livewire.sidebar.sidebar');

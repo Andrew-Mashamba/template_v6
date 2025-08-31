@@ -51,7 +51,7 @@ class LoansModel extends Model
     // Relationships
     public function loanProduct(): BelongsTo
     {
-        return $this->belongsTo(Loan_sub_products::class, 'loan_sub_product', 'sub_product_id');
+        return $this->belongsTo(LoanSubProduct::class, 'loan_sub_product', 'product_id');
     }
 
     public function client(): BelongsTo
@@ -72,6 +72,27 @@ class LoansModel extends Model
     public function schedules(): HasMany
     {
         return $this->hasMany(loans_schedules::class, 'loan_id', 'loan_id');
+    }
+
+    public function loanAccount()
+    {
+        return $this->belongsTo(AccountsModel::class, 'loan_account_number', 'account_number');
+    }
+
+    /**
+     * Get the maximum days in arrears for this loan
+     */
+    public function getMaxDaysInArrearsAttribute()
+    {
+        return $this->schedules()->max('days_in_arrears') ?? 0;
+    }
+
+    /**
+     * Get the total amount in arrears for this loan
+     */
+    public function getTotalAmountInArrearsAttribute()
+    {
+        return $this->schedules()->sum('amount_in_arrears') ?? 0;
     }
 
     public function approvals(): HasMany

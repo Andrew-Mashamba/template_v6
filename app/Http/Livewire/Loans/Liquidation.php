@@ -5,8 +5,11 @@ namespace App\Http\Livewire\Loans;
 use App\Models\LoansModel;
 use App\Models\ClientsModel;
 use App\Models\loan_sub_products;
+use App\Services\OtpService;
+use App\Services\SmsService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Carbon\Carbon;
@@ -32,6 +35,8 @@ class Liquidation extends Component
     
     // Liquidation Details
     public $liquidationAmount = 0;
+    public $liquidationPenalty = 0;
+    public $totalLiquidationAmount = 0;
     public $paymentMethod = 'CASH';
     public $paymentReference = '';
     public $liquidationReason = '';
@@ -48,10 +53,14 @@ class Liquidation extends Component
     public $penaltyWaived = false;
     public $waiverReason = '';
     
-    // Confirmation
+    // OTP Confirmation
     public $confirmLiquidation = false;
     public $confirmationCode = '';
-    public $generatedCode = '';
+    public $generatedOTP = '';
+    public $otpSent = false;
+    public $otpSentTime = null;
+    public $memberPhone = '';
+    public $memberEmail = '';
     
     protected $listeners = [
         'refreshLiquidationTable' => '$refresh',
@@ -110,8 +119,16 @@ class Liquidation extends Component
             // Calculate outstanding balance
             $this->calculateOutstandingBalance();
             
-            // Generate confirmation code
-            $this->generatedCode = strtoupper(substr(md5(uniqid()), 0, 6));
+            // Get member contact information
+            if ($this->selectedLoan->client) {
+                $this->memberPhone = $this->selectedLoan->client->phone_number ?? '';
+                $this->memberEmail = $this->selectedLoan->client->email ?? '';
+            }
+            
+            // Reset OTP status
+            $this->otpSent = false;
+            $this->generatedOTP = '';
+            $this->confirmationCode = '';
             
             // Reset form fields
             $this->resetLiquidationForm();
@@ -134,7 +151,14 @@ class Liquidation extends Component
         }
 
         try {
-            // Get loan repayment schedule
+            // Get loan account balance (Outstanding Balance = loan account balance)
+            $loanAccount = DB::table('accounts')
+                ->where('account_number', $this->selectedLoan->loan_account_number)
+                ->first();
+            
+            $outstandingBalance = $loanAccount ? abs($loanAccount->balance ?? 0) : 0;
+            
+            // Get loan repayment schedule for other calculations
             $schedule = DB::table('loans_schedules')
                 ->where('loan_id', $this->selectedLoan->loan_id)
                 ->get();
@@ -147,9 +171,6 @@ class Liquidation extends Component
                 ->where('loan_id', $this->selectedLoan->loan_id)
                 ->where('status', 'COMPLETED')
                 ->sum('amount');
-
-            // Outstanding balance
-            $outstandingBalance = $totalExpected - $totalPaid;
             
             // Calculate early settlement if applicable
             $remainingMonths = $schedule->where('completion_status', '!=', 'PAID')->count();
@@ -160,7 +181,11 @@ class Liquidation extends Component
             $currentMonthInterest = $outstandingPrincipal * $monthlyInterestRate;
             
             $this->earlySettlementAmount = $outstandingPrincipal + $currentMonthInterest;
+            
+            // Calculate 5% liquidation penalty
             $this->liquidationAmount = $outstandingBalance;
+            $this->liquidationPenalty = $outstandingBalance * 0.05; // 5% penalty
+            $this->totalLiquidationAmount = $this->liquidationAmount + $this->liquidationPenalty;
             
             // Store in selectedLoan for display
             $this->selectedLoan->outstanding_balance = $outstandingBalance;
@@ -186,14 +211,97 @@ class Liquidation extends Component
         }
     }
 
+    public function sendOTP()
+    {
+        if (!$this->selectedLoan || !$this->selectedLoan->client) {
+            session()->flash('error', 'Unable to send OTP. Client information not found.');
+            return;
+        }
+
+        try {
+            // Generate 6-digit OTP
+            $this->generatedOTP = str_pad(random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+            
+            // Store OTP in cache with 5 minute expiry
+            $cacheKey = 'liquidation_otp_' . $this->selectedLoan->loan_id;
+            Cache::put($cacheKey, $this->generatedOTP, Carbon::now()->addMinutes(5));
+            
+            // Send OTP via SMS
+            $message = "Your loan liquidation OTP is: {$this->generatedOTP}. Valid for 5 minutes. Do not share with anyone.";
+            
+            if ($this->memberPhone) {
+                try {
+                    $smsService = app(SmsService::class);
+                    $smsService->sendSMS($this->memberPhone, $message);
+                    $this->otpSent = true;
+                    $this->otpSentTime = now();
+                    session()->flash('success', 'OTP has been sent to ' . substr($this->memberPhone, 0, 3) . '****' . substr($this->memberPhone, -2));
+                } catch (Exception $e) {
+                    Log::error('Failed to send OTP via SMS', [
+                        'loan_id' => $this->selectedLoan->loan_id,
+                        'error' => $e->getMessage()
+                    ]);
+                    session()->flash('error', 'Failed to send OTP. Please try again.');
+                }
+            } else {
+                session()->flash('error', 'No phone number found for this member.');
+            }
+            
+        } catch (Exception $e) {
+            Log::error('Error generating OTP', [
+                'loan_id' => $this->selectedLoan->loan_id,
+                'error' => $e->getMessage()
+            ]);
+            session()->flash('error', 'Error generating OTP: ' . $e->getMessage());
+        }
+    }
+
+    public function verifyOTP()
+    {
+        if (!$this->selectedLoan) {
+            return false;
+        }
+
+        $cacheKey = 'liquidation_otp_' . $this->selectedLoan->loan_id;
+        $storedOTP = Cache::get($cacheKey);
+        
+        if (!$storedOTP) {
+            session()->flash('error', 'OTP has expired. Please request a new one.');
+            return false;
+        }
+        
+        if ($this->confirmationCode !== $storedOTP) {
+            session()->flash('error', 'Invalid OTP. Please try again.');
+            return false;
+        }
+        
+        // Clear OTP after successful verification
+        Cache::forget($cacheKey);
+        return true;
+    }
+
     public function processLiquidation()
     {
-        $this->validate([
-            'liquidationAmount' => 'required|numeric|min:0',
+        $rules = [
             'paymentMethod' => 'required',
             'liquidationReason' => 'required|string',
-            'confirmationCode' => 'required|same:generatedCode'
-        ]);
+            'confirmationCode' => 'required|digits:6'
+        ];
+
+        // Add waiver reason validation if penalty is being waived
+        if ($this->penaltyWaived) {
+            $rules['waiverReason'] = 'required|string|min:10';
+        }
+
+        $this->validate($rules);
+
+        // Verify OTP
+        if (!$this->verifyOTP()) {
+            return;
+        }
+
+        // Calculate final amount based on waiver status
+        $finalAmount = $this->penaltyWaived ? $this->liquidationAmount : $this->totalLiquidationAmount;
 
         if (!$this->selectedLoan) {
             session()->flash('error', 'No loan selected for liquidation.');
@@ -206,19 +314,26 @@ class Liquidation extends Component
             // Generate receipt number
             $receiptNumber = 'LIQ-' . date('YmdHis') . '-' . $this->selectedLoan->loan_id;
             
-            // Record the liquidation payment
+            // Record the liquidation payment with penalty
+            $noteText = $this->liquidationNotes;
+            if (!$this->penaltyWaived) {
+                $noteText .= ' (Includes 5% liquidation penalty)';
+            } else {
+                $noteText .= ' (Penalty waived - Reason: ' . $this->waiverReason . ')';
+            }
+
             $paymentId = DB::table('loan_repayments')->insertGetId([
                 'loan_id' => $this->selectedLoan->loan_id,
                 'client_number' => $this->selectedLoan->client_number,
                 'receipt_number' => $receiptNumber,
-                'amount' => $this->liquidationAmount,
+                'amount' => $finalAmount,
                 'payment_date' => now(),
                 'payment_method' => $this->paymentMethod,
                 'payment_reference' => $this->getPaymentReference(),
                 'payment_type' => 'LIQUIDATION',
                 'status' => 'COMPLETED',
                 'processed_by' => auth()->id(),
-                'notes' => $this->liquidationNotes,
+                'notes' => $noteText,
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
@@ -247,15 +362,17 @@ class Liquidation extends Component
                     'updated_at' => now()
                 ]);
 
-            // Record liquidation transaction
+            // Record liquidation transaction with penalty details
             DB::table('loan_liquidations')->insert([
                 'loan_id' => $this->selectedLoan->loan_id,
                 'client_number' => $this->selectedLoan->client_number,
                 'liquidation_date' => now(),
                 'original_balance' => $this->selectedLoan->outstanding_balance,
                 'liquidation_amount' => $this->liquidationAmount,
+                'penalty_amount' => $this->liquidationPenalty,
+                'total_amount' => $finalAmount,
                 'penalty_waived' => $this->penaltyWaived,
-                'waiver_amount' => $this->penaltyWaived ? ($this->selectedLoan->outstanding_balance - $this->liquidationAmount) : 0,
+                'waiver_amount' => $this->penaltyWaived ? $this->liquidationPenalty : 0,
                 'waiver_reason' => $this->waiverReason,
                 'payment_method' => $this->paymentMethod,
                 'payment_reference' => $this->getPaymentReference(),
@@ -317,6 +434,8 @@ class Liquidation extends Component
     private function resetLiquidationForm()
     {
         $this->liquidationAmount = 0;
+        $this->liquidationPenalty = 0;
+        $this->totalLiquidationAmount = 0;
         $this->paymentMethod = 'CASH';
         $this->paymentReference = '';
         $this->liquidationReason = '';
@@ -329,6 +448,9 @@ class Liquidation extends Component
         $this->waiverReason = '';
         $this->confirmLiquidation = false;
         $this->confirmationCode = '';
+        $this->otpSent = false;
+        $this->generatedOTP = '';
+        $this->otpSentTime = null;
         $this->resetValidation();
     }
 

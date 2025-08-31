@@ -553,4 +553,130 @@ class AiAgentController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Handle AI chat requests and return HTML formatted responses
+     */
+    public function chat(Request $request)
+    {
+        try {
+            // Validate the request
+            $request->validate([
+                'message' => 'required|string|max:1000',
+                'format' => 'sometimes|string|in:html,text,json',
+                'sessionId' => 'sometimes|string'
+            ]);
+
+            $message = $request->input('message');
+            $format = $request->input('format', 'html');
+            $sessionId = $request->input('sessionId', session()->getId());
+            
+            // Get user context
+            $context = [
+                'user_id' => auth()->id(),
+                'user_permissions' => $this->getUserPermissions(),
+                'session_id' => $sessionId,
+                'format' => $format
+            ];
+
+            // Process the message and get response
+            $aiResponse = $this->aiAgentService->processRequest($message, $context);
+
+            // Format response as HTML
+            $htmlResponse = $this->formatAsHtml($message, $aiResponse);
+
+            return response()->json([
+                'success' => true,
+                'response' => $htmlResponse,
+                'message' => $message,
+                'sessionId' => $sessionId,
+                'timestamp' => now()->toISOString()
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'response' => '<div class="text-red-600">Invalid message format. Please try again.</div>',
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (Exception $e) {
+            Log::error('AI Chat Error', [
+                'message' => $request->input('message'),
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'response' => '<div class="text-red-600">An error occurred while processing your message. Please try again.</div>',
+                'error_code' => 'AI_CHAT_ERROR'
+            ], 500);
+        }
+    }
+
+    /**
+     * Format AI response as HTML
+     */
+    private function formatAsHtml($message, $aiResponse)
+    {
+        // If the response is already HTML, return it
+        if (is_string($aiResponse) && (strpos($aiResponse, '<div') !== false || strpos($aiResponse, '<p') !== false)) {
+            return $aiResponse;
+        }
+
+        // Handle different message types
+        $lowerMessage = strtolower($message);
+
+        // Simple greetings
+        if (in_array($lowerMessage, ['hi', 'hello', 'hey'])) {
+            return '<div><p>Hi there! How can I help you today?</p></div>';
+        }
+
+        if (strpos($lowerMessage, 'how are you') !== false) {
+            return '<div><p>I\'m doing well, thank you for asking! I\'m here to help you with your SACCOS queries.</p></div>';
+        }
+
+        // If response is an array or object, format it nicely
+        if (is_array($aiResponse) || is_object($aiResponse)) {
+            $responseData = is_object($aiResponse) ? (array)$aiResponse : $aiResponse;
+            
+            // Check if it has a response field
+            if (isset($responseData['response'])) {
+                return $responseData['response'];
+            }
+
+            // Format as a nice HTML display
+            return '<div class="space-y-2">' . $this->arrayToHtml($responseData) . '</div>';
+        }
+
+        // Default formatting for plain text
+        $text = is_string($aiResponse) ? $aiResponse : json_encode($aiResponse);
+        return '<div><p>' . nl2br(htmlspecialchars($text)) . '</p></div>';
+    }
+
+    /**
+     * Convert array to HTML
+     */
+    private function arrayToHtml($array, $level = 0)
+    {
+        $html = '';
+        $indent = str_repeat('  ', $level);
+
+        foreach ($array as $key => $value) {
+            if (is_array($value) || is_object($value)) {
+                $html .= $indent . '<div class="mb-2">';
+                $html .= '<strong>' . htmlspecialchars($key) . ':</strong>';
+                $html .= '<div class="ml-4">' . $this->arrayToHtml((array)$value, $level + 1) . '</div>';
+                $html .= '</div>';
+            } else {
+                $html .= $indent . '<div class="mb-1">';
+                $html .= '<span class="font-medium">' . htmlspecialchars($key) . ':</span> ';
+                $html .= '<span>' . htmlspecialchars($value) . '</span>';
+                $html .= '</div>';
+            }
+        }
+
+        return $html;
+    }
 } 

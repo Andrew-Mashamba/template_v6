@@ -86,8 +86,14 @@
                                                     {{ \Carbon\Carbon::parse($withdrawal['created_at'])->format('Y-m-d') }}
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="text-sm font-medium text-gray-900">{{ $withdrawal['member']['first_name'] }} {{ $withdrawal['member']['last_name'] }}</div>
-                                                    <div class="text-sm text-gray-500">{{ $withdrawal['client_number'] }}</div>
+                                                    <div class="text-sm font-medium text-gray-900">
+                                                        @if(isset($withdrawal['member']) && $withdrawal['member'])
+                                                            {{ $withdrawal['member']['first_name'] ?? '' }} {{ $withdrawal['member']['last_name'] ?? '' }}
+                                                        @else
+                                                            Member Not Found
+                                                        @endif
+                                                    </div>
+                                                    <div class="text-sm text-gray-500">{{ $withdrawal['client_number'] ?? 'N/A' }}</div>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {{ $withdrawal['product_name'] }}

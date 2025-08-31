@@ -213,7 +213,7 @@ class TillAndCashManagement extends Component
     public $movementType = '';
     public $strongroomStatus = '';
     public $strongroomSearch = '';
-    public $strongroomSortField = 'date';
+    public $strongroomSortField = 'created_at';
     public $strongroomSortDirection = 'desc';
     
     public $approvalDateRange = 'today';
@@ -2285,15 +2285,13 @@ class TillAndCashManagement extends Component
             ->paginate(10);
 
         // Get strongroom ledger data
-        $strongroomLedger = StrongroomLedger::with(['authorized_by'])
-            ->when($this->movementType, function($q) {
-                $q->where('type', $this->movementType);
-            })
+        $strongroomLedger = StrongroomLedger::with(['vault', 'branch'])
             ->when($this->strongroomStatus, function($q) {
                 $q->where('status', $this->strongroomStatus);
             })
             ->when($this->strongroomSearch, function($q) {
-                $q->where('reference', 'like', '%' . $this->strongroomSearch . '%');
+                $q->where('vault_code', 'like', '%' . $this->strongroomSearch . '%')
+                  ->orWhere('notes', 'like', '%' . $this->strongroomSearch . '%');
             })
             ->orderBy($this->strongroomSortField, $this->strongroomSortDirection)
             ->paginate(10);

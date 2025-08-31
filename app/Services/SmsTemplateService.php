@@ -49,7 +49,7 @@ class SmsTemplateService
     /**
      * Generate member registration SMS
      */
-    public function generateMemberRegistrationSMS($memberName, $controlNumber = null, $amount = null)
+    public function generateMemberRegistrationSMS($memberName, $controlNumber = null, $amount = null, $paymentLink = null)
     {
         $message = "Dear {$memberName}, welcome to NBC SACCOS! ";
         $message .= "Your account has been created successfully. ";
@@ -57,6 +57,11 @@ class SmsTemplateService
         if ($controlNumber && $amount) {
             $formattedAmount = number_format($amount, 0);
             $message .= "Control No: {$controlNumber}, Amount: TZS {$formattedAmount}. ";
+        }
+        
+        if ($paymentLink) {
+            $message .= "Pay online: {$paymentLink} ";
+            $message .= "or ";
         }
         
         $message .= "Pay via NBC Kiganjani, Wakala or branches. ";

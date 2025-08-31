@@ -685,8 +685,12 @@ class AllMembers extends Component
     public function viewMember($id)
     {
         $this->viewingMember = ClientsModel::with([
-            'loans', 
-            'bills', 
+            'loans.schedules', 
+            'loans.loanAccount',
+            'loans.loanProduct',
+            'bills.service',
+            'dividends',
+            'interestPayables',
             // 'accounts' => function($query) {
             //     $query->with('parentAccount');
             // }

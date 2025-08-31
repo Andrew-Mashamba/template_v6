@@ -291,7 +291,8 @@ class ProcessMemberNotifications implements ShouldQueue
             return $this->smsTemplateService->generateMemberRegistrationSMS(
                 $memberName,
                 $controlNumber,
-                $amount
+                $amount,
+                $this->paymentLink
             );
         }
     }

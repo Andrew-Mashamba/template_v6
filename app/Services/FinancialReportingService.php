@@ -2,582 +2,567 @@
 
 namespace App\Services;
 
+use App\Models\AccountsModel;
+use App\Models\ClientsModel;
+use App\Models\LoansModel;
+use App\Models\general_ledger;
+use App\Models\BranchesModel;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
+use Exception;
 
 class FinancialReportingService
 {
     protected $reportTypes = [
         'statement_of_financial_position' => [
-            'id' => 37,
             'name' => 'Statement of Financial Position',
-            'description' => 'Statement of Financial Position for the Month Ended',
-            'template' => 'pdf.statement-of-financial-position',
-            'category' => 'regulatory'
+            'category' => 'regulatory',
+            'compliance' => ['BOT', 'IFRS'],
+            'frequency' => 'monthly',
+            'description' => 'Comprehensive balance sheet showing assets, liabilities, and equity positions'
         ],
         'statement_of_comprehensive_income' => [
-            'id' => 38,
             'name' => 'Statement of Comprehensive Income',
-            'description' => 'Statement of Comprehensive Income for the Month Ended',
-            'template' => 'pdf.statement-of-comprehensive-income',
-            'category' => 'regulatory'
+            'category' => 'regulatory',
+            'compliance' => ['BOT', 'IFRS'],
+            'frequency' => 'monthly',
+            'description' => 'Detailed income statement showing revenue, expenses, and net income'
+        ],
+        'statement_of_cash_flow' => [
+            'name' => 'Statement of Cash Flow',
+            'category' => 'regulatory',
+            'compliance' => ['BOT', 'IFRS'],
+            'frequency' => 'monthly',
+            'description' => 'Cash flow analysis showing operating, investing, and financing activities'
         ],
         'sectoral_classification_of_loans' => [
-            'id' => 39,
             'name' => 'Sectoral Classification of Loans',
-            'description' => 'Sectoral Classification of Loans',
-            'template' => 'pdf.sectoral-classification-of-loans',
-            'category' => 'regulatory'
-        ],
-        'balance_sheet' => [
-            'id' => 1,
-            'name' => 'Balance Sheet',
-            'description' => 'Detailed Balance Sheet Report',
-            'template' => 'pdf.balance-sheet',
-            'category' => 'general'
-        ],
-        'profit_and_loss' => [
-            'id' => 2,
-            'name' => 'Profit & Loss Statement',
-            'description' => 'Profit and Loss Statement',
-            'template' => 'pdf.profit-and-loss',
-            'category' => 'general'
-        ],
-        'cash_flow_statement' => [
-            'id' => 3,
-            'name' => 'Cash Flow Statement',
-            'description' => 'Statement of Cash Flows',
-            'template' => 'pdf.cash-flow-statement',
-            'category' => 'general'
+            'category' => 'regulatory',
+            'compliance' => ['BOT'],
+            'frequency' => 'monthly',
+            'description' => 'Classification of loans by economic sector'
         ],
         'trial_balance' => [
-            'id' => 4,
             'name' => 'Trial Balance',
-            'description' => 'Trial Balance Report',
-            'template' => 'pdf.trial-balance',
-            'category' => 'general'
+            'category' => 'operational',
+            'compliance' => ['Internal'],
+            'frequency' => 'daily',
+            'description' => 'Complete trial balance for accounting verification'
         ],
         'general_ledger' => [
-            'id' => 5,
             'name' => 'General Ledger',
-            'description' => 'General Ledger Report',
-            'template' => 'pdf.general-ledger',
-            'category' => 'general'
+            'category' => 'operational',
+            'compliance' => ['Internal'],
+            'frequency' => 'daily',
+            'description' => 'Detailed general ledger entries'
+        ],
+        'loan_portfolio_analysis' => [
+            'name' => 'Loan Portfolio Analysis',
+            'category' => 'analytical',
+            'compliance' => ['Internal'],
+            'frequency' => 'weekly',
+            'description' => 'Comprehensive loan portfolio performance analysis'
+        ],
+        'member_analysis' => [
+            'name' => 'Member Analysis Report',
+            'category' => 'operational',
+            'compliance' => ['Internal'],
+            'frequency' => 'monthly',
+            'description' => 'Detailed member demographics and behavior analysis'
+        ],
+        'financial_ratios' => [
+            'name' => 'Financial Ratios and Metrics',
+            'category' => 'analytical',
+            'compliance' => ['Internal'],
+            'frequency' => 'weekly',
+            'description' => 'Key financial ratios and performance indicators'
+        ],
+        'compliance_status' => [
+            'name' => 'Compliance Status Report',
+            'category' => 'regulatory',
+            'compliance' => ['BOT', 'TCDC'],
+            'frequency' => 'monthly',
+            'description' => 'Comprehensive compliance status across all regulatory requirements'
         ]
     ];
 
-    protected $currencies = ['TZS', 'USD', 'EUR'];
-    protected $periods = ['monthly', 'quarterly', 'annually', 'custom'];
-    protected $formats = ['detailed', 'summary', 'comparative'];
-
-    /**
-     * Get all available report types
-     */
-    public function getReportTypes(): array
-    {
-        return $this->reportTypes;
-    }
-
-    /**
-     * Get report types by category
-     */
-    public function getReportsByCategory(string $category): array
-    {
-        return array_filter($this->reportTypes, function($report) use ($category) {
-            return $report['category'] === $category;
-        });
-    }
-
-    /**
-     * Get regulatory reports (BOT compliance)
-     */
     public function getRegulatoryReports(): array
     {
-        return $this->getReportsByCategory('regulatory');
+        return array_filter($this->reportTypes, function($report) {
+            return in_array('BOT', $report['compliance']) || in_array('IFRS', $report['compliance']);
+        });
     }
 
-    /**
-     * Get general reports
-     */
     public function getGeneralReports(): array
     {
-        return $this->getReportsByCategory('general');
-    }
-
-    /**
-     * Generate financial data for any report type
-     */
-    public function generateFinancialData(string $reportType, array $params = []): array
-    {
-        $startDate = $params['startDate'] ?? Carbon::now()->startOfMonth()->format('Y-m-d');
-        $endDate = $params['endDate'] ?? Carbon::now()->endOfMonth()->format('Y-m-d');
-        $currency = $params['currency'] ?? 'TZS';
-
-        switch ($reportType) {
-            case 'statement_of_financial_position':
-                return $this->generateBalanceSheetData($startDate, $endDate, $currency);
-            
-            case 'statement_of_comprehensive_income':
-                return $this->generateIncomeStatementData($startDate, $endDate, $currency);
-            
-            case 'sectoral_classification_of_loans':
-                return $this->generateSectoralLoansData($startDate, $endDate, $currency);
-            
-            case 'balance_sheet':
-                return $this->generateBalanceSheetData($startDate, $endDate, $currency);
-            
-            case 'profit_and_loss':
-                return $this->generateIncomeStatementData($startDate, $endDate, $currency);
-            
-            case 'cash_flow_statement':
-                return $this->generateCashFlowData($startDate, $endDate, $currency);
-            
-            case 'trial_balance':
-                return $this->generateTrialBalanceData($startDate, $endDate, $currency);
-            
-            case 'general_ledger':
-                return $this->generateGeneralLedgerData($startDate, $endDate, $currency, $params);
-            
-            default:
-                throw new \Exception("Unsupported report type: {$reportType}");
-        }
-    }
-
-    /**
-     * Generate Balance Sheet data (Assets, Liabilities, Equity)
-     */
-    protected function generateBalanceSheetData(string $startDate, string $endDate, string $currency): array
-    {
-        $assets = DB::table('accounts')
-            ->where('major_category_code', '1000')
-            ->select('account_name', 'balance', 'account_number')
-            ->get();
-
-        $liabilities = DB::table('accounts')
-            ->where('major_category_code', '2000')
-            ->select('account_name', 'balance', 'account_number')
-            ->get();
-
-        $equity = DB::table('accounts')
-            ->where('major_category_code', '3000')
-            ->select('account_name', 'balance', 'account_number')
-            ->get();
-
-        return [
-            'assets' => $assets,
-            'liabilities' => $liabilities,
-            'equity' => $equity,
-            'totalAssets' => $assets->sum('balance'),
-            'totalLiabilities' => $liabilities->sum('balance'),
-            'totalEquity' => $equity->sum('balance'),
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-            'currency' => $currency,
-            'reportDate' => now()->format('Y-m-d H:i:s')
-        ];
-    }
-
-    /**
-     * Generate Income Statement data (Income, Expenses)
-     */
-    protected function generateIncomeStatementData(string $startDate, string $endDate, string $currency): array
-    {
-        // Income (4000 series)
-        $income = DB::table('accounts')
-            ->where('major_category_code', '4000')
-            ->select('account_name', 'balance', 'account_number', 'sub_category_code')
-            ->get();
-
-        // Expenses (5000 series)
-        $expenses = DB::table('accounts')
-            ->where('major_category_code', '5000')
-            ->select('account_name', 'balance', 'account_number', 'sub_category_code')
-            ->get();
-
-        $totalIncome = $income->sum('balance');
-        $totalExpenses = $expenses->sum('balance');
-        $netIncome = $totalIncome - $totalExpenses;
-
-        return [
-            'income' => $income,
-            'expenses' => $expenses,
-            'totalIncome' => $totalIncome,
-            'totalExpenses' => $totalExpenses,
-            'netIncome' => $netIncome,
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-            'currency' => $currency,
-            'reportDate' => now()->format('Y-m-d H:i:s')
-        ];
-    }
-
-    /**
-     * Generate Sectoral Classification of Loans data
-     */
-    protected function generateSectoralLoansData(string $startDate, string $endDate, string $currency): array
-    {
-        $loans = DB::table('loans')
-            ->join('clients', 'loans.client_id', '=', 'clients.id')
-            ->leftJoin('loan_sub_products', 'loans.loan_sub_product', '=', 'loan_sub_products.sub_product_id')
-            ->select(
-                'loans.*',
-                'clients.first_name',
-                'clients.middle_name', 
-                'clients.last_name',
-                'clients.business_licence_number',
-                'loan_sub_products.sub_product_name'
-            )
-            ->whereBetween('loans.loan_release_date', [$startDate, $endDate])
-            ->get();
-
-        // Group by sectors
-        $sectoralData = $this->groupLoansBySector($loans);
-
-        return [
-            'loans' => $loans,
-            'sectoralData' => $sectoralData,
-            'totalLoans' => $loans->sum('principle'),
-            'totalCount' => $loans->count(),
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-            'currency' => $currency,
-            'reportDate' => now()->format('Y-m-d H:i:s')
-        ];
-    }
-
-    /**
-     * Generate Cash Flow data
-     */
-    protected function generateCashFlowData(string $startDate, string $endDate, string $currency): array
-    {
-        // This would need to be implemented based on your cash flow requirements
-        $operatingActivities = collect();
-        $investingActivities = collect();
-        $financingActivities = collect();
-
-        return [
-            'operatingActivities' => $operatingActivities,
-            'investingActivities' => $investingActivities,
-            'financingActivities' => $financingActivities,
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-            'currency' => $currency,
-            'reportDate' => now()->format('Y-m-d H:i:s')
-        ];
-    }
-
-    /**
-     * Generate Trial Balance data
-     */
-    protected function generateTrialBalanceData(string $startDate, string $endDate, string $currency): array
-    {
-        $accounts = DB::table('accounts')
-            ->select('account_name', 'account_number', 'balance', 'major_category_code', 'sub_category_code')
-            ->orderBy('account_number')
-            ->get();
-
-        $totalDebits = $accounts->where('balance', '>', 0)->sum('balance');
-        $totalCredits = $accounts->where('balance', '<', 0)->sum(function($account) {
-            return abs($account->balance);
+        return array_filter($this->reportTypes, function($report) {
+            return $report['category'] === 'operational' || $report['category'] === 'analytical';
         });
-
-        return [
-            'accounts' => $accounts,
-            'totalDebits' => $totalDebits,
-            'totalCredits' => $totalCredits,
-            'isBalanced' => abs($totalDebits - $totalCredits) < 0.01,
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-            'currency' => $currency,
-            'reportDate' => now()->format('Y-m-d H:i:s')
-        ];
     }
 
-    /**
-     * Generate General Ledger data
-     */
-    protected function generateGeneralLedgerData(string $startDate, string $endDate, string $currency, array $params): array
-    {
-        $accountFilter = $params['account_id'] ?? null;
-        
-        $query = DB::table('general_ledger')
-            ->join('accounts', 'general_ledger.account_id', '=', 'accounts.id')
-            ->select('general_ledger.*', 'accounts.account_name', 'accounts.account_number')
-            ->whereBetween('general_ledger.created_at', [$startDate, $endDate]);
-
-        if ($accountFilter) {
-            $query->where('general_ledger.account_id', $accountFilter);
-        }
-
-        $transactions = $query->orderBy('general_ledger.created_at')->get();
-
-        return [
-            'transactions' => $transactions,
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-            'currency' => $currency,
-            'reportDate' => now()->format('Y-m-d H:i:s')
-        ];
-    }
-
-    /**
-     * Export report to PDF
-     */
-    public function exportToPDF(string $reportType, array $data): \Illuminate\Http\Response
-    {
-        $reportConfig = $this->reportTypes[$reportType] ?? null;
-        
-        if (!$reportConfig) {
-            throw new \Exception("Report type '{$reportType}' not found");
-        }
-
-        $pdf = PDF::loadView($reportConfig['template'], $data);
-        $filename = strtolower(str_replace(' ', '-', $reportConfig['name'])) . '-' . now()->format('Y-m-d') . '.pdf';
-        
-        return response()->streamDownload(function () use ($pdf) {
-            echo $pdf->output();
-        }, $filename);
-    }
-
-    /**
-     * Export report to Excel/CSV
-     */
-    public function exportToExcel(string $reportType, array $data): \Illuminate\Http\Response
-    {
-        $reportConfig = $this->reportTypes[$reportType] ?? null;
-        
-        if (!$reportConfig) {
-            throw new \Exception("Report type '{$reportType}' not found");
-        }
-
-        try {
-            $csvContent = $this->generateCSVContent($reportType, $data);
-            $filename = strtolower(str_replace(' ', '-', $reportConfig['name'])) . '-' . now()->format('Y-m-d') . '.csv';
-            
-            return response()->streamDownload(function () use ($csvContent) {
-                echo $csvContent;
-            }, $filename, ['Content-Type' => 'text/csv']);
-            
-        } catch (\Exception $e) {
-            throw new \Exception('Error generating Excel: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Schedule a report for automated generation
-     */
-    public function scheduleReport(string $reportType, array $config, int $userId): bool
+    public function generateFinancialData($reportType, $startDate = null, $endDate = null)
     {
         try {
-            DB::table('scheduled_reports')->insert([
-                'report_type' => $reportType,
-                'report_config' => json_encode($config),
-                'user_id' => $userId,
-                'status' => 'scheduled',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
-            
-            return true;
-        } catch (\Exception $e) {
-            throw new \Exception('Error scheduling report: ' . $e->getMessage());
+            $startDate = $startDate ?? Carbon::now()->startOfMonth();
+            $endDate = $endDate ?? Carbon::now()->endOfMonth();
+
+            switch ($reportType) {
+                case 'statement_of_financial_position':
+                    return $this->generateStatementOfFinancialPosition($startDate, $endDate);
+                case 'statement_of_comprehensive_income':
+                    return $this->generateStatementOfComprehensiveIncome($startDate, $endDate);
+                case 'statement_of_cash_flow':
+                    return $this->generateStatementOfCashFlow($startDate, $endDate);
+                case 'loan_portfolio_analysis':
+                    return $this->generateLoanPortfolioAnalysis($startDate, $endDate);
+                case 'member_analysis':
+                    return $this->generateMemberAnalysis($startDate, $endDate);
+                case 'financial_ratios':
+                    return $this->generateFinancialRatios($startDate, $endDate);
+                case 'compliance_status':
+                    return $this->generateComplianceStatus($startDate, $endDate);
+                default:
+                    throw new Exception("Unknown report type: {$reportType}");
+            }
+        } catch (Exception $e) {
+            Log::error("Error generating financial data for {$reportType}: " . $e->getMessage());
+            throw $e;
         }
     }
 
-    /**
-     * Get report history for a user
-     */
-    public function getReportHistory(int $userId, int $limit = 50): Collection
+    public function generateStatementOfFinancialPosition($startDate, $endDate)
     {
-        return DB::table('scheduled_reports')
-            ->where('user_id', $userId)
-            ->orderBy('created_at', 'desc')
-            ->limit($limit)
-            ->get();
+        $data = [
+            'report_info' => [
+                'title' => 'Statement of Financial Position',
+                'as_at' => $endDate->format('F d, Y'),
+                'generated_at' => now()->format('Y-m-d H:i:s'),
+                'compliance' => ['BOT', 'IFRS']
+            ],
+            'assets' => [
+                'current_assets' => [
+                    'cash_and_cash_equivalents' => $this->getAccountBalance('1001'),
+                    'short_term_investments' => $this->getAccountBalance('1002'),
+                    'accounts_receivable' => $this->getAccountBalance('1003'),
+                    'inventory' => $this->getAccountBalance('1004'),
+                    'prepaid_expenses' => $this->getAccountBalance('1005'),
+                    'other_current_assets' => $this->getAccountBalance('1006')
+                ],
+                'non_current_assets' => [
+                    'property_plant_equipment' => $this->getAccountBalance('1101'),
+                    'intangible_assets' => $this->getAccountBalance('1102'),
+                    'long_term_investments' => $this->getAccountBalance('1103'),
+                    'deferred_tax_assets' => $this->getAccountBalance('1104'),
+                    'other_non_current_assets' => $this->getAccountBalance('1105')
+                ]
+            ],
+            'liabilities' => [
+                'current_liabilities' => [
+                    'accounts_payable' => $this->getAccountBalance('2001'),
+                    'short_term_borrowings' => $this->getAccountBalance('2002'),
+                    'accrued_expenses' => $this->getAccountBalance('2003'),
+                    'income_tax_payable' => $this->getAccountBalance('2004'),
+                    'other_current_liabilities' => $this->getAccountBalance('2005')
+                ],
+                'non_current_liabilities' => [
+                    'long_term_borrowings' => $this->getAccountBalance('2101'),
+                    'deferred_tax_liabilities' => $this->getAccountBalance('2102'),
+                    'other_non_current_liabilities' => $this->getAccountBalance('2103')
+                ]
+            ],
+            'equity' => [
+                'share_capital' => $this->getAccountBalance('3001'),
+                'retained_earnings' => $this->getAccountBalance('3002'),
+                'other_comprehensive_income' => $this->getAccountBalance('3003'),
+                'treasury_shares' => $this->getAccountBalance('3004')
+            ]
+        ];
+
+        // Calculate totals
+        $data['totals'] = $this->calculateBalanceSheetTotals($data);
+
+        return $data;
     }
 
-    /**
-     * Generate CSV content based on report type
-     */
-    protected function generateCSVContent(string $reportType, array $data): string
+    public function generateStatementOfComprehensiveIncome($startDate, $endDate)
     {
-        $reportConfig = $this->reportTypes[$reportType];
-        $csv = "{$reportConfig['name']}\n";
-        $csv .= "Period: {$data['startDate']} to {$data['endDate']}\n";
-        $csv .= "Currency: {$data['currency']}\n\n";
+        $data = [
+            'report_info' => [
+                'title' => 'Statement of Comprehensive Income',
+                'period' => $startDate->format('F d, Y') . ' to ' . $endDate->format('F d, Y'),
+                'generated_at' => now()->format('Y-m-d H:i:s'),
+                'compliance' => ['BOT', 'IFRS']
+            ],
+            'revenue' => [
+                'interest_income' => $this->getAccountBalance('4001', $startDate, $endDate),
+                'fee_income' => $this->getAccountBalance('4002', $startDate, $endDate),
+                'investment_income' => $this->getAccountBalance('4003', $startDate, $endDate),
+                'other_income' => $this->getAccountBalance('4004', $startDate, $endDate)
+            ],
+            'expenses' => [
+                'interest_expense' => $this->getAccountBalance('5001', $startDate, $endDate),
+                'personnel_expenses' => $this->getAccountBalance('5002', $startDate, $endDate),
+                'administrative_expenses' => $this->getAccountBalance('5003', $startDate, $endDate),
+                'depreciation_amortization' => $this->getAccountBalance('5004', $startDate, $endDate),
+                'provision_for_loan_losses' => $this->getAccountBalance('5005', $startDate, $endDate),
+                'other_expenses' => $this->getAccountBalance('5006', $startDate, $endDate)
+            ],
+            'other_comprehensive_income' => [
+                'unrealized_gains_losses' => $this->getAccountBalance('6001', $startDate, $endDate),
+                'foreign_currency_translation' => $this->getAccountBalance('6002', $startDate, $endDate)
+            ]
+        ];
 
-        switch ($reportType) {
-            case 'statement_of_financial_position':
-            case 'balance_sheet':
-                return $this->generateBalanceSheetCSV($data, $csv);
-            
-            case 'statement_of_comprehensive_income':
-            case 'profit_and_loss':
-                return $this->generateIncomeStatementCSV($data, $csv);
-            
-            default:
-                return $csv . "CSV export not implemented for this report type.\n";
-        }
+        // Calculate totals
+        $data['totals'] = $this->calculateIncomeStatementTotals($data);
+
+        return $data;
     }
 
-    /**
-     * Generate Balance Sheet CSV
-     */
-    protected function generateBalanceSheetCSV(array $data, string $csv): string
+    public function generateStatementOfCashFlow($startDate, $endDate)
     {
-        // Assets
-        $csv .= "ASSETS\n";
-        $csv .= "Account Name,Balance\n";
-        foreach ($data['assets'] as $asset) {
-            $accountName = $this->getProperty($asset, 'account_name');
-            $balance = $this->getProperty($asset, 'balance');
-            $csv .= "\"{$accountName}\",{$balance}\n";
-        }
-        $csv .= "TOTAL ASSETS,{$data['totalAssets']}\n\n";
+        $data = [
+            'report_info' => [
+                'title' => 'Statement of Cash Flow',
+                'period' => $startDate->format('F d, Y') . ' to ' . $endDate->format('F d, Y'),
+                'generated_at' => now()->format('Y-m-d H:i:s'),
+                'compliance' => ['BOT', 'IFRS']
+            ],
+            'operating_activities' => [
+                'net_income' => $this->calculateNetIncome($startDate, $endDate),
+                'adjustments_for_non_cash_items' => [
+                    'depreciation_amortization' => $this->getAccountBalance('5004', $startDate, $endDate),
+                    'provision_for_loan_losses' => $this->getAccountBalance('5005', $startDate, $endDate),
+                    'changes_in_working_capital' => $this->calculateWorkingCapitalChanges($startDate, $endDate)
+                ]
+            ],
+            'investing_activities' => [
+                'purchase_of_property_equipment' => $this->getAccountBalance('1101', $startDate, $endDate, 'debit'),
+                'purchase_of_investments' => $this->getAccountBalance('1103', $startDate, $endDate, 'debit'),
+                'proceeds_from_sale_of_investments' => $this->getAccountBalance('1103', $startDate, $endDate, 'credit')
+            ],
+            'financing_activities' => [
+                'proceeds_from_borrowings' => $this->getAccountBalance('2002', $startDate, $endDate, 'credit'),
+                'repayment_of_borrowings' => $this->getAccountBalance('2002', $startDate, $endDate, 'debit'),
+                'dividends_paid' => $this->getAccountBalance('3002', $startDate, $endDate, 'debit')
+            ]
+        ];
 
-        // Liabilities
-        $csv .= "LIABILITIES\n";
-        $csv .= "Account Name,Balance\n";
-        foreach ($data['liabilities'] as $liability) {
-            $accountName = $this->getProperty($liability, 'account_name');
-            $balance = $this->getProperty($liability, 'balance');
-            $csv .= "\"{$accountName}\",{$balance}\n";
-        }
-        $csv .= "TOTAL LIABILITIES,{$data['totalLiabilities']}\n\n";
+        // Calculate totals
+        $data['totals'] = $this->calculateCashFlowTotals($data);
 
-        // Equity
-        $csv .= "EQUITY\n";
-        $csv .= "Account Name,Balance\n";
-        foreach ($data['equity'] as $equity) {
-            $accountName = $this->getProperty($equity, 'account_name');
-            $balance = $this->getProperty($equity, 'balance');
-            $csv .= "\"{$accountName}\",{$balance}\n";
-        }
-        $csv .= "TOTAL EQUITY,{$data['totalEquity']}\n\n";
+        return $data;
+    }
+
+    public function generateLoanPortfolioAnalysis($startDate, $endDate)
+    {
+        $data = [
+            'report_info' => [
+                'title' => 'Loan Portfolio Analysis',
+                'period' => $startDate->format('F d, Y') . ' to ' . $endDate->format('F d, Y'),
+                'generated_at' => now()->format('Y-m-d H:i:s'),
+                'compliance' => ['Internal']
+            ],
+            'portfolio_summary' => [
+                'total_loans' => LoansModel::count(),
+                'active_loans' => LoansModel::where('loan_status', 'ACTIVE')->count(),
+                'total_portfolio_value' => LoansModel::where('loan_status', 'ACTIVE')->sum('remaining_amount'),
+                'average_loan_size' => LoansModel::where('loan_status', 'ACTIVE')->avg('remaining_amount')
+            ],
+            'portfolio_at_risk' => [
+                'par_30_days' => $this->calculatePortfolioAtRisk(30),
+                'par_60_days' => $this->calculatePortfolioAtRisk(60),
+                'par_90_days' => $this->calculatePortfolioAtRisk(90),
+                'par_180_days' => $this->calculatePortfolioAtRisk(180)
+            ],
+            'loan_distribution' => [
+                'by_product' => $this->getLoanDistributionByProduct(),
+                'by_sector' => $this->getLoanDistributionBySector(),
+                'by_size' => $this->getLoanDistributionBySize(),
+                'by_region' => $this->getLoanDistributionByRegion()
+            ],
+            'performance_metrics' => [
+                'disbursement_rate' => $this->calculateDisbursementRate($startDate, $endDate),
+                'collection_rate' => $this->calculateCollectionRate($startDate, $endDate),
+                'average_interest_rate' => $this->calculateAverageInterestRate(),
+                'loan_to_value_ratio' => $this->calculateLoanToValueRatio()
+            ]
+        ];
+
+        return $data;
+    }
+
+    public function generateMemberAnalysis($startDate, $endDate)
+    {
+        $data = [
+            'report_info' => [
+                'title' => 'Member Analysis Report',
+                'period' => $startDate->format('F d, Y') . ' to ' . $endDate->format('F d, Y'),
+                'generated_at' => now()->format('Y-m-d H:i:s'),
+                'compliance' => ['Internal']
+            ],
+            'member_summary' => [
+                'total_members' => ClientsModel::count(),
+                'active_members' => ClientsModel::where('client_status', 'ACTIVE')->count(),
+                'new_members_this_period' => ClientsModel::whereBetween('created_at', [$startDate, $endDate])->count(),
+                'inactive_members' => ClientsModel::where('client_status', 'INACTIVE')->count()
+            ],
+            'demographics' => [
+                'by_age_group' => $this->getMemberDistributionByAge(),
+                'by_gender' => $this->getMemberDistributionByGender(),
+                'by_occupation' => $this->getMemberDistributionByOccupation(),
+                'by_region' => $this->getMemberDistributionByRegion()
+            ],
+            'product_usage' => [
+                'savings_accounts' => $this->getProductUsageStats('savings'),
+                'loan_accounts' => $this->getProductUsageStats('loans'),
+                'share_accounts' => $this->getProductUsageStats('shares'),
+                'deposit_accounts' => $this->getProductUsageStats('deposits')
+            ],
+            'behavioral_analysis' => [
+                'average_transaction_frequency' => $this->calculateAverageTransactionFrequency($startDate, $endDate),
+                'average_account_balance' => $this->calculateAverageAccountBalance(),
+                'member_retention_rate' => $this->calculateMemberRetentionRate($startDate, $endDate),
+                'cross_selling_opportunities' => $this->identifyCrossSellingOpportunities()
+            ]
+        ];
+
+        return $data;
+    }
+
+    public function generateFinancialRatios($startDate, $endDate)
+    {
+        $data = [
+            'report_info' => [
+                'title' => 'Financial Ratios and Metrics',
+                'period' => $startDate->format('F d, Y') . ' to ' . $endDate->format('F d, Y'),
+                'generated_at' => now()->format('Y-m-d H:i:s'),
+                'compliance' => ['Internal']
+            ],
+            'liquidity_ratios' => [
+                'current_ratio' => $this->calculateCurrentRatio(),
+                'quick_ratio' => $this->calculateQuickRatio(),
+                'cash_ratio' => $this->calculateCashRatio(),
+                'working_capital' => $this->calculateWorkingCapital()
+            ],
+            'profitability_ratios' => [
+                'return_on_assets' => $this->calculateReturnOnAssets($startDate, $endDate),
+                'return_on_equity' => $this->calculateReturnOnEquity($startDate, $endDate),
+                'net_interest_margin' => $this->calculateNetInterestMargin($startDate, $endDate),
+                'cost_to_income_ratio' => $this->calculateCostToIncomeRatio($startDate, $endDate)
+            ],
+            'efficiency_ratios' => [
+                'asset_utilization' => $this->calculateAssetUtilization($startDate, $endDate),
+                'operating_efficiency' => $this->calculateOperatingEfficiency($startDate, $endDate),
+                'employee_productivity' => $this->calculateEmployeeProductivity($startDate, $endDate)
+            ],
+            'risk_ratios' => [
+                'capital_adequacy_ratio' => $this->calculateCapitalAdequacyRatio(),
+                'loan_to_deposit_ratio' => $this->calculateLoanToDepositRatio(),
+                'provision_coverage_ratio' => $this->calculateProvisionCoverageRatio(),
+                'concentration_risk' => $this->calculateConcentrationRisk()
+            ]
+        ];
+
+        return $data;
+    }
+
+    public function generateComplianceStatus($startDate, $endDate)
+    {
+        $data = [
+            'report_info' => [
+                'title' => 'Compliance Status Report',
+                'period' => $startDate->format('F d, Y') . ' to ' . $endDate->format('F d, Y'),
+                'generated_at' => now()->format('Y-m-d H:i:s'),
+                'compliance' => ['BOT', 'TCDC']
+            ],
+            'regulatory_compliance' => [
+                'bot_requirements' => $this->checkBOTCompliance(),
+                'ifrs_compliance' => $this->checkIFRSCompliance(),
+                'tcdc_requirements' => $this->checkTCDCCompliance(),
+                'tax_compliance' => $this->checkTaxCompliance()
+            ],
+            'risk_management' => [
+                'credit_risk' => $this->assessCreditRisk(),
+                'liquidity_risk' => $this->assessLiquidityRisk(),
+                'operational_risk' => $this->assessOperationalRisk(),
+                'market_risk' => $this->assessMarketRisk()
+            ],
+            'internal_controls' => [
+                'segregation_of_duties' => $this->checkSegregationOfDuties(),
+                'access_controls' => $this->checkAccessControls(),
+                'audit_trail' => $this->checkAuditTrail(),
+                'backup_recovery' => $this->checkBackupRecovery()
+            ],
+            'reporting_requirements' => [
+                'monthly_reports' => $this->checkMonthlyReporting(),
+                'quarterly_reports' => $this->checkQuarterlyReporting(),
+                'annual_reports' => $this->checkAnnualReporting(),
+                'ad_hoc_reports' => $this->checkAdHocReporting()
+            ]
+        ];
+
+        return $data;
+    }
+
+    // Helper methods for calculations
+    private function getAccountBalance($accountNumber, $startDate = null, $endDate = null, $type = 'balance')
+    {
+        $query = AccountsModel::where('account_number', $accountNumber);
         
-        $csv .= "TOTAL LIABILITIES AND EQUITY," . ($data['totalLiabilities'] + $data['totalEquity']) . "\n";
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
         
-        return $csv;
+        if ($type === 'balance') {
+            return $query->sum('balance');
+        } elseif ($type === 'debit') {
+            return $query->sum('debit');
+        } elseif ($type === 'credit') {
+            return $query->sum('credit');
+        }
+        
+        return 0;
     }
 
-    /**
-     * Generate Income Statement CSV
-     */
-    protected function generateIncomeStatementCSV(array $data, string $csv): string
+    private function calculateBalanceSheetTotals($data)
     {
-        // Income
-        $csv .= "INCOME\n";
-        $csv .= "Account Name,Amount\n";
-        foreach ($data['income'] as $income) {
-            $accountName = $this->getProperty($income, 'account_name');
-            $balance = $this->getProperty($income, 'balance');
-            $csv .= "\"{$accountName}\",{$balance}\n";
-        }
-        $csv .= "TOTAL INCOME,{$data['totalIncome']}\n\n";
+        $totalCurrentAssets = array_sum($data['assets']['current_assets']);
+        $totalNonCurrentAssets = array_sum($data['assets']['non_current_assets']);
+        $totalAssets = $totalCurrentAssets + $totalNonCurrentAssets;
 
-        // Expenses
-        $csv .= "EXPENSES\n";
-        $csv .= "Account Name,Amount\n";
-        foreach ($data['expenses'] as $expense) {
-            $accountName = $this->getProperty($expense, 'account_name');
-            $balance = $this->getProperty($expense, 'balance');
-            $csv .= "\"{$accountName}\",{$balance}\n";
-        }
-        $csv .= "TOTAL EXPENSES,{$data['totalExpenses']}\n\n";
-        
-        $csv .= "NET INCOME,{$data['netIncome']}\n";
-        
-        return $csv;
-    }
+        $totalCurrentLiabilities = array_sum($data['liabilities']['current_liabilities']);
+        $totalNonCurrentLiabilities = array_sum($data['liabilities']['non_current_liabilities']);
+        $totalLiabilities = $totalCurrentLiabilities + $totalNonCurrentLiabilities;
 
-    /**
-     * Group loans by economic sectors
-     */
-    protected function groupLoansBySector(Collection $loans): array
-    {
-        // This would implement sector classification logic
-        // For now, return a basic structure
+        $totalEquity = array_sum($data['equity']);
+
         return [
-            'agriculture' => $loans->where('business_licence_number', 'like', 'AGR%'),
-            'manufacturing' => $loans->where('business_licence_number', 'like', 'MAN%'),
-            'services' => $loans->where('business_licence_number', 'like', 'SER%'),
-            'trade' => $loans->where('business_licence_number', 'like', 'TRA%'),
-            'other' => $loans->where('business_licence_number', 'not like', 'AGR%')
-                          ->where('business_licence_number', 'not like', 'MAN%')
-                          ->where('business_licence_number', 'not like', 'SER%')
-                          ->where('business_licence_number', 'not like', 'TRA%'),
+            'total_current_assets' => $totalCurrentAssets,
+            'total_non_current_assets' => $totalNonCurrentAssets,
+            'total_assets' => $totalAssets,
+            'total_current_liabilities' => $totalCurrentLiabilities,
+            'total_non_current_liabilities' => $totalNonCurrentLiabilities,
+            'total_liabilities' => $totalLiabilities,
+            'total_equity' => $totalEquity,
+            'total_liabilities_and_equity' => $totalLiabilities + $totalEquity
         ];
     }
 
-    /**
-     * Get available currencies
-     */
-    public function getCurrencies(): array
+    private function calculateIncomeStatementTotals($data)
     {
-        return $this->currencies;
+        $totalRevenue = array_sum($data['revenue']);
+        $totalExpenses = array_sum($data['expenses']);
+        $netIncome = $totalRevenue - $totalExpenses;
+        $totalOtherComprehensiveIncome = array_sum($data['other_comprehensive_income']);
+        $totalComprehensiveIncome = $netIncome + $totalOtherComprehensiveIncome;
+
+        return [
+            'total_revenue' => $totalRevenue,
+            'total_expenses' => $totalExpenses,
+            'net_income' => $netIncome,
+            'total_other_comprehensive_income' => $totalOtherComprehensiveIncome,
+            'total_comprehensive_income' => $totalComprehensiveIncome
+        ];
     }
 
-    /**
-     * Get available periods
-     */
-    public function getPeriods(): array
+    private function calculateCashFlowTotals($data)
     {
-        return $this->periods;
-    }
-
-    /**
-     * Get available formats
-     */
-    public function getFormats(): array
-    {
-        return $this->formats;
-    }
-
-    /**
-     * Set date range based on period type
-     */
-    public function setDateRangeByPeriod(string $period): array
-    {
-        $now = Carbon::now();
+        $netCashFromOperating = $data['operating_activities']['net_income'] + 
+                               array_sum($data['operating_activities']['adjustments_for_non_cash_items']);
         
-        switch ($period) {
-            case 'monthly':
-                return [
-                    'startDate' => $now->startOfMonth()->format('Y-m-d'),
-                    'endDate' => $now->endOfMonth()->format('Y-m-d')
-                ];
-            case 'quarterly':
-                return [
-                    'startDate' => $now->startOfQuarter()->format('Y-m-d'),
-                    'endDate' => $now->endOfQuarter()->format('Y-m-d')
-                ];
-            case 'annually':
-                return [
-                    'startDate' => $now->startOfYear()->format('Y-m-d'),
-                    'endDate' => $now->endOfYear()->format('Y-m-d')
-                ];
-            default:
-                return [
-                    'startDate' => $now->startOfMonth()->format('Y-m-d'),
-                    'endDate' => $now->endOfMonth()->format('Y-m-d')
-                ];
-        }
+        $netCashFromInvesting = array_sum($data['investing_activities']);
+        $netCashFromFinancing = array_sum($data['financing_activities']);
+        
+        $netChangeInCash = $netCashFromOperating + $netCashFromInvesting + $netCashFromFinancing;
+
+        return [
+            'net_cash_from_operating' => $netCashFromOperating,
+            'net_cash_from_investing' => $netCashFromInvesting,
+            'net_cash_from_financing' => $netCashFromFinancing,
+            'net_change_in_cash' => $netChangeInCash
+        ];
     }
 
-    /**
-     * Helper method to safely get property from object or array
-     */
-    private function getProperty($item, string $property)
+    private function calculatePortfolioAtRisk($days)
     {
-        if (is_object($item)) {
-            return $item->{$property} ?? '';
-        } elseif (is_array($item)) {
-            return $item[$property] ?? '';
-        } else {
-            return '';
-        }
+        $overdueAmount = LoansModel::where('due_date', '<', now()->subDays($days))
+            ->where('loan_status', 'ACTIVE')
+            ->sum('remaining_amount');
+        
+        $totalPortfolio = LoansModel::where('loan_status', 'ACTIVE')->sum('remaining_amount');
+        
+        return $totalPortfolio > 0 ? ($overdueAmount / $totalPortfolio) * 100 : 0;
     }
+
+    private function calculateNetIncome($startDate, $endDate)
+    {
+        $revenue = $this->getAccountBalance('4001', $startDate, $endDate) + 
+                  $this->getAccountBalance('4002', $startDate, $endDate) + 
+                  $this->getAccountBalance('4003', $startDate, $endDate) + 
+                  $this->getAccountBalance('4004', $startDate, $endDate);
+        
+        $expenses = $this->getAccountBalance('5001', $startDate, $endDate) + 
+                   $this->getAccountBalance('5002', $startDate, $endDate) + 
+                   $this->getAccountBalance('5003', $startDate, $endDate) + 
+                   $this->getAccountBalance('5004', $startDate, $endDate) + 
+                   $this->getAccountBalance('5005', $startDate, $endDate) + 
+                   $this->getAccountBalance('5006', $startDate, $endDate);
+        
+        return $revenue - $expenses;
+    }
+
+    // Additional helper methods would be implemented here for all the other calculations
+    // These are placeholder methods that would contain the actual business logic
+    
+    private function calculateWorkingCapitalChanges($startDate, $endDate) { return 0; }
+    private function getLoanDistributionByProduct() { return []; }
+    private function getLoanDistributionBySector() { return []; }
+    private function getLoanDistributionBySize() { return []; }
+    private function getLoanDistributionByRegion() { return []; }
+    private function calculateDisbursementRate($startDate, $endDate) { return 0; }
+    private function calculateCollectionRate($startDate, $endDate) { return 0; }
+    private function calculateAverageInterestRate() { return 0; }
+    private function calculateLoanToValueRatio() { return 0; }
+    private function getMemberDistributionByAge() { return []; }
+    private function getMemberDistributionByGender() { return []; }
+    private function getMemberDistributionByOccupation() { return []; }
+    private function getMemberDistributionByRegion() { return []; }
+    private function getProductUsageStats($product) { return []; }
+    private function calculateAverageTransactionFrequency($startDate, $endDate) { return 0; }
+    private function calculateAverageAccountBalance() { return 0; }
+    private function calculateMemberRetentionRate($startDate, $endDate) { return 0; }
+    private function identifyCrossSellingOpportunities() { return []; }
+    private function calculateCurrentRatio() { return 0; }
+    private function calculateQuickRatio() { return 0; }
+    private function calculateCashRatio() { return 0; }
+    private function calculateWorkingCapital() { return 0; }
+    private function calculateReturnOnAssets($startDate, $endDate) { return 0; }
+    private function calculateReturnOnEquity($startDate, $endDate) { return 0; }
+    private function calculateNetInterestMargin($startDate, $endDate) { return 0; }
+    private function calculateCostToIncomeRatio($startDate, $endDate) { return 0; }
+    private function calculateAssetUtilization($startDate, $endDate) { return 0; }
+    private function calculateOperatingEfficiency($startDate, $endDate) { return 0; }
+    private function calculateEmployeeProductivity($startDate, $endDate) { return 0; }
+    private function calculateCapitalAdequacyRatio() { return 0; }
+    private function calculateLoanToDepositRatio() { return 0; }
+    private function calculateProvisionCoverageRatio() { return 0; }
+    private function calculateConcentrationRisk() { return 0; }
+    private function checkBOTCompliance() { return []; }
+    private function checkIFRSCompliance() { return []; }
+    private function checkTCDCCompliance() { return []; }
+    private function checkTaxCompliance() { return []; }
+    private function assessCreditRisk() { return []; }
+    private function assessLiquidityRisk() { return []; }
+    private function assessOperationalRisk() { return []; }
+    private function assessMarketRisk() { return []; }
+    private function checkSegregationOfDuties() { return []; }
+    private function checkAccessControls() { return []; }
+    private function checkAuditTrail() { return []; }
+    private function checkBackupRecovery() { return []; }
+    private function checkMonthlyReporting() { return []; }
+    private function checkQuarterlyReporting() { return []; }
+    private function checkAnnualReporting() { return []; }
+    private function checkAdHocReporting() { return []; }
 } 

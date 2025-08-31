@@ -197,7 +197,7 @@ class DatabaseSeeder extends Seeder
                 JobpostingsSeeder::class,
 
                 // Approvals and Committees
-                ApprovalsSeeder::class,
+                // ApprovalsSeeder::class, // Removed - approvals are transactional data, not seed data
                 ApprovalactionsSeeder::class,
                 ApprovalcommentsSeeder::class,
                 ApprovalmatrixconfigsSeeder::class,

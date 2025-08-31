@@ -104,9 +104,20 @@ Route::get('/download-csv', [\App\Http\Controllers\WebRoutesController::class, '
 // AI Agent Routes
 Route::middleware('auth')->group(function () {
     Route::get('/ai-agent', [\App\Http\Controllers\WebRoutesController::class, 'aiAgent'])->name('ai-agent.chat');
+    Route::get('/prompt-logger', function() {
+        return view('prompt-logger');
+    })->name('prompt.logger');
     
     // Test route to verify AI agent is working
     Route::get('/ai-agent/test', [\App\Http\Controllers\WebRoutesController::class, 'aiAgentTest'])->name('ai-agent.test');
+    
+    // Streaming routes for real-time AI responses
+    Route::post('/ai/process', [\App\Http\Controllers\StreamController::class, 'process'])
+        ->name('ai.process');
+    Route::get('/ai/stream/{sessionId}', [\App\Http\Controllers\StreamController::class, 'stream'])
+        ->name('ai.stream');
+    Route::post('/ai/stream/{sessionId}/complete', [\App\Http\Controllers\StreamController::class, 'complete'])
+        ->name('ai.stream.complete');
 });
 
 // Email Routes
@@ -135,6 +146,19 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
 // Test route for AI conversation saving
 Route::get('/test-ai-conversation', [\App\Http\Controllers\WebRoutesController::class, 'testAiConversation'])->middleware('auth');
+
+// Terminal Console Route
+Route::get('/terminal', function () {
+    return view('terminal');
+})->name('terminal');
+
+// Test AI Routes (No Auth Required for Testing)
+Route::post('/test-ai/process', [\App\Http\Controllers\StreamController::class, 'process'])
+    ->withoutMiddleware(['auth'])
+    ->name('test.ai.process');
+Route::get('/test-ai/stream/{sessionId}', [\App\Http\Controllers\StreamController::class, 'stream'])
+    ->withoutMiddleware(['auth'])
+    ->name('test.ai.stream');
 
 
 

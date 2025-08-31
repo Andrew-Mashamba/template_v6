@@ -148,6 +148,22 @@ return [
             'replace_placeholders' => true,
             'permission' => 0664,
         ],
+        
+        'ai_chat' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/ai-chat.log'),
+            'level' => 'debug',
+            'days' => 30,
+            'replace_placeholders' => true,
+            'permission' => 0664,
+            'formatter' => Monolog\Formatter\LineFormatter::class,
+            'formatter_with' => [
+                'format' => "[%datetime%] %level_name%: %message% %context%\n",
+                'dateFormat' => 'Y-m-d H:i:s',
+                'allowInlineLineBreaks' => true,
+                'ignoreEmptyContextAndExtra' => false,
+            ],
+        ],
 
         'budget_management' => [
             'driver' => 'daily',
@@ -248,6 +264,15 @@ return [
             'path' => storage_path('logs/gepg/gepg.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => 14,
+        ],
+        
+        'ai_performance' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/ai-performance.log'),
+            'level' => 'debug',
+            'days' => 7,
+            'replace_placeholders' => true,
+            'permission' => 0664,
         ],
     ],
 ];

@@ -166,6 +166,10 @@ class Deposits extends Component
     public $withdrawSelectedBankDetails = null;
     public $withdrawSelectedAccountBalance = 0;
 
+    // Receipt Properties
+    public $showReceiptModal = false;
+    public $receiptData = null;
+
     // Additional withdrawal properties for different methods
     public $withdrawNbcAccount;
     public $withdrawAccountHolderName;
@@ -971,75 +975,181 @@ class Deposits extends Component
 
     public function submitReceiveDeposits()
     {
-        
+        DB::beginTransaction();
+        try {
+            $memberAccount = AccountsModel::where('account_number', $this->selectedAccount)->first();
+            if(!$memberAccount){
+                throw new \Exception('Member account not found.');
+            }
 
-        if($this->paymentMethod === 'bank'){
-            $this->validate([
-                'depositDate' => 'required|date',
-                'depositTime' => 'required|date_format:H:i',
-                'selectedBank' => 'required',
-                'referenceNumber' => 'required|string|max:255',
-                'narration' => 'required|string|max:255',
-                'amount' => 'required|numeric|min:0',
-                'depositorName' => 'required|string|max:255',
-              
-                'paymentMethod' => 'required|string|in:bank,cash'
-            ]);
+            if($this->paymentMethod === 'bank'){
+                $this->validate([
+                    'depositDate' => 'required|date',
+                    'depositTime' => 'required|date_format:H:i',
+                    'selectedBank' => 'required',
+                    'referenceNumber' => 'required|string|max:255',
+                    'narration' => 'required|string|max:255',
+                    'amount' => 'required|numeric|min:0',
+                    'depositorName' => 'required|string|max:255',
+                    'paymentMethod' => 'required|string|in:bank,cash'
+                ]);
 
-           
-        
-             if (!empty($this->selectedBankDetails->internal_mirror_account_number) && !empty($this->selectedAccount)) {
-                $totalAmount = $this->amount;
-                
-                // Post the transaction using TransactionPostingService
+                if (!empty($this->selectedBankDetails->internal_mirror_account_number) && !empty($this->selectedAccount)) {
+                    $totalAmount = $this->amount;
+                    
+                    // Post the transaction using TransactionPostingService
+                    $transactionService = new TransactionPostingService();
+                    $transactionData = [
+                        'first_account' => $this->selectedBankDetails->internal_mirror_account_number, // Debit account 
+                        'second_account' => $this->selectedAccount, // Credit account 
+                        'amount' => $totalAmount,
+                        'narration' => 'Deposits deposit : ' . $this->amount . ' : ' . $this->depositorName . ' : ' . $this->selectedBankDetails->bank_name . ' : ' . $this->referenceNumber,
+                        'action' => 'deposits_deposit'
+                    ];
+
+                    Log::info('Posting deposits deposit transaction', [
+                        'transaction_data' => $transactionData
+                    ]);
+
+                    $result = $transactionService->postTransaction($transactionData);
+                    
+                    if ($result['status'] !== 'success') {
+                        Log::error('Transaction posting failed', [
+                            'error' => $result['message'] ?? 'Unknown error',
+                            'transaction_data' => $transactionData
+                        ]);
+                        throw new \Exception('Failed to post transaction: ' . ($result['message'] ?? 'Unknown error'));
+                    }
+
+                    Log::info('Transaction posted successfully', [
+                        'transaction_reference' => $result['reference'] ?? null,
+                        'amount' => $totalAmount
+                    ]);
+                }
+            }
+
+            if($this->paymentMethod === 'cash'){
+                $this->validate([
+                    'depositDate' => 'required|date',
+                    'depositTime' => 'required|date_format:H:i',
+                    'referenceNumber' => 'required|string|max:255',
+                    'narration' => 'required|string|max:255',
+                    'amount' => 'required|numeric|min:0',
+                    'depositorName' => 'required|string|max:255',
+                    'paymentMethod' => 'required|string|in:bank,cash'
+                ]);
+
+                // Handle cash deposit transaction
                 $transactionService = new TransactionPostingService();
                 $transactionData = [
-                    'first_account' => $this->selectedBankDetails->internal_mirror_account_number, // Debit account 
-                    'second_account' => $this->selectedAccount, // Credit account 
-                    'amount' => $totalAmount,
-                    'narration' => 'Deposits deposit : ' . $this->amount . ' : ' . $this->depositorName . ' : ' . $this->selectedBankDetails->bank_name . ' : ' . $this->referenceNumber,
-                    'action' => 'deposits_deposit'
+                    'first_account' => '010000010024', // Cash account
+                    'second_account' => $this->selectedAccount, // Credit member's account
+                    'amount' => $this->amount,
+                    'narration' => 'Cash deposits deposit: ' . $this->amount . ' : ' . $this->depositorName . ' : ' . $this->referenceNumber,
+                    'action' => 'deposits_deposit_by_cash'
                 ];
-
-                Log::info('Posting deposits deposit transaction', [
-                    'transaction_data' => $transactionData
-                ]);
 
                 $result = $transactionService->postTransaction($transactionData);
                 
                 if ($result['status'] !== 'success') {
-                    Log::error('Transaction posting failed', [
-                        'error' => $result['message'] ?? 'Unknown error',
-                        'transaction_data' => $transactionData
-                    ]);
-                    throw new \Exception('Failed to post transaction: ' . ($result['message'] ?? 'Unknown error'));
+                    throw new \Exception('Failed to post cash transaction: ' . ($result['message'] ?? 'Unknown error'));
                 }
-
-                Log::info('Transaction posted successfully', [
-                    'transaction_reference' => $result['reference'] ?? null,
-                    'amount' => $totalAmount
-                ]);
-
             }
-        }
 
-        if($this->paymentMethod === 'cash'){
-            $this->validate([
-                'depositDate' => 'required|date',
-                'depositTime' => 'required|date_format:H:i',
-                'referenceNumber' => 'required|string|max:255',
-                'narration' => 'required|string|max:255',
-                'amount' => 'required|numeric|min:0',
-                'depositorName' => 'required|string|max:255',
-                'paymentMethod' => 'required|string|in:bank,cash'
+            // Generate receipt after successful transaction
+            $this->receiptData = $this->generateReceiptData($memberAccount);
+            
+            // Create receipt record in database
+            $this->createReceiptRecord($memberAccount, $this->amount);
+            
+            session()->flash('success', 'Deposits received successfully.');
+            DB::commit();
+            $this->showReceiveDepositsModal = false;
+            $this->showReceiptModal = true;
+            
+        } catch(\Exception $e) {
+            DB::rollBack();
+            Log::error('Error receiving deposits: ' . $e->getMessage());
+            session()->flash('error', 'Error receiving deposits');
+            return;
+        }
+    }
+    
+    private function generateReceiptData($memberAccount)
+    {
+        $receiptNumber = 'RCP-DEP-' . strtoupper(uniqid());
+        $transactionDate = now();
+        
+        return [
+            'receipt_number' => $receiptNumber,
+            'transaction_date' => $transactionDate->format('d/m/Y H:i:s'),
+            'member_name' => $this->verifiedMember['name'] ?? 'N/A',
+            'member_number' => $this->membershipNumber,
+            'account_number' => $this->selectedAccount,
+            'account_name' => $memberAccount->account_name,
+            'amount' => number_format($this->amount, 2),
+            'payment_method' => ucfirst($this->paymentMethod),
+            'depositor_name' => $this->depositorName,
+            'narration' => $this->narration,
+            'reference_number' => $this->referenceNumber,
+            'bank_name' => $this->selectedBankDetails->bank_name ?? 'Cash',
+            'processed_by' => auth()->user()->name,
+            'branch' => auth()->user()->branch ?? 'Main Branch',
+            'currency' => 'TZS',
+            'transaction_type' => 'Deposits Deposit',
+            'balance_after' => number_format($memberAccount->balance + $this->amount, 2)
+        ];
+    }
+    
+    private function createReceiptRecord($memberAccount, $amount)
+    {
+        $receiptNumber = 'RCP-DEP-' . strtoupper(uniqid());
+        
+        \App\Models\Receipt::create([
+            'receipt_number' => $receiptNumber,
+            'transaction_id' => null, // Will be updated when transaction is created
+            'account_id' => $memberAccount->id,
+            'member_number' => $this->membershipNumber,
+            'member_name' => $this->verifiedMember['name'] ?? 'N/A',
+            'amount' => $amount,
+            'currency' => 'TZS',
+            'payment_method' => $this->paymentMethod,
+            'depositor_name' => $this->depositorName,
+            'narration' => $this->narration,
+            'reference_number' => $this->referenceNumber,
+            'bank_name' => $this->selectedBankDetails->bank_name ?? 'Cash',
+            'processed_by' => auth()->id(),
+            'branch' => auth()->user()->branch ?? 'Main Branch',
+            'transaction_type' => 'Deposits Deposit',
+            'status' => 'GENERATED',
+            'generated_at' => now(),
+            'printed_at' => null,
+            'metadata' => [
+                'balance_before' => $memberAccount->balance,
+                'balance_after' => $memberAccount->balance + $amount,
+                'deposit_date' => $this->depositDate ?? now()->format('Y-m-d'),
+                'deposit_time' => $this->depositTime ?? now()->format('H:i'),
+            ]
+        ]);
+        
+        // Update the receipt number in the receipt data
+        $this->receiptData['receipt_number'] = $receiptNumber;
+    }
+    
+    public function closeReceiptModal()
+    {
+        $this->showReceiptModal = false;
+        $this->receiptData = null;
+        $this->resetForm();
+    }
+    
+    public function printReceipt()
+    {
+        if ($this->receiptData) {
+            $this->dispatchBrowserEvent('printReceipt', [
+                'receiptData' => $this->receiptData
             ]);
         }
-
-
-        $this->showReceiveDepositsModal = false;
-        $this->resetForm();
-        session()->flash('success', 'Deposits received successfully.');
-
     }
 
     public function showWithdrawDepositsModal()

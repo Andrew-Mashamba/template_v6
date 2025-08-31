@@ -90,6 +90,14 @@ class ClientsModel extends Model
     }
 
     /**
+     * Get the client's member group.
+     */
+    public function memberGroup()
+    {
+        return $this->belongsTo(MemberGroup::class, 'member_group_id');
+    }
+
+    /**
      * Get the client's loans.
      */
     public function loans()
@@ -102,7 +110,7 @@ class ClientsModel extends Model
      */
     public function savings()
     {
-        return $this->hasMany(Saving::class, 'client_number', 'client_number');
+        return $this->hasMany(Saving::class, 'client_number', 'client_number')->savings();
     }
 
     /**
@@ -110,7 +118,7 @@ class ClientsModel extends Model
      */
     public function shares()
     {
-        return $this->hasMany(Share::class, 'client_number', 'client_number');
+        return $this->hasMany(Share::class, 'client_number', 'client_number')->shares();
     }
 
     /**
@@ -127,6 +135,22 @@ class ClientsModel extends Model
     public function accounts()
     {
         return $this->hasMany(AccountsModel::class, 'client_number', 'client_number');
+    }
+
+    /**
+     * Get the client's dividends.
+     */
+    public function dividends()
+    {
+        return $this->hasMany(Dividend::class, 'member_id', 'id');
+    }
+
+    /**
+     * Get the client's interest payables.
+     */
+    public function interestPayables()
+    {
+        return $this->hasMany(InterestPayable::class, 'member_id', 'id');
     }
 
     /**

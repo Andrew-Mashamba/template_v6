@@ -1,0 +1,28 @@
+{
+  "channelId": "MOBILE_MONEY",
+  "spCode": "SACCOS001",
+  "requestType": "payment",
+  "approach": "sync",
+  "timestamp": "2024-08-30T12:00:00.000000Z",
+  "userId": "USER123456",
+  "branchCode": "BR001",
+  "billRef": "BILL20240830001",
+  "channelRef": "CHANNEL20240830001",
+  "amount": 50000.00,
+  "creditAccount": "1234567890",
+  "creditCurrency": "TZS",
+  "paymentType": "MOBILE_MONEY",
+  "channelCode": "MPESA",
+  "payerName": "John Doe",
+  "payerPhone": "+255712345678",
+  "payerEmail": "john.doe@example.com",
+  "narration": "Payment for SACCOS membership registration",
+  "extraFields": {
+    "transactionId": "TXN123456789",
+    "merchantId": "MERCH001",
+    "terminalId": "TERM001",
+    "receiptNumber": "RCPT001",
+    "paymentMethod": "MPESA",
+    "customerReference": "CUST001"
+  }
+}

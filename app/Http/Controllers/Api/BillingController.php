@@ -385,7 +385,7 @@ class BillingController extends Controller
                     if (!$paymentResult['success']) {
                         $transaction->update([
                             'status' => 'FAILED',
-                            'external_status_message' => $paymentResult['message'],
+                            'external_status_message' => substr($paymentResult['message'], 0, 255), // Limit message to 255 characters
                         ]);
 
                         return response()->json([
@@ -439,7 +439,7 @@ class BillingController extends Controller
                 $transaction->update([
                     'status' => 'FAILED',
                     'external_status_message' => 'Exception occurred during processing',
-                    'error_message' => $e->getMessage()
+                    'error_message' => substr($e->getMessage(), 0, 255) // Limit error message to 255 characters
                 ]);
             }
 
@@ -507,11 +507,11 @@ private function processAsyncPayment($requestData, $transaction, $gatewayRef, $b
             // Handle failed payment processing
             $errorMessage = $paymentResult['message'] ?? 'Payment processing failed';
             
-            $transaction->update([
-                'status' => 'FAILED',
-                'external_status_message' => $errorMessage,
-                'error_message' => $errorMessage
-            ]);
+                            $transaction->update([
+                    'status' => 'FAILED',
+                    'external_status_message' => substr($errorMessage, 0, 255), // Limit message to 255 characters
+                    'error_message' => substr($errorMessage, 0, 255) // Limit error message to 255 characters
+                ]);
 
             Log::info('Transaction updated to failed status', [
                 'transaction_id' => $transaction->id,
@@ -602,11 +602,11 @@ private function processAsyncPayment($requestData, $transaction, $gatewayRef, $b
             'channelRef' => $requestData['channelRef']
         ]);
 
-        $transaction->update([
-            'status' => 'FAILED',
-            'external_status_message' => 'Async processing failed',
-            'error_message' => $e->getMessage()
-        ]);
+                        $transaction->update([
+                    'status' => 'FAILED',
+                    'external_status_message' => 'Async processing failed',
+                    'error_message' => substr($e->getMessage(), 0, 255) // Limit error message to 255 characters
+                ]);
 
         Log::info('Transaction updated to failed status', [
             'transaction_id' => $transaction->id

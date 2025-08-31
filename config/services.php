@@ -136,8 +136,9 @@ return [
     ],
     
     'payment_link' => [
-        'endpoint' => env('PAYMENT_LINK_ENDPOINT', 'http://172.240.241.188/api/payment-links/generate-universal'),
-        'base_url' => env('PAYMENT_LINK_BASE_URL', 'http://172.240.241.188'),
+        'url' => env('PAYMENT_LINK_API_URL', 'http://172.240.241.188/api/payment-links/generate-universal'),
+        'api_key' => env('PAYMENT_LINK_API_KEY'),
+        'api_secret' => env('PAYMENT_LINK_API_SECRET'),
         'timeout' => env('PAYMENT_LINK_TIMEOUT', 30),
     ],
 

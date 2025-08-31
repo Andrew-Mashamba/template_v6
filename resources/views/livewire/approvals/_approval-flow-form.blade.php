@@ -74,52 +74,7 @@
                 </div>
             </div>
 
-            <!-- Amount Limits Section -->
-            <div class="bg-gray-50/50 p-6 rounded-xl border border-gray-100">
-                <h4 class="text-lg font-semibold text-gray-800 mb-4">Amount Limits</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="minAmount" class="block text-sm font-medium text-gray-700 mb-1">
-                            Minimum Amount <span class="ml-1 text-gray-400 cursor-help" title="Minimum amount for this process (optional)">ⓘ</span>
-                        </label>
-                        <div class="relative rounded-lg shadow-sm">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">$</span>
-                            </div>
-                            <input type="number" 
-                                   id="minAmount" 
-                                   step="0.01" 
-                                   wire:model.defer="minAmount" 
-                                   placeholder="0.00" 
-                                   class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 py-2.5 pl-8 pr-3.5 transition-colors text-gray-900 placeholder-gray-400" 
-                                   aria-describedby="minAmount-error">
-                        </div>
-                        @error('minAmount') 
-                            <span id="minAmount-error" class="text-red-500 text-sm mt-1">{{ $message }}</span> 
-                        @enderror
-                    </div>
-                    <div>
-                        <label for="maxAmount" class="block text-sm font-medium text-gray-700 mb-1">
-                            Maximum Amount <span class="ml-1 text-gray-400 cursor-help" title="Maximum amount for this process (optional)">ⓘ</span>
-                        </label>
-                        <div class="relative rounded-lg shadow-sm">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">$</span>
-                            </div>
-                            <input type="number" 
-                                   id="maxAmount" 
-                                   step="0.01" 
-                                   wire:model.defer="maxAmount" 
-                                   placeholder="0.00" 
-                                   class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 py-2.5 pl-8 pr-3.5 transition-colors text-gray-900 placeholder-gray-400" 
-                                   aria-describedby="maxAmount-error">
-                        </div>
-                        @error('maxAmount') 
-                            <span id="maxAmount-error" class="text-red-500 text-sm mt-1">{{ $message }}</span> 
-                        @enderror
-                    </div>
-                </div>
-            </div>
+            
 
             <!-- Approval Settings Section -->
             <div class="bg-gray-50/50 p-6 rounded-xl border border-gray-100">

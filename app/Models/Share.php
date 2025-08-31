@@ -11,7 +11,7 @@ class Share extends Model
 
     protected $guarded = [];
 
-    protected $table = 'shares';
+    protected $table = 'accounts';
 
     protected $casts = [
         'paid_up_shares' => 'integer',
@@ -21,11 +21,19 @@ class Share extends Model
 
     public function member()
     {
-        return $this->belongsTo(Member::class);
+        return $this->belongsTo(ClientsModel::class, 'client_number', 'client_number');
     }
 
     public function dividends()
     {
         return $this->hasMany(Dividend::class);
+    }
+
+    /**
+     * Scope to only include share accounts
+     */
+    public function scopeShares($query)
+    {
+        return $query->where('product_number', '1000');
     }
 }

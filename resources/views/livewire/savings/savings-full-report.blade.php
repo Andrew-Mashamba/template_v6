@@ -784,12 +784,30 @@
                                                 title="View Transactions">
                                             <i class="fas fa-list"></i>
                                         </button>
-                                        <button wire:click="downloadAccountStatement('{{ $item->account_number }}')" 
-                                                class="text-purple-600 hover:text-purple-900 transition-colors duration-200" 
-                                                title="Download Statement"
-                                                @if($isExporting) disabled @endif>
-                                            <i class="fas fa-download @if($isExporting) animate-pulse @endif"></i>
-                                        </button>
+                                        <div class="relative inline-block text-left">
+                                            <button type="button" 
+                                                    class="text-purple-600 hover:text-purple-900 transition-colors duration-200 dropdown-toggle" 
+                                                    title="Download Statement"
+                                                    @if($isExporting) disabled @endif
+                                                    onclick="toggleDropdown('dropdown-{{ $item->account_number }}')">
+                                                <i class="fas fa-download @if($isExporting) animate-pulse @endif"></i>
+                                            </button>
+                                            <div id="dropdown-{{ $item->account_number }}" 
+                                                 class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200">
+                                                <div class="py-1">
+                                                    <button wire:click="exportStatement('{{ $item->account_number }}', 'pdf')" 
+                                                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                            @if($isExporting) disabled @endif>
+                                                        <i class="fas fa-file-pdf mr-2"></i>Download PDF
+                                                    </button>
+                                                    <button wire:click="exportStatement('{{ $item->account_number }}', 'excel')" 
+                                                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                            @if($isExporting) disabled @endif>
+                                                        <i class="fas fa-file-excel mr-2"></i>Download Excel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -1132,3 +1150,22 @@
     </div>
 </div>
 @endif
+
+<script>
+function toggleDropdown(dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (dropdown) {
+        dropdown.classList.toggle('hidden');
+    }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+    const dropdowns = document.querySelectorAll('[id^="dropdown-"]');
+    dropdowns.forEach(dropdown => {
+        if (!dropdown.contains(event.target) && !event.target.classList.contains('dropdown-toggle')) {
+            dropdown.classList.add('hidden');
+        }
+    });
+});
+</script>
