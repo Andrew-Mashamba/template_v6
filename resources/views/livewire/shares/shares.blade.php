@@ -1056,7 +1056,7 @@
                                wire:model.defer="number_of_shares" 
                             
                                min="1"
-                               max="{{ $selectedProduct['shares_per_member'] ?? 0 }}"
+                             
                                class="w-full border-gray-300 rounded-lg p-2 focus:outline-none focus:ring focus:ring-blue-200">
                         @error('number_of_shares') 
                             <span class="text-red-500 text-sm">{{ $message }}</span> 
@@ -1770,11 +1770,11 @@
                                             <label for="sender_share_type" class="block text-sm font-medium text-gray-700">Share Type</label>
                                             <select wire:model="sender_share_type" id="sender_share_type" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                                                 <option value="">Select a share type</option>
-                                                @foreach(DB::table('share_registers')->where('member_number', $senderMemberDetails->client_number)->get() as $type)
-                                                    <option value="{{ $type->id }}" class="py-2">
-                                                        {{ $type->product_name }} 
+                                                @foreach($senderShareTypes as $shareType)
+                                                    <option value="{{ $shareType['id'] }}" class="py-2">
+                                                        {{ $shareType['name'] }} 
                                                         <span class="text-sm text-gray-500">
-                                                            - No. of Shares: {{ number_format($type->current_share_balance) }}
+                                                            - No. of Shares: {{ number_format($shareType['balance']) }}
                                                         </span>                                                
                                                     </option>
                                                 @endforeach
@@ -1784,48 +1784,48 @@
                                             {{-- Share Type Details --}}
                                             @if($sender_share_type)
                                                 @php
-                                                    $selectedType = DB::table('share_registers')->where('id', $sender_share_type)->first();
+                                                    $selectedType = collect($senderShareTypes)->firstWhere('id', $sender_share_type);
                                                 @endphp
                                                 @if($selectedType)
                                                     <div class="mt-4 space-y-3 text-sm">
                                                         <div class="grid grid-cols-2 gap-4">
                                                             <div>
                                                                 <p class="text-gray-600">Account Number:</p>
-                                                                <p class="font-medium">{{ $selectedType->share_account_number }}</p>
+                                                                <p class="font-medium">{{ $selectedType['account_number'] }}</p>
                                                             </div>
                                                             <div>
                                                                 <p class="text-gray-600">Share Type:</p>
-                                                                <p class="font-medium">{{ strtoupper($selectedType->product_name) }}</p>
+                                                                <p class="font-medium">{{ strtoupper($selectedType['name']) }}</p>
                                                             </div>
                                                         </div>
                                                         
                                                         <div class="grid grid-cols-2 gap-4">
                                                             <div>
                                                                 <p class="text-gray-600">Current Balance:</p>
-                                                                <p class="font-medium">{{ number_format($selectedType->current_share_balance) }} shares</p>
+                                                                <p class="font-medium">{{ number_format($selectedType['balance']) }} shares</p>
                                                             </div>
                                                             <div>
                                                                 <p class="text-gray-600">Total Value:</p>
-                                                                <p class="font-medium">TZS {{ number_format($selectedType->total_share_value, 2) }}</p>
+                                                                <p class="font-medium">TZS {{ number_format($selectedType['value'], 2) }}</p>
                                                             </div>
                                                         </div>
 
                                                         <div class="grid grid-cols-2 gap-4">
                                                             <div>
                                                                 <p class="text-gray-600">Last Activity:</p>
-                                                                <p class="font-medium">{{ $selectedType->last_transaction_date ? \Carbon\Carbon::parse($selectedType->last_transaction_date)->format('d M Y') : 'N/A' }}</p>
+                                                                <p class="font-medium">{{ $selectedType['last_transaction_date'] ? \Carbon\Carbon::parse($selectedType['last_transaction_date'])->format('d M Y') : 'N/A' }}</p>
                                                             </div>
                                                             <div>
                                                                 <p class="text-gray-600">Opening Date:</p>
-                                                                <p class="font-medium">{{ $selectedType->opening_date ? \Carbon\Carbon::parse($selectedType->opening_date)->format('d M Y') : 'N/A' }}</p>
+                                                                <p class="font-medium">{{ $selectedType['opening_date'] ? \Carbon\Carbon::parse($selectedType['opening_date'])->format('d M Y') : 'N/A' }}</p>
                                                             </div>
                                                         </div>
 
-                                                        @if($selectedType->is_restricted)
+                                                        @if($selectedType['is_restricted'])
                                                             <div class="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
                                                                 <p class="text-yellow-700">
                                                                     <span class="font-medium">Note:</span> 
-                                                                    {{ $selectedType->restriction_notes ?? 'This share type has transfer restrictions.' }}
+                                                                    {{ $selectedType['restriction_notes'] ?? 'This share type has transfer restrictions.' }}
                                                                 </p>
                                                             </div>
                                                         @endif
@@ -1901,11 +1901,11 @@
                                             <label for="receiver_share_type" class="block text-sm font-medium text-gray-700">Share Account</label>
                                             <select wire:model="receiver_share_type" id="receiver_share_type" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                                                 <option value="">Select a share type</option>
-                                                @foreach(DB::table('share_registers')->where('member_number', $receiverMemberDetails->client_number)->get() as $product)
-                                                    <option value="{{ $product->id }}" class="py-2">
-                                                        {{ $product->product_name }} 
+                                                @foreach($receiverShareTypes as $shareType)
+                                                    <option value="{{ $shareType['id'] }}" class="py-2">
+                                                        {{ $shareType['name'] }} 
                                                         <span class="text-sm text-gray-500">
-                                                            ({{ DB::table('accounts')->where('account_number', $product->share_account_number)->first()->account_name }})
+                                                            ({{ number_format($shareType['balance']) }} shares)
                                                         </span>
                                                     </option>
                                                 @endforeach
@@ -1915,48 +1915,48 @@
                                             {{-- Share Type Details --}}
                                             @if($receiver_share_type)
                                                 @php
-                                                $selectedReceiverShareType = DB::table('share_registers')->where('id', $receiver_share_type)->first();
+                                                $selectedReceiverShareType = collect($receiverShareTypes)->firstWhere('id', $receiver_share_type);
                                                 @endphp
                                                 @if($selectedReceiverShareType)
                                                     <div class="mt-4 space-y-3 text-sm">
                                                         <div class="grid grid-cols-2 gap-4">
                                                             <div>
                                                                 <p class="text-gray-600">Account Number:</p>
-                                                                <p class="font-medium">{{ $selectedReceiverShareType->share_account_number }}</p>
+                                                                <p class="font-medium">{{ $selectedReceiverShareType['account_number'] }}</p>
                                                             </div>
                                                             <div>
                                                                 <p class="text-gray-600">Share Type:</p>
-                                                                <p class="font-medium">{{ strtoupper($selectedReceiverShareType->product_name) }}</p>
+                                                                <p class="font-medium">{{ strtoupper($selectedReceiverShareType['name']) }}</p>
                                                             </div>
                                                         </div>
                                                         
                                                         <div class="grid grid-cols-2 gap-4">
                                                             <div>
                                                                 <p class="text-gray-600">Current Balance:</p>
-                                                                <p class="font-medium">{{ number_format($selectedReceiverShareType->current_share_balance) }} shares</p>
+                                                                <p class="font-medium">{{ number_format($selectedReceiverShareType['balance']) }} shares</p>
                                                             </div>
                                                             <div>
                                                                 <p class="text-gray-600">Total Value:</p>
-                                                                <p class="font-medium">TZS {{ number_format($selectedReceiverShareType->total_share_value, 2) }}</p>
+                                                                <p class="font-medium">TZS {{ number_format($selectedReceiverShareType['value'], 2) }}</p>
                                                             </div>
                                                         </div>
 
                                                         <div class="grid grid-cols-2 gap-4">
                                                             <div>
                                                                 <p class="text-gray-600">Last Activity:</p>
-                                                                <p class="font-medium">{{ $selectedReceiverShareType->last_transaction_date ? \Carbon\Carbon::parse($selectedReceiverShareType->last_transaction_date)->format('d M Y') : 'N/A' }}</p>
+                                                                <p class="font-medium">{{ $selectedReceiverShareType['last_transaction_date'] ? \Carbon\Carbon::parse($selectedReceiverShareType['last_transaction_date'])->format('d M Y') : 'N/A' }}</p>
                                                             </div>
                                                             <div>
                                                                 <p class="text-gray-600">Opening Date:</p>
-                                                                <p class="font-medium">{{ $selectedReceiverShareType->opening_date ? \Carbon\Carbon::parse($selectedReceiverShareType->opening_date)->format('d M Y') : 'N/A' }}</p>
+                                                                <p class="font-medium">{{ $selectedReceiverShareType['opening_date'] ? \Carbon\Carbon::parse($selectedReceiverShareType['opening_date'])->format('d M Y') : 'N/A' }}</p>
                                                             </div>
                                                         </div>
 
-                                                        @if($selectedReceiverShareType->is_restricted == 1)
+                                                        @if($selectedReceiverShareType['is_restricted'])
                                                             <div class="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
                                                                 <p class="text-yellow-700">
                                                                     <span class="font-medium">Note:</span> 
-                                                                    {{ $selectedReceiverShareType->restriction_notes ?? 'This share type has transfer restrictions.' }}
+                                                                    {{ $selectedReceiverShareType['restriction_notes'] ?? 'This share type has transfer restrictions.' }}
                                                                 </p>
                                                             </div>
                                                         @endif
@@ -1969,7 +1969,7 @@
                                 @endif
 
                                 {{-- Transfer Details --}}
-                                @if($selectedReceiverShareType)
+                                @if($receiver_share_type)
                                 <div class="bg-white p-4 rounded-lg shadow">
                                     <h3 class="text-lg font-medium text-gray-900 mb-4">Transfer Details</h3>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1992,24 +1992,62 @@
                                     {{-- Share Value Calculation --}}
                                     @if($transfer_shares > 0)
                                     <div class="mt-4 p-4 bg-gray-50 rounded-lg">
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div>
-                                                <span class="text-sm font-medium text-gray-500">Shares to Transfer:</span>
-                                                <p class="text-sm text-gray-900">{{ number_format($transfer_shares) }}</p>
-                                            </div>
-                                            <div>
-                                                <span class="text-sm font-medium text-gray-500">Price per Share:</span>
-                                                <p class="text-sm text-gray-900">
-                                                    TZS {{ number_format($selectedReceiverShareType->nominal_price, 2) }}
+                                        @php
+                                            $selectedSenderShareType = collect($senderShareTypes)->firstWhere('id', $sender_share_type);
+                                            $isCrossProductTransfer = $selectedSenderShareType && $selectedReceiverShareType && $selectedSenderShareType['id'] !== $selectedReceiverShareType['id'];
+                                            $senderValue = $transfer_shares * $selectedSenderShareType['nominal_price'];
+                                            $equivalentShares = $isCrossProductTransfer ? round($senderValue / $selectedReceiverShareType['nominal_price'], 2) : $transfer_shares;
+                                        @endphp
+                                        
+                                        @if($isCrossProductTransfer)
+                                            <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                                <div class="flex items-center">
+                                                    <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    <span class="text-sm font-medium text-blue-800">Cross-Product Transfer</span>
+                                                </div>
+                                                <p class="text-sm text-blue-700 mt-1">
+                                                    Transferring between different share products. Value will be converted based on share prices.
                                                 </p>
                                             </div>
-                                            <div>
-                                                <span class="text-sm font-medium text-gray-500">Total Value:</span>
-                                                <p class="text-sm text-gray-900">
-                                                    TZS {{ number_format($transfer_shares * $selectedReceiverShareType->nominal_price, 2) }}
-                                                </p>
+                                        @endif
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div class="space-y-3">
+                                                <h4 class="text-sm font-medium text-gray-700">Sender Details</h4>
+                                                <div class="grid grid-cols-2 gap-2 text-sm">
+                                                    <span class="text-gray-500">Shares:</span>
+                                                    <span class="font-medium">{{ number_format($transfer_shares) }}</span>
+                                                    <span class="text-gray-500">Price per Share:</span>
+                                                    <span class="font-medium">TZS {{ number_format($selectedSenderShareType['nominal_price'], 2) }}</span>
+                                                    <span class="text-gray-500">Total Value:</span>
+                                                    <span class="font-medium">TZS {{ number_format($senderValue, 2) }}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="space-y-3">
+                                                <h4 class="text-sm font-medium text-gray-700">Receiver Details</h4>
+                                                <div class="grid grid-cols-2 gap-2 text-sm">
+                                                    <span class="text-gray-500">Shares to Receive:</span>
+                                                    <span class="font-medium">{{ number_format($equivalentShares, 2) }}</span>
+                                                    <span class="text-gray-500">Price per Share:</span>
+                                                    <span class="font-medium">TZS {{ number_format($selectedReceiverShareType['nominal_price'], 2) }}</span>
+                                                    <span class="text-gray-500">Total Value:</span>
+                                                    <span class="font-medium">TZS {{ number_format($senderValue, 2) }}</span>
+                                                </div>
                                             </div>
                                         </div>
+                                        
+                                        @if($isCrossProductTransfer)
+                                            <div class="mt-3 pt-3 border-t border-gray-200">
+                                                <div class="text-sm text-gray-600">
+                                                    <span class="font-medium">Conversion Rate:</span> 
+                                                    {{ number_format($selectedSenderShareType['nominal_price'] / $selectedReceiverShareType['nominal_price'], 4) }} 
+                                                    ({{ $selectedSenderShareType['name'] }} to {{ $selectedReceiverShareType['name'] }})
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
                                     @endif
                                 </div>

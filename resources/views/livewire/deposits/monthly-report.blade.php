@@ -71,10 +71,9 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Product</label>
-                    <select wire:model="selectedProduct" class="w-full border border-gray-300 rounded-md px-3 py-2">
-                        <option value="">All Products</option>
-                        <!-- Product options would be populated here -->
-                    </select>
+                    <div class="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 text-gray-500">
+                        All Savings Accounts (product_number = 2000)
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
@@ -174,7 +173,7 @@
                                         <div class="text-sm text-gray-500">{{ $account->account_name }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">{{ $account->product->product_name ?? 'N/A' }}</div>
+                                        <div class="text-sm text-gray-900">Savings (2000)</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">{{ number_format($account->balance, 2) }}</div>
@@ -235,7 +234,7 @@
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">{{ $product->product_name }}</div>
-                                    <div class="text-sm text-gray-500">{{ $product->sub_product_name }}</div>
+                                    <div class="text-sm text-gray-500">{{ $product->sub_product_id }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($product->account_count) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($product->total_balance, 2) }}</td>

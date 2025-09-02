@@ -168,7 +168,7 @@ class LoanRepaymentService
             ]);
             
             // Update loan status if fully paid
-            $this->updateLoanStatus($loan);
+            $this->updateLoanStatus($loan, $amount, $paymentRecord->receipt_number);
             
             // Generate receipt
             $receipt = $this->generateReceipt($loan, $paymentRecord, $allocation);
@@ -243,10 +243,19 @@ class LoanRepaymentService
      */
     public function calculateOutstandingBalances($loan)
     {
+        // First try with numeric ID (most common), then string ID
         $schedules = DB::table('loans_schedules')
-            ->where('loan_id', $loan->loan_id)
-            ->whereIn('completion_status', ['PENDING', 'PARTIAL', 'ACTIVE'])
+            ->where('loan_id', (string)$loan->id)
+            ->whereIn('completion_status', ['PENDING', 'PARTIAL', 'ACTIVE', 'NOT PAID'])
             ->get();
+            
+        // If no schedules found, try with string loan_id
+        if ($schedules->isEmpty()) {
+            $schedules = DB::table('loans_schedules')
+                ->where('loan_id', $loan->loan_id)
+                ->whereIn('completion_status', ['PENDING', 'PARTIAL', 'ACTIVE', 'NOT PAID'])
+                ->get();
+        }
         
         $penalties = 0;
         $interest = 0;
@@ -356,66 +365,106 @@ class LoanRepaymentService
     
     /**
      * Update loan schedules with payment allocation
+     * Following the pattern from FrontDesk repayment
      */
     private function updateLoanSchedules($loan, $allocation)
     {
+        // Get total amount to allocate (penalties + interest + principal)
+        $amount = $allocation['penalties'] + $allocation['interest'] + $allocation['principal'];
+        
+        // First try with numeric ID (most common), then string ID
         $schedules = DB::table('loans_schedules')
-            ->where('loan_id', $loan->loan_id)
-            ->whereIn('completion_status', ['PENDING', 'PARTIAL', 'ACTIVE'])
+            ->where('loan_id', (string)$loan->id)
+            ->whereIn('completion_status', ['ACTIVE', 'PENDING', 'PARTIAL'])
             ->orderBy('installment_date', 'asc')
             ->get();
         
-        $remainingInterest = $allocation['interest'];
-        $remainingPrincipal = $allocation['principal'];
+        // If no schedules found, try with string loan_id
+        if ($schedules->isEmpty()) {
+            $schedules = DB::table('loans_schedules')
+                ->where('loan_id', $loan->loan_id)
+                ->whereIn('completion_status', ['ACTIVE', 'PENDING', 'PARTIAL'])
+                ->orderBy('installment_date', 'asc')
+                ->get();
+        }
+        
+        Log::info('Updating loan schedules', [
+            'loan_id' => $loan->loan_id,
+            'schedules_found' => $schedules->count(),
+            'amount_to_allocate' => $amount
+        ]);
         
         foreach ($schedules as $schedule) {
-            $interestPayment = 0;
-            $principalPayment = 0;
-            $updated = false;
-            
-            // Allocate interest payment
-            $outstandingInterest = $schedule->interest - ($schedule->interest_payment ?? 0);
-            if ($remainingInterest > 0 && $outstandingInterest > 0) {
-                $interestPayment = min($remainingInterest, $outstandingInterest);
-                $remainingInterest -= $interestPayment;
-                $updated = true;
+            // Skip if installment is 0
+            if ($schedule->installment == 0) {
+                continue;
             }
             
-            // Allocate principal payment
-            $outstandingPrincipal = $schedule->principle - ($schedule->principle_payment ?? 0);
-            if ($remainingPrincipal > 0 && $outstandingPrincipal > 0) {
-                $principalPayment = min($remainingPrincipal, $outstandingPrincipal);
-                $remainingPrincipal -= $principalPayment;
-                $updated = true;
+            // Initialize payment values
+            $interest_payment = 0;
+            $principal_payment = 0;
+            
+            // Get current payment values (handle NULL)
+            $current_interest_payment = is_numeric($schedule->interest_payment) ? (float)$schedule->interest_payment : 0;
+            $current_principal_payment = is_numeric($schedule->principle_payment) ? (float)$schedule->principle_payment : 0;
+            
+            // Pay off the interest first
+            $outstanding_interest = (float)$schedule->interest - $current_interest_payment;
+            if ($amount > 0 && $outstanding_interest > 0) {
+                if ($amount >= $outstanding_interest) {
+                    $interest_payment = $outstanding_interest;
+                    $amount -= $interest_payment;
+                } else {
+                    $interest_payment = $amount;
+                    $amount = 0;
+                }
             }
             
-            if ($updated) {
-                $totalInterestPaid = ($schedule->interest_payment ?? 0) + $interestPayment;
-                $totalPrincipalPaid = ($schedule->principle_payment ?? 0) + $principalPayment;
-                $totalPaid = $totalInterestPaid + $totalPrincipalPaid;
+            // Pay off the principal next
+            $outstanding_principal = (float)$schedule->principle - $current_principal_payment;
+            if ($amount > 0 && $outstanding_principal > 0) {
+                if ($amount >= $outstanding_principal) {
+                    $principal_payment = $outstanding_principal;
+                    $amount -= $principal_payment;
+                } else {
+                    $principal_payment = $amount;
+                    $amount = 0;
+                }
+            }
+            
+            // Only update if there's a payment to record
+            if ($interest_payment > 0 || $principal_payment > 0) {
+                // Calculate new totals
+                $new_interest_payment = $current_interest_payment + $interest_payment;
+                $new_principal_payment = $current_principal_payment + $principal_payment;
+                $total_payment = $new_interest_payment + $new_principal_payment;
                 
-                // Determine completion status
-                $isFullyPaid = (
-                    abs($totalInterestPaid - $schedule->interest) < 0.01 && 
-                    abs($totalPrincipalPaid - $schedule->principle) < 0.01
-                );
+                // Determine the completion status (using floor to handle floating point)
+                $completion_status = floor($total_payment * 100) / 100 >= floor($schedule->installment * 100) / 100 ? 'PAID' : 'PARTIAL';
                 
-                $status = $isFullyPaid ? 'PAID' : 'PARTIAL';
-                
-                DB::table('loans_schedules')
+                // Update the schedule record
+                $updateResult = DB::table('loans_schedules')
                     ->where('id', $schedule->id)
                     ->update([
-                        'interest_payment' => $totalInterestPaid,
-                        'principle_payment' => $totalPrincipalPaid,
-                        'payment' => $totalPaid,
-                        'completion_status' => $status,
-                        'last_payment_date' => now(),
+                        'interest_payment' => $new_interest_payment,
+                        'principle_payment' => $new_principal_payment,
+                        'payment' => $total_payment,
+                        'completion_status' => $completion_status,
                         'updated_at' => now()
                     ]);
+                
+                Log::info('Schedule updated', [
+                    'schedule_id' => $schedule->id,
+                    'interest_paid' => $interest_payment,
+                    'principal_paid' => $principal_payment,
+                    'total_paid' => $total_payment,
+                    'status' => $completion_status,
+                    'update_result' => $updateResult
+                ]);
             }
             
-            // Break if all payment allocated
-            if ($remainingInterest <= 0 && $remainingPrincipal <= 0) {
+            // If the remaining amount is exhausted, break out of the loop
+            if ($amount <= 0) {
                 break;
             }
         }
@@ -590,8 +639,15 @@ class LoanRepaymentService
             // Record advance payment
             DB::table('loan_advance_payments')->insert([
                 'loan_id' => $loan->loan_id,
+                'client_number' => $loan->client_number ?? null,
                 'amount' => $amount,
+                'amount_used' => 0,
+                'amount_available' => $amount,
+                'source_payment_id' => $receiptNumber ?? null,
+                'payment_date' => now()->toDateString(),
                 'status' => 'AVAILABLE',
+                'branch_id' => $loan->branch_id ?? null,
+                'created_by' => auth()->user()->name ?? 'System',
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
@@ -610,16 +666,17 @@ class LoanRepaymentService
     {
         $paymentData = [
             'loan_id' => $loan->loan_id,
+            'client_number' => $loan->client_number ?? null,
             'payment_date' => now(),
             'amount' => $amount,
             'principal_paid' => $allocation['principal'],
             'interest_paid' => $allocation['interest'],
-            'penalties_paid' => $allocation['penalties'],
+            'penalty_paid' => $allocation['penalties'],
             'overpayment' => $allocation['overpayment'] ?? 0,
             'payment_method' => $paymentMethod,
             'reference_number' => $paymentDetails['reference'] ?? null,
             'receipt_number' => $this->generateReceiptNumber(),
-            'processed_by' => auth()->id() ?? 'SYSTEM',
+            'processed_by' => auth()->user()->name ?? 'SYSTEM',
             'created_at' => now(),
             'updated_at' => now()
         ];
@@ -632,16 +689,32 @@ class LoanRepaymentService
     
     /**
      * Update loan status based on payment
+     * Following the pattern from FrontDesk
      */
-    private function updateLoanStatus($loan)
+    private function updateLoanStatus($loan, $paymentAmount = null, $receiptNumber = null)
     {
-        // Check if all schedules are paid
-        $unpaidSchedules = DB::table('loans_schedules')
-            ->where('loan_id', $loan->loan_id)
+        // Check if all schedules are marked as "PAID" - try numeric ID first
+        $remainingSchedules = DB::table('loans_schedules')
+            ->where('loan_id', (string)$loan->id)
             ->where('completion_status', '!=', 'PAID')
             ->count();
         
-        if ($unpaidSchedules === 0) {
+        // If no schedules found with numeric ID, try string loan_id
+        if (DB::table('loans_schedules')->where('loan_id', (string)$loan->id)->count() == 0) {
+            $remainingSchedules = DB::table('loans_schedules')
+                ->where('loan_id', $loan->loan_id)
+                ->where('completion_status', '!=', 'PAID')
+                ->count();
+        }
+        
+        // Log for debugging
+        Log::info('Loan status check', [
+            'loan_id' => $loan->loan_id,
+            'remaining_schedules' => $remainingSchedules
+        ]);
+        
+        // If all schedules are paid, close the loan
+        if ($remainingSchedules === 0) {
             // All schedules paid - close the loan
             DB::table('loans')
                 ->where('id', $loan->id)
@@ -649,6 +722,10 @@ class LoanRepaymentService
                     'status' => 'CLOSED',
                     'loan_status' => 'CLOSED',
                     'closure_date' => now(),
+                    'closure_reason' => 'FULLY_PAID',
+                    'closed_by' => auth()->user()->name ?? 'SYSTEM',
+                    'final_payment_amount' => $paymentAmount,
+                    'final_receipt_number' => $receiptNumber,
                     'updated_at' => now()
                 ]);
             

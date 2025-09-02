@@ -34,6 +34,7 @@
   'accounting.investiments' => 'App\\Http\\Livewire\\Accounting\\Investiments',
   'accounting.jedwali' => 'App\\Http\\Livewire\\Accounting\\Jedwali',
   'accounting.ledger-accounts' => 'App\\Http\\Livewire\\Accounting\\LedgerAccounts',
+  'accounting.list-of-all-accounts' => 'App\\Http\\Livewire\\Accounting\\ListOfAllAccounts',
   'accounting.loan-charges' => 'App\\Http\\Livewire\\Accounting\\LoanCharges',
   'accounting.loan-details' => 'App\\Http\\Livewire\\Accounting\\LoanDetails',
   'accounting.loan-loss-reserve-manager' => 'App\\Http\\Livewire\\Accounting\\LoanLossReserveManager',

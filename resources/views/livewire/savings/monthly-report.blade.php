@@ -4,7 +4,7 @@
         <div class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
             <div class="bg-white p-6 rounded-lg shadow-lg">
                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p class="mt-2 text-sm text-gray-600">{{ $processingMessage ?: 'Loading...' }}</p>
+                <p class="mt-2 text-sm text-gray-600">Loading...</p>
             </div>
         </div>
     @endif
@@ -39,17 +39,75 @@
     <div class="bg-white rounded-lg shadow-lg p-6">
         {{-- Header --}}
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-800">Comprehensive Monthly Savings Report</h2>
+            <h2 class="text-2xl font-bold text-gray-800">Monthly Savings Report</h2>
             <div class="flex space-x-2">
-                <button wire:click="showSettings" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
-                    Settings
-                </button>
-                <button wire:click="showArrearsReport" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-                    Arrears Report
+                {{-- Export Dropdown --}}
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" 
+                            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 flex items-center"
+                            @if($isLoading) disabled @endif>
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span>Export to Excel</span>
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    
+                    <div x-show="open" 
+                         @click.away="open = false"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="transform opacity-0 scale-95"
+                         x-transition:enter-end="transform opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="transform opacity-100 scale-100"
+                         x-transition:leave-end="transform opacity-0 scale-95"
+                         class="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                        <div class="py-1">
+                            <button wire:click="exportSummary" @click="open = false"
+                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <span wire:loading.remove wire:target="exportSummary">Export Summary Report</span>
+                                <span wire:loading wire:target="exportSummary">Exporting...</span>
+                            </button>
+                            <button wire:click="exportAccounts" @click="open = false"
+                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <span wire:loading.remove wire:target="exportAccounts">Export Accounts Report</span>
+                                <span wire:loading wire:target="exportAccounts">Exporting...</span>
+                            </button>
+                            <button wire:click="exportTransactions" @click="open = false"
+                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <span wire:loading.remove wire:target="exportTransactions">Export Transactions Report</span>
+                                <span wire:loading wire:target="exportTransactions">Exporting...</span>
+                            </button>
+                            <button wire:click="exportMembers" @click="open = false"
+                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <span wire:loading.remove wire:target="exportMembers">Export Members Report</span>
+                                <span wire:loading wire:target="exportMembers">Exporting...</span>
+                            </button>
+                            <button wire:click="exportMonthlyTrends" @click="open = false"
+                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <span wire:loading.remove wire:target="exportMonthlyTrends">Export Monthly Trends</span>
+                                <span wire:loading wire:target="exportMonthlyTrends">Exporting...</span>
+                            </button>
+                            <button wire:click="exportFullReport" @click="open = false"
+                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t">
+                                <span wire:loading.remove wire:target="exportFullReport">Export Full Report</span>
+                                <span wire:loading wire:target="exportFullReport">Exporting...</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button wire:click="sendBulkNotifications" 
+                        class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+                        @if($isLoading) disabled @endif>
+                    <span wire:loading.remove wire:target="sendBulkNotifications">Send Bulk Notifications</span>
+                    <span wire:loading wire:target="sendBulkNotifications">Sending...</span>
                 </button>
                 <button wire:click="refreshData" 
-                        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                        wire:loading.attr="disabled">
+                        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+                        @if($isLoading) disabled @endif>
                     <span wire:loading.remove wire:target="refreshData">Refresh Data</span>
                     <span wire:loading wire:target="refreshData">Refreshing...</span>
                 </button>
@@ -65,7 +123,6 @@
                         <option value="{{ $month }}">{{ Carbon\Carbon::create()->month($month)->format('F') }}</option>
                     @endforeach
                 </select>
-                @error('selectedMonth') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <div>
@@ -75,453 +132,360 @@
                         <option value="{{ $year }}">{{ $year }}</option>
                     @endforeach
                 </select>
-                @error('selectedYear') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <div>
                 <label for="product" class="block text-sm font-medium text-gray-700">Product</label>
                 <select wire:model="selectedProduct" id="product" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    <option value="">All Products</option>
-                    @foreach($productData as $product)
-                        <option value="{{ $product->id }}">{{ $product->product_name }}</option>
-                    @endforeach
+                    <option value="">All Savings Products</option>
+                    @if(!$isLoading && isset($productsData) && is_object($productsData) && method_exists($productsData, 'count') && $productsData->count() > 0)
+                        @foreach($productsData as $product)
+                            @if(isset($product) && is_object($product) && isset($product->sub_product_id) && isset($product->product_name) && isset($product->status))
+                                <option value="{{ $product->sub_product_id }}">{{ $product->product_name }} ({{ $product->status }})</option>
+                            @endif
+                        @endforeach
+                    @elseif($isLoading)
+                        <option value="" disabled>Loading products...</option>
+                    @else
+                        <option value="" disabled>No products available</option>
+                    @endif
                 </select>
-                @error('selectedProduct') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <div>
-                <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-                <select wire:model="selectedStatus" id="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    <option value="">All Status</option>
-                    <option value="PAID">Paid</option>
-                    <option value="PARTIAL">Partial</option>
-                    <option value="UNPAID">Unpaid</option>
-                    <option value="OVERDUE">Overdue</option>
-                </select>
-            </div>
-        </div>
-
-        {{-- Search and Filters for Mandatory Savings --}}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Search Members</label>
-                <input type="text" wire:model.debounce.300ms="searchTerm" 
-                       placeholder="Search by name or number..." 
+                <label for="search" class="block text-sm font-medium text-gray-700">Search</label>
+                <input type="text" wire:model.debounce.300ms="searchTerm" id="search" 
+                       placeholder="Search members or accounts..." 
                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-            </div>
-            <div class="flex items-end">
-                <label class="flex items-center">
-                    <input type="checkbox" wire:model="showArrearsOnly" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-gray-700">Show Arrears Only</span>
-                </label>
-            </div>
-            <div class="flex items-end">
-                <button wire:click="loadMandatorySavingsData" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
-                    Apply Filters
-                </button>
             </div>
         </div>
 
         {{-- Tabs --}}
         <div class="border-b border-gray-200 mb-6">
             <nav class="-mb-px flex space-x-8">
-                <button wire:click="$set('activeTab', 'overview')" 
-                        class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'overview' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                    Overview
+                <button wire:click="$set('activeTab', 'summary')" 
+                        class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'summary' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    Summary
                 </button>
-                <button wire:click="$set('activeTab', 'mandatory')" 
-                        class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'mandatory' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                    Mandatory Savings
+                <button wire:click="$set('activeTab', 'accounts')" 
+                        class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'accounts' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    Accounts ({{ count($accountsData) }})
                 </button>
-                <button wire:click="$set('activeTab', 'transactions')" 
-                        class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'transactions' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                    Transactions
+                <button wire:click="$set('activeTab', 'members')" 
+                        class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'members' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    Members ({{ count($membersData) }})
                 </button>
-                <button wire:click="$set('activeTab', 'products')" 
-                        class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'products' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                    Products
+                <button wire:click="$set('activeTab', 'notifications')" 
+                        class="py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'notifications' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    Non-Compliant ({{ count($nonCompliantMembers) }})
                 </button>
             </nav>
         </div>
 
-        {{-- Overview Tab --}}
-        @if($activeTab === 'overview')
+        {{-- Summary Tab --}}
+        @if($activeTab === 'summary')
             <div>
                 {{-- Summary Cards --}}
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div class="bg-blue-50 p-4 rounded-lg">
-                        <h3 class="text-sm font-medium text-blue-800">Total Deposits</h3>
-                        <p class="text-2xl font-bold text-blue-900">TZS {{ number_format($summaryData['total_deposits'] ?? 0, 2) }}</p>
+                        <h3 class="text-sm font-medium text-blue-800">Total Savings Balance</h3>
+                        <p class="text-2xl font-bold text-blue-900">TZS {{ number_format($summaryData['total_balance'] ?? 0, 2) }}</p>
+                        <p class="text-sm text-blue-600">{{ $summaryData['active_accounts'] ?? 0 }} active accounts</p>
                     </div>
-                    <div class="bg-red-50 p-4 rounded-lg">
-                        <h3 class="text-sm font-medium text-red-800">Total Withdrawals</h3>
-                        <p class="text-2xl font-bold text-red-900">TZS {{ number_format($summaryData['total_withdrawals'] ?? 0, 2) }}</p>
-                    </div>
+                    
                     <div class="bg-green-50 p-4 rounded-lg">
-                        <h3 class="text-sm font-medium text-green-800">Net Change</h3>
-                        <p class="text-2xl font-bold text-green-900">TZS {{ number_format($summaryData['net_change'] ?? 0, 2) }}</p>
+                        <h3 class="text-sm font-medium text-green-800">Monthly Deposits</h3>
+                        <p class="text-2xl font-bold text-green-900">TZS {{ number_format($summaryData['monthly_deposits'] ?? 0, 2) }}</p>
+                        <p class="text-sm text-green-600">{{ $summaryData['transaction_count'] ?? 0 }} transactions</p>
                     </div>
+                    
+                    <div class="bg-red-50 p-4 rounded-lg">
+                        <h3 class="text-sm font-medium text-red-800">Monthly Withdrawals</h3>
+                        <p class="text-2xl font-bold text-red-900">TZS {{ number_format($summaryData['monthly_withdrawals'] ?? 0, 2) }}</p>
+                        <p class="text-sm text-red-600">Net: TZS {{ number_format($summaryData['monthly_net_change'] ?? 0, 2) }}</p>
+                    </div>
+                    
                     <div class="bg-purple-50 p-4 rounded-lg">
-                        <h3 class="text-sm font-medium text-purple-800">Transaction Count</h3>
-                        <p class="text-2xl font-bold text-purple-900">{{ number_format($summaryData['transaction_count'] ?? 0) }}</p>
+                        <h3 class="text-sm font-medium text-purple-800">Compliance Rate</h3>
+                        <p class="text-2xl font-bold text-purple-900">{{ $summaryData['compliance_rate'] ?? 0 }}%</p>
+                        <p class="text-sm text-purple-600">{{ $summaryData['members_with_savings'] ?? 0 }}/{{ $summaryData['total_members'] ?? 0 }} members</p>
                     </div>
                 </div>
 
-                {{-- Mandatory Savings Summary --}}
-                @if(isset($mandatorySavingsStats))
+                {{-- Products Summary --}}
                 <div class="mb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Mandatory Savings Summary</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div class="bg-yellow-50 p-4 rounded-lg">
-                            <h3 class="text-sm font-medium text-yellow-800">Total Records</h3>
-                            <p class="text-2xl font-bold text-yellow-900">{{ number_format($mandatorySavingsStats['total_records']) }}</p>
-                        </div>
-                        <div class="bg-green-50 p-4 rounded-lg">
-                            <h3 class="text-sm font-medium text-green-800">Paid Records</h3>
-                            <p class="text-2xl font-bold text-green-900">{{ number_format($mandatorySavingsStats['paid_records']) }}</p>
-                            <p class="text-sm text-green-600">{{ number_format($mandatorySavingsStats['compliance_rate'], 1) }}% compliance</p>
-                        </div>
-                        <div class="bg-orange-50 p-4 rounded-lg">
-                            <h3 class="text-sm font-medium text-orange-800">Unpaid Records</h3>
-                            <p class="text-2xl font-bold text-orange-900">{{ number_format($mandatorySavingsStats['unpaid_records']) }}</p>
-                        </div>
-                        <div class="bg-red-50 p-4 rounded-lg">
-                            <h3 class="text-sm font-medium text-red-800">Overdue Records</h3>
-                            <p class="text-2xl font-bold text-red-900">{{ number_format($mandatorySavingsStats['overdue_records']) }}</p>
-                        </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Savings Products Summary</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Accounts</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Balance</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Average Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @if(!$isLoading && isset($productsData) && is_object($productsData) && method_exists($productsData, 'count') && $productsData->count() > 0)
+                                    @foreach($productsData as $product)
+                                        @if(isset($product) && is_object($product) && isset($product->product_name) && isset($product->status) && isset($product->account_count) && isset($product->total_balance) && isset($product->average_balance))
+                                            <tr>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                    {{ $product->product_name }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                        @if($product->status === 'ACTIVE') bg-green-100 text-green-800
+                                                        @elseif($product->status === 'PENDING') bg-yellow-100 text-yellow-800
+                                                        @else bg-red-100 text-red-800 @endif">
+                                                        {{ $product->status }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {{ number_format($product->account_count) }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    TZS {{ number_format($product->total_balance, 2) }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    TZS {{ number_format($product->average_balance, 2) }}
+                                                </td>
+                                            </tr>
+                                        @endif
+                                    @endforeach
+                                @endif
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                @endif
 
-                {{-- Quick Actions --}}
-                <div class="mb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <button wire:click="generateTrackingRecords" 
-                                class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-900 disabled:opacity-50"
-                                @if($isLoading) disabled @endif>
-                            Generate Tracking Records
-                        </button>
-                        <button wire:click="updateFromPayments" 
-                                class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
-                                @if($isLoading) disabled @endif>
-                            Update from Payments
-                        </button>
-                        <button wire:click="generateNotifications" 
-                                class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:opacity-50"
-                                @if($isLoading) disabled @endif>
-                            Generate Notifications
-                        </button>
-                        <button wire:click="processOverdueRecords" 
-                                class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
-                                @if($isLoading) disabled @endif>
-                            Process Overdue
-                        </button>
+                {{-- Monthly Trends --}}
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Monthly Trends ({{ $selectedYear }})</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deposits</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Withdrawals</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Change</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transactions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach($monthlyTotals as $month)
+                                    <tr class="{{ $month['month'] == $selectedMonth ? 'bg-blue-50' : '' }}">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            {{ Carbon\Carbon::create()->month($month['month'])->format('F') }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">
+                                            TZS {{ number_format($month['total_deposits'], 2) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600">
+                                            TZS {{ number_format($month['total_withdrawals'], 2) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            TZS {{ number_format($month['total_deposits'] - $month['total_withdrawals'], 2) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ number_format($month['transaction_count']) }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         @endif
 
-        {{-- Mandatory Savings Tab --}}
-        @if($activeTab === 'mandatory')
+        {{-- Accounts Tab --}}
+        @if($activeTab === 'accounts')
             <div>
-                @if(isset($mandatorySavingsData))
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Savings Accounts</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($accountsData as $account)
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {{ $account['account_number'] }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">
+                                            {{ $account['first_name'] }} {{ $account['last_name'] }}
+                                        </div>
+                                        <div class="text-sm text-gray-500">{{ $account['client_number'] }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ $account['product_name'] }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        TZS {{ number_format($account['balance'], 2) }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                            @if($account['status'] === 'ACTIVE') bg-green-100 text-green-800
+                                            @else bg-red-100 text-red-800 @endif">
+                                            {{ $account['status'] }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ Carbon\Carbon::parse($account['created_at'])->format('d/m/Y') }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                                        No savings accounts found.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+
+        {{-- Members Tab --}}
+        @if($activeTab === 'members')
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Members Savings Status</h3>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Required</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Savings</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Accounts</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member Status</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($mandatorySavingsData as $record)
+                            @forelse($membersData as $member)
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">
-                                            {{ $record->client->first_name ?? '' }} {{ $record->client->last_name ?? '' }}
+                                            {{ $member['first_name'] }} {{ $member['last_name'] }}
                                         </div>
-                                        <div class="text-sm text-gray-500">{{ $record->client_number }}</div>
+                                        <div class="text-sm text-gray-500">{{ $member['client_number'] }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ $member['phone_number'] ?? 'N/A' }}</div>
+                                        <div class="text-sm text-gray-500">{{ $member['email'] ?? 'N/A' }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        TZS {{ number_format($member['total_savings'], 2) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $record->account_number }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $record->period }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        TZS {{ number_format($record->required_amount, 2) }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        TZS {{ number_format($record->paid_amount, 2) }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        TZS {{ number_format($record->balance, 2) }}
+                                        {{ $member['savings_accounts'] }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                            @if($record->status === 'PAID') bg-green-100 text-green-800
-                                            @elseif($record->status === 'PARTIAL') bg-yellow-100 text-yellow-800
-                                            @elseif($record->status === 'OVERDUE') bg-red-100 text-red-800
-                                            @else bg-gray-100 text-gray-800 @endif">
-                                            {{ $record->status }}
+                                            @if($member['compliance_status'] === 'COMPLIANT') bg-green-100 text-green-800
+                                            @else bg-red-100 text-red-800 @endif">
+                                            {{ $member['compliance_status'] }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $record->due_date->format('d/m/Y') }}
-                                        @if($record->isOverdue())
-                                            <div class="text-xs text-red-600">{{ $record->days_overdue }} days overdue</div>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button wire:click="viewMemberDetails('{{ $record->client_number }}')" 
-                                                class="text-blue-600 hover:text-blue-900">
-                                            View Details
-                                        </button>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                            @if($member['member_status'] === 'ACTIVE') bg-green-100 text-green-800
+                                            @else bg-red-100 text-red-800 @endif">
+                                            {{ $member['member_status'] }}
+                                        </span>
                                     </td>
                                 </tr>
-                            @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                                        No members found.
+                                    </td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
+            </div>
+        @endif
 
-                {{-- Pagination --}}
-                <div class="mt-4">
-                    {{ $mandatorySavingsData->links() }}
+        {{-- Notifications Tab --}}
+        @if($activeTab === 'notifications')
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Non-Compliant Members</h3>
+                    <div class="text-sm text-gray-500">
+                        {{ count($nonCompliantMembers) }} members without savings
+                    </div>
                 </div>
+                
+                @if(count($nonCompliantMembers) > 0)
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach($nonCompliantMembers as $member)
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ $member['first_name'] }} {{ $member['last_name'] }}
+                                            </div>
+                                            <div class="text-sm text-gray-500">{{ $member['client_number'] }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">{{ $member['phone_number'] ?? 'N/A' }}</div>
+                                            <div class="text-sm text-gray-500">{{ $member['email'] ?? 'N/A' }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                @if($member['status'] === 'ACTIVE') bg-green-100 text-green-800
+                                                @else bg-red-100 text-red-800 @endif">
+                                                {{ $member['status'] }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button wire:click="sendNotification('{{ $member['client_number'] }}')" 
+                                                    class="text-blue-600 hover:text-blue-900">
+                                                Send Notification
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 @else
-                <div class="text-center py-8">
-                    <p class="text-gray-500">No mandatory savings data available for the selected period.</p>
-                </div>
+                    <div class="text-center py-8">
+                        <div class="text-green-500 mb-2">
+                            <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900">All Members Are Compliant!</h3>
+                        <p class="text-gray-500">All members have savings accounts with positive balances.</p>
+                    </div>
                 @endif
             </div>
         @endif
-
-        {{-- Transactions Tab --}}
-        @if($activeTab === 'transactions')
-            <div>
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Transactions</h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($transactionData as $transaction)
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $transaction->created_at->format('Y-m-d H:i') }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $transaction->account->account_number ?? 'N/A' }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                            {{ $transaction->transaction_type === 'CREDIT' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                            {{ $transaction->transaction_type }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        TZS {{ number_format($transaction->credit ?? $transaction->debit ?? 0, 2) }}
-                                    </td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">
-                                        {{ $transaction->description ?? 'N/A' }}
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        @endif
-
-        {{-- Products Tab --}}
-        @if($activeTab === 'products')
-            <div>
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Product Breakdown</h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Accounts</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Balance</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($productStats as $product)
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $product->product_name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($product->account_count) }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TZS {{ number_format($product->total_balance, 2) }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        @endif
     </div>
-
-    {{-- Settings Modal --}}
-    @if($showSettingsModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" aria-hidden="true"></div>
-                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                    <form wire:submit.prevent="saveSettings">
-                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Mandatory Savings Settings</h3>
-                            
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Monthly Amount (TZS)</label>
-                                    <input type="number" step="0.01" wire:model="monthlyAmount" 
-                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    @error('monthlyAmount') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Due Day of Month</label>
-                                    <input type="number" wire:model="dueDay" min="1" max="31"
-                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    @error('dueDay') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Grace Period (Days)</label>
-                                    <input type="number" wire:model="gracePeriodDays" min="0" max="30"
-                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    @error('gracePeriodDays') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                                </div>
-
-                                <div class="flex items-center">
-                                    <input type="checkbox" wire:model="enableNotifications" 
-                                           class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <label class="ml-2 text-sm text-gray-700">Enable Notifications</label>
-                                </div>
-
-                                @if($enableNotifications)
-                                    <div class="space-y-2 pl-4 border-l-2 border-gray-200">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">First Reminder (Days Before Due)</label>
-                                            <input type="number" wire:model="firstReminderDays" min="1" max="30"
-                                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                            @error('firstReminderDays') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Second Reminder (Days Before Due)</label>
-                                            <input type="number" wire:model="secondReminderDays" min="1" max="30"
-                                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                            @error('secondReminderDays') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Final Reminder (Days Before Due)</label>
-                                            <input type="number" wire:model="finalReminderDays" min="1" max="30"
-                                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                            @error('finalReminderDays') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                            <button type="submit" 
-                                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-900 text-base font-medium text-white hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
-                                Save Settings
-                            </button>
-                            <button type="button" wire:click="$set('showSettingsModal', false)"
-                                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                                Cancel
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    @endif
-
-    {{-- Arrears Modal --}}
-    @if($showArrearsModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" aria-hidden="true"></div>
-                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all w-4/5">
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Arrears Report</h3>
-                        
-                        @if($selectedMember)
-                            <div class="mb-4 p-4 bg-gray-50 rounded-md">
-                                <h4 class="text-sm font-medium text-gray-900">Member Details</h4>
-                                <p class="mt-1 text-sm text-gray-600">{{ $selectedMember->first_name }} {{ $selectedMember->last_name }}</p>
-                                <p class="mt-1 text-sm text-gray-600">Client Number: {{ $selectedMember->client_number }}</p>
-                            </div>
-                        @endif
-
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Arrears</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Months in Arrears</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    @php
-                                        $service = new \App\Services\MandatorySavingsService();
-                                        $arrearsData = $service->calculateArrears();
-                                    @endphp
-                                    @foreach($arrearsData as $arrear)
-                                        <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm font-medium text-gray-900">{{ $arrear['client_name'] }}</div>
-                                                <div class="text-sm text-gray-500">{{ $arrear['client_number'] }}</div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                TZS {{ number_format($arrear['total_arrears'], 2) }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {{ $arrear['months_in_arrears'] }} months
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                <button wire:click="viewMemberDetails('{{ $arrear['client_number'] }}')" 
-                                                        class="text-blue-600 hover:text-blue-900">
-                                                    View Details
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="button" wire:click="$set('showArrearsModal', false)"
-                                class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
-                            Close
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
 </div>

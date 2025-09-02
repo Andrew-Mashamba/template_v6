@@ -320,7 +320,21 @@ class DividendOverview extends Component
                     continue;
                 }
                 
-                $creditAccount = $client->account_number;
+                // Get the member's savings account for dividend payment
+                $savingsAccount = DB::table('accounts')
+                    ->where('client_number', $shareRegister->member_number)
+                    ->where('product_number', '2000') // Savings account
+                    ->first();
+                
+                if (!$savingsAccount) {
+                    Log::warning('Savings account not found for member', [
+                        'processId' => $processId,
+                        'memberNumber' => $shareRegister->member_number
+                    ]);
+                    continue;
+                }
+                
+                $creditAccount = $savingsAccount->account_number;
                 
                 // Prepare transfer data
                 $transferData = [

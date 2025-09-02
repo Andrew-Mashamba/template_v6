@@ -2192,12 +2192,14 @@ class Shares extends Component
         try {
             if (empty($this->receiver_client_number)) {
                 $this->receiverMemberDetails = null;
+                $this->receiverShareTypes = [];
                 return;
             }
 
             if ($this->receiver_client_number === $this->sender_client_number) {
                 $this->addError('receiver_client_number', 'Cannot transfer shares to the same member');
                 $this->receiverMemberDetails = null;
+                $this->receiverShareTypes = [];
                 return;
             }
 
@@ -2208,12 +2210,12 @@ class Shares extends Component
             if (!$member) {
                 $this->addError('receiver_client_number', 'Member not found or not active');
                 $this->receiverMemberDetails = null;
+                $this->receiverShareTypes = [];
                 return;
             }
 
             $this->receiverMemberDetails = $member;
-
-            //dd($member);
+            $this->loadReceiverShareTypes();
 
             Log::info('Receiver member details loaded', [
                 'client_number' => $this->receiver_client_number,
@@ -2266,27 +2268,22 @@ class Shares extends Component
 
     protected function loadSenderShareTypes()
     {
-
-        
         try {
             if (!$this->senderMemberDetails) {
                 $this->senderShareTypes = [];
                 return;
             }
 
-           // dd($this->senderMemberDetails->id);
-
-            $shareRegisters = ShareRegister::where('member_id', $this->senderMemberDetails->id)
+            // Use member_number instead of member_id for consistency
+            $shareRegisters = ShareRegister::where('member_number', $this->senderMemberDetails->client_number)
                 //->where('status', 'active')
                 ->get();
-
-                //dd($shareRegisters);
 
             $this->senderShareTypes = [];
 
             foreach ($shareRegisters as $register) {
                 $this->senderShareTypes[] = [
-                    'id' => $register->product_id,
+                    'id' => $register->id, // Use the register ID, not product_id
                     'name' => $register->product_name,
                     'type' => $register->product_type,
                     'account_number' => $register->share_account_number,
@@ -2307,8 +2304,6 @@ class Shares extends Component
                     'last_activity_date' => $register->last_activity_date
                 ];
             }
-
-            //dd($this->senderShareTypes);
 
             Log::info('Sender share types loaded', [
                 'client_number' => $this->sender_client_number,
@@ -2326,27 +2321,22 @@ class Shares extends Component
 
     protected function loadReceiverShareTypes()
     {
-
-        
         try {
             if (!$this->receiverMemberDetails) {
                 $this->receiverShareTypes = [];
                 return;
             }
 
-           // dd($this->senderMemberDetails->id);
-
-            $shareRegisters = ShareRegister::where('member_id', $this->receiverMemberDetails->id)
+            // Use member_number instead of member_id for consistency
+            $shareRegisters = ShareRegister::where('member_number', $this->receiverMemberDetails->client_number)
                 //->where('status', 'active')
                 ->get();
-
-                //dd($shareRegisters);
 
             $this->receiverShareTypes = [];
 
             foreach ($shareRegisters as $register) {
                 $this->receiverShareTypes[] = [
-                    'id' => $register->product_id,
+                    'id' => $register->id, // Use the register ID, not product_id
                     'name' => $register->product_name,
                     'type' => $register->product_type,
                     'account_number' => $register->share_account_number,
@@ -2368,14 +2358,12 @@ class Shares extends Component
                 ];
             }
 
-            //dd($this->senderShareTypes);
-
-            Log::info('Sender share types loaded', [
+            Log::info('Receiver share types loaded', [
                 'client_number' => $this->receiver_client_number,
                 'share_types_count' => count($this->receiverShareTypes)
             ]);
         } catch (\Exception $e) {
-            Log::error('Error loading sender share types', [
+            Log::error('Error loading receiver share types', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -2452,14 +2440,20 @@ class Shares extends Component
                 throw new \Exception('Insufficient shares available for transfer');
             }
 
-            // Calculate total value
+            // Calculate total value and check if it's a cross-product transfer
             $totalValue = $this->transfer_shares * $senderShareRegister->nominal_price;
+            $isCrossProductTransfer = $senderShareRegister->product_id !== $receiverShareRegister->product_id;
+            $equivalentShares = $isCrossProductTransfer ? round($totalValue / $receiverShareRegister->nominal_price, 2) : $this->transfer_shares;
 
             Log::info('Creating share transfer record', [
                 'sender' => $this->senderMemberDetails->client_number,
                 'receiver' => $this->receiverMemberDetails->client_number,
                 'shares' => $this->transfer_shares,
-                'total_value' => $totalValue
+                'total_value' => $totalValue,
+                'is_cross_product' => $isCrossProductTransfer,
+                'equivalent_shares' => $equivalentShares,
+                'sender_product' => $senderShareRegister->product_name,
+                'receiver_product' => $receiverShareRegister->product_name
             ]);
 
             // Create share transfer record
@@ -2481,6 +2475,8 @@ class Shares extends Component
                 'nominal_price' => $senderShareRegister->nominal_price,
                 'total_value' => $totalValue,
                 'transfer_reason' => $this->transfer_reason,
+                'is_cross_product_transfer' => $isCrossProductTransfer,
+                'equivalent_shares' => $equivalentShares,
                 'status' => 'PENDING',
                 'created_by' => auth()->id(),
                 'updated_by' => auth()->id(),
@@ -2490,7 +2486,7 @@ class Shares extends Component
 
             Log::info('Creating approval request', [
                 'transfer_id' => $transferId,
-                'sender' => $this->senderMemberDetails->client_number,
+                'sender' => $this->senderMemberDetails->client_number ?? $senderShareRegister->member_number,
                 'shares' => $this->transfer_shares
             ]);
 
@@ -2498,7 +2494,7 @@ class Shares extends Component
             approvals::create([
                 'process_name' => 'share_transfer',
                 'process_description' => "Share transfer request for {$senderShareRegister->product_name}",
-                'approval_process_description' => "Member {$this->senderMemberDetails->first_name} {$this->senderMemberDetails->last_name} is requesting to transfer {$this->transfer_shares} shares worth TZS " . number_format($totalValue, 2),
+                'approval_process_description' => "Member " . ($this->senderMemberDetails->first_name ?? 'Unknown') . " " . ($this->senderMemberDetails->last_name ?? 'Member') . " is requesting to transfer {$this->transfer_shares} shares worth TZS " . number_format($totalValue, 2),
                 'process_code' => 'SHARE_TRF',
                 'process_id' => $transferId,
                 'process_status' => 'PENDING',
@@ -2519,8 +2515,8 @@ class Shares extends Component
                 'transfer_id' => $transferId,
                 'shares' => $this->transfer_shares,
                 'total_value' => $totalValue,
-                'source_member' => $this->senderMemberDetails->client_number,
-                'destination_member' => $this->receiverMemberDetails->client_number,
+                'source_member' => $this->senderMemberDetails->client_number ?? $senderShareRegister->member_number,
+                'destination_member' => $this->receiverMemberDetails->client_number ?? $receiverShareRegister->member_number,
                 'reason' => $this->transfer_reason
             ]);
 
@@ -2598,10 +2594,32 @@ class Shares extends Component
                         ->value('current_share_balance')
                 ]);
 
+                // Get sender and receiver share register details for cross-product transfer calculation
+                $senderRegister = DB::table('share_registers')->where('id', $transfer->sender_share_register_id)->first();
+                $receiverRegister = DB::table('share_registers')->where('id', $transfer->receiver_share_register_id)->first();
+                
+                // Calculate equivalent shares for cross-product transfer
+                $senderValue = $transfer->number_of_shares * $senderRegister->nominal_price;
+                $equivalentShares = round($senderValue / $receiverRegister->nominal_price, 2);
+                
+                Log::info('Cross-product transfer calculation', [
+                    'sender_shares' => $transfer->number_of_shares,
+                    'sender_price' => $senderRegister->nominal_price,
+                    'sender_value' => $senderValue,
+                    'receiver_price' => $receiverRegister->nominal_price,
+                    'equivalent_shares' => $equivalentShares,
+                    'is_same_product' => $senderRegister->product_id === $receiverRegister->product_id
+                ]);
+
                 // Update receiver's share register
+                $sharesToAdd = $senderRegister->product_id === $receiverRegister->product_id 
+                    ? $transfer->number_of_shares 
+                    : $equivalentShares;
+                    
                 Log::info('Updating receiver share register', [
                     'register_id' => $transfer->receiver_share_register_id,
-                    'shares_to_add' => $transfer->number_of_shares,
+                    'shares_to_add' => $sharesToAdd,
+                    'is_cross_product' => $senderRegister->product_id !== $receiverRegister->product_id,
                     'current_balance' => DB::table('share_registers')
                         ->where('id', $transfer->receiver_share_register_id)
                         ->value('current_share_balance')
@@ -2610,9 +2628,9 @@ class Shares extends Component
                 DB::table('share_registers')
                     ->where('id', $transfer->receiver_share_register_id)
                     ->update([
-                        'total_shares_transferred_in' => DB::raw('total_shares_transferred_in + ' . $transfer->number_of_shares),
-                        'current_share_balance' => DB::raw('current_share_balance + ' . $transfer->number_of_shares),
-                        'total_share_value' => DB::raw('(current_share_balance + ' . $transfer->number_of_shares . ') * nominal_price'),
+                        'total_shares_transferred_in' => DB::raw('total_shares_transferred_in + ' . $sharesToAdd),
+                        'current_share_balance' => DB::raw('current_share_balance + ' . $sharesToAdd),
+                        'total_share_value' => DB::raw('(current_share_balance + ' . $sharesToAdd . ') * nominal_price'),
                         'last_transaction_type' => 'TRANSFER_IN',
                         'last_transaction_reference' => $transferId,
                         'last_transaction_date' => now(),

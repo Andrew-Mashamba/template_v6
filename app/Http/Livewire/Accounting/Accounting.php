@@ -74,6 +74,7 @@ class Accounting extends Component
         $this->menuItems = [
             ['id' => 1, 'label' => 'Chart of accounts'],
             ['id' => 37, 'label' => 'Ledger Accounts'],
+            ['id' => 47, 'label' => 'List of All Accounts'],
             ['id' => 2, 'label' => 'Manual Posting'],
             ['id' => 44, 'label' => 'Internal Transfers'],
             ['id' => 45, 'label' => 'Adjustments'],
@@ -118,7 +119,7 @@ class Accounting extends Component
         ];
 
         $this->menuCategories = [
-            'Core Accounting' => [1, 37, 2, 44, 45, 46, 3, 4, 6],
+            'Core Accounting' => [1, 37, 47, 2, 44, 45, 46, 3, 4, 6],
             'Financial Statements' => [12, 40, 41, 42, 28, 8, 5],
             'Member Management' => [9, 33, 34, 35],
             'Asset Management' => [16, 20, 32],

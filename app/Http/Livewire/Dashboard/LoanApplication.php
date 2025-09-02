@@ -196,33 +196,36 @@ class LoanApplication extends Component
 
     public function mount()
     {
-        // Always load loan products regardless of client number status
-        $this->loadLoanProducts();
         // Initialize textual loan type mirror
         $this->loan_type_2 = $this->loanType;
         
         // Initialize document counter
         $this->uploadedDocumentsCount = count($this->uploadedDocuments);
         
+        // Always load loan products first - they should always be available
+        $this->loadLoanProducts();
+        
         // Check if client number is set and valid
         if (!$this->isClientNumberValid()) {
             $this->showClientNumberModal = true;
-            return;
-        }
-        
-        $this->loadExistingLoans();
-        $this->loadMemberData();
-        
-        // Always load existing collateral data for top-up/restructure loans
-        if (in_array($this->loanType, ['Top-up', 'Restructuring', 'Restructure'])) {
-            $loanId = $this->selectedLoanForTopUp ?: $this->selectedLoanForRestructure;
-            if ($loanId) {
-                $this->loadExistingGuarantorData();
+            // Don't return early - allow the component to render with products loaded
+            // but without client-specific data
+        } else {
+            // Only load client-specific data if we have a valid client number
+            $this->loadExistingLoans();
+            $this->loadMemberData();
+            
+            // Always load existing collateral data for top-up/restructure loans
+            if (in_array($this->loanType, ['Top-up', 'Restructuring', 'Restructure'])) {
+                $loanId = $this->selectedLoanForTopUp ?: $this->selectedLoanForRestructure;
+                if ($loanId) {
+                    $this->loadExistingGuarantorData();
+                }
             }
-        }
-        // If we're on step 4 and have a top-up/restructure loan, load existing documents data
-        if ($this->currentStep === 4 && in_array($this->loanType, ['Top-up', 'Restructuring', 'Restructure'])) {
-            $this->reloadExistingDocumentsData();
+            // If we're on step 4 and have a top-up/restructure loan, load existing documents data
+            if ($this->currentStep === 4 && in_array($this->loanType, ['Top-up', 'Restructuring', 'Restructure'])) {
+                $this->reloadExistingDocumentsData();
+            }
         }
     }
 
@@ -284,10 +287,12 @@ class LoanApplication extends Component
                 ->get();
         } else {
             // For new loans, load only active loan products
+            // Use case-insensitive comparison for status
             $this->loanProducts = DB::table('loan_sub_products')
                 ->where(function($query) {
-                    $query->where('sub_product_status', 'Active')
+                    $query->whereRaw("LOWER(sub_product_status) = ?", ['active'])
                           ->orWhere('sub_product_status', '1')
+                          ->orWhere('sub_product_status', 'Active') // Also check exact case
                           ->orWhereNull('sub_product_status');
                 })
                 ->orderBy('sub_product_name')
@@ -300,7 +305,8 @@ class LoanApplication extends Component
         \Log::info('LoanApplication: Loaded loan products', [
             'loan_type' => $this->loanType,
             'total_products' => $this->loanProducts->count(),
-            'products' => $this->loanProducts->pluck('sub_product_name', 'id')->toArray()
+            'products' => $this->loanProducts->pluck('sub_product_name', 'id')->toArray(),
+            'hasLoanProducts' => $this->hasLoanProducts
         ]);
     }
 
@@ -451,6 +457,7 @@ class LoanApplication extends Component
             $this->calculateLoanDetails();
         }
         $this->recalculateStep1Warnings();
+        $this->checkPolicyViolations();
     }
     
     private function updateSelectedProductProperties()
@@ -604,6 +611,7 @@ class LoanApplication extends Component
         // Recompute charges and insurance based on new principal
         $this->loadProductCharges();
         $this->recalculateStep1Warnings();
+        $this->checkPolicyViolations();
     }
 
     public function updatedSalaryTakeHome($value)
@@ -612,6 +620,7 @@ class LoanApplication extends Component
             $this->calculateLoanDetails();
         }
         $this->recalculateStep1Warnings();
+        $this->checkPolicyViolations();
     }
 
     public function updatedRepaymentPeriod($value)
@@ -622,6 +631,7 @@ class LoanApplication extends Component
             $this->calculateLoanDetails();
         }
         $this->recalculateStep1Warnings();
+        $this->checkPolicyViolations();
     }
 
     public function updatedLoanType($value)
@@ -838,23 +848,51 @@ class LoanApplication extends Component
     {
         $this->step1PolicyViolations = [];
         
-        // Check loan amount vs income ratio
-        if ($this->salaryTakeHome > 0) {
-            $incomeRatio = ($this->monthlyInstallment / $this->salaryTakeHome) * 100;
-            if ($incomeRatio > 70) {
+        // Log for debugging
+        \Log::info('LoanApplication: Checking policy violations', [
+            'salary_take_home' => $this->salaryTakeHome,
+            'monthly_installment' => $this->monthlyInstallment,
+            'loan_amount' => $this->loanAmount,
+            'repayment_period' => $this->repaymentPeriod,
+            'has_selected_product' => $this->selectedProduct ? true : false
+        ]);
+        
+        // Check loan amount vs income ratio (DTI - Debt to Income)
+        $salaryTakeHome = (float)$this->salaryTakeHome;
+        $monthlyInstallment = (float)$this->monthlyInstallment;
+        
+        if ($salaryTakeHome > 0 && $monthlyInstallment > 0) {
+            // Get DTI threshold from product or use default of 70%
+            $dtiThreshold = 70; // Default threshold
+            if ($this->selectedProduct && isset($this->selectedProduct->score_limit)) {
+                $dtiThreshold = (float)$this->selectedProduct->score_limit;
+            }
+            
+            $incomeRatio = ($monthlyInstallment / $salaryTakeHome) * 100;
+            
+            \Log::info('LoanApplication: DTI calculation', [
+                'income_ratio' => $incomeRatio,
+                'dti_threshold' => $dtiThreshold,
+                'is_breach' => $incomeRatio > $dtiThreshold
+            ]);
+            
+            if ($incomeRatio > $dtiThreshold) {
                 $this->step1PolicyViolations[] = [
                     'severity' => 'high',
-                    'title' => 'High Debt-to-Income Ratio',
+                    'title' => 'Installment exceeds ' . rtrim(rtrim(number_format($dtiThreshold, 2), '0'), '.') . '% of take-home',
                     'current_value' => number_format($incomeRatio, 1) . '%',
-                    'limit_value' => '70%',
+                    'limit_value' => rtrim(rtrim(number_format($dtiThreshold, 2), '0'), '.') . '%',
                     'recommendation' => 'Consider reducing loan amount or increasing repayment period'
                 ];
             }
         }
 
         // Check loan amount vs savings ratio
-        if ($this->totalSavings > 0) {
-            $savingsRatio = ($this->loanAmount / $this->totalSavings);
+        $loanAmount = (float)$this->loanAmount;
+        $totalSavings = (float)$this->totalSavings;
+        
+        if ($totalSavings > 0 && $loanAmount > 0) {
+            $savingsRatio = $loanAmount / $totalSavings;
             if ($savingsRatio > 3) {
                 $this->step1PolicyViolations[] = [
                     'severity' => 'medium',
@@ -865,6 +903,13 @@ class LoanApplication extends Component
                 ];
             }
         }
+        
+        // Log final violations
+        \Log::info('LoanApplication: Policy violations check complete', [
+            'violations_count' => count($this->step1PolicyViolations),
+            'violations' => $this->step1PolicyViolations,
+            'has_any_breaches' => $this->hasAnyBreaches()
+        ]);
     }
 
     public function checkSavingsPolicyViolations()

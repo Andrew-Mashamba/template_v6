@@ -1049,48 +1049,18 @@
 
                 <!-- Member SACCO Financial Details -->
                 @php
-                    $memberAccounts = DB::table('accounts')->where('client_number', $selectedLoan->client->client_number)->get();
                     $memberLoans = DB::table('loans')->where('client_number', $selectedLoan->client->client_number)->where('status', 'active')->get();
-                    $memberBills = DB::table('bills')->where('client_number', $selectedLoan->client->client_number)->get();
                 @endphp
                 <div class="mb-6">
                     <div class="relative flex py-3 items-center mb-4">
                         <div class="flex-grow border-t border-gray-400"></div>
-                        <span class="flex-shrink mx-4 text-gray-500 font-semibold">Member SACCO Financial Details</span>
+                        <span class="flex-shrink mx-4 text-gray-500 font-semibold">Other Active Loans</span>
                         <div class="flex-grow border-t border-gray-400"></div>
-                    </div>
-                    
-                    <!-- Accounts Section -->
-                    <div class="mb-6">
-                        <div class="font-semibold text-gray-700 mb-3">Accounts</div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            @forelse($memberAccounts as $account)
-                                <div class="bg-gray-100 rounded-lg p-4">
-                                    @if($account->parent_account_number)
-                                        @php
-                                            $parentAccount = DB::table('accounts')->where('account_number', $account->parent_account_number)->first();
-                                        @endphp
-                                        @if($parentAccount)
-                                            <div class="text-xs text-gray-800 font-bold mt-1">{{ $parentAccount->account_name }}</div>
-                                        @endif
-                                    @endif
-                                    <div class="text-xs text-gray-500 mb-1">{{ $account->account_name }}</div>
-                                    <div class="text-sm text-gray-600 mb-1">#{{ $account->account_number }}</div>
-                                    <div class="text-lg font-bold text-gray-900">{{ number_format($account->balance, 2) }}</div>
-                                    
-                                    @if($account->locked_amount > 0)
-                                        <div class="text-xs text-red-600 mt-1">Locked: {{ number_format($account->locked_amount, 2) }}</div>
-                                    @endif
-                                </div>
-                            @empty
-                                <div class="col-span-3 text-center text-gray-500 py-4">No accounts found</div>
-                            @endforelse
-                        </div>
                     </div>
 
                     <!-- Ongoing Loans Section -->
                     <div class="mb-6">
-                        <div class="font-semibold text-gray-700 mb-3">Ongoing Loans</div>
+                        <div class="font-semibold text-gray-700 mb-3">Member's Other Active Loans</div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead>
@@ -1114,38 +1084,7 @@
                                             </td>
                                         </tr>
                                     @empty
-                                        <tr><td colspan="5" class="text-center text-gray-400 py-2">No active loans</td></tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Available Control Numbers Section -->
-                    <div>
-                        <div class="font-semibold text-gray-700 mb-3">Available Control Numbers</div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead>
-                                    <tr class="text-gray-500 text-xs">
-                                        <th class="py-1 px-2 text-left">Control #</th>
-                                        <th class="py-1 px-2 text-left">Amount</th>
-                                        <th class="py-1 px-2 text-left">Due Date</th>
-                                        <th class="py-1 px-2 text-left">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($memberBills as $bill)
-                                        <tr>
-                                            <td class="py-1 px-2">{{ $bill->control_number }}</td>
-                                            <td class="py-1 px-2">{{ number_format($bill->amount_due,2) }}</td>
-                                            <td class="py-1 px-2">{{ $bill->due_date }}</td>
-                                            <td class="py-1 px-2">
-                                                <span class="inline-block rounded px-2 py-0.5 text-xs {{ $bill->status==='PAID'?'bg-green-100 text-green-700':'bg-yellow-100 text-yellow-700' }}">{{ $bill->status }}</span>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr><td colspan="4" class="text-center text-gray-400 py-2">No control numbers</td></tr>
+                                        <tr><td colspan="5" class="text-center text-gray-400 py-2">No other active loans</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>

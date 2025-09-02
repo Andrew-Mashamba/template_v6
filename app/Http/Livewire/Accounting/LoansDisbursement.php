@@ -7,6 +7,8 @@ use App\Services\TransactionProcessingService;
 use App\Services\AccountCreationService;
 use App\Services\BillingService;
 use App\Services\PaymentLinkService;
+use App\Services\SmsTemplateService;
+use App\Services\SmsService;
 use App\Helper\GenerateAccountNumber;
 use App\Jobs\FundsTransfer;
 use App\Models\AccountsModel;
@@ -436,6 +438,9 @@ class LoansDisbursement extends Component
                 'correlation_id' => $tpsResult ? ($tpsResult['transaction']['correlation_id'] ?? null) : null,
                 'external_reference' => $tpsResult ? ($tpsResult['transaction']['external_reference'] ?? null) : null
             ]);
+
+            // Send SMS notification to member
+            $this->sendLoanDisbursementNotification($member, $loan, $deductions['net_disbursement_amount']);
 
             // Close modal and reset form
             $this->closeModal();
@@ -1591,9 +1596,19 @@ class LoansDisbursement extends Component
                 throw new \Exception('Loan account configuration not found for this product.');
             }
 
-            $loanParentAccount = AccountsModel::where('account_number', $this->accountDetails['loan_account'])->first();
+            // Ensure the account number preserves leading zeros (16 digits for account numbers)
+            $loanAccountNumber = str_pad($this->accountDetails['loan_account'], 16, '0', STR_PAD_LEFT);
+            Log::info('Looking for loan account', [
+                'raw_value' => $this->accountDetails['loan_account'],
+                'padded_value' => $loanAccountNumber
+            ]);
+            $loanParentAccount = AccountsModel::where('account_number', $loanAccountNumber)->first();
             if (!$loanParentAccount) {
-                throw new \Exception('Loan parent account not found in database.');
+                // Try without padding if not found
+                $loanParentAccount = AccountsModel::where('account_number', $this->accountDetails['loan_account'])->first();
+            }
+            if (!$loanParentAccount) {
+                throw new \Exception('Loan parent account not found in database. Looking for: ' . $loanAccountNumber);
             }
 
             // Create loan account
@@ -1608,9 +1623,19 @@ class LoansDisbursement extends Component
             ], $loanParentAccount->account_number);
 
             // Create interest account
-            $interestParentAccount = AccountsModel::where('account_number', $this->accountDetails['interest_account'])->first();
+            // Ensure the account number preserves leading zeros (16 digits for account numbers)
+            $interestAccountNumber = str_pad($this->accountDetails['interest_account'], 16, '0', STR_PAD_LEFT);
+            Log::info('Looking for interest account', [
+                'raw_value' => $this->accountDetails['interest_account'],
+                'padded_value' => $interestAccountNumber
+            ]);
+            $interestParentAccount = AccountsModel::where('account_number', $interestAccountNumber)->first();
             if (!$interestParentAccount) {
-                throw new \Exception('Interest parent account not found.');
+                // Try without padding if not found
+                $interestParentAccount = AccountsModel::where('account_number', $this->accountDetails['interest_account'])->first();
+            }
+            if (!$interestParentAccount) {
+                throw new \Exception('Interest parent account not found. Looking for: ' . $interestAccountNumber);
             }
 
             $interestAccount = $accountService->createAccount([
@@ -1624,9 +1649,19 @@ class LoansDisbursement extends Component
             ], $interestParentAccount->account_number);
 
             // Create charges account
-            $chargesParentAccount = AccountsModel::where('account_number', $this->accountDetails['fees_account'])->first();
+            // Ensure the account number preserves leading zeros (16 digits for account numbers)
+            $feesAccountNumber = str_pad($this->accountDetails['fees_account'], 16, '0', STR_PAD_LEFT);
+            Log::info('Looking for fees account', [
+                'raw_value' => $this->accountDetails['fees_account'],
+                'padded_value' => $feesAccountNumber
+            ]);
+            $chargesParentAccount = AccountsModel::where('account_number', $feesAccountNumber)->first();
             if (!$chargesParentAccount) {
-                throw new \Exception('Charges parent account not found.');
+                // Try without padding if not found
+                $chargesParentAccount = AccountsModel::where('account_number', $this->accountDetails['fees_account'])->first();
+            }
+            if (!$chargesParentAccount) {
+                throw new \Exception('Charges parent account not found. Looking for: ' . $feesAccountNumber);
             }
 
             $chargesAccount = $accountService->createAccount([
@@ -1640,9 +1675,19 @@ class LoansDisbursement extends Component
             ], $chargesParentAccount->account_number);
 
             // Create insurance account
-            $insuranceParentAccount = AccountsModel::where('account_number', $this->accountDetails['insurance_account'])->first();
+            // Ensure the account number preserves leading zeros (16 digits for account numbers)
+            $insuranceAccountNumber = str_pad($this->accountDetails['insurance_account'], 16, '0', STR_PAD_LEFT);
+            Log::info('Looking for insurance account', [
+                'raw_value' => $this->accountDetails['insurance_account'],
+                'padded_value' => $insuranceAccountNumber
+            ]);
+            $insuranceParentAccount = AccountsModel::where('account_number', $insuranceAccountNumber)->first();
             if (!$insuranceParentAccount) {
-                throw new \Exception('Insurance parent account not found.');
+                // Try without padding if not found
+                $insuranceParentAccount = AccountsModel::where('account_number', $this->accountDetails['insurance_account'])->first();
+            }
+            if (!$insuranceParentAccount) {
+                throw new \Exception('Insurance parent account not found. Looking for: ' . $insuranceAccountNumber);
             }
 
             $insuranceAccount = $accountService->createAccount([
@@ -3641,15 +3686,23 @@ class LoansDisbursement extends Component
      * Process charges transaction
      * Credit bank account, debit charges account from loan sub-product
      */
-    private function processChargesTransaction($transactionService, $amount)
+    private function processChargesTransaction($transactionService, $amount, $chargesAccount = null)
     {
         // Use selected disbursement account from modal
         if (empty($this->bank_account)) {
             throw new \Exception('Disbursement account not selected for charges transaction.');
         }
         
+        // Use the passed chargesAccount if available, otherwise use the one from accountDetails
+        $chargesAccountNumber = $chargesAccount ? $chargesAccount->account_number : $this->accountDetails['loan_charges_account'];
+        
+        // Add leading zero if account is 15 digits (common issue with varchar storage)
+        if ($chargesAccountNumber && $chargesAccountNumber !== 'N/A' && strlen($chargesAccountNumber) == 15) {
+            $chargesAccountNumber = '0' . $chargesAccountNumber;
+        }
+        
         $transactionData = [
-            'first_account' => $this->accountDetails['loan_charges_account'], // Debit charges account from loan sub-product
+            'first_account' => $chargesAccountNumber, // Debit charges account from loan sub-product
             'second_account' => $this->bank_account, // Credit selected disbursement account
             'amount' => $amount,
             'narration' => 'Loan charges collection for loan disbursement',
@@ -3664,7 +3717,7 @@ class LoansDisbursement extends Component
 
         Log::info('Charges transaction processed successfully', [
             'amount' => $amount,
-            'debit_account' => $this->accountDetails['loan_charges_account'],
+            'debit_account' => $chargesAccountNumber,
             'credit_account' => $this->bank_account
         ]);
     }
@@ -3673,15 +3726,23 @@ class LoansDisbursement extends Component
      * Process insurance transaction
      * Credit bank account, debit insurance account from loan sub-product
      */
-    private function processInsuranceTransaction($transactionService, $amount)
+    private function processInsuranceTransaction($transactionService, $amount, $insuranceAccount = null)
     {
         // Use selected disbursement account from modal
         if (empty($this->bank_account)) {
             throw new \Exception('Disbursement account not selected for insurance transaction.');
         }
         
+        // Use the passed insuranceAccount if available, otherwise use the one from accountDetails
+        $insuranceAccountNumber = $insuranceAccount ? $insuranceAccount->account_number : $this->accountDetails['loan_insurance_account'];
+        
+        // Add leading zero if account is 15 digits (common issue with varchar storage)
+        if ($insuranceAccountNumber && $insuranceAccountNumber !== 'N/A' && strlen($insuranceAccountNumber) == 15) {
+            $insuranceAccountNumber = '0' . $insuranceAccountNumber;
+        }
+        
         $transactionData = [
-            'first_account' => $this->accountDetails['loan_insurance_account'], // Debit insurance account from loan sub-product
+            'first_account' => $insuranceAccountNumber, // Debit insurance account from loan sub-product
             'second_account' => $this->bank_account, // Credit selected disbursement account
             'amount' => $amount,
             'narration' => 'Loan insurance collection for loan disbursement',
@@ -3696,7 +3757,7 @@ class LoansDisbursement extends Component
 
         Log::info('Insurance transaction processed successfully', [
             'amount' => $amount,
-            'debit_account' => $this->accountDetails['loan_insurance_account'],
+            'debit_account' => $insuranceAccountNumber,
             'credit_account' => $this->bank_account
         ]);
     }
@@ -3737,15 +3798,23 @@ class LoansDisbursement extends Component
      * Process first interest transaction
      * Credit bank account, debit interest account from loan sub-product
      */
-    private function processFirstInterestTransaction($transactionService, $amount)
+    private function processFirstInterestTransaction($transactionService, $amount, $interestAccount = null)
     {
         // Use selected disbursement account from modal
         if (empty($this->bank_account)) {
             throw new \Exception('Disbursement account not selected for first interest transaction.');
         }
         
+        // Use the passed interestAccount if available, otherwise use the one from accountDetails
+        $interestAccountNumber = $interestAccount ? $interestAccount->account_number : $this->accountDetails['loan_interest_account'];
+        
+        // Add leading zero if account is 15 digits (common issue with varchar storage)
+        if ($interestAccountNumber && $interestAccountNumber !== 'N/A' && strlen($interestAccountNumber) == 15) {
+            $interestAccountNumber = '0' . $interestAccountNumber;
+        }
+        
         $transactionData = [
-            'first_account' => $this->accountDetails['loan_interest_account'], // Debit interest account from loan sub-product
+            'first_account' => $interestAccountNumber, // Debit interest account from loan sub-product
             'second_account' => $this->bank_account, // Credit selected disbursement account
             'amount' => $amount,
             'narration' => 'First interest collection for loan disbursement',
@@ -3760,7 +3829,7 @@ class LoansDisbursement extends Component
 
         Log::info('First interest transaction processed successfully', [
             'amount' => $amount,
-            'debit_account' => $this->accountDetails['loan_interest_account'],
+            'debit_account' => $interestAccountNumber,
             'credit_account' => $this->bank_account
         ]);
     }
@@ -3965,9 +4034,24 @@ class LoansDisbursement extends Component
 
             // Get bank and account information
             $cashAccount = DB::table('accounts')->where('id', $this->bank)->value('sub_category_code');
-            $loanAccountSubCategoryCode = AccountsModel::where('account_number', $loan->loan_account_number)->value('sub_category_code');
+            
+            // Ensure loan account number has proper padding
+            $paddedLoanAccountNumber = str_pad($loan->loan_account_number, 16, '0', STR_PAD_LEFT);
+            $loanAccountSubCategoryCode = AccountsModel::where('account_number', $paddedLoanAccountNumber)
+                ->orWhere('account_number', $loan->loan_account_number)
+                ->value('sub_category_code');
+            
             $interestAccountNumber = DB::table('loans')->where('loan_account_number', $loan->loan_account_number)->value('interest_account_number');
-            $interestAccountSubCategoryCode = AccountsModel::where('account_number', $interestAccountNumber)->value('sub_category_code');
+            
+            // Ensure interest account number has proper padding
+            if ($interestAccountNumber) {
+                $paddedInterestAccountNumber = str_pad($interestAccountNumber, 16, '0', STR_PAD_LEFT);
+                $interestAccountSubCategoryCode = AccountsModel::where('account_number', $paddedInterestAccountNumber)
+                    ->orWhere('account_number', $interestAccountNumber)
+                    ->value('sub_category_code');
+            } else {
+                $interestAccountSubCategoryCode = null;
+            }
 
             // Fetch all pending schedules for the given loan ID
             $schedules = DB::table('loans_schedules')
@@ -4514,6 +4598,186 @@ class LoansDisbursement extends Component
                 'trace' => $e->getTraceAsString()
             ]);
             throw $e;
+        }
+    }
+
+    /**
+     * Send loan disbursement notification to member
+     */
+    private function sendLoanDisbursementNotification($member, $loan, $netDisbursementAmount)
+    {
+        try {
+            // Get loan repayment schedule to find monthly installment
+            $schedule = loans_schedules::where('loan_id', $loan->id)
+                ->where('status', 'Active')
+                ->first();
+            
+            $monthlyInstallment = $schedule ? $schedule->installment : 0;
+            
+            // Generate payment link using the same approach as member registration
+            $paymentUrl = null;
+            $controlNumber = null;
+            
+            try {
+                // Get institution ID for SACCOS code
+                $institution_id = DB::table('institutions')->where('id', 1)->value('institution_id');
+                $saccos = preg_replace('/[^0-9]/', '', $institution_id);
+                
+                // Create billing service and generate control number for loan repayment
+                $billingService = new BillingService();
+                
+                // Check if loan repayment service exists
+                $loanService = DB::table('services')
+                    ->where('code', 'LRP') // Loan Repayment service code
+                    ->first();
+                
+                if ($loanService) {
+                    // Generate control number for this loan
+                    $controlNumber = $billingService->generateControlNumber(
+                        $member->client_number,
+                        $loanService->id,
+                        true, // is_recurring for monthly payments
+                        'partial' // allow partial payments
+                    );
+                    
+                    // Create bill for the loan
+                    $bill = $billingService->createBill(
+                        $member->client_number,
+                        $loanService->id,
+                        true,
+                        'partial',
+                        $controlNumber,
+                        $monthlyInstallment
+                    );
+                    
+                    // Generate payment link
+                    $paymentService = new PaymentLinkService();
+                    
+                    $paymentData = [
+                        'description' => 'Loan Repayment - ' . $member->first_name . ' ' . $member->last_name,
+                        'target' => 'individual',
+                        'customer_reference' => $member->client_number,
+                        'customer_name' => $member->first_name . ' ' . $member->last_name,
+                        'customer_phone' => $member->phone_number,
+                        'customer_email' => $member->email,
+                        'expires_at' => now()->addDays(30)->toIso8601String(),
+                        'items' => [
+                            [
+                                'type' => 'service',
+                                'product_service_reference' => (string) $bill->id,
+                                'product_service_name' => 'Loan Repayment - Loan ID: ' . $loan->loan_id,
+                                'amount' => $monthlyInstallment,
+                                'is_required' => true,
+                                'allow_partial' => true
+                            ]
+                        ]
+                    ];
+                    
+                    $paymentResponse = $paymentService->generateUniversalPaymentLink($paymentData);
+                    $paymentUrl = $paymentResponse['data']['payment_url'] ?? null;
+                    
+                    if ($paymentUrl) {
+                        // Store payment link in bills table
+                        DB::table('bills')->where('id', $bill->id)->update([
+                            'payment_link' => $paymentUrl,
+                            'payment_link_id' => $paymentResponse['data']['link_id'] ?? null,
+                            'payment_link_generated_at' => now(),
+                            'payment_link_items' => json_encode($paymentResponse['data']['items'] ?? [])
+                        ]);
+                        
+                        Log::info('Payment link generated for loan disbursement', [
+                            'loan_id' => $loan->id,
+                            'payment_url' => $paymentUrl,
+                            'control_number' => $controlNumber
+                        ]);
+                    }
+                } else {
+                    Log::warning('Loan repayment service not found, skipping control number generation');
+                }
+                
+            } catch (\Exception $e) {
+                Log::error('Failed to generate payment link for loan disbursement', [
+                    'error' => $e->getMessage(),
+                    'loan_id' => $loan->id
+                ]);
+            }
+            
+            // Send SMS notification
+            if ($member->phone_number) {
+                $smsTemplateService = new SmsTemplateService();
+                $memberName = $member->first_name . ' ' . $member->last_name;
+                
+                // Generate SMS message (shortened version without schedule)
+                $message = $smsTemplateService->generateLoanDisbursementMemberSMS(
+                    $memberName,
+                    $netDisbursementAmount,
+                    $monthlyInstallment,
+                    $controlNumber,
+                    $paymentUrl
+                );
+                
+                // Send SMS using your SMS service
+                try {
+                    // Uncomment and configure your SMS service
+                    // $smsService = new SmsService();
+                    // $smsService->sendSms($member->phone_number, $message);
+                    
+                    Log::info('Loan disbursement SMS sent', [
+                        'phone' => substr($member->phone_number, 0, 6) . '****',
+                        'loan_id' => $loan->id,
+                        'message_length' => strlen($message)
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to send loan disbursement SMS', [
+                        'error' => $e->getMessage(),
+                        'loan_id' => $loan->id
+                    ]);
+                }
+            }
+            
+            // Send notification to guarantors if any
+            $guarantors = DB::table('loan_guarantors')
+                ->join('clients', 'loan_guarantors.guarantor_client_id', '=', 'clients.id')
+                ->where('loan_guarantors.loan_id', $loan->id)
+                ->select('clients.*')
+                ->get();
+            
+            if ($guarantors->count() > 0) {
+                $smsTemplateService = new SmsTemplateService();
+                foreach ($guarantors as $guarantor) {
+                    if ($guarantor->phone_number) {
+                        try {
+                            $guarantorMessage = $smsTemplateService->generateLoanDisbursementGuarantorSMS(
+                                $guarantor->first_name . ' ' . $guarantor->last_name,
+                                $memberName ?? ($member->first_name . ' ' . $member->last_name),
+                                $netDisbursementAmount
+                            );
+                            
+                            // Uncomment and configure your SMS service
+                            // $smsService = new SmsService();
+                            // $smsService->sendSms($guarantor->phone_number, $guarantorMessage);
+                            
+                            Log::info('Guarantor notification SMS sent', [
+                                'guarantor_phone' => substr($guarantor->phone_number, 0, 6) . '****',
+                                'loan_id' => $loan->id
+                            ]);
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send guarantor SMS', [
+                                'error' => $e->getMessage(),
+                                'guarantor_id' => $guarantor->id
+                            ]);
+                        }
+                    }
+                }
+            }
+            
+        } catch (\Exception $e) {
+            // Don't throw exception - notifications are not critical for disbursement
+            Log::error('Failed to send loan disbursement notification', [
+                'member' => $member->client_number ?? 'Unknown',
+                'loan_id' => $loan->id ?? 'Unknown',
+                'error' => $e->getMessage()
+            ]);
         }
     }
 }

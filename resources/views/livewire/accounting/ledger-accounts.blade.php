@@ -178,7 +178,27 @@
     <!-- Filter Section -->
     <div class="bg-gray-50 border-b px-6 py-4">
         <div class="flex justify-between items-start mb-4">
-            <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wider">Filter & Search</h3>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wider">Filter & Search</h3>
+                <div class="flex items-center mt-2 text-xs text-gray-500 space-x-4">
+                    <div class="flex items-center">
+                        <span class="inline-block w-2 h-2 bg-blue-900 rounded-full mr-1"></span>
+                        <span>Level 1: Major Categories</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="inline-block w-2 h-2 bg-blue-700 rounded-full mr-1"></span>
+                        <span>Level 2: Categories</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="inline-block w-2 h-2 bg-gray-400 rounded-full mr-1"></span>
+                        <span>Level 3: Sub-Categories</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="inline-block w-2 h-2 bg-gray-300 rounded-full mr-1"></span>
+                        <span>Level 4: Detail Accounts</span>
+                    </div>
+                </div>
+            </div>
             <button wire:click="openCreateModal()" 
                 class="px-4 py-2 bg-blue-900 text-white rounded-md hover:bg-blue-800 text-sm font-medium transition-colors">
                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,16 +247,30 @@
     <div class="bg-white">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+                <thead class="bg-gray-50 border-b-2 border-gray-300">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Number</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Debit</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Credit</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                                </svg>
+                                Account Hierarchy
+                            </div>
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Account Number</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Level</th>
+                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">Debit</th>
+                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">Credit</th>
+                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <div class="flex items-center justify-end">
+                                Balance
+                                <svg class="w-3 h-3 ml-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </th>
+                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -482,7 +516,7 @@
                     <div class="bg-white px-6 py-4">
                         <div class="flex items-center justify-between border-b pb-3">
                             <h3 class="text-lg font-medium text-gray-900">
-                                {{ $parentAccountNumber ? 'Add Sub-Account' : 'Create New Account' }}
+                                {{ isset($parentAccountNumber) && $parentAccountNumber ? 'Add Sub-Account' : 'Create New Account' }}
                             </h3>
                             <button wire:click="$set('showCreateModal', false)" class="text-gray-400 hover:text-gray-500">
                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -492,7 +526,7 @@
                         </div>
 
                         <form wire:submit.prevent="createAccount" class="mt-4 space-y-4">
-                            @if($parentAccountNumber && $parentAccountData)
+                            @if(isset($parentAccountNumber) && $parentAccountNumber && isset($parentAccountData) && $parentAccountData)
                                 <div class="bg-blue-50 rounded-lg p-3 mb-4">
                                     <div class="text-sm">
                                         <span class="font-medium text-gray-700">Parent Account:</span>
@@ -513,7 +547,7 @@
                                     @enderror
                                 </div>
 
-                                @if(!$parentAccountNumber)
+                                @if(!isset($parentAccountNumber) || !$parentAccountNumber)
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
                                         <select wire:model.defer="newAccount.type" 

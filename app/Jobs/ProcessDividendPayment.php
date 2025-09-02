@@ -216,9 +216,12 @@ class ProcessDividendPayment implements ShouldQueue
     {
         // Get account details
         $client = DB::table('clients')->where('client_number', $shareRegister->member_number)->first();
-        $account = DB::table('accounts')->where('account_number', $client->account_number)->first();
-
-        $account = $client->account_number;
+        
+        // Get the member's savings account for dividend payment
+        $account = DB::table('accounts')
+            ->where('client_number', $shareRegister->member_number)
+            ->where('product_number', '2000') // Savings account
+            ->first();
 
         //add logs
         Log::info('Creating transaction record', [
@@ -230,11 +233,19 @@ class ProcessDividendPayment implements ShouldQueue
         ]);
 
         if (!$account) {
-            throw new \Exception("Account not found for member ID: {$shareRegister->member_id}");
+            throw new \Exception("Savings account not found for member: {$shareRegister->member_number}");
         }
-
-        return Transaction::create([
-            'account_id' => $account,
+        
+        // Log the account details for debugging
+        Log::info('Account found for dividend payment', [
+            'account_id' => $account->id,
+            'account_number' => $account->account_number,
+            'client_number' => $shareRegister->member_number,
+            'client_account' => $client ? $client->account_number : 'N/A'
+        ]);
+        
+        $transactionData = [
+            'account_id' => $account->id,
             'amount' => $amount,
             'type' => 'credit',
             'transaction_category' => 'dividend',
@@ -262,7 +273,13 @@ class ProcessDividendPayment implements ShouldQueue
                 'share_value' => $shareRegister->current_price
             ],
             'tags' => ['dividend', 'payment', 'background_job']
+        ];
+        
+        Log::info('Creating transaction with data', [
+            'transaction_data' => $transactionData
         ]);
+
+        return Transaction::create($transactionData);
     }
 
     /**

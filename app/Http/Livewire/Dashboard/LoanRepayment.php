@@ -109,6 +109,16 @@ class LoanRepayment extends Component
     }
     
     /**
+     * Reload banks when payment method changes to BANK
+     */
+    public function updatedPaymentMethod($value)
+    {
+        if ($value === 'BANK') {
+            $this->loadBanks();
+        }
+    }
+    
+    /**
      * Search for loan
      */
     public function searchLoan()
@@ -492,8 +502,27 @@ class LoanRepayment extends Component
         switch ($this->paymentMethod) {
             case 'BANK':
                 $details['reference'] = $this->referenceNumber;
-                $details['bank_name'] = $this->bankName;
-                $details['bank_account'] = $this->bankName;
+                
+                // Get bank details from bank_accounts table
+                if ($this->bankName && $this->bankName != '0') {
+                    $bankAccount = DB::table('bank_accounts')
+                        ->where('id', $this->bankName)
+                        ->first();
+                    
+                    if ($bankAccount) {
+                        $details['bank_name'] = $bankAccount->bank_name;
+                        $details['bank_account'] = $bankAccount->account_number;
+                        $details['bank_account_id'] = $bankAccount->id;
+                        $details['bank_account_name'] = $bankAccount->account_name;
+                    } else {
+                        // Fallback if bank account not found
+                        $details['bank_name'] = $this->bankName;
+                        $details['bank_account'] = $this->bankName;
+                    }
+                } else {
+                    $details['bank_name'] = 'Not specified';
+                    $details['bank_account'] = 'Not specified';
+                }
                 break;
                 
             case 'MOBILE':
@@ -629,21 +658,55 @@ class LoanRepayment extends Component
     }
     
     /**
-     * Load banks for dropdown
+     * Load banks for dropdown from bank_accounts table
      */
     private function loadBanks()
     {
-        $this->banks = [
-            'CRDB' => 'CRDB Bank',
-            'NMB' => 'NMB Bank',
-            'NBC' => 'NBC Bank',
-            'STANBIC' => 'Stanbic Bank',
-            'EQUITY' => 'Equity Bank',
-            'AZANIA' => 'Azania Bank',
-            'DTB' => 'Diamond Trust Bank',
-            'KCB' => 'KCB Bank',
-            'ABSA' => 'ABSA Bank'
-        ];
+        try {
+            // Fetch banks from bank_accounts table
+            $bankAccounts = DB::table('bank_accounts')
+                ->select('id', 'bank_name', 'account_name', 'account_number')
+                ->where('status', 'ACTIVE')
+                ->orderBy('bank_name')
+                ->get();
+            
+            // Format for dropdown display
+            $this->banks = [];
+            foreach ($bankAccounts as $bank) {
+                // Use account ID as value and combine bank name with account info as display
+                $displayName = $bank->bank_name;
+                if ($bank->account_name) {
+                    $displayName .= ' - ' . $bank->account_name;
+                }
+                if ($bank->account_number) {
+                    $displayName .= ' (' . substr($bank->account_number, -4) . ')';
+                }
+                $this->banks[$bank->id] = $displayName;
+            }
+            
+            // If no banks found, add a default message
+            if (empty($this->banks)) {
+                $this->banks = ['0' => 'No active bank accounts configured'];
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Error loading banks', [
+                'error' => $e->getMessage()
+            ]);
+            
+            // Fallback to common banks if table doesn't exist or error occurs
+            $this->banks = [
+                'CRDB' => 'CRDB Bank',
+                'NMB' => 'NMB Bank',
+                'NBC' => 'NBC Bank',
+                'STANBIC' => 'Stanbic Bank',
+                'EQUITY' => 'Equity Bank',
+                'AZANIA' => 'Azania Bank',
+                'DTB' => 'Diamond Trust Bank',
+                'KCB' => 'KCB Bank',
+                'ABSA' => 'ABSA Bank'
+            ];
+        }
     }
     
     /**

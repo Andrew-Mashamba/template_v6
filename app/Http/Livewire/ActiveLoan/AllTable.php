@@ -182,10 +182,14 @@ class AllTable extends Component
         $this->loanDetails = LoansModel::with(['client', 'loanBranch', 'schedules'])->where('status', 'ACTIVE')
             ->find($loanId);
 
-        // Load loan schedule using the actual loan_id string, not the primary key
+        // Load loan schedule - try both loan_id string and numeric id since data is inconsistent
         if ($this->loanDetails) {
             $this->loanSchedule = DB::table('loans_schedules')
-                ->where('loan_id', $this->loanDetails->loan_id)
+                ->where(function($query) use ($loanId) {
+                    $query->where('loan_id', $this->loanDetails->loan_id)
+                          ->orWhere('loan_id', (string)$loanId)
+                          ->orWhere('loan_id', (string)$this->loanDetails->id);
+                })
                 ->orderBy('installment_date', 'asc')
                 ->get();
         } else {

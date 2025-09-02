@@ -644,17 +644,19 @@
                                 <div class="mb-4">
                                     <label for="withdrawNbcAccount" class="block text-sm font-medium text-gray-700">NBC Account Number</label>
                                     <div class="mt-1">
-                                        <input type="text" wire:model.defer="withdrawNbcAccount" id="withdrawNbcAccount" class="focus:ring-red-500 focus:border-red-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" placeholder="Enter NBC account number">
+                                        <input type="text" value="{{ $withdrawVerifiedMember['account_number'] ?? '' }}" id="withdrawNbcAccount" class="bg-gray-100 focus:ring-red-500 focus:border-red-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" disabled readonly>
                                     </div>
-                                    @error('withdrawNbcAccount') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div class="mb-4">
-                                    <label for="withdrawAccountHolderName" class="block text-sm font-medium text-gray-700">Account Holder Name</label>
-                                    <div class="mt-1">
-                                        <input type="text" wire:model.defer="withdrawAccountHolderName" id="withdrawAccountHolderName" class="focus:ring-red-500 focus:border-red-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" placeholder="Enter account holder name">
-                                    </div>
-                                    @error('withdrawAccountHolderName') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                    <label for="withdrawSourceAccount" class="block text-sm font-medium text-gray-700">Source Account</label>
+                                    <select wire:model.defer="withdrawSourceAccount" id="withdrawSourceAccount" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm rounded-md">
+                                        <option value="">Select source account</option>
+                                        @foreach($withdrawBankAccounts as $bankAccount)
+                                            <option value="{{ $bankAccount->id }}">{{ $bankAccount->account_name }} - {{ $bankAccount->bank_name }} ({{ $bankAccount->account_number }})</option>
+                                        @endforeach
+                                    </select>
+                                    @error('withdrawSourceAccount') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                                 </div>
                             @endif
 
@@ -680,14 +682,6 @@
                                         <input type="text" wire:model.defer="withdrawPhoneNumber" id="withdrawPhoneNumber" class="focus:ring-red-500 focus:border-red-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" placeholder="Enter phone number (e.g., 0786123456)">
                                     </div>
                                     @error('withdrawPhoneNumber') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                                </div>
-
-                                <div class="mb-4">
-                                    <label for="withdrawWalletHolderName" class="block text-sm font-medium text-gray-700">Wallet Holder Name</label>
-                                    <div class="mt-1">
-                                        <input type="text" wire:model.defer="withdrawWalletHolderName" id="withdrawWalletHolderName" class="focus:ring-red-500 focus:border-red-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" placeholder="Enter wallet holder name">
-                                    </div>
-                                    @error('withdrawWalletHolderName') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                                 </div>
                             @endif
 
@@ -747,14 +741,60 @@
                                 </div>
                             @endif
 
-                            {{-- Withdrawer Name --}}
-                            <div class="mb-4">
-                                <label for="withdrawerName" class="block text-sm font-medium text-gray-700">Name of Withdrawer</label>
-                                <div class="mt-1">
-                                    <input type="text" wire:model.defer="withdrawerName" id="withdrawerName" class="focus:ring-red-500 focus:border-red-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" placeholder="Enter withdrawer name">
+                            {{-- OTP Section (Required for Cash Withdrawals) --}}
+                            @if($withdrawPaymentMethod === 'cash')
+                            <div class="mb-4 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-md">
+                                <h4 class="text-sm font-medium text-gray-900 mb-3">
+                                    <span class="text-red-500">*</span> Security Verification (Required)
+                                </h4>
+                                
+                                <div wire:loading wire:target="updatedWithdrawPaymentMethod" class="mb-3">
+                                    <div class="flex items-center text-blue-600">
+                                        <svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Sending OTP to your registered phone and email...
+                                    </div>
                                 </div>
-                                @error('withdrawerName') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                
+                                @if($withdrawOtpSent)
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label for="withdrawOtpCode" class="block text-sm font-medium text-gray-700">Enter OTP Code</label>
+                                            <div class="mt-1 flex space-x-2">
+                                                <input type="text" wire:model.defer="withdrawOtpCode" id="withdrawOtpCode" maxlength="6" class="focus:ring-blue-500 focus:border-blue-500 block w-32 shadow-sm sm:text-sm border-gray-300 rounded-md" placeholder="000000">
+                                                <button type="button" wire:click="verifyWithdrawOTP" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                                    Verify
+                                                </button>
+                                                <button type="button" wire:click="sendWithdrawOTP" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                                    Resend
+                                                </button>
+                                            </div>
+                                            @error('withdrawOtpCode') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                        </div>
+                                        
+                                        @if($withdrawOtpVerified)
+                                            <div class="flex items-center text-green-600">
+                                                <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                                </svg>
+                                                OTP Verified Successfully
+                                            </div>
+                                        @endif
+                                        
+                                        @if($withdrawOtpSentTime)
+                                            <p class="text-xs text-gray-500">OTP sent at {{ \Carbon\Carbon::parse($withdrawOtpSentTime)->format('H:i:s') }}</p>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="text-sm text-gray-600">
+                                        <p>An OTP will be automatically sent to your registered phone number and email address.</p>
+                                        <p class="mt-2 text-xs">Please ensure your contact details are up to date.</p>
+                                    </div>
+                                @endif
                             </div>
+                            @endif
 
                             {{-- Narration --}}
                             <div class="mb-4">
@@ -768,10 +808,19 @@
                     </div>
 
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
-                            <span wire:loading.remove wire:target="submitWithdrawSavings">Process Withdrawal</span>
-                            <span wire:loading wire:target="submitWithdrawSavings">Processing...</span>
-                        </button>
+                        @if($withdrawPaymentMethod === 'cash' && !$withdrawOtpVerified)
+                            <div class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-gray-200 text-base font-medium text-gray-500 sm:ml-3 sm:w-auto sm:text-sm cursor-not-allowed">
+                                <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                                </svg>
+                                Verify OTP to Continue
+                            </div>
+                        @else
+                            <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                <span wire:loading.remove wire:target="submitWithdrawSavings">Process Withdrawal</span>
+                                <span wire:loading wire:target="submitWithdrawSavings">Processing...</span>
+                            </button>
+                        @endif
                         <button type="button" wire:click="$set('showWithdrawSavingsModal', false)" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                             Cancel
                         </button>

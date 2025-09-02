@@ -1,5 +1,6 @@
 @php
-    $indentClass = 'pl-' . (($level * 8) + 6);
+    // Calculate indentation based on level (increasing for deeper levels)
+    $indentPixels = $level * 32; // 32px per level (equivalent to 8 in Tailwind spacing)
     $hasChildren = isset($account->children) && count($account->children) > 0;
     $isExpanded = in_array($account->account_number, $expandedAccounts);
     
@@ -31,6 +32,7 @@
         default => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>'
     };
     
+    // Level-based styling for better visual hierarchy
     $levelBadge = match($account->account_level) {
         '1' => 'bg-blue-900 text-white',
         '2' => 'bg-blue-700 text-white',
@@ -39,17 +41,43 @@
         default => 'bg-gray-50 text-gray-500'
     };
     
+    // Row background based on level for better visual separation
+    $rowBackground = match($account->account_level) {
+        '1' => '',  // No background for level 1
+        '2' => 'bg-gray-50',
+        '3' => 'bg-gray-50',
+        '4' => 'bg-gray-100',
+        default => ''
+    };
+    
+    // Font weight based on level
+    $fontWeight = match($account->account_level) {
+        '1' => 'font-bold text-gray-900',
+        '2' => 'font-semibold text-gray-800',
+        '3' => 'font-medium text-gray-700',
+        '4' => 'font-normal text-gray-600',
+        default => 'font-normal text-gray-600'
+    };
+    
     // Determine if balance is negative for styling
     $balance = floatval($account->current_balance ?? $account->balance ?? 0);
     $isNegative = $balance < 0;
 @endphp
 
-<tr class="{{ $level > 0 ? 'bg-gray-50' : '' }} hover:bg-blue-50 transition-colors">
-    <td class="px-6 py-3 whitespace-nowrap">
-        <div class="flex items-center {{ $indentClass }}">
+<tr class="{{ $rowBackground }} hover:bg-blue-50 transition-colors {{ $level > 0 ? 'border-l-2 border-gray-300' : '' }}">
+    <td class="py-3 whitespace-nowrap">
+        <div class="flex items-center" style="padding-left: {{ 24 + $indentPixels }}px;">
+            @if($level > 0)
+                <!-- Hierarchy connector lines -->
+                <div class="relative">
+                    <div class="absolute -left-4 top-0 bottom-0 w-px bg-gray-300"></div>
+                    <div class="absolute -left-4 top-1/2 w-3 h-px bg-gray-300"></div>
+                </div>
+            @endif
+            
             @if($hasChildren)
                 <button wire:click="toggleAccount('{{ $account->account_number }}')" 
-                    class="mr-2 text-gray-500 hover:text-blue-900 focus:outline-none transition-colors">
+                    class="mr-2 p-1 rounded text-gray-500 hover:text-blue-900 hover:bg-gray-100 focus:outline-none transition-all">
                     @if($isExpanded)
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
@@ -61,15 +89,29 @@
                     @endif
                 </button>
             @else
-                <span class="inline-block w-6"></span>
+                @if($level > 0)
+                    <span class="inline-block w-7 mr-2"></span>
+                @else
+                    <span class="inline-block w-7 mr-2"></span>
+                @endif
             @endif
+            
             <div class="flex items-center">
+                <!-- Level indicator -->
+                @if($level > 0)
+                    <span class="mr-2 text-gray-400">
+                        @for($i = 1; $i < $level; $i++)
+                            <span class="inline-block w-1 h-1 bg-gray-400 rounded-full mr-1"></span>
+                        @endfor
+                    </span>
+                @endif
+                
                 <svg class="w-4 h-4 mr-2 {{ $accountType == 'LIABILITY' || $accountType == 'EXPENSE' ? 'text-red-600' : 'text-blue-900' }}" 
                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     {!! $typeIcon !!}
                 </svg>
                 <div>
-                    <div class="text-sm font-medium text-gray-900">
+                    <div class="text-sm {{ $fontWeight }}">
                         {{ $account->account_name }}
                     </div>
                     @if($account->notes)
@@ -113,14 +155,19 @@
         </span>
     </td>
     <td class="px-6 py-3 whitespace-nowrap text-right">
-        <span class="text-sm font-semibold {{ $isNegative ? 'text-red-600' : 'text-gray-900' }} font-mono">
-            {{ number_format($balance, 2) }}
-        </span>
-        @if($hasChildren && isset($account->total_balance) && $account->total_balance != $balance)
-            <div class="text-xs text-gray-500 font-mono">
-                Σ {{ number_format($account->total_balance, 2) }}
-            </div>
-        @endif
+        <div class="space-y-1">
+            <span class="text-sm {{ $fontWeight }} {{ $isNegative ? 'text-red-600' : '' }} font-mono block">
+                {{ number_format($balance, 2) }}
+            </span>
+            @if($hasChildren && isset($account->total_balance) && $account->total_balance != $balance)
+                <div class="flex items-center justify-end space-x-1">
+                    <span class="text-xs text-gray-400">Total:</span>
+                    <span class="text-xs font-semibold text-gray-600 font-mono">
+                        {{ number_format($account->total_balance, 2) }}
+                    </span>
+                </div>
+            @endif
+        </div>
     </td>
     <td class="px-6 py-3 whitespace-nowrap text-center">
         <div class="flex items-center justify-center space-x-2">

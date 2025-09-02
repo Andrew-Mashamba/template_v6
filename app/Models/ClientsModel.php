@@ -165,6 +165,14 @@ class ClientsModel extends Model
     }
 
     /**
+     * Get the name of the client (alias for full_name).
+     */
+    public function getNameAttribute()
+    {
+        return $this->full_name;
+    }
+
+    /**
      * Scope a query to only include active clients.
      */
     public function scopeActive($query)

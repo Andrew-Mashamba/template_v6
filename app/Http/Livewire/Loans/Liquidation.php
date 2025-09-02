@@ -232,7 +232,7 @@ class Liquidation extends Component
             if ($this->memberPhone) {
                 try {
                     $smsService = app(SmsService::class);
-                    $smsService->sendSMS($this->memberPhone, $message);
+                    $smsService->send($this->memberPhone, $message);
                     $this->otpSent = true;
                     $this->otpSentTime = now();
                     session()->flash('success', 'OTP has been sent to ' . substr($this->memberPhone, 0, 3) . '****' . substr($this->memberPhone, -2));

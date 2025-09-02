@@ -201,7 +201,6 @@ class Deposits extends Component
         'withdrawSelectedAccount' => 'required|min:1',
         'withdrawAmount' => 'required|numeric|min:0.01',
         'withdrawPaymentMethod' => 'required|in:cash,internal_transfer,tips_mno,tips_bank',
-        'withdrawerName' => 'required|string|max:255',
         'withdrawNarration' => 'required|string|max:255',
         // Internal transfer validation
         'withdrawNbcAccount' => 'required_if:withdrawPaymentMethod,internal_transfer|string|max:255',
@@ -1255,7 +1254,6 @@ class Deposits extends Component
                 'withdrawSelectedAccount' => 'required|min:1',
                 'withdrawAmount' => 'required|numeric|min:0.01',
                 'withdrawPaymentMethod' => 'required|in:cash,internal_transfer,tips_mno,tips_bank',
-                'withdrawerName' => 'required|string|max:255',
                 'withdrawNarration' => 'required|string|max:255'
             ]);
 
@@ -1300,11 +1298,14 @@ class Deposits extends Component
 
     private function processCashWithdrawal()
     {
-        $this->validate([
-            'withdrawDate' => 'required|date',
-            'withdrawTime' => 'required|date_format:H:i',
-            'withdrawReferenceNumber' => 'required|string|max:255'
-        ]);
+        // Auto-generate reference number if not provided
+        if (empty($this->withdrawReferenceNumber)) {
+            $this->withdrawReferenceNumber = 'DCASH-' . date('YmdHis') . '-' . rand(1000, 9999);
+        }
+        
+        // Set current date and time automatically
+        $this->withdrawDate = date('Y-m-d');
+        $this->withdrawTime = date('H:i');
 
         // Get cash in safe account (this should be configured in the system)
         $cashInSafeAccount = AccountsModel::where('account_name', 'LIKE', '%cash in safe%')
@@ -1322,7 +1323,7 @@ class Deposits extends Component
             'first_account' => $this->withdrawSelectedAccount, // Debit member's account
             'second_account' => $cashInSafeAccount->account_number, // Credit cash in safe account
             'amount' => $this->withdrawAmount,
-            'narration' => 'Cash withdrawal: ' . $this->withdrawAmount . ' : ' . $this->withdrawerName . ' : ' . $this->withdrawReferenceNumber,
+            'narration' => 'Cash withdrawal: ' . $this->withdrawAmount . ' : ' . ($this->withdrawVerifiedMember['name'] ?? 'Member') . ' : ' . $this->withdrawReferenceNumber,
             'action' => 'cash_withdrawal'
         ];
 
@@ -1335,7 +1336,7 @@ class Deposits extends Component
         Log::info('Cash withdrawal processed successfully', [
             'account' => $this->withdrawSelectedAccount,
             'amount' => $this->withdrawAmount,
-            'withdrawer' => $this->withdrawerName,
+            'withdrawer' => $this->withdrawVerifiedMember['name'] ?? 'Member',
             'reference' => $this->withdrawReferenceNumber
         ]);
     }
@@ -1344,11 +1345,17 @@ class Deposits extends Component
     {
         $this->validate([
             'withdrawNbcAccount' => 'required|string|max:255',
-            'withdrawAccountHolderName' => 'required|string|max:255',
-            'withdrawReferenceNumber' => 'required|string|max:255',
-            'withdrawDate' => 'required|date',
-            'withdrawTime' => 'required|date_format:H:i'
+            'withdrawAccountHolderName' => 'required|string|max:255'
         ]);
+        
+        // Auto-generate reference number if not provided
+        if (empty($this->withdrawReferenceNumber)) {
+            $this->withdrawReferenceNumber = 'DINT-' . date('YmdHis') . '-' . rand(1000, 9999);
+        }
+        
+        // Set current date and time automatically
+        $this->withdrawDate = date('Y-m-d');
+        $this->withdrawTime = date('H:i');
 
         // Get cash at NBC account (this should be configured in the system)
         $cashAtNbcAccount = AccountsModel::where('account_name', 'LIKE', '%cash at NBC%')
@@ -1411,11 +1418,17 @@ class Deposits extends Component
         $this->validate([
             'withdrawMnoProvider' => 'required|string|max:255',
             'withdrawPhoneNumber' => 'required|string|max:255',
-            'withdrawWalletHolderName' => 'required|string|max:255',
-            'withdrawReferenceNumber' => 'required|string|max:255',
-            'withdrawDate' => 'required|date',
-            'withdrawTime' => 'required|date_format:H:i'
+            'withdrawWalletHolderName' => 'required|string|max:255'
         ]);
+        
+        // Auto-generate reference number if not provided
+        if (empty($this->withdrawReferenceNumber)) {
+            $this->withdrawReferenceNumber = 'DMNO-' . date('YmdHis') . '-' . rand(1000, 9999);
+        }
+        
+        // Set current date and time automatically
+        $this->withdrawDate = date('Y-m-d');
+        $this->withdrawTime = date('H:i');
 
         // Get cash at NBC account
         $cashAtNbcAccount = AccountsModel::where('account_name', 'LIKE', '%cash at NBC%')
@@ -1489,11 +1502,17 @@ class Deposits extends Component
         $this->validate([
             'withdrawBankCode' => 'required|string|max:255',
             'withdrawBankAccountNumber' => 'required|string|max:255',
-            'withdrawBankAccountHolderName' => 'required|string|max:255',
-            'withdrawReferenceNumber' => 'required|string|max:255',
-            'withdrawDate' => 'required|date',
-            'withdrawTime' => 'required|date_format:H:i'
+            'withdrawBankAccountHolderName' => 'required|string|max:255'
         ]);
+        
+        // Auto-generate reference number if not provided
+        if (empty($this->withdrawReferenceNumber)) {
+            $this->withdrawReferenceNumber = 'DTIPS-' . date('YmdHis') . '-' . rand(1000, 9999);
+        }
+        
+        // Set current date and time automatically
+        $this->withdrawDate = date('Y-m-d');
+        $this->withdrawTime = date('H:i');
 
         // Get cash at NBC account
         $cashAtNbcAccount = AccountsModel::where('account_name', 'LIKE', '%cash at NBC%')

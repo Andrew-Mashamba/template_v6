@@ -472,6 +472,8 @@
                         <livewire:accounting.insurance />
                     @elseif($this->tab_id == 37)
                         <livewire:accounting.ledger-accounts />
+                    @elseif($this->tab_id == 47)
+                        <livewire:accounting.list-of-all-accounts />
                     @elseif($this->tab_id == 25)
                         <livewire:accounting.interest-payable />
                     @elseif($this->tab_id == 26)

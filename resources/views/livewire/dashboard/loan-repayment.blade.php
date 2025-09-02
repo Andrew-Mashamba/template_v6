@@ -293,9 +293,9 @@
                         <select wire:model="paymentMethod" 
                                 class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:border-blue-900 focus:outline-none">
                             <option value="CASH">Cash</option>
-                            <option value="BANK">Bank Transfer</option>
+                            <option value="BANK">Bank Deposit</option>
                             <option value="MOBILE">Mobile Money</option>
-                            <option value="INTERNAL">Internal Transfer</option>
+                          
                         </select>
                         @error('paymentMethod') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                     </div>
@@ -479,94 +479,173 @@
 
     {{-- Step 4: Receipt --}}
     @if($currentStep == 4 && $receipt)
-        <div class="bg-white rounded shadow-sm p-4">
-            <div class="text-center mb-4">
-                <div class="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-2">
-                    <i class="fas fa-check text-xl text-green-600"></i>
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            {{-- Success Header --}}
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-3">
+                    <i class="fas fa-check-circle text-3xl text-green-600"></i>
                 </div>
-                <h3 class="text-lg font-semibold text-green-600">Payment Successful!</h3>
+                <h3 class="text-xl font-bold text-green-600">Payment Successful!</h3>
+                <p class="text-sm text-gray-600 mt-1">Your loan repayment has been processed successfully</p>
             </div>
 
-            {{-- Receipt Content --}}
-            <div id="receipt-content" class="border rounded p-4 bg-white">
-                <div class="text-center mb-3">
-                    <h2 class="text-sm font-bold">PAYMENT RECEIPT</h2>
-                    <p class="text-xs text-gray-600">{{ $receipt['branch'] ?? 'Main Branch' }}</p>
-                </div>
+            {{-- Receipt Display --}}
+            <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                <div id="receipt-content" class="bg-white border-2 border-gray-300 rounded p-6 max-w-md mx-auto">
+                    {{-- Header --}}
+                    <div class="text-center border-b-2 border-gray-800 pb-3 mb-4">
+                        <h1 class="text-base font-bold uppercase">SACCOS CORE SYSTEM</h1>
+                        <p class="text-xs text-gray-600">Loan Payment Receipt</p>
+                        <p class="text-xs text-gray-600">{{ $receipt['branch'] ?? 'Main Branch' }}</p>
+                    </div>
 
-                <div class="grid grid-cols-2 gap-2 text-xs mb-3">
-                    <div>
-                        <span class="text-gray-600">Receipt #:</span>
-                        <span class="font-semibold">{{ $receipt['receipt_number'] ?? '' }}</span>
+                    {{-- Receipt Title --}}
+                    <div class="text-center font-bold text-sm uppercase mb-3">
+                        LOAN PAYMENT RECEIPT
                     </div>
-                    <div>
-                        <span class="text-gray-600">Date:</span>
-                        <span class="font-semibold">{{ $receipt['generated_at'] ?? '' }}</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">Loan ID:</span>
-                        <span class="font-semibold">{{ $receipt['loan_id'] ?? '' }}</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">Member:</span>
-                        <span class="font-semibold">{{ $receipt['member_name'] ?? '' }}</span>
-                    </div>
-                </div>
 
-                <div class="border-t border-b py-2 my-2">
-                    <div class="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                            <span class="text-gray-600">Amount Paid:</span>
-                            <p class="text-lg font-bold text-blue-900">{{ number_format($receipt['amount_paid'] ?? 0, 0) }}</p>
+                    {{-- Receipt Number --}}
+                    <div class="text-center text-xs mb-4">
+                        Receipt No: <span class="font-bold">{{ $receipt['receipt_number'] ?? '' }}</span>
+                    </div>
+
+                    {{-- Transaction Details --}}
+                    <div class="space-y-2 text-xs mb-4">
+                        <div class="flex justify-between border-b border-dotted border-gray-400 pb-1">
+                            <span class="font-semibold">Date:</span>
+                            <span>{{ $receipt['generated_at'] ?? '' }}</span>
                         </div>
-                        <div>
-                            <span class="text-gray-600">Method:</span>
-                            <p class="font-semibold">{{ $receipt['payment_method'] ?? '' }}</p>
+                        <div class="flex justify-between border-b border-dotted border-gray-400 pb-1">
+                            <span class="font-semibold">Member:</span>
+                            <span>{{ $receipt['member_name'] ?? '' }}</span>
+                        </div>
+                        <div class="flex justify-between border-b border-dotted border-gray-400 pb-1">
+                            <span class="font-semibold">Member No:</span>
+                            <span>{{ $receipt['member_number'] ?? '' }}</span>
+                        </div>
+                        <div class="flex justify-between border-b border-dotted border-gray-400 pb-1">
+                            <span class="font-semibold">Loan ID:</span>
+                            <span>{{ $receipt['loan_id'] ?? '' }}</span>
+                        </div>
+                        <div class="flex justify-between border-b border-dotted border-gray-400 pb-1">
+                            <span class="font-semibold">Product:</span>
+                            <span>{{ $receipt['loan_product'] ?? 'N/A' }}</span>
+                        </div>
+                        <div class="flex justify-between border-b border-dotted border-gray-400 pb-1">
+                            <span class="font-semibold">Payment Method:</span>
+                            <span>{{ $receipt['payment_method'] ?? '' }}</span>
+                        </div>
+                        
+                        @if(($receipt['payment_method'] ?? '') == 'BANK')
+                            <div class="flex justify-between border-b border-dotted border-gray-400 pb-1">
+                                <span class="font-semibold">Bank:</span>
+                                <span>{{ $receipt['bank_name'] ?? '' }}</span>
+                            </div>
+                            <div class="flex justify-between border-b border-dotted border-gray-400 pb-1">
+                                <span class="font-semibold">Reference:</span>
+                                <span>{{ $receipt['reference_number'] ?? '' }}</span>
+                            </div>
+                        @elseif(($receipt['payment_method'] ?? '') == 'MOBILE')
+                            <div class="flex justify-between border-b border-dotted border-gray-400 pb-1">
+                                <span class="font-semibold">Provider:</span>
+                                <span>{{ $receipt['mobile_provider'] ?? '' }}</span>
+                            </div>
+                            <div class="flex justify-between border-b border-dotted border-gray-400 pb-1">
+                                <span class="font-semibold">Mobile No:</span>
+                                <span>{{ $receipt['mobile_number'] ?? '' }}</span>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Payment Amount Section --}}
+                    <div class="bg-gray-100 p-3 rounded mb-4">
+                        <div class="text-center">
+                            <p class="text-xs font-semibold uppercase mb-1">Amount Paid</p>
+                            <p class="text-2xl font-bold text-blue-900">TZS {{ number_format($receipt['amount_paid'] ?? 0, 0) }}</p>
                         </div>
                     </div>
-                </div>
 
-                @if($receipt['payment_breakdown'] ?? false)
-                    <div class="mb-2">
-                        <h4 class="text-xs font-semibold mb-1">Breakdown:</h4>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-1 text-xs">
-                            @foreach($receipt['payment_breakdown'] as $key => $value)
-                                @if($value > 0)
-                                    <div>{{ ucfirst($key) }}: {{ number_format($value, 0) }}</div>
+                    {{-- Payment Breakdown --}}
+                    @if($receipt['payment_breakdown'] ?? false)
+                        <div class="mb-4">
+                            <h4 class="text-xs font-semibold mb-2 uppercase">Payment Allocation:</h4>
+                            <div class="space-y-1 text-xs">
+                                @if(($receipt['payment_breakdown']['penalties'] ?? 0) > 0)
+                                    <div class="flex justify-between border-b border-dotted border-gray-300 pb-1">
+                                        <span>Penalties:</span>
+                                        <span class="font-semibold">TZS {{ number_format($receipt['payment_breakdown']['penalties'], 0) }}</span>
+                                    </div>
                                 @endif
-                            @endforeach
+                                @if(($receipt['payment_breakdown']['interest'] ?? 0) > 0)
+                                    <div class="flex justify-between border-b border-dotted border-gray-300 pb-1">
+                                        <span>Interest:</span>
+                                        <span class="font-semibold">TZS {{ number_format($receipt['payment_breakdown']['interest'], 0) }}</span>
+                                    </div>
+                                @endif
+                                @if(($receipt['payment_breakdown']['principal'] ?? 0) > 0)
+                                    <div class="flex justify-between border-b border-dotted border-gray-300 pb-1">
+                                        <span>Principal:</span>
+                                        <span class="font-semibold">TZS {{ number_format($receipt['payment_breakdown']['principal'], 0) }}</span>
+                                    </div>
+                                @endif
+                                @if(($receipt['payment_breakdown']['overpayment'] ?? 0) > 0)
+                                    <div class="flex justify-between border-b border-dotted border-gray-300 pb-1">
+                                        <span>Overpayment:</span>
+                                        <span class="font-semibold">TZS {{ number_format($receipt['payment_breakdown']['overpayment'], 0) }}</span>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Outstanding Balance --}}
+                    <div class="border-t-2 border-gray-800 pt-3 mb-4">
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span>Outstanding Balance:</span>
+                            <span class="text-red-600">TZS {{ number_format($receipt['outstanding_balance'] ?? 0, 0) }}</span>
                         </div>
                     </div>
-                @endif
 
-                <div class="border-t pt-2">
-                    <div class="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                            <span class="text-gray-600">Outstanding:</span>
-                            <span class="font-bold">{{ number_format($receipt['outstanding_balance'] ?? 0, 0) }}</span>
-                        </div>
-                        <div>
-                            <span class="text-gray-600">Processed By:</span>
-                            <span class="font-semibold">{{ $receipt['processed_by'] ?? '' }}</span>
-                        </div>
+                    {{-- Barcode --}}
+                    <div class="text-center font-mono text-xs mb-4">
+                        *{{ $receipt['receipt_number'] ?? '' }}*
+                    </div>
+
+                    {{-- Signature Line --}}
+                    <div class="text-xs mb-4">
+                        Processed by: <span class="font-semibold">{{ $receipt['processed_by'] ?? '' }}</span>
+                    </div>
+
+                    {{-- Footer --}}
+                    <div class="text-center text-xs text-gray-600 border-t pt-3">
+                        <p class="font-semibold">Thank you for your payment!</p>
+                        <p>This is a computer generated receipt</p>
+                        <p>For queries, contact your branch office</p>
+                        <p class="text-xs mt-1">Generated on: {{ $receipt['generated_at'] ?? '' }}</p>
                     </div>
                 </div>
+            </div>
 
-                <div class="mt-3 text-center text-xs text-gray-500">
-                    <p>Thank you for your payment</p>
-                </div>
+            {{-- Information Box --}}
+            <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                <p class="text-sm text-blue-800">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Your receipt has been generated. You can print it or save it for your records.
+                </p>
             </div>
 
             {{-- Action Buttons --}}
-            <div class="mt-4 flex justify-center space-x-2">
-                <button onclick="window.print()" 
-                        class="px-3 py-1.5 bg-blue-900 text-white text-sm rounded hover:bg-blue-800">
-                    <i class="fas fa-print mr-1 text-xs"></i>Print
+            <div class="flex justify-center space-x-3">
+                <button onclick="printLoanReceipt()" 
+                        class="inline-flex items-center px-4 py-2 bg-blue-900 text-white text-sm font-medium rounded-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <i class="fas fa-print mr-2"></i>
+                    Print Receipt
                 </button>
                 
                 <button wire:click="newPayment" 
-                        class="px-3 py-1.5 bg-gray-600 text-white text-sm rounded hover:bg-gray-700">
-                    <i class="fas fa-plus mr-1 text-xs"></i>New Payment
+                        class="inline-flex items-center px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                    <i class="fas fa-plus mr-2"></i>
+                    New Payment
                 </button>
             </div>
         </div>

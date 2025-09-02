@@ -704,15 +704,6 @@
                                 </div>
                             @endif
 
-                            {{-- Withdrawer Name --}}
-                            <div class="mb-4">
-                                <label for="withdrawerName" class="block text-sm font-medium text-gray-700">Name of Withdrawer</label>
-                                <div class="mt-1">
-                                    <input type="text" wire:model.defer="withdrawerName" id="withdrawerName" class="focus:ring-red-500 focus:border-red-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" placeholder="Enter withdrawer name">
-                                </div>
-                                @error('withdrawerName') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
-
                             {{-- Narration --}}
                             <div class="mb-4">
                                 <label for="withdrawNarration" class="block text-sm font-medium text-gray-700">Narration</label>

@@ -22,8 +22,12 @@ class LedgerAccounts extends Component
     public $showDetailsModal = false;
     public $showCreateModal = false;
     public $selectedAccount = null;
-    protected $selectedAccountData = null;
-    protected $ledgerEntries = [];
+    public $selectedAccountData = null;
+    public $ledgerEntries = [];
+    
+    // Create account modal properties
+    public $parentAccountNumber = null;
+    public $parentAccountData = null;
     
     // New account properties
     public $newAccount = [
@@ -39,8 +43,6 @@ class LedgerAccounts extends Component
         'sub_category_code' => '',
         'status' => 'ACTIVE'
     ];
-    
-    protected $parentAccountData = null;
     
     // Account types based on IAS standards
     public $accountTypes = [

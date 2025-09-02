@@ -56,7 +56,8 @@ class MembershipVerificationService
                         ? $member->first_name . ' ' . $member->last_name 
                         : $member->business_name,
                     'membership_type' => $member->membership_type,
-                    'client_number' => $member->client_number
+                    'client_number' => $member->client_number,
+                    'account_number' => $member->account_number
                 ]
             ];
 

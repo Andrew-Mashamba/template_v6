@@ -25,15 +25,16 @@ use App\Models\issured_savings;
 use App\Models\general_ledger;
 
 use Livewire\WithPagination;
-
+use Illuminate\Support\Facades\Cache;
+use Carbon\Carbon;
+use App\Services\SmsService;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 use App\Models\Client;
 
 use App\Models\general_ledger as GeneralLedgerModel;
-use Carbon\Carbon;
 use App\Models\User;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Exception;
 use App\Services\MembershipVerificationService;
@@ -156,6 +157,7 @@ class Savings extends Component
     public $withdrawAmount;
     public $withdrawPaymentMethod = 'cash'; // 'cash', 'internal_transfer', 'tips_mno', 'tips_bank'
     public $withdrawSelectedBank;
+    public $withdrawSourceAccount;
     public $withdrawReferenceNumber;
     public $withdrawDate;
     public $withdrawTime;
@@ -180,6 +182,13 @@ class Savings extends Component
     public $withdrawBankCode;
     public $withdrawBankAccountNumber;
     public $withdrawBankAccountHolderName;
+    
+    // OTP Properties
+    public $withdrawOtpCode = '';
+    public $generatedWithdrawOTP = '';
+    public $withdrawOtpSent = false;
+    public $withdrawOtpSentTime = null;
+    public $withdrawOtpVerified = false;
 
     protected $rules = [
         'member'=> 'required|min:1',
@@ -202,15 +211,12 @@ class Savings extends Component
         'withdrawSelectedAccount' => 'required|min:1',
         'withdrawAmount' => 'required|numeric|min:0.01',
         'withdrawPaymentMethod' => 'required|in:cash,internal_transfer,tips_mno,tips_bank',
-        'withdrawerName' => 'required|string|max:255',
         'withdrawNarration' => 'required|string|max:255',
         // Internal transfer validation
-        'withdrawNbcAccount' => 'required_if:withdrawPaymentMethod,internal_transfer|string|max:255',
-        'withdrawAccountHolderName' => 'required_if:withdrawPaymentMethod,internal_transfer|string|max:255',
+        'withdrawSourceAccount' => 'required_if:withdrawPaymentMethod,internal_transfer|exists:bank_accounts,id',
         // TIPS MNO validation
         'withdrawMnoProvider' => 'required_if:withdrawPaymentMethod,tips_mno|string|max:255',
         'withdrawPhoneNumber' => 'required_if:withdrawPaymentMethod,tips_mno|string|max:255',
-        'withdrawWalletHolderName' => 'required_if:withdrawPaymentMethod,tips_mno|string|max:255',
         // TIPS Bank validation
         'withdrawBankCode' => 'required_if:withdrawPaymentMethod,tips_bank|string|max:255',
         'withdrawBankAccountNumber' => 'required_if:withdrawPaymentMethod,tips_bank|string|max:255',
@@ -1556,10 +1562,22 @@ class Savings extends Component
 
     public function updatedWithdrawPaymentMethod()
     {
+        // Reset OTP verification when payment method changes
+        $this->withdrawOtpCode = '';
+        $this->withdrawOtpSent = false;
+        $this->withdrawOtpSentTime = null;
+        $this->withdrawOtpVerified = false;
+        $this->generatedWithdrawOTP = null;
+        
         if ($this->withdrawPaymentMethod === 'cash') {
             $this->withdrawReferenceNumber = 'CASH-' . strtoupper(uniqid());
             $this->withdrawDate = now()->format('Y-m-d');
             $this->withdrawTime = now()->format('H:i');
+            
+            // Automatically send OTP when cash withdrawal is selected
+            if ($this->withdrawVerifiedMember) {
+                $this->sendWithdrawOTP();
+            }
         } elseif ($this->withdrawPaymentMethod === 'internal_transfer') {
             $this->withdrawReferenceNumber = 'IFT-' . strtoupper(uniqid());
             $this->withdrawDate = now()->format('Y-m-d');
@@ -1600,7 +1618,6 @@ class Savings extends Component
                 'withdrawSelectedAccount' => 'required|min:1',
                 'withdrawAmount' => 'required|numeric|min:0.01',
                 'withdrawPaymentMethod' => 'required|in:cash,internal_transfer,tips_mno,tips_bank',
-                'withdrawerName' => 'required|string|max:255',
                 'withdrawNarration' => 'required|string|max:255'
             ]);
 
@@ -1612,6 +1629,12 @@ class Savings extends Component
 
             if ($account->balance < $this->withdrawAmount) {
                 $this->addError('withdrawAmount', 'Insufficient balance. Available balance: ' . number_format($account->balance, 2));
+                return;
+            }
+
+            // For cash withdrawals, verify OTP first
+            if ($this->withdrawPaymentMethod === 'cash' && !$this->withdrawOtpVerified) {
+                $this->addError('withdrawOtpCode', 'Please verify OTP before processing cash withdrawal.');
                 return;
             }
 
@@ -1643,22 +1666,170 @@ class Savings extends Component
         }
     }
 
+    public function sendWithdrawOTP()
+    {
+        if (!$this->withdrawVerifiedMember) {
+            session()->flash('error', 'Please verify member first.');
+            return;
+        }
+
+        try {
+            // Generate 6-digit OTP
+            $this->generatedWithdrawOTP = str_pad(random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+            
+            // Store OTP in cache with 5 minute expiry
+            $cacheKey = 'withdrawal_otp_' . $this->withdrawMembershipNumber . '_' . date('YmdHis');
+            Cache::put($cacheKey, $this->generatedWithdrawOTP, Carbon::now()->addMinutes(5));
+            
+            // Get member's details
+            $member = ClientsModel::where('client_number', $this->withdrawMembershipNumber)->first();
+            $memberPhone = $member->phone_number ?? null;
+            $memberEmail = $member->email ?? null;
+            $memberName = $member->first_name . ' ' . $member->last_name;
+            
+            $otpSentVia = [];
+            
+            // Send OTP via SMS
+            if ($memberPhone) {
+                $smsMessage = "Dear {$memberName}, your savings withdrawal OTP is: {$this->generatedWithdrawOTP}. Valid for 5 minutes. Do not share with anyone. - SACCOS";
+                
+                try {
+                    $smsService = app(SmsService::class);
+                    $smsService->send($memberPhone, $smsMessage, $member);
+                    $otpSentVia[] = 'SMS (' . substr($memberPhone, 0, 3) . '****' . substr($memberPhone, -2) . ')';
+                } catch (\Exception $e) {
+                    Log::error('Failed to send withdrawal OTP via SMS', [
+                        'member' => $this->withdrawMembershipNumber,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+            
+            // Send OTP via Email
+            if ($memberEmail) {
+                try {
+                    $otp = $this->generatedWithdrawOTP;
+                    Mail::send([], [], function ($message) use ($memberEmail, $memberName, $otp) {
+                        $emailBody = "
+                        <h3>Savings Withdrawal OTP</h3>
+                        <p>Dear {$memberName},</p>
+                        <p>Your OTP for savings withdrawal is:</p>
+                        <h1 style='color: #2563eb; font-size: 32px; letter-spacing: 5px;'>{$otp}</h1>
+                        <p>This OTP is valid for 5 minutes.</p>
+                        <p><strong>Security Notice:</strong> Do not share this OTP with anyone. SACCOS staff will never ask for your OTP.</p>
+                        <br>
+                        <p>Best regards,<br>SACCOS Core System</p>
+                        ";
+                        
+                        $message->to($memberEmail, $memberName)
+                            ->subject('Savings Withdrawal OTP - SACCOS')
+                            ->html($emailBody);
+                    });
+                    $otpSentVia[] = 'Email (' . substr($memberEmail, 0, 3) . '****' . substr($memberEmail, strpos($memberEmail, '@')) . ')';
+                } catch (\Exception $e) {
+                    Log::error('Failed to send withdrawal OTP via Email', [
+                        'member' => $this->withdrawMembershipNumber,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+            
+            $this->withdrawOtpSent = true;
+            $this->withdrawOtpSentTime = now();
+            
+            if (!empty($otpSentVia)) {
+                session()->flash('success', 'OTP has been sent via ' . implode(' and ', $otpSentVia));
+            } else {
+                // If no phone or email, show OTP on screen (for testing)
+                session()->flash('info', 'No contact details found. OTP for testing: ' . $this->generatedWithdrawOTP);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Error generating withdrawal OTP', [
+                'member' => $this->withdrawMembershipNumber,
+                'error' => $e->getMessage()
+            ]);
+            session()->flash('error', 'Error generating OTP: ' . $e->getMessage());
+        }
+    }
+
+    public function verifyWithdrawOTP()
+    {
+        if (!$this->withdrawOtpCode) {
+            session()->flash('error', 'Please enter the OTP code.');
+            return false;
+        }
+
+        // Check all possible cache keys (last 5 minutes)
+        $found = false;
+        for ($i = 0; $i < 300; $i++) { // Check last 5 minutes
+            $time = Carbon::now()->subSeconds($i);
+            $cacheKey = 'withdrawal_otp_' . $this->withdrawMembershipNumber . '_' . $time->format('YmdHis');
+            $storedOTP = Cache::get($cacheKey);
+            
+            if ($storedOTP && $storedOTP === $this->withdrawOtpCode) {
+                Cache::forget($cacheKey);
+                $found = true;
+                break;
+            }
+        }
+        
+        if (!$found) {
+            session()->flash('error', 'Invalid or expired OTP. Please request a new one.');
+            return false;
+        }
+        
+        $this->withdrawOtpVerified = true;
+        session()->flash('success', 'OTP verified successfully.');
+        return true;
+    }
+
     private function processCashWithdrawal()
     {
-        $this->validate([
-            'withdrawDate' => 'required|date',
-            'withdrawTime' => 'required|date_format:H:i',
-            'withdrawReferenceNumber' => 'required|string|max:255'
-        ]);
+        // Verify OTP first
+        if (!$this->withdrawOtpVerified) {
+            if (!$this->verifyWithdrawOTP()) {
+                throw new \Exception('OTP verification failed. Please enter valid OTP.');
+            }
+        }
+        
+        // Auto-generate reference number if not provided
+        if (empty($this->withdrawReferenceNumber)) {
+            $this->withdrawReferenceNumber = 'CASH-' . date('YmdHis') . '-' . rand(1000, 9999);
+        }
+        
+        // Set current date and time automatically
+        $this->withdrawDate = date('Y-m-d');
+        $this->withdrawTime = date('H:i');
 
-        // Get cash in safe account (this should be configured in the system)
-        $cashInSafeAccount = AccountsModel::where('account_name', 'LIKE', '%cash in safe%')
-            ->orWhere('account_name', 'LIKE', '%cash%')
+        // Get cash account from institution settings
+        $institution = \App\Models\institutions::find(1);
+        if (!$institution || !$institution->main_till_account) {
+            throw new \Exception('Institution cash account not configured. Please contact administrator.');
+        }
+
+        $cashInSafeAccount = AccountsModel::where('account_number', $institution->main_till_account)
             ->where('status', 'ACTIVE')
             ->first();
 
         if (!$cashInSafeAccount) {
-            throw new \Exception('Cash in safe account not found. Please contact administrator.');
+            // Fallback to vault cash or petty cash account
+            $cashInSafeAccount = AccountsModel::where('account_number', $institution->main_petty_cash_account)
+                ->where('status', 'ACTIVE')
+                ->first();
+        }
+
+        if (!$cashInSafeAccount) {
+            // Last fallback to searching by name
+            $cashInSafeAccount = AccountsModel::where('account_name', 'LIKE', '%VAULT CASH%')
+                ->orWhere('account_name', 'LIKE', '%TILL%')
+                ->orWhere('account_name', 'LIKE', '%PETTY CASH%')
+                ->where('status', 'ACTIVE')
+                ->first();
+        }
+
+        if (!$cashInSafeAccount) {
+            throw new \Exception('Cash account not found. Please contact administrator to configure cash accounts.');
         }
 
         // Post the cash withdrawal transaction
@@ -1667,7 +1838,7 @@ class Savings extends Component
             'first_account' => $this->withdrawSelectedAccount, // Debit member's account
             'second_account' => $cashInSafeAccount->account_number, // Credit cash in safe account
             'amount' => $this->withdrawAmount,
-            'narration' => 'Cash withdrawal: ' . $this->withdrawAmount . ' : ' . $this->withdrawerName . ' : ' . $this->withdrawReferenceNumber,
+            'narration' => 'Cash withdrawal: ' . $this->withdrawAmount . ' : ' . ($this->withdrawVerifiedMember['name'] ?? 'Member') . ' : ' . $this->withdrawReferenceNumber,
             'action' => 'cash_withdrawal'
         ];
 
@@ -1680,7 +1851,7 @@ class Savings extends Component
         Log::info('Cash withdrawal processed successfully', [
             'account' => $this->withdrawSelectedAccount,
             'amount' => $this->withdrawAmount,
-            'withdrawer' => $this->withdrawerName,
+            'withdrawer' => $this->withdrawVerifiedMember['name'] ?? 'Member',
             'reference' => $this->withdrawReferenceNumber
         ]);
     }
@@ -1688,36 +1859,37 @@ class Savings extends Component
     private function processInternalTransferWithdrawal()
     {
         $this->validate([
-            'withdrawNbcAccount' => 'required|string|max:255',
-            'withdrawAccountHolderName' => 'required|string|max:255',
-            'withdrawReferenceNumber' => 'required|string|max:255',
-            'withdrawDate' => 'required|date',
-            'withdrawTime' => 'required|date_format:H:i'
+            'withdrawSourceAccount' => 'required|exists:bank_accounts,id'
         ]);
+        
+        // Auto-generate reference number if not provided
+        if (empty($this->withdrawReferenceNumber)) {
+            $this->withdrawReferenceNumber = 'INT-' . date('YmdHis') . '-' . rand(1000, 9999);
+        }
+        
+        // Set current date and time automatically
+        $this->withdrawDate = date('Y-m-d');
+        $this->withdrawTime = date('H:i');
 
-        // Get cash at NBC account (this should be configured in the system)
-        $cashAtNbcAccount = AccountsModel::where('account_name', 'LIKE', '%cash at NBC%')
-            ->orWhere('account_name', 'LIKE', '%NBC%')
-            ->where('status', 'ACTIVE')
-            ->first();
-
-        if (!$cashAtNbcAccount) {
-            throw new \Exception('Cash at NBC account not found. Please contact administrator.');
+        // Get the source bank account from the selected bank account
+        $sourceBankAccount = \App\Models\BankAccount::find($this->withdrawSourceAccount);
+        if (!$sourceBankAccount) {
+            throw new \Exception('Source bank account not found.');
         }
 
         // Process internal fund transfer using NBC API
         $internalTransferService = new \App\Services\NbcPayments\InternalFundTransferService();
         
         $transferData = [
-            'debitAccount' => $cashAtNbcAccount->account_number, // SACCO's NBC account
-            'creditAccount' => $this->withdrawNbcAccount, // Member's NBC account
+            'debitAccount' => $sourceBankAccount->account_number, // SACCO's NBC account from selected source
+            'creditAccount' => $this->withdrawVerifiedMember['account_number'] ?? '', // Member's NBC account from client record
             'amount' => $this->withdrawAmount,
             'debitCurrency' => 'TZS',
             'creditCurrency' => 'TZS',
             'narration' => 'Internal transfer: ' . $this->withdrawNarration,
             'channelId' => config('services.nbc_internal_fund_transfer.channel_id'),
             'channelRef' => $this->withdrawReferenceNumber,
-            'pyrName' => $this->withdrawAccountHolderName
+            'pyrName' => $this->withdrawVerifiedMember['name'] ?? 'Member'
         ];
 
         $result = $internalTransferService->processInternalTransfer($transferData);
@@ -1730,9 +1902,9 @@ class Savings extends Component
         $transactionService = new TransactionPostingService();
         $transactionData = [
             'first_account' => $this->withdrawSelectedAccount, // Debit member's savings account
-            'second_account' => $cashAtNbcAccount->account_number, // Credit cash at NBC account
+            'second_account' => $sourceBankAccount->internal_mirror_account_number ?? $sourceBankAccount->account_number, // Credit source bank account
             'amount' => $this->withdrawAmount,
-            'narration' => 'Internal transfer withdrawal: ' . $this->withdrawAmount . ' to ' . $this->withdrawNbcAccount . ' : ' . $this->withdrawReferenceNumber,
+            'narration' => 'Internal transfer withdrawal: ' . $this->withdrawAmount . ' to ' . ($this->withdrawVerifiedMember['account_number'] ?? '') . ' : ' . $this->withdrawReferenceNumber,
             'action' => 'internal_transfer_withdrawal'
         ];
 
@@ -1744,7 +1916,8 @@ class Savings extends Component
 
         Log::info('Internal transfer withdrawal processed successfully', [
             'member_account' => $this->withdrawSelectedAccount,
-            'nbc_account' => $this->withdrawNbcAccount,
+            'nbc_account' => $this->withdrawVerifiedMember['account_number'] ?? '',
+            'source_bank_account' => $sourceBankAccount->account_number,
             'amount' => $this->withdrawAmount,
             'reference' => $this->withdrawReferenceNumber,
             'nbc_reference' => $result['data']['hostReferenceCbs'] ?? null
@@ -1755,12 +1928,17 @@ class Savings extends Component
     {
         $this->validate([
             'withdrawMnoProvider' => 'required|string|max:255',
-            'withdrawPhoneNumber' => 'required|string|max:255',
-            'withdrawWalletHolderName' => 'required|string|max:255',
-            'withdrawReferenceNumber' => 'required|string|max:255',
-            'withdrawDate' => 'required|date',
-            'withdrawTime' => 'required|date_format:H:i'
+            'withdrawPhoneNumber' => 'required|string|max:255'
         ]);
+        
+        // Auto-generate reference number if not provided
+        if (empty($this->withdrawReferenceNumber)) {
+            $this->withdrawReferenceNumber = 'MNO-' . date('YmdHis') . '-' . rand(1000, 9999);
+        }
+        
+        // Set current date and time automatically
+        $this->withdrawDate = date('Y-m-d');
+        $this->withdrawTime = date('H:i');
 
         // Get cash at NBC account
         $cashAtNbcAccount = AccountsModel::where('account_name', 'LIKE', '%cash at NBC%')
@@ -1834,11 +2012,17 @@ class Savings extends Component
         $this->validate([
             'withdrawBankCode' => 'required|string|max:255',
             'withdrawBankAccountNumber' => 'required|string|max:255',
-            'withdrawBankAccountHolderName' => 'required|string|max:255',
-            'withdrawReferenceNumber' => 'required|string|max:255',
-            'withdrawDate' => 'required|date',
-            'withdrawTime' => 'required|date_format:H:i'
+            'withdrawBankAccountHolderName' => 'required|string|max:255'
         ]);
+        
+        // Auto-generate reference number if not provided
+        if (empty($this->withdrawReferenceNumber)) {
+            $this->withdrawReferenceNumber = 'TIPS-' . date('YmdHis') . '-' . rand(1000, 9999);
+        }
+        
+        // Set current date and time automatically
+        $this->withdrawDate = date('Y-m-d');
+        $this->withdrawTime = date('H:i');
 
         // Get cash at NBC account
         $cashAtNbcAccount = AccountsModel::where('account_name', 'LIKE', '%cash at NBC%')
@@ -1916,6 +2100,7 @@ class Savings extends Component
             'withdrawAmount',
             'withdrawPaymentMethod',
             'withdrawSelectedBank',
+            'withdrawSourceAccount',
             'withdrawReferenceNumber',
             'withdrawDate',
             'withdrawTime',
@@ -1932,7 +2117,12 @@ class Savings extends Component
             'withdrawWalletHolderName',
             'withdrawBankCode',
             'withdrawBankAccountNumber',
-            'withdrawBankAccountHolderName'
+            'withdrawBankAccountHolderName',
+            'withdrawOtpCode',
+            'generatedWithdrawOTP',
+            'withdrawOtpSent',
+            'withdrawOtpSentTime',
+            'withdrawOtpVerified'
         ]);
         $this->resetErrorBag();
     }

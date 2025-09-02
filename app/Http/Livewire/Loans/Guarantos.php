@@ -1186,15 +1186,22 @@ class Guarantos extends Component
             }
             
             // Use restructured loan ID for data loading if available
+            // IMPORTANT: loan_guarantors table uses numeric ID, not string loan_id
             $loanIdToQuery = $restructuredLoanId ?: $this->loan_id;
             
-            // Get the actual loan_id string from the loans table
+            // Keep the numeric ID for querying guarantors table
+            // The loan_guarantors.loan_id column is bigint and references loans.id (numeric)
+            $numericLoanId = $loanIdToQuery;
+            
+            // Also get the string loan_id for reference
+            $stringLoanId = null;
             $loan = LoansModel::find($loanIdToQuery);
             if ($loan && $loan->loan_id) {
-                $loanIdToQuery = $loan->loan_id; // Use the string loan_id instead of numeric id
+                $stringLoanId = $loan->loan_id; // This is the string format like "LN202508311692"
             }
             
-            $this->debugInfo['loan_id_to_query'] = $loanIdToQuery;
+            $this->debugInfo['loan_id_to_query'] = $numericLoanId; // Use numeric ID for queries
+            $this->debugInfo['string_loan_id'] = $stringLoanId; // Keep string ID for reference
             $this->debugInfo['original_numeric_id'] = $restructuredLoanId ?: $this->loan_id;
             
             // Debug: Check if loan exists in loans table
@@ -1214,14 +1221,14 @@ class Guarantos extends Component
                 $this->debugInfo['errors']['loan_check'] = $e->getMessage();
             }
             
-            // Query guarantor data with debug info
+            // Query guarantor data with debug info - use numeric ID
             try {
-                $guarantorQuery = DB::table('loan_guarantors')->where('loan_id', $loanIdToQuery);
+                $guarantorQuery = DB::table('loan_guarantors')->where('loan_id', $numericLoanId);
                 $this->debugInfo['queries']['guarantors'] = [
                     'sql' => $guarantorQuery->toSql(),
                     'bindings' => $guarantorQuery->getBindings(),
                     'table' => 'loan_guarantors',
-                    'where_conditions' => ['loan_id' => $loanIdToQuery]
+                    'where_conditions' => ['loan_id' => $numericLoanId]
                 ];
                 
                 $this->existingGuarantorData = $guarantorQuery->get()->toArray();
@@ -1233,10 +1240,10 @@ class Guarantos extends Component
                 $this->debugInfo['errors']['guarantors_query'] = $e->getMessage();
             }
             
-            // Get collateral data through loan_guarantors relationship with debug info
+            // Get collateral data through loan_guarantors relationship with debug info - use numeric ID
             try {
                 $guarantorIds = DB::table('loan_guarantors')
-                    ->where('loan_id', $loanIdToQuery)
+                    ->where('loan_id', $numericLoanId)
                     ->pluck('id');
                 
                 $this->debugInfo['guarantor_ids'] = $guarantorIds->toArray();
