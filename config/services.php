@@ -40,6 +40,7 @@ return [
         'api_key' => env('NBC_PAYMENTS_API_KEY'),
         'client_id' => env('NBC_PAYMENTS_CLIENT_ID'),
         'private_key' => env('NBC_PAYMENTS_PRIVATE_KEY'),
+        'saccos_account' => env('NBC_PAYMENTS_SACCOS_ACCOUNT', '015103001490'),
     ],
 
     'nbc_internal_fund_transfer' => [
