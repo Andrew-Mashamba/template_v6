@@ -52,6 +52,15 @@ return [
     */
 
     'channels' => [
+        'money_transfer' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/MoneyTransfer/').date('Y-m-d').'.log',
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 30,
+            'replace_placeholders' => true,
+            'permission' => 0664,
+        ],
+
         'payments' => [
             'driver' => 'daily',
             'path' => storage_path('logs/payments/payments.log'),

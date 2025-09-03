@@ -12,6 +12,14 @@ use Exception;
 
 class MoneyTransfer extends Component
 {
+    /**
+     * Get the custom logger for Money Transfer
+     */
+    protected function log()
+    {
+        return Log::channel('money_transfer');
+    }
+    
     // Transfer type selection
     public $transferCategory = ''; // 'internal' or 'external' - primary choice
     public $transferType = ''; // 'bank' or 'wallet' - for external transfers only
@@ -56,7 +64,7 @@ class MoneyTransfer extends Component
 
     public function mount()
     {
-        Log::info('[MoneyTransfer] Component mounting', [
+        $this->log()->info('[MoneyTransfer] Component mounting', [
             'user_id' => auth()->id(),
             'session_id' => session()->getId()
         ]);
@@ -72,14 +80,14 @@ class MoneyTransfer extends Component
             // Set default account if available
             $this->debitAccount = config('services.nbc_payments.saccos_account', '');
             
-            Log::info('[MoneyTransfer] Component mounted successfully', [
+            $this->log()->info('[MoneyTransfer] Component mounted successfully', [
                 'default_account' => $this->debitAccount,
                 'banks_loaded' => count($this->availableBanks),
                 'wallets_loaded' => count($this->availableWallets)
             ]);
             
         } catch (Exception $e) {
-            Log::error('[MoneyTransfer] Failed to mount component', [
+            $this->log()->error('[MoneyTransfer] Failed to mount component', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -115,7 +123,7 @@ class MoneyTransfer extends Component
 
     public function verifyBeneficiary()
     {
-        Log::info('[MoneyTransfer] Starting beneficiary verification', [
+        $this->log()->info('[MoneyTransfer] Starting beneficiary verification', [
             'transfer_category' => $this->transferCategory,
             'transfer_type' => $this->transferType,
             'amount' => $this->amount,
@@ -125,13 +133,13 @@ class MoneyTransfer extends Component
         try {
             $this->validate($this->getValidationRules());
             
-            Log::info('[MoneyTransfer] Validation passed', [
+            $this->log()->info('[MoneyTransfer] Validation passed', [
                 'category' => $this->transferCategory,
                 'type' => $this->transferType
             ]);
             
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::warning('[MoneyTransfer] Validation failed', [
+            $this->log()->warning('[MoneyTransfer] Validation failed', [
                 'errors' => $e->errors(),
                 'category' => $this->transferCategory,
                 'type' => $this->transferType
@@ -144,7 +152,7 @@ class MoneyTransfer extends Component
         
         try {
             if ($this->transferCategory === 'internal') {
-                Log::info('[MoneyTransfer] Verifying internal NBC account', [
+                $this->log()->info('[MoneyTransfer] Verifying internal NBC account', [
                     'account' => $this->internalAccount
                 ]);
                 $this->verifyInternalAccount();
@@ -152,7 +160,7 @@ class MoneyTransfer extends Component
             } elseif ($this->transferCategory === 'external') {
                 switch ($this->transferType) {
                     case 'bank':
-                        Log::info('[MoneyTransfer] Verifying external bank account', [
+                        $this->log()->info('[MoneyTransfer] Verifying external bank account', [
                             'bank_code' => $this->bankCode,
                             'account' => $this->beneficiaryAccount
                         ]);
@@ -160,7 +168,7 @@ class MoneyTransfer extends Component
                         break;
                         
                     case 'wallet':
-                        Log::info('[MoneyTransfer] Verifying mobile wallet', [
+                        $this->log()->info('[MoneyTransfer] Verifying mobile wallet', [
                             'provider' => $this->walletProvider,
                             'phone' => $this->phoneNumber
                         ]);
@@ -170,18 +178,18 @@ class MoneyTransfer extends Component
             }
             
             if (!empty($this->verificationData)) {
-                Log::info('[MoneyTransfer] Verification successful', [
+                $this->log()->info('[MoneyTransfer] Verification successful', [
                     'verification_data' => $this->verificationData,
                     'lookup_ref' => $this->lookupRef
                 ]);
                 $this->currentPhase = 'verify';
             } else {
-                Log::warning('[MoneyTransfer] Verification returned empty data');
+                $this->log()->warning('[MoneyTransfer] Verification returned empty data');
             }
             
         } catch (Exception $e) {
             $this->errorMessage = $e->getMessage();
-            Log::error('[MoneyTransfer] Verification failed', [
+            $this->log()->error('[MoneyTransfer] Verification failed', [
                 'category' => $this->transferCategory,
                 'type' => $this->transferType,
                 'error' => $e->getMessage(),
@@ -194,7 +202,7 @@ class MoneyTransfer extends Component
 
     protected function verifyBankAccount()
     {
-        Log::info('[MoneyTransfer] Calling external transfer service for bank lookup', [
+        $this->log()->info('[MoneyTransfer] Calling external transfer service for bank lookup', [
             'account' => $this->beneficiaryAccount,
             'bank_code' => $this->bankCode,
             'amount' => $this->amount
@@ -206,7 +214,7 @@ class MoneyTransfer extends Component
             floatval($this->amount)
         );
         
-        Log::info('[MoneyTransfer] Bank lookup response', [
+        $this->log()->info('[MoneyTransfer] Bank lookup response', [
             'success' => $result['success'] ?? false,
             'account_name' => $result['account_name'] ?? null,
             'engine_ref' => $result['engine_ref'] ?? null,
@@ -227,12 +235,12 @@ class MoneyTransfer extends Component
             $this->beneficiaryName = $result['account_name'] ?? '';
             $this->lookupRef = $result['engine_ref'] ?? '';
             
-            Log::info('[MoneyTransfer] Bank account verified successfully', [
+            $this->log()->info('[MoneyTransfer] Bank account verified successfully', [
                 'beneficiary_name' => $this->beneficiaryName,
                 'lookup_ref' => $this->lookupRef
             ]);
         } else {
-            Log::error('[MoneyTransfer] Bank account verification failed', [
+            $this->log()->error('[MoneyTransfer] Bank account verification failed', [
                 'error' => $result['error'] ?? 'Unknown error',
                 'response' => $result
             ]);
@@ -242,7 +250,7 @@ class MoneyTransfer extends Component
 
     protected function verifyWallet()
     {
-        Log::info('[MoneyTransfer] Calling wallet transfer service for lookup', [
+        $this->log()->info('[MoneyTransfer] Calling wallet transfer service for lookup', [
             'phone' => $this->phoneNumber,
             'provider' => $this->walletProvider,
             'amount' => $this->amount
@@ -254,7 +262,7 @@ class MoneyTransfer extends Component
             floatval($this->amount)
         );
         
-        Log::info('[MoneyTransfer] Wallet lookup response', [
+        $this->log()->info('[MoneyTransfer] Wallet lookup response', [
             'success' => $result['success'] ?? false,
             'account_name' => $result['account_name'] ?? null,
             'engine_ref' => $result['engine_ref'] ?? null,
@@ -275,12 +283,12 @@ class MoneyTransfer extends Component
             $this->beneficiaryName = $result['account_name'] ?? '';
             $this->lookupRef = $result['engine_ref'] ?? '';
             
-            Log::info('[MoneyTransfer] Wallet verified successfully', [
+            $this->log()->info('[MoneyTransfer] Wallet verified successfully', [
                 'beneficiary_name' => $this->beneficiaryName,
                 'lookup_ref' => $this->lookupRef
             ]);
         } else {
-            Log::error('[MoneyTransfer] Wallet verification failed', [
+            $this->log()->error('[MoneyTransfer] Wallet verification failed', [
                 'error' => $result['error'] ?? 'Unknown error',
                 'response' => $result
             ]);
@@ -290,13 +298,13 @@ class MoneyTransfer extends Component
 
     protected function verifyInternalAccount()
     {
-        Log::info('[MoneyTransfer] Calling internal transfer service for lookup', [
+        $this->log()->info('[MoneyTransfer] Calling internal transfer service for lookup', [
             'account' => $this->internalAccount
         ]);
         
         $result = $this->internalTransferService->lookupAccount($this->internalAccount);
         
-        Log::info('[MoneyTransfer] Internal account lookup response', [
+        $this->log()->info('[MoneyTransfer] Internal account lookup response', [
             'success' => $result['success'] ?? false,
             'account_name' => $result['account_name'] ?? null,
             'branch' => $result['branch_name'] ?? null,
@@ -314,12 +322,12 @@ class MoneyTransfer extends Component
             
             $this->beneficiaryName = $result['account_name'] ?? '';
             
-            Log::info('[MoneyTransfer] Internal account verified successfully', [
+            $this->log()->info('[MoneyTransfer] Internal account verified successfully', [
                 'beneficiary_name' => $this->beneficiaryName,
                 'branch' => $this->verificationData['branch']
             ]);
         } else {
-            Log::error('[MoneyTransfer] Internal account verification failed', [
+            $this->log()->error('[MoneyTransfer] Internal account verification failed', [
                 'error' => $result['error'] ?? 'Unknown error',
                 'response' => $result
             ]);
@@ -329,7 +337,7 @@ class MoneyTransfer extends Component
 
     public function executeTransfer()
     {
-        Log::info('[MoneyTransfer] Starting transfer execution', [
+        $this->log()->info('[MoneyTransfer] Starting transfer execution', [
             'category' => $this->transferCategory,
             'type' => $this->transferType,
             'amount' => $this->amount,
@@ -345,7 +353,7 @@ class MoneyTransfer extends Component
             $result = [];
             
             if ($this->transferCategory === 'internal') {
-                Log::info('[MoneyTransfer] Executing internal transfer', [
+                $this->log()->info('[MoneyTransfer] Executing internal transfer', [
                     'from' => $this->debitAccount,
                     'to' => $this->internalAccount,
                     'amount' => $this->amount
@@ -355,7 +363,7 @@ class MoneyTransfer extends Component
             } elseif ($this->transferCategory === 'external') {
                 switch ($this->transferType) {
                     case 'bank':
-                        Log::info('[MoneyTransfer] Executing external bank transfer', [
+                        $this->log()->info('[MoneyTransfer] Executing external bank transfer', [
                             'from' => $this->debitAccount,
                             'to' => $this->beneficiaryAccount,
                             'bank' => $this->bankCode,
@@ -365,7 +373,7 @@ class MoneyTransfer extends Component
                         break;
                         
                     case 'wallet':
-                        Log::info('[MoneyTransfer] Executing wallet transfer', [
+                        $this->log()->info('[MoneyTransfer] Executing wallet transfer', [
                             'from' => $this->debitAccount,
                             'to' => $this->phoneNumber,
                             'provider' => $this->walletProvider,
@@ -376,7 +384,7 @@ class MoneyTransfer extends Component
                 }
             }
             
-            Log::info('[MoneyTransfer] Transfer execution response', [
+            $this->log()->info('[MoneyTransfer] Transfer execution response', [
                 'success' => $result['success'] ?? false,
                 'reference' => $result['reference'] ?? null,
                 'nbc_reference' => $result['nbc_reference'] ?? null,
@@ -389,7 +397,7 @@ class MoneyTransfer extends Component
                 $this->transactionReference = $result['reference'] ?? $result['nbc_reference'] ?? 'REF' . time();
                 $this->currentPhase = 'complete';
                 
-                Log::info('[MoneyTransfer] Transfer completed successfully', [
+                $this->log()->info('[MoneyTransfer] Transfer completed successfully', [
                     'reference' => $this->transactionReference,
                     'message' => $this->successMessage
                 ]);
@@ -405,7 +413,7 @@ class MoneyTransfer extends Component
             $this->errorMessage = $e->getMessage();
             $this->currentPhase = 'verify'; // Go back to verify phase
             
-            Log::error('[MoneyTransfer] Transfer execution failed', [
+            $this->log()->error('[MoneyTransfer] Transfer execution failed', [
                 'category' => $this->transferCategory,
                 'type' => $this->transferType,
                 'error' => $e->getMessage(),
@@ -455,7 +463,7 @@ class MoneyTransfer extends Component
 
     public function resetForm()
     {
-        Log::info('[MoneyTransfer] Resetting form');
+        $this->log()->info('[MoneyTransfer] Resetting form');
         
         $this->reset([
             'amount',
@@ -480,7 +488,7 @@ class MoneyTransfer extends Component
 
     public function goBack()
     {
-        Log::info('[MoneyTransfer] Going back from phase', [
+        $this->log()->info('[MoneyTransfer] Going back from phase', [
             'current_phase' => $this->currentPhase
         ]);
         
@@ -493,7 +501,7 @@ class MoneyTransfer extends Component
     
     public function updated($propertyName)
     {
-        Log::debug('[MoneyTransfer] Property updated', [
+        $this->log()->debug('[MoneyTransfer] Property updated', [
             'property' => $propertyName,
             'value' => $this->$propertyName ?? null
         ]);
@@ -553,13 +561,13 @@ class MoneyTransfer extends Component
                 'updated_at' => now()
             ]);
         } catch (Exception $e) {
-            Log::error('Failed to log transaction', ['error' => $e->getMessage()]);
+            $this->log()->error('Failed to log transaction', ['error' => $e->getMessage()]);
         }
     }
 
     public function render()
     {
-        Log::debug('[MoneyTransfer] Rendering component', [
+        $this->log()->debug('[MoneyTransfer] Rendering component', [
             'phase' => $this->currentPhase,
             'category' => $this->transferCategory,
             'type' => $this->transferType,
@@ -574,7 +582,7 @@ class MoneyTransfer extends Component
      */
     public function logJsError($error, $context = [])
     {
-        Log::error('[MoneyTransfer] JavaScript error', [
+        $this->log()->error('[MoneyTransfer] JavaScript error', [
             'error' => $error,
             'context' => $context,
             'user_agent' => request()->header('User-Agent')
