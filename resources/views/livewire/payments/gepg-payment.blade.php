@@ -1,18 +1,7 @@
 <div>
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <!-- Error Message -->
-        @if ($errorMessage)
-            <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                <span class="block sm:inline">{{ $errorMessage }}</span>
-            </div>
-        @endif
-
-        <!-- Success Message -->
-        @if ($successMessage)
-            <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-                <span class="block sm:inline">{{ $successMessage }}</span>
-            </div>
-        @endif
+        <!-- Include Enhanced Error Handler Component -->
+        @include('livewire.payments.error-handler')
 
         <!-- Control Number Verification Form -->
         @if (!$showPaymentForm)

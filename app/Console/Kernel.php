@@ -34,9 +34,7 @@ class Kernel extends ConsoleKernel
 
         // Monthly report generation for recurring reports
         $schedule->command('reports:generate-monthly')
-                ->monthly()
-                ->firstOfMonth()
-                ->at('07:00')
+                ->monthlyOn(1, '07:00')
                 ->appendOutputTo(storage_path('logs/monthly-reports.log'));
     }
 

@@ -1,0 +1,57 @@
+URGENT: FIREWALL EXCEPTION REQUEST - SACCOS SYSTEM EMAIL FUNCTIONALITY
+========================================================================
+
+QUICK SUMMARY FOR NETWORK TEAM
+-------------------------------
+System: SACCOS Management System (UAT)
+Server: tzukawrapsmms01.tz.af.absa.local (22.32.221.43)
+Issue: Cannot send emails - All SMTP ports blocked
+Impact: Users cannot login (OTP emails failing)
+
+REQUIRED FIREWALL RULES
+-----------------------
+FROM: 22.32.221.43
+TO: server354.web-hosting.com (192.64.117.3)
+PORTS: TCP 465, 587, 25
+DIRECTION: OUTBOUND
+ACTION: ALLOW
+
+TESTING EVIDENCE
+----------------
+All SMTP connections timeout (test script available):
+- server354.web-hosting.com:465 - BLOCKED
+- server354.web-hosting.com:587 - BLOCKED  
+- server354.web-hosting.com:25 - BLOCKED
+- smtp.gmail.com:587 - BLOCKED
+- smtp.office365.com:587 - BLOCKED
+
+DNS resolution works: server354.web-hosting.com → 192.64.117.3
+Local firewall has port 587 open
+External/network firewall is blocking
+
+BUSINESS IMPACT
+---------------
+1. Users cannot receive OTP codes for login
+2. No transaction notifications sent
+3. No email alerts for critical events
+4. Manual intervention required for every login
+
+FILES FOR REFERENCE
+-------------------
+Full Request: /var/www/html/template/docs/FIREWALL_EXCEPTION_REQUEST.md
+Test Script: /var/www/html/template/test-smtp-connectivity.sh
+Test Results: Run the test script for current status
+
+CONTACT
+-------
+Application: SACCOS Development Team
+Server Admin: [Your contact]
+
+ACTION NEEDED
+-------------
+Please approve and implement firewall exception for SMTP ports
+to restore email functionality for SACCOS system.
+
+This is blocking UAT testing and user access.
+
+Thank you!

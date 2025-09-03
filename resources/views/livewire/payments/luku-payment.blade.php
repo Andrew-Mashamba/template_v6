@@ -2,17 +2,8 @@
     <div class="bg-white rounded-lg shadow-lg p-6">
         <h2 class="text-2xl font-bold mb-6 text-gray-800">Luku Payment</h2>
 
-        @if($errorMessage)
-            <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-                {{ $errorMessage }}
-            </div>
-        @endif
-
-        @if($successMessage)
-            <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-                {{ $successMessage }}
-            </div>
-        @endif
+        <!-- Include Enhanced Error Handler Component -->
+        @include('livewire.payments.error-handler')
 
         @if(!$showPaymentForm)
             <!-- Meter Lookup Form -->

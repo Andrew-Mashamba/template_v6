@@ -1,0 +1,28 @@
+FIREWALL EXCEPTION REQUEST - EMAIL SERVICES
+============================================
+
+SERVER: 22.32.221.43 (tzukawrapsmms01.tz.af.absa.local)
+SYSTEM: SACCOS UAT
+
+RULES NEEDED:
+-------------
+OUTBOUND (Send Email):
+  From: 22.32.221.43
+  To: ANY
+  Ports: TCP 25, 465, 587
+  
+INBOUND (Receive Email):
+  From: ANY  
+  To: 22.32.221.43
+  Ports: TCP 25, 143, 993, 110, 995
+
+REASON:
+-------
+- Email services required for dynamic mail servers
+- Users cannot login without OTP emails
+- Transaction notifications blocked
+- Critical for UAT testing
+
+STATUS: URGENT - System non-functional without email
+
+Test Script: /var/www/html/template/test-smtp-connectivity.sh

@@ -176,6 +176,17 @@
       0 => 'Te7aHoudini\\LaravelTrix\\LaravelTrixServiceProvider',
     ),
   ),
+  'webklex/laravel-imap' => 
+  array (
+    'aliases' => 
+    array (
+      'Client' => 'Webklex\\IMAP\\Facades\\Client',
+    ),
+    'providers' => 
+    array (
+      0 => 'Webklex\\IMAP\\Providers\\LaravelServiceProvider',
+    ),
+  ),
   'wire-elements/modal' => 
   array (
     'providers' => 

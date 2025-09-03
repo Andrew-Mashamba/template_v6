@@ -1,4 +1,7 @@
 <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <!-- Include Error Handler Component -->
+    @include('livewire.payments.error-handler')
+    
     <div class="p-6">
         <!-- Header Section -->
         <div class="mb-8">

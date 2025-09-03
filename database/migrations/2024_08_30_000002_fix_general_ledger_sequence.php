@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         // Fix the sequence for general_ledger table
-        $maxId = DB::table('general_ledger')->max('id') ?? 0;
+        $maxId = DB::table('general_ledger')->max('id') ?? 1;
         DB::select("SELECT setval('general_ledger_id_seq', {$maxId})");
         
         // Add indexes to improve performance (without unique constraint due to existing duplicates)

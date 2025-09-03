@@ -34,8 +34,15 @@ class GepgGatewayService
         $this->logger = $logger;
 
         // Load keys from storage
-        //$this->privateKey = file_get_contents(config('gepg.private_key_path'));
-        //$this->publicKey = file_get_contents(config('gepg.public_key_path'));
+        $privateKeyPath = storage_path('keys/private_key.pem');
+        if (file_exists($privateKeyPath)) {
+            $this->privateKey = file_get_contents($privateKeyPath);
+        }
+        
+        $publicKeyPath = storage_path('keys/private.pem.pub');
+        if (file_exists($publicKeyPath)) {
+            $this->publicKey = file_get_contents($publicKeyPath);
+        }
     }
 
     public function verifyControlNumber($controlNumber, $accountNo, $currency)
