@@ -20,6 +20,39 @@ class MoneyTransfer extends Component
         return Log::channel('money_transfer');
     }
     
+    /**
+     * Get External Transfer Service instance
+     */
+    protected function getExternalTransferService()
+    {
+        if (!$this->externalTransferService) {
+            $this->externalTransferService = app(ExternalFundsTransferService::class);
+        }
+        return $this->externalTransferService;
+    }
+    
+    /**
+     * Get Wallet Transfer Service instance
+     */
+    protected function getWalletTransferService()
+    {
+        if (!$this->walletTransferService) {
+            $this->walletTransferService = app(MobileWalletTransferService::class);
+        }
+        return $this->walletTransferService;
+    }
+    
+    /**
+     * Get Internal Transfer Service instance
+     */
+    protected function getInternalTransferService()
+    {
+        if (!$this->internalTransferService) {
+            $this->internalTransferService = app(InternalFundsTransferService::class);
+        }
+        return $this->internalTransferService;
+    }
+    
     // Transfer type selection
     public $transferCategory = ''; // 'internal' or 'external' - primary choice
     public $transferType = ''; // 'bank' or 'wallet' - for external transfers only
@@ -57,7 +90,7 @@ class MoneyTransfer extends Component
     public $availableBanks = [];
     public $availableWallets = [];
     
-    // Services
+    // Services (initialized on demand)
     protected $externalTransferService;
     protected $walletTransferService;
     protected $internalTransferService;
@@ -208,7 +241,7 @@ class MoneyTransfer extends Component
             'amount' => $this->amount
         ]);
         
-        $result = $this->externalTransferService->lookupAccount(
+        $result = $this->getExternalTransferService()->lookupAccount(
             $this->beneficiaryAccount,
             $this->bankCode,
             floatval($this->amount)
@@ -256,7 +289,7 @@ class MoneyTransfer extends Component
             'amount' => $this->amount
         ]);
         
-        $result = $this->walletTransferService->lookupWallet(
+        $result = $this->getWalletTransferService()->lookupWallet(
             $this->phoneNumber,
             $this->walletProvider,
             floatval($this->amount)
@@ -302,7 +335,7 @@ class MoneyTransfer extends Component
             'account' => $this->internalAccount
         ]);
         
-        $result = $this->internalTransferService->lookupAccount($this->internalAccount);
+        $result = $this->getInternalTransferService()->lookupAccount($this->internalAccount);
         
         $this->log()->info('[MoneyTransfer] Internal account lookup response', [
             'success' => $result['success'] ?? false,
@@ -426,7 +459,7 @@ class MoneyTransfer extends Component
 
     protected function executeExternalTransfer()
     {
-        return $this->externalTransferService->transfer([
+        return $this->getExternalTransferService()->transfer([
             'from_account' => $this->debitAccount,
             'to_account' => $this->beneficiaryAccount,
             'bank_code' => $this->bankCode,
@@ -440,7 +473,7 @@ class MoneyTransfer extends Component
 
     protected function executeWalletTransfer()
     {
-        return $this->walletTransferService->transfer([
+        return $this->getWalletTransferService()->transfer([
             'from_account' => $this->debitAccount,
             'phone_number' => $this->phoneNumber,
             'provider' => $this->walletProvider,
@@ -453,7 +486,7 @@ class MoneyTransfer extends Component
 
     protected function executeInternalTransfer()
     {
-        return $this->internalTransferService->transfer([
+        return $this->getInternalTransferService()->transfer([
             'from_account' => $this->debitAccount,
             'to_account' => $this->internalAccount,
             'amount' => $this->amount,
