@@ -94,11 +94,13 @@ class MobileWalletTransferService
 
             // Sign the payload
             $signature = $this->generateSignature($payload);
+            $uuid = $this->generateUUID();
             
             $response = $this->sendRequest('/domestix/api/v2/lookup', $payload, [
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
                 'X-Api-Key' => $this->apiKey,
+                'X-Trace-Uuid' => 'domestix-' . $uuid,
                 'Client-Id' => $this->clientId,
                 'Service-Name' => 'TIPS_LOOKUP',
                 'Signature' => $signature,
@@ -485,8 +487,14 @@ class MobileWalletTransferService
         try {
             $url = $this->baseUrl . $endpoint;
             
+            // Generate UUID if not provided in additional headers
+            if (!isset($additionalHeaders['X-Trace-Uuid'])) {
+                $additionalHeaders['X-Trace-Uuid'] = 'domestix-' . $this->generateUUID();
+            }
+            
             $headers = array_merge([
                 'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
                 'X-Api-Key' => $this->apiKey,
                 'Client-Id' => $this->clientId,
                 'Timestamp' => Carbon::now()->toIso8601String()
