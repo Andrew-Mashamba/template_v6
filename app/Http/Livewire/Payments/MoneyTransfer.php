@@ -13,7 +13,8 @@ use Exception;
 class MoneyTransfer extends Component
 {
     // Transfer type selection
-    public $transferType = 'bank'; // 'bank', 'wallet', 'internal'
+    public $transferCategory = ''; // 'internal' or 'external' - primary choice
+    public $transferType = ''; // 'bank' or 'wallet' - for external transfers only
     
     // Common fields
     public $debitAccount = '';
@@ -42,6 +43,7 @@ class MoneyTransfer extends Component
     // Verification data
     public $verificationData = [];
     public $lookupRef = '';
+    public $transactionReference = '';
     
     // Available options
     public $availableBanks = [];
@@ -99,18 +101,18 @@ class MoneyTransfer extends Component
         $this->errorMessage = '';
         
         try {
-            switch ($this->transferType) {
-                case 'bank':
-                    $this->verifyBankAccount();
-                    break;
-                    
-                case 'wallet':
-                    $this->verifyWallet();
-                    break;
-                    
-                case 'internal':
-                    $this->verifyInternalAccount();
-                    break;
+            if ($this->transferCategory === 'internal') {
+                $this->verifyInternalAccount();
+            } elseif ($this->transferCategory === 'external') {
+                switch ($this->transferType) {
+                    case 'bank':
+                        $this->verifyBankAccount();
+                        break;
+                        
+                    case 'wallet':
+                        $this->verifyWallet();
+                        break;
+                }
             }
             
             if (!empty($this->verificationData)) {
@@ -208,22 +210,23 @@ class MoneyTransfer extends Component
         try {
             $result = [];
             
-            switch ($this->transferType) {
-                case 'bank':
-                    $result = $this->executeExternalTransfer();
-                    break;
-                    
-                case 'wallet':
-                    $result = $this->executeWalletTransfer();
-                    break;
-                    
-                case 'internal':
-                    $result = $this->executeInternalTransfer();
-                    break;
+            if ($this->transferCategory === 'internal') {
+                $result = $this->executeInternalTransfer();
+            } elseif ($this->transferCategory === 'external') {
+                switch ($this->transferType) {
+                    case 'bank':
+                        $result = $this->executeExternalTransfer();
+                        break;
+                        
+                    case 'wallet':
+                        $result = $this->executeWalletTransfer();
+                        break;
+                }
             }
             
             if ($result['success'] ?? false) {
                 $this->successMessage = $result['message'] ?? 'Transfer completed successfully';
+                $this->transactionReference = $result['reference'] ?? $result['nbc_reference'] ?? 'REF' . time();
                 $this->currentPhase = 'complete';
                 
                 // Log successful transaction
@@ -296,7 +299,9 @@ class MoneyTransfer extends Component
             'verificationData',
             'lookupRef',
             'errorMessage',
-            'successMessage'
+            'successMessage',
+            'transferCategory',
+            'transferType'
         ]);
         
         $this->currentPhase = 'form';
@@ -317,23 +322,26 @@ class MoneyTransfer extends Component
             'debitAccount' => 'required|string|min:10',
             'amount' => 'required|numeric|min:1000',
             'remarks' => 'required|string|max:50',
-            'chargeBearer' => 'required|in:OUR,BEN,SHA'
+            'transferCategory' => 'required|in:internal,external'
         ];
         
-        switch ($this->transferType) {
-            case 'bank':
-                $rules['beneficiaryAccount'] = 'required|string|min:10';
-                $rules['bankCode'] = 'required|string';
-                break;
-                
-            case 'wallet':
-                $rules['phoneNumber'] = 'required|string|regex:/^(255|0)[0-9]{9}$/';
-                $rules['walletProvider'] = 'required|string';
-                break;
-                
-            case 'internal':
-                $rules['internalAccount'] = 'required|string|min:10';
-                break;
+        if ($this->transferCategory === 'internal') {
+            $rules['internalAccount'] = 'required|string|min:10';
+        } elseif ($this->transferCategory === 'external') {
+            $rules['chargeBearer'] = 'required|in:OUR,BEN,SHA';
+            $rules['transferType'] = 'required|in:bank,wallet';
+            
+            switch ($this->transferType) {
+                case 'bank':
+                    $rules['beneficiaryAccount'] = 'required|string|min:10';
+                    $rules['bankCode'] = 'required|string';
+                    break;
+                    
+                case 'wallet':
+                    $rules['phoneNumber'] = 'required|string|regex:/^(255|0)[0-9]{9}$/';
+                    $rules['walletProvider'] = 'required|string';
+                    break;
+            }
         }
         
         // Amount limits based on transfer type
