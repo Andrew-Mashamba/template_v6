@@ -92,19 +92,18 @@ class MobileWalletTransferService
                 'debitAccountCategory' => 'BUSINESS'
             ];
 
-            // Sign the payload
-            $signature = $this->generateSignature($payload);
+            // Generate UUID for tracing
             $uuid = $this->generateUUID();
             
+            // Use exact headers from working curl command
             $response = $this->sendRequest('/domestix/api/v2/lookup', $payload, [
-                'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-                'X-Api-Key' => $this->apiKey,
+                'Content-Type' => 'application/json',
                 'X-Trace-Uuid' => 'domestix-' . $uuid,
+                'x-api-key' => $this->apiKey,  // lowercase as in working curl
                 'Client-Id' => $this->clientId,
-                'Service-Name' => 'TIPS_LOOKUP',
-                'Signature' => $signature,
-                'Timestamp' => Carbon::now()->toIso8601String()
+                'Service-Name' => 'TIPS_LOOKUP'
+                // Note: No Signature or Timestamp headers - they're not needed
             ]);
             
             $duration = round((microtime(true) - $startTime) * 1000, 2);
@@ -256,15 +255,13 @@ class MobileWalletTransferService
                 'remarks' => $transferData['narration'] ?? "Transfer to {$transferData['provider']} wallet"
             ];
 
-            // Sign the payload
-            $signature = $this->generateSignature($payload);
-            
+            // Use exact headers from working curl command
             $response = $this->sendRequest('/domestix/api/v2/outgoing-transfers', $payload, [
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
                 'X-Trace-Uuid' => 'domestix-' . $this->generateUUID(),
-                'Signature' => $signature,
-                'X-Api-Key' => $this->apiKey
+                'x-api-key' => $this->apiKey  // lowercase as in working curl
+                // Note: No Signature header - it's not needed
             ]);
             
             $duration = round((microtime(true) - $startTime) * 1000, 2);
@@ -492,12 +489,10 @@ class MobileWalletTransferService
                 $additionalHeaders['X-Trace-Uuid'] = 'domestix-' . $this->generateUUID();
             }
             
+            // Use only the headers that are proven to work
             $headers = array_merge([
-                'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-                'X-Api-Key' => $this->apiKey,
-                'Client-Id' => $this->clientId,
-                'Timestamp' => Carbon::now()->toIso8601String()
+                'Content-Type' => 'application/json'
             ], $additionalHeaders);
 
             $this->logDebug("Sending wallet transfer request", [
