@@ -142,7 +142,9 @@ class InternalFundTransferService
                 try {
                     Log::debug("API request attempt {$attempt} of {$maxRetries}", [
                         'requestId' => $requestId,
-                        'endpoint' => $endpoint
+                        'endpoint' => $endpoint,
+                        'headers' => $headers,
+                        'payload' => $requestPayload
                     ]);
 
                     $response = Http::withHeaders($headers)
@@ -155,11 +157,14 @@ class InternalFundTransferService
                         })
                         ->post($endpoint, $requestPayload);
 
-                    Log::debug('API request completed successfully', [
+                    // Log the exact response for debugging
+                    Log::debug('API request completed - Full Response Details', [
                         'requestId' => $requestId,
                         'attempt' => $attempt,
                         'statusCode' => $response->status(),
-                        'response' => $this->sanitizeResponseForLogging($response->json())
+                        'responseBody' => $response->body(),
+                        'responseHeaders' => $response->headers(),
+                        'responseJson' => $response->json()
                     ]);
 
                     // Step 5: Process response
@@ -195,12 +200,23 @@ class InternalFundTransferService
                     }
                 } catch (\Illuminate\Http\Client\RequestException $e) {
                     $lastException = $e;
+                    
+                    // Log the exact response body for debugging
+                    $responseBody = null;
+                    $responseHeaders = null;
+                    if ($e->response) {
+                        $responseBody = $e->response->body();
+                        $responseHeaders = $e->response->headers();
+                    }
+                    
                     Log::warning("API request attempt {$attempt} failed - Request error", [
                         'requestId' => $requestId,
                         'attempt' => $attempt,
                         'maxRetries' => $maxRetries,
                         'error' => $e->getMessage(),
                         'statusCode' => $e->response?->status(),
+                        'responseBody' => $responseBody,
+                        'responseHeaders' => $responseHeaders,
                         'endpoint' => $endpoint
                     ]);
 

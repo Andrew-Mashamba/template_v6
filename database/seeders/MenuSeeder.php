@@ -361,13 +361,21 @@ class MenuSeeder extends Seeder
 
         // Insert or update each menu item
         foreach ($menuItems as $menuItem) {
+            // Add the standard fields that the application expects
+            $menuData = array_merge($menuItem, [
+                'name' => $menuItem['menu_name'],  // Copy menu_name to name field
+                'route' => strtolower(str_replace(' ', '_', $menuItem['menu_name'])),  // Generate route from menu name
+                'icon' => 'fa fa-' . strtolower(str_replace(' ', '-', $menuItem['menu_name'])),  // Generate icon class
+                'created_at' => $menuItem['created_at'] ?? now(),
+                'updated_at' => $menuItem['updated_at'] ?? now()
+            ]);
+            
             DB::table('menus')->updateOrInsert(
                 ['id' => $menuItem['id']],
-                array_merge($menuItem, [
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ])
+                $menuData
             );
         }
+        
+        echo "MenuSeeder: Inserted " . count($menuItems) . " menus with names, routes, and icons\n";
     }
 }

@@ -18,14 +18,27 @@ class Payments extends Component
 {
 
     public $billers = [];
+    public $billersGrouped = [];
+    public $selectedCategory = null;
     public $selectedSpCode = null;
+    public $selectedBiller = null;
     public $billRef = '';
     public $billDetails = null;
     public $amount = '';
     public $paymentResponse = null;
     public $paymentStatus = null;
     public $transactions = [];
-
+    public $paymentMode = null;
+    public $inquiryRawResponse = null;
+    public $gatewayRef = null;
+    public $channelRef = null;
+    
+    // Payment form fields
+    public $payerName = '';
+    public $payerPhone = '';
+    public $payerEmail = '';
+    public $narration = '';
+    
     public $inquiryResult;
 
 
@@ -156,95 +169,289 @@ class Payments extends Component
     {
         try {
             $service = new NbcBillsPaymentService();
-            $this->billers = $service->getBillers();
+            $result = $service->getBillers();
+            
+            $this->billers = $result['flat'] ?? [];
+            $this->billersGrouped = $result['grouped'] ?? [];
+            
+            Log::info('Billers fetched successfully', [
+                'total' => count($this->billers),
+                'categories' => array_keys($this->billersGrouped)
+            ]);
 
         } catch (\Throwable $e) {
             Log::error('Failed to fetch billers', ['error' => $e->getMessage()]);
+            $this->errorMessage = 'Unable to load service providers. Please try again.';
         }
     }
 
     public function selectBiller($spCode)
     {
         $this->selectedSpCode = $spCode;
+        $this->selectedBiller = collect($this->billers)->firstWhere('spCode', $spCode);
         $this->billDetails = null;
         $this->paymentResponse = null;
         $this->paymentStatus = null;
+        $this->billRef = '';
+        $this->amount = '';
+        $this->resetValidation();
+        $this->errorMessage = null;
+        $this->successMessage = null;
     }
 
     public function inquireBill()
     {
+        $this->validate([
+            'billRef' => 'required|string|min:1'
+        ]);
+        
+        $this->errorMessage = null;
+        $this->successMessage = null;
+        
         try {
             $service = new NbcBillsPaymentService();
             $payload = [
                 'spCode' => $this->selectedSpCode,
                 'billRef' => $this->billRef,
-                'userId' => 'USER101',
+                'userId' => auth()->id() ?? 'USER001',
                 'branchCode' => '015',
-                'channelRef' => now()->timestamp,
-                'extraFields' => [],
+                'extraFields' => $this->getExtraFieldsForInquiry(),
             ];
 
-            $this->billDetails = $service->inquireDetailedBill($payload);
-$this->inquiryResult = $this->billDetails;
+            $result = $service->inquireDetailedBill($payload);
+            
+            if ($result['success']) {
+                $this->billDetails = $result['data'];
+                $this->inquiryRawResponse = $result['rawResponse'];
+                $this->inquiryResult = $this->billDetails;
+                
+                // Extract payment mode from bill details
+                $this->paymentMode = $this->billDetails['paymentMode'] ?? 'exact';
+                
+                // Pre-fill amount if exact payment mode
+                if ($this->paymentMode === 'exact') {
+                    $this->amount = $this->billDetails['balance'] ?? $this->billDetails['totalAmount'] ?? '';
+                }
+                
+                // Pre-fill payer details if available
+                if (auth()->check()) {
+                    $user = auth()->user();
+                    $this->payerName = $user->name ?? '';
+                    $this->payerPhone = $user->phone ?? '';
+                    $this->payerEmail = $user->email ?? '';
+                }
+                
+                $this->successMessage = 'Bill details retrieved successfully';
+            } else {
+                $this->errorMessage = $result['message'] ?? 'Unable to retrieve bill details';
+            }
         } catch (\Throwable $e) {
             Log::error('Bill inquiry failed', ['error' => $e->getMessage()]);
+            $this->errorMessage = 'Failed to inquire bill. Please try again.';
         }
     }
 
     public function makePayment()
     {
+        // Validate payment amount based on payment mode
+        $this->validatePaymentAmount();
+        
+        $this->errorMessage = null;
+        $this->successMessage = null;
+        
         try {
             $service = new NbcBillsPaymentService();
-            $channelRef = now()->timestamp;
+            $this->channelRef = 'PAY' . now()->timestamp;
 
+            // Get user account details
+            $userAccount = $this->getUserAccount();
+            
             $payload = [
-                'spCode' => $this->selectedSpCode,
+                'spCode' => $this->billDetails['spCode'] ?? $this->selectedSpCode,
                 'billRef' => $this->billRef,
                 'amount' => $this->amount,
-                'callbackUrl' => route('nbc.payment.callback'),
-                'userId' => 'USER101',
+                'callbackUrl' => route('nbc.payment.callback', ['ref' => $this->channelRef]),
+                'userId' => auth()->id() ?? 'USER001',
                 'branchCode' => '015',
-                'channelRef' => $channelRef,
-                'creditAccount' => '28012040022',
-                'debitAccount' => '28012040011',
-                'payerName' => 'Nyerere Julias',
-                'payerPhone' => '255715000000',
-                'payerEmail' => 'Nyerere.Julias@example.com',
-                'narration' => 'Livewire Payment Test',
-                'creditCurrency' => 'TZS',
+                'channelRef' => $this->channelRef,
+                'creditAccount' => $this->billDetails['creditAccount'] ?? '',
+                'creditCurrency' => $this->billDetails['creditCurrency'] ?? 'TZS',
+                'debitAccount' => $userAccount['account_number'] ?? '28012040011',
                 'debitCurrency' => 'TZS',
+                'payerName' => $this->payerName,
+                'payerPhone' => $this->payerPhone,
+                'payerEmail' => $this->payerEmail,
+                'narration' => $this->narration ?: 'Bill Payment',
                 'paymentType' => 'ACCOUNT',
                 'channelCode' => 'APP',
-                'extraFields' => new \stdClass(),
-                'inquiryRawResponse' => json_encode($this->billDetails),
+                'extraFields' => $this->getExtraFieldsForPayment(),
+                'inquiryRawResponse' => $this->inquiryRawResponse,
+                'billDetails' => $this->billDetails
             ];
 
             $this->paymentResponse = $service->processPaymentAsync($payload);
-
-            $this->transactions[] = [
-                'spCode' => $this->selectedSpCode,
-                'billRef' => $this->billRef,
-                'amount' => $this->amount,
-                'channelRef' => $channelRef,
-                'gatewayRef' => $this->paymentResponse['gatewayRef'] ?? null,
-            ];
+            
+            if ($this->paymentResponse['status'] === 'processing') {
+                $this->gatewayRef = $this->paymentResponse['gatewayRef'];
+                $this->successMessage = 'Payment initiated successfully. Processing...';
+                
+                // Store transaction for tracking
+                $this->transactions[] = [
+                    'spCode' => $this->selectedSpCode,
+                    'billRef' => $this->billRef,
+                    'amount' => $this->amount,
+                    'channelRef' => $this->channelRef,
+                    'gatewayRef' => $this->gatewayRef,
+                    'status' => 'processing',
+                    'timestamp' => now()->toDateTimeString()
+                ];
+                
+                // Check status after 3 seconds
+                $this->dispatchBrowserEvent('check-payment-status', [
+                    'channelRef' => $this->channelRef,
+                    'delay' => 3000
+                ]);
+            } else {
+                $this->errorMessage = $this->paymentResponse['message'] ?? 'Payment processing failed';
+            }
         } catch (\Throwable $e) {
             Log::error('Payment failed', ['error' => $e->getMessage()]);
+            $this->errorMessage = 'Payment processing failed. Please try again.';
         }
     }
 
-    public function checkPaymentStatus($channelRef)
+    public function checkPaymentStatus($channelRef = null)
     {
         try {
             $service = new NbcBillsPaymentService();
-            $this->paymentStatus = $service->checkPaymentStatus([
+            $result = $service->checkPaymentStatus([
                 'spCode' => $this->selectedSpCode,
                 'billRef' => $this->billRef,
-                'channelRef' => $channelRef,
+                'channelRef' => $channelRef ?? $this->channelRef,
             ]);
+            
+            if ($result['status'] === 'success') {
+                $this->paymentStatus = $result['data'];
+                
+                // Update transaction status
+                $transactionIndex = collect($this->transactions)->search(function ($item) use ($channelRef) {
+                    return $item['channelRef'] === ($channelRef ?? $this->channelRef);
+                });
+                
+                if ($transactionIndex !== false) {
+                    $this->transactions[$transactionIndex]['status'] = 
+                        $this->paymentStatus['paymentDetails']['accountingStatus'] ?? 'pending';
+                }
+                
+                if (isset($this->paymentStatus['paymentDetails']['accountingStatus']) && 
+                    $this->paymentStatus['paymentDetails']['accountingStatus'] === 'success') {
+                    $this->successMessage = 'Payment completed successfully!';
+                    $this->paymentResponse['status'] = 'completed';
+                } else {
+                    // Continue checking if still processing
+                    $this->dispatchBrowserEvent('check-payment-status', [
+                        'channelRef' => $channelRef ?? $this->channelRef,
+                        'delay' => 5000
+                    ]);
+                }
+            }
         } catch (\Throwable $e) {
             Log::error('Status check failed', ['error' => $e->getMessage()]);
         }
+    }
+    
+    protected function validatePaymentAmount()
+    {
+        $rules = ['amount' => 'required|numeric|min:100'];
+        
+        // Apply validation based on payment mode
+        switch ($this->paymentMode) {
+            case 'exact':
+                $expectedAmount = $this->billDetails['balance'] ?? $this->billDetails['totalAmount'] ?? 0;
+                $rules['amount'] .= '|in:' . $expectedAmount;
+                break;
+            case 'full':
+                $minAmount = $this->billDetails['balance'] ?? $this->billDetails['totalAmount'] ?? 0;
+                $rules['amount'] .= '|min:' . $minAmount;
+                break;
+            case 'partial':
+            case 'limited':
+                // Allow any amount for partial payments
+                break;
+        }
+        
+        $this->validate($rules);
+    }
+    
+    protected function getExtraFieldsForInquiry()
+    {
+        // Add extra fields based on biller type
+        $extraFields = new \stdClass();
+        
+        // Check if special biller (NIDC, Yanga, DSE)
+        if ($this->selectedBiller) {
+            $category = $this->selectedBiller['category'] ?? '';
+            
+            // Add specific inquiry types based on category
+            // This can be expanded based on the NBC documentation
+        }
+        
+        return $extraFields;
+    }
+    
+    protected function getExtraFieldsForPayment()
+    {
+        $extraFields = new \stdClass();
+        
+        // Add extra fields from bill details if present
+        if (isset($this->billDetails['extraFields'])) {
+            $extraFields = $this->billDetails['extraFields'];
+        }
+        
+        return $extraFields;
+    }
+    
+    protected function getUserAccount()
+    {
+        // Get user's default account or first available account
+        if (auth()->check()) {
+            $account = AccountsModel::where('user_id', auth()->id())
+                ->where('status', 'active')
+                ->first();
+                
+            if ($account) {
+                return $account->toArray();
+            }
+        }
+        
+        // Return default account if no user account found
+        return [
+            'account_number' => '28012040011',
+            'account_name' => 'Default Account'
+        ];
+    }
+    
+    public function resetBillPayment()
+    {
+        $this->reset([
+            'selectedSpCode',
+            'selectedBiller',
+            'billRef',
+            'billDetails',
+            'amount',
+            'paymentResponse',
+            'paymentStatus',
+            'paymentMode',
+            'inquiryRawResponse',
+            'gatewayRef',
+            'channelRef',
+            'payerName',
+            'payerPhone',
+            'payerEmail',
+            'narration',
+            'errorMessage',
+            'successMessage'
+        ]);
     }
 
 
@@ -450,25 +657,131 @@ protected function resetMessages()
 
 public function lookup()
 {
-    $this->validateOnly('meterNumber');
-    $service = new LukuService();
-    $this->lookupResult = $service->lookup($this->meterNumber, $this->accountNumber);
+    try {
+        Log::info('=== LUKU LOOKUP STARTED ===', [
+            'timestamp' => now()->toDateTimeString(),
+            'meter_number' => $this->meterNumber,
+            'account_number' => $this->accountNumber,
+            'user_id' => auth()->id(),
+            'session_id' => session()->getId(),
+            'ip' => request()->ip()
+        ]);
+        
+        $this->validateOnly('meterNumber');
+        Log::info('LUKU validation passed', ['meter_number' => $this->meterNumber]);
+        
+        $service = new LukuService();
+        Log::info('LukuService instantiated');
+        
+        $this->lookupResult = $service->lookup($this->meterNumber, $this->accountNumber);
+        
+        Log::info('LUKU lookup result received', [
+            'has_result' => !empty($this->lookupResult),
+            'has_error' => isset($this->lookupResult['error']),
+            'result_keys' => $this->lookupResult ? array_keys($this->lookupResult) : [],
+            'timestamp' => now()->toDateTimeString()
+        ]);
+        
+        if (isset($this->lookupResult['error'])) {
+            $this->errorMessage = $this->lookupResult['error'];
+            Log::error('LUKU lookup failed', [
+                'error' => $this->lookupResult['error'],
+                'meter_number' => $this->meterNumber
+            ]);
+        } else {
+            $this->successMessage = 'Meter details retrieved successfully';
+            Log::info('✓ LUKU lookup successful', [
+                'meter_number' => $this->meterNumber,
+                'result' => $this->lookupResult
+            ]);
+        }
+    } catch (\Exception $e) {
+        Log::error('✗ LUKU lookup exception', [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+            'meter_number' => $this->meterNumber,
+            'timestamp' => now()->toDateTimeString()
+        ]);
+        $this->errorMessage = 'Failed to lookup meter: ' . $e->getMessage();
+        $this->lookupResult = null;
+    }
 }
 
 public function pay()
 {
-    $this->validate();
-
-    $service = new LukuService();
-    $this->paymentResult = $service->pay([
-        'channel_ref' => 'CHNL' . now()->timestamp,
-        'cbp_gw_ref' => 'CBPGW' . now()->timestamp,
-        'result_url' => url()->route('luku.callback'),
-        'transaction_id' => 'TRX' . rand(10000, 99999),
-        'meter_number' => $this->meterNumber,
-        'account_number' => $this->accountNumber,
-        'amount' => $this->amount,
-    ]);
+    try {
+        Log::info('=== LUKU PAYMENT STARTED ===', [
+            'timestamp' => now()->toDateTimeString(),
+            'meter_number' => $this->meterNumber,
+            'account_number' => $this->accountNumber,
+            'amount' => $this->amount,
+            'user_id' => auth()->id(),
+            'session_id' => session()->getId()
+        ]);
+        
+        // LUKU-specific validation instead of generic $this->validate()
+        $this->validate([
+            'meterNumber' => 'required|string',
+            'accountNumber' => 'required|string',
+            'amount' => 'required|numeric|min:1000'
+        ], [
+            'meterNumber.required' => 'Meter number is required for LUKU payment.',
+            'accountNumber.required' => 'Account number is required for LUKU payment.',
+            'amount.required' => 'Amount is required.',
+            'amount.min' => 'Minimum LUKU purchase amount is 1000 TZS.'
+        ]);
+        Log::info('LUKU payment validation passed');
+        
+        $service = new LukuService();
+        
+        $paymentData = [
+            'channel_ref' => 'CHNL' . now()->timestamp,
+            'cbp_gw_ref' => 'CBPGW' . now()->timestamp,
+            'result_url' => url()->route('luku.callback'),
+            'transaction_id' => 'TRX' . rand(10000, 99999),
+            'meter_number' => $this->meterNumber,
+            'account_number' => $this->accountNumber,
+            'amount' => $this->amount,
+        ];
+        
+        Log::info('Calling LukuService->pay()', ['payment_data' => $paymentData]);
+        
+        $this->paymentResult = $service->pay($paymentData);
+        
+        Log::info('LUKU payment result received', [
+            'has_result' => !empty($this->paymentResult),
+            'has_error' => isset($this->paymentResult['error']),
+            'result_keys' => $this->paymentResult ? array_keys($this->paymentResult) : [],
+            'timestamp' => now()->toDateTimeString()
+        ]);
+        
+        if (isset($this->paymentResult['error'])) {
+            $this->errorMessage = $this->paymentResult['error'];
+            Log::error('✗ LUKU payment failed', [
+                'error' => $this->paymentResult['error'],
+                'payment_data' => $paymentData
+            ]);
+        } else {
+            $this->successMessage = 'Payment processed successfully';
+            Log::info('✓ LUKU payment successful', [
+                'payment_result' => $this->paymentResult,
+                'transaction_id' => $paymentData['transaction_id']
+            ]);
+        }
+    } catch (\Exception $e) {
+        Log::error('✗✗ LUKU payment exception', [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+            'payment_data' => $paymentData ?? null,
+            'timestamp' => now()->toDateTimeString()
+        ]);
+        $this->errorMessage = 'Payment failed: ' . $e->getMessage();
+        $this->paymentResult = null;
+    }
 }
 
 

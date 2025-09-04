@@ -57,7 +57,7 @@ Route::post('/loan-decision', [LoanDecisionController::class, 'processLoanDecisi
 // });
 
 
-// Route::post('/callback', [PaymentCallbackController::class, 'handlePaymentCallback'])->name('nbc.payment.callback');
+Route::post('/nbc/payment/callback', [PaymentCallbackController::class, 'handlePaymentCallback'])->name('nbc.payment.callback');
 
 
 Route::post('/luku/callback', [LukuCallbackController::class, 'handleCallback'])->name('luku.callback');

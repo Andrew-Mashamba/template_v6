@@ -14,36 +14,54 @@ class UserrolesSeeder extends Seeder
      */
     public function run()
     {
-        // Clear existing data
-        DB::table('user_roles')->truncate();
+        // Clear existing data carefully
+        DB::table('user_roles')->delete();
+        
+        // Reset auto-increment (PostgreSQL syntax)
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER SEQUENCE user_roles_id_seq RESTART WITH 1");
+        } elseif (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE user_roles AUTO_INCREMENT = 1');
+        }
 
-        // Insert existing data
-        $data = [
-            [
-                'id' => 1,
-                'user_id' => 1,
-                'role_id' => 1,
-                'created_at' => '2025-07-17 16:25:47',
-                'updated_at' => '2025-07-17 16:25:47',
-            ],
-            [
-                'id' => 2,
-                'user_id' => 2,
-                'role_id' => 1,
-                'created_at' => '2025-07-17 16:25:47',
-                'updated_at' => '2025-07-17 16:25:47',
-            ],
-            [
-                'id' => 3,
-                'user_id' => 1,
-                'role_id' => 1,
-                'created_at' => '2025-07-17 16:25:47',
-                'updated_at' => '2025-07-17 16:25:47',
-            ],
-        ];
-
-        foreach ($data as $row) {
-            DB::table('user_roles')->insert($row);
-    }
+        // Get all users and roles
+        $users = DB::table('users')->orderBy('id')->get();
+        $systemAdminRole = DB::table('roles')->where('name', 'System Administrator')->first();
+        $institutionAdminRole = DB::table('roles')->where('name', 'Institution Administrator')->first();
+        
+        if (!$systemAdminRole || !$institutionAdminRole) {
+            echo "UserRolesSeeder: Required roles not found. Please run RolesSeeder first.\n";
+            return;
+        }
+        
+        $id = 1;
+        $insertedCount = 0;
+        
+        // Assign roles to users
+        foreach ($users as $index => $user) {
+            if ($index < 2) {
+                // First two users get System Administrator role
+                DB::table('user_roles')->insert([
+                    'id' => $id++,
+                    'user_id' => $user->id,
+                    'role_id' => $systemAdminRole->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $insertedCount++;
+            } else {
+                // Third user gets Institution Administrator role
+                DB::table('user_roles')->insert([
+                    'id' => $id++,
+                    'user_id' => $user->id,
+                    'role_id' => $institutionAdminRole->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $insertedCount++;
+            }
+        }
+        
+        echo "UserRolesSeeder: Assigned roles to $insertedCount users\n";
 }
 }

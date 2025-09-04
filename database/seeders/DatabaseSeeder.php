@@ -59,7 +59,8 @@ class DatabaseSeeder extends Seeder
                 MenuSeeder::class, // Populates menus table
                 SubMenusSeeder::class,
                 MenuActionsSeeder::class,
-                RoleMenuActionsSeeder::class,
+                RoleMenuActionSeeder::class, // Role menu action mappings
+                RoleMenuActionsSeeder::class, // Additional role menu actions
 
                 // Member Management
                 ClientsSeeder::class,
@@ -82,6 +83,7 @@ class DatabaseSeeder extends Seeder
                 AccountsSeeder::class,
                 // GLaccountsSeeder::class, // Table doesn't exist
                 GeneralledgerSeeder::class,
+                // GLaccountsSeeder::class, // Table GL_accounts doesn't exist
                 SubaccountsSeeder::class,
                 AssetaccountsSeeder::class,
                 CapitalaccountsSeeder::class,
@@ -131,11 +133,11 @@ class DatabaseSeeder extends Seeder
                 BankstatementsstagingtableSeeder::class,
                 TransactionsSeeder::class,
                 TransactionauditlogsSeeder::class,
-                // TransactionreconciliationsSeeder::class, // Table doesn't exist
-                // TransactionretrylogsSeeder::class, // Likely doesn't exist
+                // TransactionreconciliationsSeeder::class, // Table transaction_reconciliations doesn't exist
+                // TransactionretrylogsSeeder::class, // Table transaction_retry_logs doesn't exist
                 TransactionreversalsSeeder::class,
-                // ReconciledtransactionsSeeder::class, // Table likely doesn't exist
-                // ReconciliationstagingtableSeeder::class, // Table likely doesn't exist
+                ReconciledtransactionsSeeder::class,
+                ReconciliationstagingtableSeeder::class,
                 ImbanktransactionsSeeder::class,
                 GepgtransactionsSeeder::class,
                 InternaltransfersSeeder::class,
@@ -165,7 +167,7 @@ class DatabaseSeeder extends Seeder
                 ChequebooksSeeder::class,
 
                 // Shares and Investments
-                // SharesSeeder::class, // Table doesn't exist
+                // SharesSeeder::class, // Table shares doesn't exist
                 ShareownershipSeeder::class,
                 SharetransfersSeeder::class,
                 SharewithdrawalsSeeder::class,
@@ -173,7 +175,7 @@ class DatabaseSeeder extends Seeder
                 InvestmentslistSeeder::class,
                 InvestmenttypesSeeder::class,
                 DividendsSeeder::class,
-                // ContributionsSeeder::class, // Table doesn't exist
+                // ContributionsSeeder::class, // Table Contributions doesn't exist
 
                 // Expenses and Budget
                 ExpensesSeeder::class,
@@ -197,12 +199,13 @@ class DatabaseSeeder extends Seeder
                 JobpostingsSeeder::class,
 
                 // Approvals and Committees
-                // ApprovalsSeeder::class, // Removed - approvals are transactional data, not seed data
+                ApprovalsSeeder::class, // Basic approval data
                 ApprovalactionsSeeder::class,
                 ApprovalcommentsSeeder::class,
                 ApprovalmatrixconfigsSeeder::class,
                 CommitteesSeeder::class,
                 CommitteemembersSeeder::class,
+                CommitteeSeeder::class, // Committee data
                 // CommitteemembershipsSeeder::class, // Table doesn't exist
                 CommitteeapprovalsSeeder::class,
 
@@ -246,7 +249,7 @@ class DatabaseSeeder extends Seeder
                 // Notifications and Communication
                 NotificationsSeeder::class,
                 NotificationlogsSeeder::class,
-                // EmailsSeeder::class, // Column mismatch issues
+                EmailsSeeder::class, // Email templates
                 MandatorysavingsnotificationsSeeder::class,
                 QueryresponsesSeeder::class,
 
@@ -259,10 +262,10 @@ class DatabaseSeeder extends Seeder
                 OnboardingSeeder::class,
                 AiinteractionsSeeder::class,
 
-                // Locations
-                // RegionsSeeder::class, // Table doesn't exist
-                // DistrictsSeeder::class, // Table doesn't exist
-                // WardsSeeder::class, // Table doesn't exist
+                // Locations (commented out - no tables exist)
+                // RegionsSeeder::class, // Location data
+                // DistrictsSeeder::class, // Location data
+                // WardsSeeder::class, // Location data
 
                 // Other Configurations
                 CurrenciesSeeder::class,
@@ -315,6 +318,9 @@ class DatabaseSeeder extends Seeder
                 ProjectSeeder::class,
                 EntriesSeeder::class,
                 EntriesamountSeeder::class,
+                
+                // Verification seeder - runs last to ensure everything is set up correctly
+                VerifySetupSeeder::class,
             ];
             
             $totalSeeders = count($seeders);

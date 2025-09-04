@@ -109,7 +109,7 @@
                 <div class="space-y-4">
                     <button type="button"
                             id="resendButton"
-                            class="w-full flex justify-center py-3 px-4 border border-primary-300 rounded-md shadow-sm text-sm font-medium text-primary-700 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            class="w-full flex justify-center py-3 px-4 border border-primary-300 rounded-md shadow-sm text-sm font-medium text-primary-700 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
                             wire:click="resendOTP"
                             wire:loading.attr="disabled"
                             wire:target="resendOTP">
@@ -169,7 +169,8 @@
                 clearInterval(timer);
             }
             countdown = 300;
-            resendButton.disabled = true;
+            // Allow resend button to be clicked anytime (remove the disability)
+            resendButton.disabled = false;
             timer = setInterval(updateCountdown, 1000);
             updateCountdown(); // Initial update
         }
