@@ -76,56 +76,32 @@
         </div>
     </div>
 
-    {{-- Enhanced Alerts with Alpine.js --}}
+    {{-- Alerts --}}
     @if($errorMessage)
-        <div class="mb-6" x-data="{ show: true }" x-show="show" x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 transform scale-90"
-             x-transition:enter-end="opacity-100 transform scale-100">
-            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-md">
-                <div class="flex justify-between items-start">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <svg class="h-6 w-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-                        <div class="ml-3">
-                            <h3 class="text-sm font-semibold text-red-800">Transfer Error</h3>
-                            <p class="text-sm text-red-700 mt-1">{{ $errorMessage }}</p>
-                        </div>
-                    </div>
-                    <button @click="show = false" class="ml-4 text-red-400 hover:text-red-600">
-                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                        </svg>
-                    </button>
+        <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-red-700">{{ $errorMessage }}</p>
                 </div>
             </div>
         </div>
     @endif
 
     @if($successMessage)
-        <div class="mb-6" x-data="{ show: true }" x-show="show" x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 transform scale-90"
-             x-transition:enter-end="opacity-100 transform scale-100">
-            <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg shadow-md">
-                <div class="flex justify-between items-start">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <svg class="h-6 w-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-                        <div class="ml-3">
-                            <h3 class="text-sm font-semibold text-green-800">Success</h3>
-                            <p class="text-sm text-green-700 mt-1">{{ $successMessage }}</p>
-                        </div>
-                    </div>
-                    <button @click="show = false" class="ml-4 text-green-400 hover:text-green-600">
-                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                        </svg>
-                    </button>
+        <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-green-700">{{ $successMessage }}</p>
                 </div>
             </div>
         </div>
@@ -531,75 +507,37 @@
                     @break
 
                 @case('complete')
-                    {{-- ENHANCED COMPLETE PHASE --}}
+                    {{-- COMPLETE PHASE --}}
                     <div class="text-center py-8">
-                        <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-gradient-to-br from-green-100 to-green-200 mb-4 shadow-lg">
-                            <svg class="h-12 w-12 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+                            <svg class="h-10 w-10 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                             </svg>
                         </div>
-                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Transfer Successful!</h3>
-                        <p class="text-gray-600 mb-8">Your funds have been transferred successfully.</p>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Transfer Successful!</h3>
+                        <p class="text-gray-600 mb-6">Your transfer has been processed successfully.</p>
                         
-                        <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 text-left max-w-lg mx-auto border border-green-200 shadow-inner">
-                            <h4 class="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wide">Transaction Details</h4>
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm text-gray-600">Reference Number</span>
-                                    <span class="font-mono text-sm bg-white px-3 py-1 rounded border border-gray-200">{{ $transactionReference ?? 'N/A' }}</span>
+                        <div class="bg-gray-50 rounded-lg p-6 text-left max-w-md mx-auto">
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Reference</span>
+                                    <span class="font-mono text-sm">{{ $transactionReference ?? 'N/A' }}</span>
                                 </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm text-gray-600">Amount Transferred</span>
-                                    <span class="text-xl font-bold text-green-600">{{ number_format($amount ?? 0, 2) }} <span class="text-xs text-gray-600">TZS</span></span>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Amount</span>
+                                    <span class="font-medium">{{ number_format($amount ?? 0, 2) }} TZS</span>
                                 </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm text-gray-600">Transfer Type</span>
-                                    <span class="text-sm">
-                                        @if($transferCategory === 'internal')
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                Internal Transfer
-                                            </span>
-                                        @elseif($transferType === 'bank')
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                                Bank Transfer
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                                Mobile Wallet
-                                            </span>
-                                        @endif
-                                    </span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm text-gray-600">Status</span>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <span class="w-2 h-2 bg-green-400 rounded-full mr-1.5"></span>
-                                        Completed
-                                    </span>
-                                </div>
-                                <div class="pt-2 border-t border-gray-200">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-xs text-gray-500">Timestamp</span>
-                                        <span class="text-xs text-gray-600">{{ now()->format('d M Y, H:i:s') }}</span>
-                                    </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Status</span>
+                                    <span class="text-green-600 font-medium">Completed</span>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="mt-8 flex justify-center space-x-4">
+                        <div class="mt-8">
                             <button wire:click="resetForm" 
-                                class="inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transform transition hover:scale-105">
-                                <svg class="mr-2 -ml-1 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                </svg>
+                                class="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                                 New Transfer
-                            </button>
-                            <button onclick="window.print()" 
-                                class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transform transition hover:scale-105">
-                                <svg class="mr-2 -ml-1 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-                                </svg>
-                                Print Receipt
                             </button>
                         </div>
                     </div>

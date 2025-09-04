@@ -277,6 +277,7 @@
   'payments.manage-order' => 'App\\Http\\Livewire\\Payments\\ManageOrder',
   'payments.manage-orders' => 'App\\Http\\Livewire\\Payments\\ManageOrders',
   'payments.manage-orders-table' => 'App\\Http\\Livewire\\Payments\\ManageOrdersTable',
+  'payments.money-transfer' => 'App\\Http\\Livewire\\Payments\\MoneyTransfer',
   'payments.new-order' => 'App\\Http\\Livewire\\Payments\\NewOrder',
   'payments.new-orders-table' => 'App\\Http\\Livewire\\Payments\\NewOrdersTable',
   'payments.payments' => 'App\\Http\\Livewire\\Payments\\Payments',
