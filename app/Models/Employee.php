@@ -38,4 +38,20 @@ class Employee extends Model
     {
         return $this->user->roles();
     }
+    
+    /**
+     * Get the department that the employee belongs to.
+     */
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'department_id');
+    }
+    
+    /**
+     * Get the payroll records for the employee.
+     */
+    public function payrolls()
+    {
+        return $this->hasMany(PayRolls::class, 'employee_id');
+    }
 }

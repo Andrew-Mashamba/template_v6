@@ -93,7 +93,11 @@
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-purple-600">Total Budget</p>
-                        <p class="text-2xl font-bold text-purple-900">{{ number_format(App\Models\BudgetManagement::sum('revenue') + App\Models\BudgetManagement::sum('capital_expenditure'), 2) }} TZS</p>
+                        @php
+                            $totals = App\Models\BudgetManagement::selectRaw("COALESCE(SUM(CAST(revenue as numeric)),0) as total_rev, COALESCE(SUM(CAST(capital_expenditure as numeric)),0) as total_cap")->first();
+                            $totalBudget = ($totals->total_rev ?? 0) + ($totals->total_cap ?? 0);
+                        @endphp
+                        <p class="text-2xl font-bold text-purple-900">{{ number_format($totalBudget, 2) }} TZS</p>
                     </div>
                 </div>
             </div>

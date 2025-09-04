@@ -179,9 +179,34 @@
     </div>
 
     <!-- Accounts Table -->
-    <div class="bg-white">
+    <div class="bg-white" wire:loading.class.delay="opacity-60">
+        <div class="flex items-center justify-between px-6 pt-4">
+            <div class="text-sm text-gray-600">
+                {{-- Results summary --}}
+                @php
+                    $firstItem = $accounts->firstItem();
+                    $lastItem = $accounts->lastItem();
+                    $total = $accounts->total();
+                @endphp
+                @if($total > 0)
+                    Showing {{ $firstItem }}–{{ $lastItem }} of {{ number_format($total) }} accounts
+                @else
+                    No accounts to display
+                @endif
+            </div>
+            <div class="flex items-center space-x-2">
+                <label for="perPage" class="text-xs text-gray-600">Per page</label>
+                <select id="perPage" wire:model="perPage" class="rounded-md border-gray-300 text-sm focus:border-blue-900 focus:ring-blue-900">
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+        </div>
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="min-w-full divide-y divide-gray-200" wire:loading.attr="aria-busy">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" wire:click="sortBy('account_name')">
@@ -234,7 +259,7 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($accounts as $account)
-                        <tr class="hover:bg-gray-50 transition-colors">
+                        <tr class="hover:bg-gray-50 transition-colors" wire:key="acct-{{ $account->account_number }}">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0">
@@ -379,10 +404,9 @@
                 </tbody>
             </table>
         </div>
-        
         <!-- Pagination -->
-        <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
-            {{ $accounts->links() }}
+        <div class="bg-white px-6 py-3 border-t border-gray-200">
+            {{ $accounts->onEachSide(1)->links() }}
         </div>
     </div>
 

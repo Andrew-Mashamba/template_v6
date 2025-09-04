@@ -6,6 +6,7 @@ use App\Models\BudgetManagement;
 use App\Models\Expense;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class BudgetCheckingService
 {
@@ -28,6 +29,50 @@ class BudgetCheckingService
             ->first();
 
         if (!$budgetItem) {
+            // Fallback: check account-specific budgets in budget_accounts for this year
+            $budgetAccount = DB::table('budget_accounts')
+                ->where('account_id', $accountId)
+                ->when(DB::getSchemaBuilder()->hasColumn('budget_accounts', 'year'), function ($q) use ($expenseMonth) {
+                    $q->where('year', $expenseMonth->year);
+                })
+                ->first();
+
+            if ($budgetAccount) {
+                $annualAmount = (float) ($budgetAccount->amount ?? 0);
+                $monthlyBudget = $annualAmount / 12;
+
+                $monthlySpent = Expense::where('account_id', $accountId)
+                    ->where('status', 'APPROVED')
+                    ->whereYear('created_at', $expenseMonth->year)
+                    ->whereMonth('created_at', $expenseMonth->month)
+                    ->sum('amount');
+
+                $remainingBudget = $monthlyBudget - $monthlySpent;
+                $utilizationPercentage = $monthlyBudget > 0 ? ($monthlySpent / $monthlyBudget) * 100 : 0;
+
+                $wouldExceed = ($monthlySpent + (float) $amount) > $monthlyBudget;
+                $overBudgetAmount = $wouldExceed ? ($monthlySpent + (float) $amount) - $monthlyBudget : 0;
+
+                $budgetStatus = 'WITHIN_BUDGET';
+                if ($wouldExceed) {
+                    $budgetStatus = $overBudgetAmount > ($monthlyBudget * 0.1) ? 'BUDGET_EXCEEDED' : 'OVER_BUDGET';
+                }
+
+                return [
+                    'has_budget' => true,
+                    'budget_item_id' => null, // no BudgetManagement item, but we still have a budget
+                    'budget_status' => $budgetStatus,
+                    'monthly_budget' => $monthlyBudget,
+                    'monthly_spent' => $monthlySpent,
+                    'remaining_budget' => $remainingBudget,
+                    'utilization_percentage' => $utilizationPercentage,
+                    'would_exceed' => $wouldExceed,
+                    'over_budget_amount' => $overBudgetAmount,
+                    'new_utilization_percentage' => $monthlyBudget > 0 ? (($monthlySpent + (float) $amount) / $monthlyBudget) * 100 : 0,
+                    'message' => $this->getBudgetMessage($budgetStatus, $overBudgetAmount, $monthlyBudget)
+                ];
+            }
+
             return [
                 'has_budget' => false,
                 'message' => 'No approved budget found for this expense account.',

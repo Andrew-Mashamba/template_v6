@@ -318,13 +318,13 @@
                                             </div>
                                             <div class="space-y-2">
                                                 @php
-                                                        $recentExpenses = DB::table('expenses')->orderBy('created_at', 'desc')->limit(3)->get();
+                                                        $recentExpenses = DB::table('expenses')->orderBy('id', 'desc')->limit(3)->get();
                                                 @endphp
                                                 @foreach($recentExpenses as $expense)
                                                     <div class="flex items-center justify-between bg-white p-2 rounded-lg">
                                                         <div>
                                                             <p class="text-sm font-medium text-gray-900">{{ Str::limit($expense->description ?? 'Expense', 20) }}</p>
-                                                            <p class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($expense->created_at)->format('M d, Y') }}</p>
+                                                            <p class="text-xs text-gray-500">{{ ($expense->created_at ?? $expense->expense_month) ? \Carbon\Carbon::parse($expense->created_at ?? $expense->expense_month)->format('M d, Y') : '-' }}</p>
                                                         </div>
                                                         <span class="text-sm font-semibold text-gray-900">{{number_format($expense->amount, 2)}} TZS</span>
                                                     </div>
@@ -381,7 +381,7 @@
                                                         <div class="flex items-center justify-between">
                                                             <div>
                                                                 <h4 class="font-medium text-gray-900">{{ $expense->description ?? 'Expense' }}</h4>
-                                                                <p class="text-sm text-gray-600">{{ \Carbon\Carbon::parse($expense->created_at)->format('M d, Y H:i') }}</p>
+                                                                <p class="text-sm text-gray-600">{{ ($expense->created_at ?? $expense->expense_month) ? \Carbon\Carbon::parse($expense->created_at ?? $expense->expense_month)->format('M d, Y H:i') : '-' }}</p>
                                                                 <p class="text-sm text-gray-600">Category: {{ $expense->category ?? 'Uncategorized' }}</p>
                                                             </div>
                                                             <div class="text-right">
@@ -515,7 +515,7 @@
                                                         @foreach($sampleExpenses as $expense)
                                                             <tr>
                                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                                    {{ \Carbon\Carbon::parse($expense->created_at)->format('M d, Y') }}
+                                                                    {{ ($expense->created_at ?? $expense->expense_month) ? \Carbon\Carbon::parse($expense->created_at ?? $expense->expense_month)->format('M d, Y') : '-' }}
                                                                 </td>
                                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                                     {{ Str::limit($expense->description ?? 'Expense', 30) }}

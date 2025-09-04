@@ -26,7 +26,10 @@
                             </div>
                             <div class="ml-3">
                                 <p class="text-sm font-medium text-gray-500">Total Budget {{$this->selectYear}}</p>
-                                <p class="text-lg font-semibold text-gray-900">{{number_format(App\Models\BudgetManagement::sum('revenue'))}} TZS</p>
+                                @php
+                                    $totalBudget = App\Models\BudgetManagement::selectRaw("COALESCE(SUM(CAST(revenue as numeric)),0) as total")->value('total');
+                                @endphp
+                                <p class="text-lg font-semibold text-gray-900">{{ number_format($totalBudget, 2) }} TZS</p>
                             </div>
                         </div>
                     </div>
@@ -308,7 +311,10 @@
                                             <div class="space-y-3">
                                                 <div class="flex justify-between">
                                                     <span class="text-sm text-blue-700">Total Budget:</span>
-                                                    <span class="font-semibold text-blue-900">{{number_format(App\Models\BudgetManagement::sum('revenue'))}} TZS</span>
+                                                    @php
+                                                        $totalBudget2 = App\Models\BudgetManagement::selectRaw("COALESCE(SUM(CAST(revenue as numeric)),0) as total")->value('total');
+                                                    @endphp
+                                                    <span class="font-semibold text-blue-900">{{ number_format($totalBudget2, 2) }} TZS</span>
                                                 </div>
                                                 <div class="flex justify-between">
                                                     <span class="text-sm text-blue-700">Budget Items:</span>
@@ -318,11 +324,11 @@
                                                     <span class="text-sm text-blue-700">Avg. per Item:</span>
                                                     <span class="font-semibold text-blue-900">
                                                         @php
-                                                            $total = App\Models\BudgetManagement::sum('revenue');
+                                                            $total = App\Models\BudgetManagement::selectRaw("COALESCE(SUM(CAST(revenue as numeric)),0) as total")->value('total');
                                                             $count = App\Models\BudgetManagement::count();
-                                                            $avg = $count > 0 ? $total / $count : 0;
+                                                            $avg = $count > 0 ? ($total / $count) : 0;
                                                         @endphp
-                                                        {{number_format($avg, 2)}} TZS
+                                                        {{ number_format($avg, 2) }} TZS
                                                     </span>
                                                 </div>
                                             </div>

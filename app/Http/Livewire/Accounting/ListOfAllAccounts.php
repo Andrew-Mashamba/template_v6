@@ -112,7 +112,9 @@ class ListOfAllAccounts extends Component
         '5000' => '5000 - Expenses'
     ];
 
-    protected $paginationTheme = 'bootstrap';
+    protected $paginationTheme = 'tailwind';
+
+    public $perPage = 15;
 
     public function mount()
     {
@@ -145,6 +147,21 @@ class ListOfAllAccounts extends Component
     }
 
     public function updatingSelectedUse()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSortField()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSortDirection()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingPerPage()
     {
         $this->resetPage();
     }
@@ -215,7 +232,7 @@ class ListOfAllAccounts extends Component
         // Apply sorting
         $query->orderBy($this->sortField, $this->sortDirection);
 
-        return $query->paginate(15);
+        return $query->paginate($this->perPage);
     }
 
     public function getAccountSummary()
