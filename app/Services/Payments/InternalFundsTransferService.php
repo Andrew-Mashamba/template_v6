@@ -370,6 +370,20 @@ class InternalFundsTransferService
         // NBC API requires alphanumeric clientRef only (no underscores or special chars)
         return $prefix . date('YmdHis') . strtoupper(substr(md5(uniqid()), 0, 6));
     }
+    
+    /**
+     * Generate UUID
+     */
+    protected function generateUUID(): string
+    {
+        return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0x0fff) | 0x4000,
+            mt_rand(0, 0x3fff) | 0x8000,
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+        );
+    }
 
     /**
      * Save transaction to database
@@ -379,18 +393,35 @@ class InternalFundsTransferService
     protected function saveTransaction(array $data): void
     {
         try {
-            DB::table('payment_transactions')->insert([
+            DB::table('transactions')->insert([
+                'transaction_uuid' => $this->generateUUID(),
                 'reference' => $data['reference'],
                 'type' => $data['type'],
-                'from_account' => $data['from_account'],
-                'to_account' => $data['to_account'],
+                'transaction_category' => 'TRANSFER',
+                'transaction_subcategory' => 'IFT',
                 'amount' => $data['amount'],
+                'currency' => 'TZS',
                 'status' => $data['status'],
-                'response_code' => $data['response_code'] ?? null,
-                'response_message' => $data['response_message'] ?? null,
-                'nbc_reference' => $data['nbc_reference'] ?? null,
+                'external_system' => 'NBC_INTERNAL',
+                'external_system_version' => 'v1',
+                'external_transaction_id' => $data['nbc_reference'] ?? $data['reference'],
+                'external_status_code' => $data['response_code'] ?? null,
+                'external_status_message' => $data['response_message'] ?? null,
                 'error_message' => $data['error_message'] ?? null,
-                'duration_ms' => $data['duration_ms'] ?? null,
+                'processing_time_ms' => isset($data['duration_ms']) ? round($data['duration_ms']) : null,
+                'source' => 'IFT_SERVICE',
+                'narration' => sprintf('Internal transfer from %s to %s', 
+                    $data['from_account'], 
+                    $data['to_account']
+                ),
+                'metadata' => json_encode([
+                    'from_account' => $data['from_account'],
+                    'to_account' => $data['to_account']
+                ]),
+                'initiated_at' => now(),
+                'processed_at' => $data['status'] !== 'PENDING' ? now() : null,
+                'completed_at' => $data['status'] === 'SUCCESS' ? now() : null,
+                'failed_at' => $data['status'] === 'FAILED' ? now() : null,
                 'created_at' => now(),
                 'updated_at' => now()
             ]);

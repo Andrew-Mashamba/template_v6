@@ -130,28 +130,72 @@ class MoneyTransfer extends Component
 
     public function loadAvailableOptions()
     {
-        // Available banks for external transfers
-        $this->availableBanks = [
-            'CRDBTZTZ' => 'CRDB Bank',
-            'NMIBTZTZ' => 'NMB Bank',
-            'CORUTZTZ' => 'NBC Bank',
-            'FBMETZTZ' => 'FBME Bank',
-            'STANBICTZTZ' => 'Stanbic Bank',
-            'EXIMBANKTZTZ' => 'Exim Bank',
-            'DTKETZTZ' => 'DTB Bank',
-            'ABTZTZTZ' => 'Absa Bank',
-            'STANCHART' => 'Standard Chartered Bank',
-            'BARCLAYTZT' => 'Barclays Bank',
-        ];
+        // Load ALL FSPs from both configs
+        $allFsps = config('fsp_providers');
+        $workingFsps = config('working_fsps');
         
-        // Available mobile wallet providers
-        $this->availableWallets = [
-            'MPESA' => 'M-Pesa (Vodacom)',
-            'TIGOPESA' => 'TigoPesa',
-            'AIRTELMONEY' => 'Airtel Money',
-            'HALOPESA' => 'HaloPesa',
-            'EZYPESA' => 'EzyPesa'
-        ];
+        // Available banks for external transfers (ALL banks)
+        $this->availableBanks = [];
+        
+        // First add working banks with indicators
+        foreach ($workingFsps['banks'] ?? [] as $key => $bank) {
+            if (!($bank['is_internal'] ?? false)) {
+                $suffix = '';
+                if (isset($bank['average_response_time'])) {
+                    if ($bank['average_response_time'] < 1000) {
+                        $suffix = ' ✓ (Verified - Fast)';
+                    } else {
+                        $suffix = ' ✓ (Verified)';
+                    }
+                }
+                $this->availableBanks[$bank['code']] = $bank['name'] . $suffix;
+            }
+        }
+        
+        // Then add all other banks from main config
+        foreach ($allFsps['banks'] ?? [] as $key => $bank) {
+            if (!isset($this->availableBanks[$bank['code']])) {
+                $status = '';
+                // Check if it's in known issues
+                if (isset($workingFsps['known_issues'][$key])) {
+                    $status = ' ⚠ (Issues)';
+                } elseif ($bank['active']) {
+                    $status = ' • (Active)';
+                } else {
+                    $status = ' ✗ (Inactive)';
+                }
+                $this->availableBanks[$bank['code']] = $bank['name'] . $status;
+            }
+        }
+        
+        // Available mobile wallet providers (ALL wallets)
+        $this->availableWallets = [];
+        
+        // First add working wallets
+        foreach ($workingFsps['mobile_wallets'] ?? [] as $key => $wallet) {
+            $suffix = ' ✓ (Verified)';
+            $this->availableWallets[$key] = $wallet['name'] . $suffix;
+        }
+        
+        // Then add all other wallets
+        foreach ($allFsps['mobile_wallets'] ?? [] as $key => $wallet) {
+            if (!isset($this->availableWallets[$key])) {
+                $status = '';
+                // Check if it's in known issues
+                if (isset($workingFsps['known_issues'][$key])) {
+                    $status = ' ⚠ (Timeout)';
+                } elseif ($wallet['active']) {
+                    $status = ' • (Active)';
+                } else {
+                    $status = ' ✗ (Inactive)';
+                }
+                $this->availableWallets[$key] = $wallet['name'] . $status;
+            }
+        }
+        
+        // Sort alphabetically while keeping verified ones at top
+        asort($this->availableBanks);
+        asort($this->availableWallets);
     }
 
     public function verifyBeneficiary()
@@ -259,10 +303,14 @@ class MoneyTransfer extends Component
                 'type' => 'bank',
                 'account_name' => $result['account_name'] ?? 'Account Verified',
                 'account_number' => $this->beneficiaryAccount,
+                'actual_identifier' => $result['actual_identifier'] ?? $this->beneficiaryAccount,
                 'bank_name' => $this->availableBanks[$this->bankCode] ?? $this->bankCode,
                 'bank_code' => $this->bankCode,
+                'fsp_id' => $result['fsp_id'] ?? $this->bankCode,
                 'can_receive' => $result['can_receive'] ?? true,
-                'engine_ref' => $result['engine_ref'] ?? null
+                'engine_ref' => $result['engine_ref'] ?? null,
+                'status_code' => $result['status_code'] ?? null,
+                'message' => $result['message'] ?? null
             ];
             
             $this->beneficiaryName = $result['account_name'] ?? '';
@@ -307,10 +355,14 @@ class MoneyTransfer extends Component
                 'type' => 'wallet',
                 'account_name' => $result['account_name'] ?? 'Wallet Verified',
                 'phone_number' => $this->phoneNumber,
+                'actual_identifier' => $result['actual_identifier'] ?? $this->phoneNumber,
                 'provider' => $this->availableWallets[$this->walletProvider] ?? $this->walletProvider,
                 'provider_code' => $this->walletProvider,
+                'fsp_id' => $result['fsp_id'] ?? $this->walletProvider,
                 'can_receive' => $result['can_receive'] ?? true,
-                'engine_ref' => $result['engine_ref'] ?? null
+                'engine_ref' => $result['engine_ref'] ?? null,
+                'status_code' => $result['status_code'] ?? null,
+                'message' => $result['message'] ?? null
             ];
             
             $this->beneficiaryName = $result['account_name'] ?? '';
@@ -562,7 +614,7 @@ class MoneyTransfer extends Component
                     break;
                     
                 case 'wallet':
-                    $rules['phoneNumber'] = 'required|string|regex:/^(255|0)[0-9]{9}$/';
+                    $rules['phoneNumber'] = ['required', 'string', 'regex:/^(255|0)[0-9]{9}$/'];
                     $rules['walletProvider'] = 'required|string';
                     break;
             }

@@ -1,0 +1,1 @@
+[03-Sep-2025 14:07:46 UTC] PHP Fatal error:  Cannot declare class CreatePaymentTransactionsTable, because the name is already in use in /var/www/html/template/database/migrations/2025_09_03_create_payment_transactions_table.php on line 7
