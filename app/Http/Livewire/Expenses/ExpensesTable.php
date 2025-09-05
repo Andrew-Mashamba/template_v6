@@ -2,95 +2,279 @@
 
 namespace App\Http\Livewire\Expenses;
 
-use App\Models\ExpensesModel;
-use Illuminate\Support\Facades\Config;
+use App\Models\Expense as ExpensesModel;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
-use Mediconesystems\LivewireDatatables\Column;
-use Mediconesystems\LivewireDatatables\Http\Livewire\LivewireDatatable;
+use Livewire\WithPagination;
 
-class ExpensesTable extends LivewireDatatable
+class ExpensesTable extends Component
 {
+    use WithPagination;
 
-    public $exportable=true;
-
+    public $search = '';
+    public $statusFilter = '';
+    public $perPage = 10;
+    public $sortField = 'created_at';
+    public $sortDirection = 'desc';
+    
+    // Payment Modal Properties
+    public $showPaymentModal = false;
+    public $selectedExpense = null;
+    public $paymentMethod = '';
+    public $bankAccount = '';
+    public $accountHolderName = '';
+    public $phoneNumber = '';
+    public $mnoProvider = '';
+    public $paymentReference = '';
+    public $paymentNotes = '';
+    public $isProcessingPayment = false;
+    public $paymentErrors = [];
+    public $availableBankAccounts = [];
+    
     protected $listeners = ['refreshExpenses' => '$refresh'];
+    
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'statusFilter' => ['except' => ''],
+        'perPage' => ['except' => 10]
+    ];
 
-    public function builder()
+    public function updatingSearch()
     {
-
-        return ExpensesModel::query();
-        //->leftJoin('branches', 'branches.id', 'members.branch')
+        $this->resetPage();
     }
-
-    /**
-     * Write code on Method
-     *
-     * @return array()
-     */
-    public function columns(): array
+    
+    public function updatingStatusFilter()
     {
-        return [
-
-            Column::name('id')->label('ID')->searchable(),
-            Column::callback('amount', function ($amount)  {
-                return number_format($amount,2);
-            })->label('Amount')->searchable(),
-            Column::callback('account_id', function ($accountId)  {
-                return DB::table('accounts')->where('id',$accountId)->value('account_name');
-            })->label('Expense Account')->searchable(),
-            Column::callback('budget_status', function ($budgetStatus)  {
-                if (!$budgetStatus) return 'N/A';
-                return str_replace('_', ' ', $budgetStatus);
-            })->label('Budget Status'),
-            Column::callback('budget_utilization_percentage', function ($percentage)  {
-                if (!$percentage) return 'N/A';
-                return number_format($percentage, 1) . '%';
-            })->label('Budget Utilization'),
-            Column::name('created_at')->label('Submission Date')->searchable(),
-            Column::name('status')->label('Status'),
-
-            Column::callback('id', function ($id)  {
-                //$status = 1;
-                $status = ExpensesModel::where('id',$id)->value('status');
-
-                if($status == 'ACTIVE' or $status == 'PAID'){
-                    $html ='';
-                }
-                else{
-                    $employeeId = ExpensesModel::where('id',$id)->value('employeeId');
-                    if(auth()->user()->id == $employeeId){
-                        $html= '
-                            <button wire:click="deleteExpenses('.$id.')" type="button" class="text-white bg-gray-100 hover:bg-blue-100 hover:text-blue focus:ring-4 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm p-1 text-center inline-flex items-center mr-2 dark:bg-blue-200 dark:hover:bg-blue-200 dark:focus:ring-blue-200">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="red" class="w-8 h-8">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-
-                                <span class="sr-only">Delete</span>
-                            </button> ';
-                    }else{
-                        $html = '';
-
-                    }
-
-                }
-
-
-                return $html;
-
-            })->label('Action'),
-
-
-        ];
+        $this->resetPage();
     }
-
-
-
-    public function editExpenses($id){
-        $this->emitUp('editExpenses',$id);
+    
+    public function updatingPerPage()
+    {
+        $this->resetPage();
     }
-    public function deleteExpenses($id){
-        $this->emitUp('deleteExpenses',$id);
+    
+    public function sortBy($field)
+    {
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortDirection = 'asc';
+        }
+        
+        $this->sortField = $field;
     }
-
+    
+    public function deleteExpenses($id)
+    {
+        try {
+            $expense = ExpensesModel::find($id);
+            
+            if (!$expense) {
+                session()->flash('error', 'Expense not found.');
+                return;
+            }
+            
+            // Check if user can delete (only owner of pending expenses)
+            if ($expense->status !== 'PENDING_APPROVAL' || $expense->user_id !== auth()->user()->id) {
+                session()->flash('error', 'You cannot delete this expense.');
+                return;
+            }
+            
+            $expense->delete();
+            session()->flash('success', 'Expense deleted successfully.');
+            $this->emit('refreshExpenses');
+            
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to delete expense: ' . $e->getMessage());
+        }
+    }
+    
+    public function openPaymentModal($id)
+    {
+        $this->resetPaymentForm();
+        $this->selectedExpense = ExpensesModel::with(['account', 'user'])->find($id);
+        
+        // Load approval manually
+        if ($this->selectedExpense) {
+            $this->selectedExpense->approval = \App\Models\Approval::where('process_code', 'EXPENSE_REG')
+                ->where('process_id', $id)
+                ->first();
+        }
+        
+        if (!$this->selectedExpense) {
+            session()->flash('error', 'Expense not found.');
+            return;
+        }
+        
+        // Load available bank accounts for payment
+        $this->loadBankAccounts();
+        
+        $this->showPaymentModal = true;
+    }
+    
+    public function closePaymentModal()
+    {
+        $this->showPaymentModal = false;
+        $this->resetPaymentForm();
+    }
+    
+    private function resetPaymentForm()
+    {
+        $this->paymentMethod = '';
+        $this->bankAccount = '';
+        $this->accountHolderName = '';
+        $this->phoneNumber = '';
+        $this->mnoProvider = '';
+        $this->paymentReference = '';
+        $this->paymentNotes = '';
+        $this->paymentErrors = [];
+        $this->selectedExpense = null;
+    }
+    
+    private function loadBankAccounts()
+    {
+        // Load organization bank accounts for disbursement
+        $this->availableBankAccounts = \App\Models\Account::where('major_category_code', 1000)
+            ->where(function($query) {
+                $query->where('account_name', 'LIKE', '%Bank%')
+                      ->orWhere('account_name', 'LIKE', '%Cash%');
+            })
+            ->where('status', 'ACTIVE')
+            ->get();
+    }
+    
+    public function validatePaymentForm()
+    {
+        $this->paymentErrors = [];
+        
+        if (empty($this->paymentMethod)) {
+            $this->paymentErrors[] = 'Please select a payment method';
+        }
+        
+        if ($this->paymentMethod === 'bank_transfer') {
+            if (empty($this->bankAccount)) {
+                $this->paymentErrors[] = 'Please select a bank account';
+            }
+            if (empty($this->accountHolderName)) {
+                $this->paymentErrors[] = 'Please enter account holder name';
+            }
+        }
+        
+        if ($this->paymentMethod === 'mobile_money') {
+            if (empty($this->phoneNumber)) {
+                $this->paymentErrors[] = 'Please enter phone number';
+            }
+            if (empty($this->mnoProvider)) {
+                $this->paymentErrors[] = 'Please select mobile network operator';
+            }
+        }
+        
+        if ($this->paymentMethod === 'cash' && empty($this->bankAccount)) {
+            $this->paymentErrors[] = 'Please select cash account for disbursement';
+        }
+        
+        return count($this->paymentErrors) === 0;
+    }
+    
+    public function processPayment()
+    {
+        if (!$this->validatePaymentForm()) {
+            return;
+        }
+        
+        $this->isProcessingPayment = true;
+        
+        try {
+            // Prepare payment data
+            $paymentData = [
+                'payment_method' => $this->paymentMethod,
+                'bank_account_id' => $this->bankAccount,
+                'account_holder_name' => $this->accountHolderName,
+                'phone_number' => $this->phoneNumber,
+                'mno_provider' => $this->mnoProvider,
+                'payment_notes' => $this->paymentNotes,
+            ];
+            
+            // Import the payment service
+            $paymentService = new \App\Services\ExpensePaymentService();
+            
+            // Process the payment with additional data
+            $result = $paymentService->processPaymentWithDetails($this->selectedExpense->id, $paymentData);
+            
+            if ($result['success']) {
+                session()->flash('success', $result['message'] . ' Reference: ' . $result['payment_reference']);
+                $this->closePaymentModal();
+                $this->emit('refreshExpenses'); // Refresh the table
+            } else {
+                $this->paymentErrors[] = $result['message'];
+            }
+        } catch (\Exception $e) {
+            $this->paymentErrors[] = 'Payment processing failed: ' . $e->getMessage();
+        } finally {
+            $this->isProcessingPayment = false;
+        }
+    }
+    
+    public function viewDetails($id)
+    {
+        $this->emit('viewExpenseDetails', $id);
+    }
+    
+    public function exportToExcel()
+    {
+        // Implementation for Excel export
+        session()->flash('info', 'Export functionality will be implemented soon.');
+    }
+    
+    public function render()
+    {
+        $expenses = ExpensesModel::query()
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
+                    $q->where('description', 'like', '%' . $this->search . '%')
+                      ->orWhere('payment_reference', 'like', '%' . $this->search . '%')
+                      ->orWhereHas('account', function ($q2) {
+                          $q2->where('account_name', 'like', '%' . $this->search . '%');
+                      });
+                });
+            })
+            ->when($this->statusFilter, function ($query) {
+                $query->where('status', $this->statusFilter);
+            })
+            ->with(['account', 'user']) // Load basic relationships
+            ->orderBy($this->sortField, $this->sortDirection)
+            ->paginate($this->perPage);
+            
+        // Load approvals manually for each expense
+        $expenses->each(function($expense) {
+            $expense->approval = \App\Models\Approval::where('process_code', 'EXPENSE_REG')
+                ->where('process_id', $expense->id)
+                ->first();
+        });
+            
+        $totalExpenses = ExpensesModel::count();
+        $totalAmount = ExpensesModel::sum('amount');
+        
+        // Count based on approval status for pending and approved
+        $pendingCount = ExpensesModel::whereHas('approval', function($q) {
+            $q->where('approval_status', 'PENDING');
+        })->count();
+        
+        // Count expenses that have been approved through approval workflow but not yet paid
+        $approvedCount = ExpensesModel::whereHas('approval', function($q) {
+            $q->where('approval_status', 'APPROVED');
+        })->where('status', '!=', 'PAID')->count();
+        
+        $paidCount = ExpensesModel::where('status', 'PAID')->count();
+        
+        return view('livewire.expenses.expenses-table', [
+            'expenses' => $expenses,
+            'totalExpenses' => $totalExpenses,
+            'totalAmount' => $totalAmount,
+            'pendingCount' => $pendingCount,
+            'approvedCount' => $approvedCount,
+            'paidCount' => $paidCount
+        ]);
+    }
 }

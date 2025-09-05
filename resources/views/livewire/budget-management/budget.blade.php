@@ -136,6 +136,18 @@
                                 'icon' => 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z',
                                 'description' => 'Performance analysis'
                             ],
+                            [
+                                'id' => 6, 
+                                'label' => 'Budget Monitor', 
+                                'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+                                'description' => 'Real-time monitoring & alerts'
+                            ],
+                            [
+                                'id' => 7, 
+                                'label' => 'Advanced Features', 
+                                'icon' => 'M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z',
+                                'description' => 'Commitments, transfers & GL'
+                            ],
                         ];
                     @endphp
 
@@ -242,6 +254,8 @@
                                         @case(3) Pending Approval @break
                                         @case(4) Budget Reports @break
                                         @case(5) Budget Analysis @break
+                                        @case(6) Budget Monitoring Dashboard @break
+                                        @case(7) Advanced Budget Management @break
                                         @default Budget Overview
                                     @endswitch
                                 </h2>
@@ -252,6 +266,8 @@
                                         @case(3) Review and approve pending budget item requests @break
                                         @case(4) Generate detailed budget reports and analytics @break
                                         @case(5) Analyze budget performance and trends @break
+                                        @case(6) Real-time budget tracking with alerts and monitoring @break
+                                        @case(7) Commitments, transfers, GL linking, and advanced features @break
                                         @default Monitor budget performance and financial insights
                                     @endswitch
                                 </p>
@@ -280,6 +296,8 @@
                                                     @case(3) Pending @break
                                                     @case(4) Reports @break
                                                     @case(5) Analysis @break
+                                                    @case(6) Monitor @break
+                                                    @case(7) Advanced @break
                                                     @default Overview
                                                 @endswitch
                                             </span>
@@ -554,6 +572,16 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @break
+                                    
+                                @case(6)
+                                    <!-- Budget Monitoring Dashboard -->
+                                    <livewire:budget-management.budget-dashboard />
+                                    @break
+                                    
+                                @case(7)
+                                    <!-- Advanced Budget Management Features -->
+                                    <livewire:budget-management.enhanced-budget-manager />
                                     @break
                                     
                                 @default

@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Account;
 use App\Models\Approvals;
 use App\Services\BudgetCheckingService;
+use App\Services\EnhancedBudgetCheckingService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -76,7 +77,8 @@ class NewExpense extends Component
         ]);
 
         try {
-            $budgetService = new BudgetCheckingService();
+            // Use enhanced budget checking service for comprehensive budget analysis
+            $budgetService = new EnhancedBudgetCheckingService();
             $this->budgetCheckResult = $budgetService->checkBudgetForExpense(
                 $this->expense_type_id, 
                 $this->amount, 
@@ -90,20 +92,46 @@ class NewExpense extends Component
                 $this->budgetCheckResult
             );
 
-            // If no budget exists, show a warning but allow submission
+            // If no budget exists, block submission
             if (!$this->budgetCheckResult['has_budget']) {
-                session()->flash('warning', 'No budget found for this expense account. The expense will be submitted without budget validation.');
-                $this->submitExpense();
+                Log::channel('budget_management')->error('Expense submission blocked - no budget', [
+                    'account_id' => $this->expense_type_id,
+                    'amount' => $this->amount,
+                    'user_id' => Auth::id()
+                ]);
+                
+                session()->flash('error', 'Cannot submit expense: No budget allocation found for this expense account. Please contact the budget administrator to create a budget allocation first.');
+                return;
+            }
+            
+            // Check if expense can proceed
+            if (!($this->budgetCheckResult['can_proceed'] ?? false)) {
+                Log::channel('budget_management')->warning('Expense blocked - insufficient budget', [
+                    'account_id' => $this->expense_type_id,
+                    'amount' => $this->amount,
+                    'available' => $this->budgetCheckResult['total_available'] ?? 0,
+                    'shortage' => $this->budgetCheckResult['over_budget_amount'] ?? 0,
+                    'user_id' => Auth::id()
+                ]);
+                
+                // Show modal with options if budget would be exceeded
+                if ($this->budgetCheckResult['would_exceed']) {
+                    $this->showBudgetModal = true;
+                } else {
+                    session()->flash('error', 'Cannot submit expense: ' . ($this->budgetCheckResult['message'] ?? 'Budget check failed'));
+                }
                 return;
             }
 
-            // If budget would be exceeded, show modal
-            if ($this->budgetCheckResult['would_exceed']) {
-                $this->showBudgetModal = true;
-            } else {
-                // If within budget, proceed with submission
-                $this->submitExpense();
-            }
+            // If within budget, proceed with submission
+            Log::channel('budget_management')->info('Expense approved by budget check', [
+                'account_id' => $this->expense_type_id,
+                'amount' => $this->amount,
+                'remaining_budget' => ($this->budgetCheckResult['total_available'] ?? 0) - $this->amount,
+                'user_id' => Auth::id()
+            ]);
+            
+            $this->submitExpense();
 
         } catch (\Exception $e) {
             Log::channel('budget_management')->error('Budget check failed', [
@@ -121,6 +149,17 @@ class NewExpense extends Component
     {
         $this->validate();
 
+        Log::channel('budget_management')->info('════════════════════════════════════════════════════════', []);
+        Log::channel('budget_management')->info('📝 STARTING EXPENSE SUBMISSION', [
+            'account_id' => $this->expense_type_id,
+            'amount' => number_format($this->amount, 2),
+            'payment_type' => $this->payment_type,
+            'description' => $this->description,
+            'expense_month' => $this->expense_month,
+            'user_id' => Auth::id(),
+            'user_name' => Auth::user()->name
+        ]);
+
         try {
             // Prepare expense data with budget information
             $expenseData = [
@@ -137,17 +176,39 @@ class NewExpense extends Component
             if ($this->budgetCheckResult && $this->budgetCheckResult['has_budget']) {
                 $expenseData = array_merge($expenseData, [
                     'budget_item_id' => $this->budgetCheckResult['budget_item_id'],
-                    'monthly_budget_amount' => $this->budgetCheckResult['monthly_budget'],
+                    'monthly_budget_amount' => $this->budgetCheckResult['total_available'] ?? $this->budgetCheckResult['monthly_budget'],
                     'monthly_spent_amount' => $this->budgetCheckResult['monthly_spent'],
                     'budget_utilization_percentage' => $this->budgetCheckResult['new_utilization_percentage'],
                     'budget_status' => $this->budgetCheckResult['budget_status'],
                     'budget_resolution' => $this->budgetResolution,
                     'budget_notes' => $this->budgetNotes
                 ]);
+                
+                // Store allocation ID for tracking
+                if (isset($this->budgetCheckResult['allocation_id'])) {
+                    $expenseData['budget_allocation_id'] = $this->budgetCheckResult['allocation_id'];
+                }
+                
+                Log::channel('budget_management')->info('💰 BUDGET INFORMATION ATTACHED', [
+                    'budget_item_id' => $this->budgetCheckResult['budget_item_id'],
+                    'allocation_id' => $this->budgetCheckResult['allocation_id'] ?? null,
+                    'available_budget' => number_format($this->budgetCheckResult['total_available'] ?? 0, 2),
+                    'monthly_spent' => number_format($this->budgetCheckResult['monthly_spent'] ?? 0, 2),
+                    'new_utilization' => number_format($this->budgetCheckResult['new_utilization_percentage'] ?? 0, 2) . '%',
+                    'budget_status' => $this->budgetCheckResult['budget_status'],
+                    'budget_resolution' => $this->budgetResolution
+                ]);
             }
 
             // Create expense
             $expense = \App\Models\Expense::create($expenseData);
+            
+            Log::channel('budget_management')->info('✅ EXPENSE RECORD CREATED', [
+                'expense_id' => $expense->id,
+                'account_id' => $expense->account_id,
+                'amount' => number_format($expense->amount, 2),
+                'status' => $expense->status
+            ]);
 
             // Create approval request
             $approvalData = [
@@ -165,6 +226,13 @@ class NewExpense extends Component
             ];
             
             $approval = Approvals::create($approvalData);
+            
+            Log::channel('budget_management')->info('📋 APPROVAL REQUEST CREATED', [
+                'approval_id' => $approval->id,
+                'expense_id' => $expense->id,
+                'process_code' => 'EXPENSE_REG',
+                'approval_status' => 'PENDING'
+            ]);
 
             // Update expense with approval ID
             $expense->update(['approval_id' => $approval->id]);
@@ -179,15 +247,28 @@ class NewExpense extends Component
             $this->expense_month = now()->format('Y-m');
             $this->showBudgetModal = false;
             $this->budgetCheckResult = null;
+            
+            Log::channel('budget_management')->info('🎉 EXPENSE SUBMISSION SUCCESSFUL', [
+                'expense_id' => $expense->id,
+                'approval_id' => $approval->id,
+                'amount' => number_format($expense->amount, 2),
+                'budget_status' => $expense->budget_status ?? 'N/A',
+                'next_step' => 'Awaiting approval'
+            ]);
+            
+            Log::channel('budget_management')->info('════════════════════════════════════════════════════════', []);
 
             session()->flash('success', 'Expense submitted for approval successfully!');
         } catch (\Exception $e) {
-            Log::channel('budget_management')->error('Expense submission failed', [
+            Log::channel('budget_management')->error('❌ EXPENSE SUBMISSION FAILED', [
                 'account_id' => $this->expense_type_id,
                 'amount' => $this->amount,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
                 'user_id' => Auth::id()
             ]);
+            
+            Log::channel('budget_management')->info('════════════════════════════════════════════════════════', []);
             
             session()->flash('error', 'Failed to submit expense: ' . $e->getMessage());
         }

@@ -80,6 +80,9 @@ class QuarterlySystemActivitiesService
 
             // 6. Communication and Notifications
             $this->processQuarterlyCommunicationAndNotifications();
+            
+            // 7. Budget Quarterly Close and Versioning
+            $this->processQuarterlyBudgetClose();
 
             DB::commit();
             Log::info('Quarterly activities completed successfully for ' . $this->previousQuarter->format('Y-Q'));
@@ -539,5 +542,137 @@ class QuarterlySystemActivitiesService
     private function processQuarterlyNotificationEffectivenessReview()
     {
         // Implementation for processing quarterly notification effectiveness review
+    }
+    
+    /**
+     * Process quarterly budget close and create version snapshots
+     */
+    protected function processQuarterlyBudgetClose()
+    {
+        try {
+            $quarter = ceil($this->previousQuarter->month / 3);
+            $year = $this->previousQuarter->format('Y');
+            $period = "{$year}-Q{$quarter}";
+            
+            Log::info('Starting quarterly budget close and versioning for ' . $period);
+            
+            // Get all active budgets
+            $budgets = \App\Models\BudgetManagement::where('status', 'ACTIVE')->get();
+            
+            if ($budgets->isEmpty()) {
+                Log::info('No active budgets found for quarterly close');
+                return;
+            }
+            
+            $successCount = 0;
+            $failCount = 0;
+            
+            foreach ($budgets as $budget) {
+                try {
+                    // Recalculate metrics before creating version
+                    $budget->calculateBudgetMetrics();
+                    
+                    // Create quarterly close version
+                    $versionNumber = \App\Models\BudgetVersion::where('budget_id', $budget->id)->count() + 1;
+                    
+                    \App\Models\BudgetVersion::create([
+                        'budget_id' => $budget->id,
+                        'version_number' => $versionNumber,
+                        'version_name' => "Version {$versionNumber} - {$period} Quarterly Close",
+                        'version_type' => 'QUARTERLY_CLOSE',
+                        'allocated_amount' => $budget->allocated_amount,
+                        'spent_amount' => $budget->spent_amount,
+                        'committed_amount' => $budget->committed_amount,
+                        'effective_from' => $this->previousQuarter->endOfQuarter(),
+                        'created_by' => 1, // System generated
+                        'revision_reason' => "Automatic quarterly close for {$period}",
+                        'change_summary' => json_encode([
+                            'period' => $period,
+                            'period_type' => 'quarterly',
+                            'quarter' => $quarter,
+                            'year' => $year,
+                            'utilization_percentage' => $budget->utilization_percentage,
+                            'variance_amount' => $budget->variance_amount,
+                            'available_amount' => $budget->available_amount,
+                            'quarterly_performance' => [
+                                'budget_utilization' => $budget->utilization_percentage . '%',
+                                'amount_spent' => $budget->spent_amount,
+                                'amount_committed' => $budget->committed_amount,
+                                'amount_available' => $budget->available_amount
+                            ],
+                            'closed_at' => now()->toDateTimeString(),
+                            'closed_by' => 'Quarterly System Activities'
+                        ]),
+                        'is_active' => false // Quarterly close versions are snapshots
+                    ]);
+                    
+                    // Update last period close timestamp
+                    $budget->last_period_close = $this->previousQuarter->endOfQuarter();
+                    $budget->last_closed_period = $period;
+                    $budget->saveQuietly();
+                    
+                    $successCount++;
+                    
+                    Log::info('Quarterly budget close version created', [
+                        'budget_id' => $budget->id,
+                        'budget_name' => $budget->budget_name,
+                        'period' => $period,
+                        'version_number' => $versionNumber
+                    ]);
+                    
+                } catch (\Exception $e) {
+                    $failCount++;
+                    Log::error('Failed to create quarterly close version for budget', [
+                        'budget_id' => $budget->id,
+                        'budget_name' => $budget->budget_name,
+                        'period' => $period,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+            
+            Log::info('Quarterly budget close completed', [
+                'period' => $period,
+                'total_budgets' => $budgets->count(),
+                'success' => $successCount,
+                'failed' => $failCount
+            ]);
+            
+            // Generate quarterly budget performance report
+            $this->generateQuarterlyBudgetReport($period, $budgets);
+            
+        } catch (\Exception $e) {
+            Log::error('Quarterly budget close and versioning failed: ' . $e->getMessage());
+            // Don't throw - allow other quarterly activities to continue
+        }
+    }
+    
+    /**
+     * Generate quarterly budget performance report
+     */
+    private function generateQuarterlyBudgetReport($period, $budgets)
+    {
+        try {
+            $totalAllocated = $budgets->sum('allocated_amount');
+            $totalSpent = $budgets->sum('spent_amount');
+            $totalCommitted = $budgets->sum('committed_amount');
+            $averageUtilization = $budgets->avg('utilization_percentage');
+            
+            $overBudgetCount = $budgets->filter(function ($budget) {
+                return $budget->utilization_percentage > 100;
+            })->count();
+            
+            Log::info('Quarterly Budget Performance Report', [
+                'period' => $period,
+                'total_budgets' => $budgets->count(),
+                'total_allocated' => $totalAllocated,
+                'total_spent' => $totalSpent,
+                'total_committed' => $totalCommitted,
+                'average_utilization' => round($averageUtilization, 2) . '%',
+                'over_budget_items' => $overBudgetCount
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to generate quarterly budget report: ' . $e->getMessage());
+        }
     }
 } 

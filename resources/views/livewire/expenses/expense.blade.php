@@ -26,7 +26,16 @@
                             </div>
                             <div class="ml-3">
                                 <p class="text-sm font-medium text-gray-500">Available Budget</p>
-                                <p class="text-lg font-semibold text-gray-900">{{number_format(DB::table('main_budget')->where('year',\Carbon\Carbon::now()->year)->sum('total'))}} TZS</p>
+                                @php
+                                    $currentMonthBudget = \App\Models\BudgetAllocation::where('year', now()->year)
+                                        ->where('period', now()->month)
+                                        ->sum('available_amount');
+                                    if ($currentMonthBudget == 0) {
+                                        // Fallback to old calculation
+                                        $currentMonthBudget = DB::table('main_budget')->where('year',\Carbon\Carbon::now()->year)->sum('total');
+                                    }
+                                @endphp
+                                <p class="text-lg font-semibold text-gray-900">{{number_format($currentMonthBudget)}} TZS</p>
                             </div>
                         </div>
                     </div>
@@ -293,18 +302,54 @@
                                                 </svg>
                                             </div>
                                             <div class="space-y-3">
+                                                @php
+                                                    // Get current month allocation totals
+                                                    $currentAllocations = \App\Models\BudgetAllocation::where('year', now()->year)
+                                                        ->where('period', now()->month)
+                                                        ->selectRaw('
+                                                            SUM(allocated_amount) as allocated,
+                                                            SUM(utilized_amount) as spent,
+                                                            SUM(available_amount) as available,
+                                                            SUM(rollover_amount) as rollover,
+                                                            SUM(advance_amount) as advances,
+                                                            SUM(supplementary_amount) as supplementary
+                                                        ')
+                                                        ->first();
+                                                    
+                                                    $totalBudget = $currentAllocations ? $currentAllocations->allocated : 
+                                                        DB::table('main_budget')->where('year',\Carbon\Carbon::now()->year)->sum('total')/12;
+                                                    $totalSpent = $currentAllocations ? $currentAllocations->spent :
+                                                        DB::table('expenses')->where('status',"PAID")
+                                                            ->whereYear('expense_month', now()->year)
+                                                            ->whereMonth('expense_month', now()->month)
+                                                            ->sum('amount');
+                                                    $totalRemaining = $currentAllocations ? $currentAllocations->available :
+                                                        $totalBudget - $totalSpent;
+                                                @endphp
                                                 <div class="flex justify-between">
-                                                    <span class="text-sm text-blue-700">Total Budget:</span>
-                                                    <span class="font-semibold text-blue-900">{{number_format(DB::table('main_budget')->where('year',\Carbon\Carbon::now()->year)->sum('total'))}} TZS</span>
+                                                    <span class="text-sm text-blue-700">Monthly Budget:</span>
+                                                    <span class="font-semibold text-blue-900">{{number_format($totalBudget)}} TZS</span>
                                                 </div>
                                                 <div class="flex justify-between">
                                                     <span class="text-sm text-blue-700">Spent:</span>
-                                                    <span class="font-semibold text-red-600">{{number_format(DB::table('expenses')->where('status',"PAID")->sum('amount'),2)}} TZS</span>
+                                                    <span class="font-semibold text-red-600">{{number_format($totalSpent, 2)}} TZS</span>
                                                 </div>
                                                 <div class="flex justify-between">
-                                                    <span class="text-sm text-blue-700">Remaining:</span>
-                                                    <span class="font-semibold text-green-600">{{number_format(DB::table('main_budget')->where('year',\Carbon\Carbon::now()->year)->sum('total') - DB::table('expenses')->where('status',"PAID")->sum('amount'),2)}} TZS</span>
+                                                    <span class="text-sm text-blue-700">Available:</span>
+                                                    <span class="font-semibold text-green-600">{{number_format($totalRemaining, 2)}} TZS</span>
                                                 </div>
+                                                @if($currentAllocations && $currentAllocations->rollover > 0)
+                                                <div class="flex justify-between text-xs">
+                                                    <span class="text-blue-600">Includes Rollover:</span>
+                                                    <span class="font-medium text-blue-800">+{{number_format($currentAllocations->rollover, 2)}}</span>
+                                                </div>
+                                                @endif
+                                                @if($currentAllocations && $currentAllocations->advances > 0)
+                                                <div class="flex justify-between text-xs">
+                                                    <span class="text-orange-600">Advances:</span>
+                                                    <span class="font-medium text-orange-800">+{{number_format($currentAllocations->advances, 2)}}</span>
+                                                </div>
+                                                @endif
                                             </div>
                                         </div>
 
@@ -365,6 +410,7 @@
                                     
                                 @case(3)
                                     <livewire:expenses.expenses-table />
+                                    <livewire:expenses.view-expense-details />
                                     @break
                                     
                                 @case(4)
