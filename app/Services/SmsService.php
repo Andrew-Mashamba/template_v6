@@ -28,7 +28,7 @@ class SmsService
         $this->rateLimitWindow = config('services.nbc_sms.rate_limit_window', 3600);
         $this->maxRetries = config('services.nbc_sms.max_retries', 3);
         $this->retryDelay = config('services.nbc_sms.retry_delay', 60);
-        $this->processId = uniqid('sms_');
+        $this->processId = \Illuminate\Support\Str::uuid()->toString();
     }
 
     /**
@@ -188,7 +188,9 @@ class SmsService
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json',
                     'X-API-Key' => $this->apiKey
-                ])->timeout(30)->post($this->baseUrl . '/nbc-sms-engine/api/v1/direct-sms', $payload);
+                ])->withoutVerifying()  // Disable SSL verification for internal API
+                  ->timeout(30)
+                  ->post($this->baseUrl . '/nbc-sms-engine/api/v1/direct-sms', $payload);
 
                 // Handle response
                 if ($response->successful()) {

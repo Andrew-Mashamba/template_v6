@@ -275,7 +275,12 @@
                                             @break
 
                                         @case('bill_payment')
-                                            {{-- BILL PAYMENT WORKFLOW --}}
+                                            {{-- NBC BILL PAYMENT INTEGRATION --}}
+                                            @include('livewire.payments.bill-payment-section')
+                                            @break
+                                            
+                                        @case('bill_payment_old')
+                                            {{-- OLD BILL PAYMENT WORKFLOW --}}
                                             <div class="bg-white rounded-lg shadow-sm border border-gray-200">
                                                 {{-- Header --}}
                                                 <div class="px-6 py-4 border-b border-gray-200">
@@ -858,13 +863,13 @@
                                             @break
 
                                         @case('gepg_payment')
-                                            {{-- GEPG Payment Integration: Uses dedicated Livewire component for government bill payments
+                                            {{-- GEPG Payment Integration: Simplified version for testing
                                                  - Supports control number verification
-                                                 - Handles postpaid and prepaid bill types
-                                                 - Provides detailed transaction information
+                                                 - Test with control number: 991060011847
+                                                 - Payment amounts: 1000-2000 TZS
                                                  - Integrated with NBC GEPG Gateway Service --}}
                                             <div class="gepg-payment-container">
-                                                <livewire:payments.gepg-payment />
+                                                <livewire:payments.simple-gepg-payment />
                                             </div>
                                             @break
 

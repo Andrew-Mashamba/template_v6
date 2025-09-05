@@ -14,10 +14,13 @@ class BranchesSeeder extends Seeder
      */
     public function run()
     {
-        // Clear existing data - delete instead of truncate to avoid foreign key issues
-        DB::table('branches')->delete();
+        // Check if branches already exist to avoid duplicates
+        if (DB::table('branches')->count() > 0) {
+            echo "Branches already exist, skipping BranchesSeeder\n";
+            return;
+        }
 
-        // Insert existing data
+        // Insert branch data
         $data = [
             [
                 'id' => 1,

@@ -34,43 +34,112 @@ class SendOtpNotification implements ShouldQueue
      */
     public function handle(): void
     {
+        Log::channel('otp')->info('=== SEND OTP NOTIFICATION JOB STARTED ===', [
+            'user_id' => $this->user->id,
+            'email' => $this->user->email,
+            'phone_number' => $this->user->phone_number,
+            'otp_masked' => substr($this->otp, 0, 2) . '****',
+            'timestamp' => now()->toDateTimeString()
+        ]);
+        
         try {
             $emailSent = false;
             $smsSent = false;
             
-            // Send OTP via email if email is configured
-            if (config('mail.mailers.smtp.username') && config('mail.mailers.smtp.password')) {
+            // Send OTP via SMS first (primary method)
+            if ($this->user->phone_number) {
                 try {
-                    Mail::to($this->user->email)->send(new OTP(
-                        config('app.url'), 
-                        $this->user->name ?? $this->user->email, 
-                        $this->otp
-                    ));
-                    $emailSent = true;
-                } catch (\Exception $emailError) {
-                    Log::channel('otp')->warning('Email sending failed, will try SMS only', [
+                    Log::channel('otp')->info('Attempting to send SMS', [
                         'user_id' => $this->user->id,
-                        'email' => $this->user->email,
-                        'email_error' => $emailError->getMessage()
+                        'phone_number' => $this->user->phone_number,
+                        'timestamp' => now()->toDateTimeString()
+                    ]);
+                    
+                    $message = "NBC SACCOS OTP: {$this->otp}\n\nValid for 5 minutes. Do not share this code with anyone.";
+                    app(SmsService::class)->send($this->user->phone_number, $message, $this->user, [
+                        'smsType' => 'TRANSACTIONAL',
+                        'serviceName' => 'SACCOSS',
+                        'language' => 'English'
+                    ]);
+                    $smsSent = true;
+                    
+                    Log::channel('otp')->info('✓ SMS sent successfully', [
+                        'user_id' => $this->user->id,
+                        'phone_number' => $this->user->phone_number,
+                        'timestamp' => now()->toDateTimeString()
+                    ]);
+                } catch (\Exception $smsError) {
+                    Log::channel('otp')->error('✗ SMS sending failed', [
+                        'user_id' => $this->user->id,
+                        'phone_number' => $this->user->phone_number,
+                        'exception_class' => get_class($smsError),
+                        'sms_error' => $smsError->getMessage(),
+                        'error_code' => $smsError->getCode(),
+                        'error_file' => $smsError->getFile(),
+                        'error_line' => $smsError->getLine(),
+                        'timestamp' => now()->toDateTimeString()
                     ]);
                 }
             } else {
-                Log::channel('otp')->warning('Email configuration missing, skipping email', [
+                Log::channel('otp')->warning('No phone number available for SMS', [
                     'user_id' => $this->user->id,
-                    'email' => $this->user->email
+                    'email' => $this->user->email,
+                    'timestamp' => now()->toDateTimeString()
                 ]);
             }
-
-            // Send OTP via SMS
-            if ($this->user->phone_number) {
+            
+            // Send OTP via email as fallback (secondary method)
+            if (!$smsSent && config('mail.mailers.smtp.host')) {
                 try {
-                    app(SmsService::class)->send($this->user->phone_number, "Your OTP code is: {$this->otp}. Valid for 5 minutes.", $this->user);
-                    $smsSent = true;
-                } catch (\Exception $smsError) {
-                    Log::channel('otp')->warning('SMS sending failed', [
+                    Log::channel('otp')->info('SMS failed, attempting email as fallback', [
                         'user_id' => $this->user->id,
-                        'phone_number' => $this->user->phone_number,
-                        'sms_error' => $smsError->getMessage()
+                        'email' => $this->user->email,
+                        'timestamp' => now()->toDateTimeString()
+                    ]);
+                    
+                    // Use custom SMTP method for servers without authentication
+                    $this->sendOtpViaSmtp($this->user->email, $this->otp);
+                    $emailSent = true;
+                    
+                    Log::channel('otp')->info('✓ Email sent successfully (fallback)', [
+                        'user_id' => $this->user->id,
+                        'email' => $this->user->email,
+                        'timestamp' => now()->toDateTimeString()
+                    ]);
+                } catch (\Exception $emailError) {
+                    Log::channel('otp')->error('✗ Email sending also failed', [
+                        'user_id' => $this->user->id,
+                        'email' => $this->user->email,
+                        'exception_class' => get_class($emailError),
+                        'email_error' => $emailError->getMessage(),
+                        'error_code' => $emailError->getCode(),
+                        'timestamp' => now()->toDateTimeString()
+                    ]);
+                }
+            } else if ($smsSent) {
+                // SMS was sent successfully, email is optional
+                try {
+                    Log::channel('otp')->info('SMS successful, sending email as additional channel', [
+                        'user_id' => $this->user->id,
+                        'email' => $this->user->email,
+                        'timestamp' => now()->toDateTimeString()
+                    ]);
+                    
+                    $this->sendOtpViaSmtp($this->user->email, $this->otp);
+                    $emailSent = true;
+                    
+                    Log::channel('otp')->info('✓ Email sent successfully (additional)', [
+                        'user_id' => $this->user->id,
+                        'email' => $this->user->email,
+                        'timestamp' => now()->toDateTimeString()
+                    ]);
+                } catch (\Exception $e) {
+                    // Email is optional when SMS succeeds, so just log
+                    Log::channel('otp')->info('Email sending failed but SMS was successful', [
+                        'user_id' => $this->user->id,
+                        'exception_class' => get_class($e),
+                        'error' => $e->getMessage(),
+                        'timestamp' => now()->toDateTimeString()
                     ]);
                 }
             }
@@ -126,5 +195,82 @@ class SendOtpNotification implements ShouldQueue
     public function backoff(): array
     {
         return [30, 60, 120]; // Retry after 30 seconds, then 1 minute, then 2 minutes
+    }
+
+    /**
+     * Send OTP via SMTP without authentication
+     */
+    private function sendOtpViaSmtp($to, $otp)
+    {
+        $smtp_server = config('mail.mailers.smtp.host', 'smtp.absa.co.za');
+        $smtp_port = config('mail.mailers.smtp.port', 25);
+        $from = config('mail.from.address', 'nbc_saccos@nbc.co.tz');
+        $from_name = config('mail.from.name', 'NBC SACCOS');
+        
+        // Open connection
+        $connection = @fsockopen($smtp_server, $smtp_port, $errno, $errstr, 30);
+        
+        if (!$connection) {
+            throw new \Exception("Failed to connect to SMTP server: $errstr ($errno)");
+        }
+        
+        // Read server response
+        $response = fgets($connection, 515);
+        
+        // Send HELO command
+        fputs($connection, "HELO nbc.co.tz\r\n");
+        $response = fgets($connection, 515);
+        
+        // Send MAIL FROM
+        fputs($connection, "MAIL FROM: <$from>\r\n");
+        $response = fgets($connection, 515);
+        
+        // Send RCPT TO
+        fputs($connection, "RCPT TO: <$to>\r\n");
+        $response = fgets($connection, 515);
+        
+        // Send DATA command
+        fputs($connection, "DATA\r\n");
+        $response = fgets($connection, 515);
+        
+        // Build the email message
+        $subject = "Your NBC SACCOS Login OTP";
+        $message = "Dear " . ($this->user->name ?? 'User') . ",\r\n\r\n";
+        $message .= "Your One-Time Password (OTP) for NBC SACCOS login is:\r\n\r\n";
+        $message .= "    $otp\r\n\r\n";
+        $message .= "This code is valid for 5 minutes.\r\n\r\n";
+        $message .= "If you did not request this code, please ignore this email.\r\n\r\n";
+        $message .= "Best regards,\r\n";
+        $message .= "NBC SACCOS Team\r\n";
+        $message .= config('app.url');
+        
+        // Send headers and message
+        $headers = "From: $from_name <$from>\r\n";
+        $headers .= "To: $to\r\n";
+        $headers .= "Subject: $subject\r\n";
+        $headers .= "Date: " . date("r") . "\r\n";
+        $headers .= "MIME-Version: 1.0\r\n";
+        $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+        $headers .= "\r\n";
+        
+        fputs($connection, $headers . $message . "\r\n.\r\n");
+        $response = fgets($connection, 515);
+        
+        // Check if message was accepted
+        if (strpos($response, '250') === false) {
+            fclose($connection);
+            throw new \Exception("Failed to send email. Server response: $response");
+        }
+        
+        // Quit
+        fputs($connection, "QUIT\r\n");
+        fclose($connection);
+        
+        Log::channel('otp')->info('OTP email sent via custom SMTP', [
+            'user_id' => $this->user->id,
+            'email' => $to,
+            'server' => $smtp_server,
+            'message_id' => trim(str_replace('250 ', '', $response))
+        ]);
     }
 } 

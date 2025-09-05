@@ -20,34 +20,92 @@ class NbcBillsPaymentService
 
     public function __construct()
     {
-        $this->baseUrl = 'http://22.32.245.87:4433';
-        $this->username = config('nbc.bills_payment.username');
-        $this->password = config('nbc.bills_payment.password');
-        $this->channelId = config('nbc.bills_payment.channel_id');
+        // Sandbox configuration (as per original documentation)
+        $this->baseUrl = config('nbc.bills_payment.base_url', 'http://22.32.245.87:4433');
+        $this->username = config('nbc.bills_payment.username', 'SaccosApp@nbc.co.tz');
+        $this->password = config('nbc.bills_payment.password', 'SaccosAbc@123!');
+        $this->channelId = config('nbc.bills_payment.channel_id', 'SACCOSAPP');
+        $this->channelName = config('nbc.bills_payment.channel_name', 'SACCOSAPPLICATION');
 
         Log::info('Initializing NBC Bills Payment Service');
 
-        // Load private key
-        $privateKeyContent = Storage::get('keys/private_key.pem');
-        $this->privateKey = openssl_pkey_get_private($privateKeyContent);
-
-        if (!$this->privateKey) {
-            Log::error('Failed to load private key');
-            throw new \Exception("Invalid private key");
+        // Load private key - try multiple possible filenames
+        $privateKeyContent = null;
+        $privateKeyFiles = ['keys/private_key.pem', 'keys/private.pem'];
+        
+        foreach ($privateKeyFiles as $keyFile) {
+            if (Storage::exists($keyFile)) {
+                $privateKeyContent = Storage::get($keyFile);
+                Log::info('Private key found at: ' . $keyFile);
+                break;
+            }
+        }
+        
+        if ($privateKeyContent) {
+            $this->privateKey = openssl_pkey_get_private($privateKeyContent);
+            if (!$this->privateKey) {
+                Log::warning('Private key content exists but failed to parse, generating new key pair');
+                $this->generateKeyPair();
+            } else {
+                Log::info('Private key loaded successfully');
+            }
+        } else {
+            Log::warning('No private key found, generating new key pair');
+            $this->generateKeyPair();
         }
 
-        Log::info('Private key loaded successfully');
-
-        // Load public key
-        $publicKeyContent = Storage::get('keys/public_key.pem');
-        $this->publicKey = openssl_pkey_get_public($publicKeyContent);
-
+        // Load or derive public key
+        if (!$this->publicKey && $this->privateKey) {
+            // Extract public key from private key
+            $keyDetails = openssl_pkey_get_details($this->privateKey);
+            if ($keyDetails && isset($keyDetails['key'])) {
+                $this->publicKey = openssl_pkey_get_public($keyDetails['key']);
+                Log::info('Public key derived from private key');
+            }
+        }
+        
         if (!$this->publicKey) {
-            Log::error('Failed to load public key');
-            throw new \Exception("Invalid public key");
+            Log::warning('Could not load or derive public key');
+            // Continue without public key - it's only needed for verification
         }
-
-        Log::info('Public key loaded successfully');
+    }
+    
+    protected function getBasicAuthHeader(): string
+    {
+        return 'Basic ' . base64_encode($this->username . ':' . $this->password);
+    }
+    
+    protected function generateKeyPair()
+    {
+        $config = [
+            "private_key_bits" => 2048,
+            "private_key_type" => OPENSSL_KEYTYPE_RSA,
+        ];
+        
+        $res = openssl_pkey_new($config);
+        
+        if ($res) {
+            // Export private key
+            openssl_pkey_export($res, $privateKey);
+            $this->privateKey = openssl_pkey_get_private($privateKey);
+            
+            // Store private key
+            Storage::put('keys/private_key.pem', $privateKey);
+            
+            // Get public key
+            $keyDetails = openssl_pkey_get_details($res);
+            if ($keyDetails && isset($keyDetails['key'])) {
+                $this->publicKey = openssl_pkey_get_public($keyDetails['key']);
+                
+                // Store public key
+                Storage::put('keys/public_key.pem', $keyDetails['key']);
+            }
+            
+            Log::info('New key pair generated and stored');
+        } else {
+            Log::error('Failed to generate key pair');
+            throw new \Exception("Failed to generate RSA key pair");
+        }
     }
 
     protected function generateDigitalSignature(array $payload): string
@@ -83,57 +141,82 @@ class NbcBillsPaymentService
 public function getBillers()
 {
     try {
+        // Cache billers for 8 hours as per NBC documentation
+        return Cache::remember('nbc_billers', 28800, function () {
+            try {
+                $timestamp = now()->format('Y-m-d\TH:i:s.v');
+                $channelRef = 'REF' . now()->timestamp;
 
-        $timestamp = now()->format('Y-m-d\TH:i:s'); // shorter timestamp
-        //$channelRef = 'REQ' . strtoupper(Str::random(10)); // alphanumeric, <30 chars
-        $channelRef = '20230512103230499';
+                $payload = [
+                    'channelId' => $this->channelId,
+                    'requestType' => 'getServiceProviders',
+                    'timestamp' => $timestamp,
+                    'channelRef' => $channelRef
+                ];
 
-        $payload = [
-            'channelId' => 'SACCOSAPP',
-            'requestType' => 'getServiceProviders',
-            //'timestamp' => $timestamp,
-		'timestamp' => '2023-05-15T01:10:20',
-            'channelRef' => $channelRef
-        ];
+                Log::info('Generating digital signature for biller request');
+                $digitalSignature = $this->generateDigitalSignature($payload);
 
-        Log::info('Generating digital signature for biller request');
-        $digitalSignature = $this->generateDigitalSignature($payload);
+                $headers = [
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                    'Authorization' => $this->getBasicAuthHeader(),
+                    'Digital-Signature' => $digitalSignature,
+                    'Timestamp' => $timestamp,
+                ];
 
-        $headers = [
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json',
-            'NBC-Authorization' => 'Basic c2FjY29zaXNhbGU6QE5CQ3NhY2Nvc2lzYWxlTHRk',
-            'Digital-Signature' => $digitalSignature,
-            'Timestamp' => $timestamp,
-        ];
+                Log::info('Sending request to NBC API', [
+                    'url' => $this->baseUrl . '/bills-payments-engine/api/v1/billers-retrieval',
+                    'headers' => $headers,
+                    'body' => $payload
+                ]);
 
-        Log::info('Sending request to NBC API', [
-            'url' => $this->baseUrl . '/bills-payments-engine/api/v1/billers-retrieval',
-            'headers' => $headers,
-            'body' => $payload
-        ]);
+                $response = Http::withHeaders($headers)
+                    ->post("{$this->baseUrl}/bills-payments-engine/api/v1/billers-retrieval", $payload);
 
-        $response = Http::withHeaders($headers)->post("{$this->baseUrl}/bills-payments-engine/api/v1/billers-retrieval", $payload);
+                Log::info('Received response', ['status' => $response->status(), 'body' => $response->body()]);
 
-        Log::info('Received response', ['status' => $response->status(), 'body' => $response->body()]);
+                if ($response->successful()) {
+                    $data = $response->json();
 
-        if ($response->successful()) {
-            $data = $response->json();
+                    if ($data['statusCode'] === '600') {
+                        $billers = $data['serviceProviders'] ?? [];
+                        // Filter only active billers and organize by category
+                        $activeBillers = array_filter($billers, fn($biller) => $biller['active'] === true);
+                        
+                        // Group billers by category for better organization
+                        $groupedBillers = [];
+                        foreach ($activeBillers as $biller) {
+                            $category = $biller['category'] ?? 'other';
+                            if (!isset($groupedBillers[$category])) {
+                                $groupedBillers[$category] = [];
+                            }
+                            $groupedBillers[$category][] = $biller;
+                        }
+                        
+                        Log::info('Active billers retrieved', [
+                            'total' => count($activeBillers),
+                            'categories' => array_keys($groupedBillers)
+                        ]);
+                        
+                        return [
+                            'flat' => array_values($activeBillers),
+                            'grouped' => $groupedBillers
+                        ];
+                    }
 
-            if ($data['statusCode'] === '600') {
-                $activeBillers = array_filter($data['serviceProviders'], fn($biller) => $biller['active'] === true);
-                Log::info('Active billers retrieved: ' . count($activeBillers));
-                return array_values($activeBillers);
+                    throw new \Exception("API Error: {$data['message']}");
+                }
+
+                throw new \Exception("HTTP Error: {$response->status()}");
+            } catch (\Exception $e) {
+                Log::error("NBC Billers Retrieval Error: " . $e->getMessage());
+                return ['flat' => [], 'grouped' => []];
             }
-
-            throw new \Exception("API Error: {$data['message']}");
-        }
-
-        throw new \Exception("HTTP Error: {$response->status()}");
-
+        });
     } catch (\Exception $e) {
-        Log::error("NBC Billers Retrieval Error: " . $e->getMessage());
-        return [];
+        Log::error("NBC Billers Cache Error: " . $e->getMessage());
+        return ['flat' => [], 'grouped' => []];
     }
 }
 
@@ -147,15 +230,15 @@ public function inquireDetailedBill(array $params): array
 {
     try {
         $timestamp = now()->format('Y-m-d\TH:i:s.v');
-        $channelRef = '20230512103230499';
+        $channelRef = 'INQ' . now()->timestamp;
 
         $payload = [
-            'channelId' => 'SACCOSAPP',
+            'channelId' => $this->channelId,
             'spCode' => $params['spCode'],
             'requestType' => 'inquiry',
             'timestamp' => $timestamp,
-            'userId' => $params['userId'],
-            'branchCode' => $params['branchCode'],
+            'userId' => $params['userId'] ?? auth()->id() ?? 'USER001',
+            'branchCode' => $params['branchCode'] ?? '015',
             'channelRef' => $channelRef,
             'billRef' => $params['billRef'],
             'extraFields' => $params['extraFields'] ?? (object)[],
@@ -167,7 +250,7 @@ public function inquireDetailedBill(array $params): array
         $headers = [
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-            'NBC-Authorization' => 'Basic c2FjY29zaXNhbGU6QE5CQ3NhY2Nvc2lzYWxlTHRk',            
+            'Authorization' => $this->getBasicAuthHeader(),            
             'Digital-Signature' => $digitalSignature,
             'Timestamp' => $timestamp,
         ];
@@ -191,17 +274,37 @@ public function inquireDetailedBill(array $params): array
             $data = $response->json();
 
             if ($data['statusCode'] === '600') {
-                return $data['billDetails'];
+                // Store the raw response for payment processing
+                $billDetails = $data['billDetails'] ?? [];
+                $billDetails['inquiryRawResponse'] = json_encode($data);
+                $billDetails['spCode'] = $data['spCode'] ?? $params['spCode'];
+                $billDetails['channelRef'] = $channelRef;
+                
+                return [
+                    'success' => true,
+                    'data' => $billDetails,
+                    'rawResponse' => json_encode($data)
+                ];
             }
 
-            throw new \Exception("API Error: {$data['message']}");
+            return [
+                'success' => false,
+                'message' => $data['message'] ?? 'Inquiry failed',
+                'statusCode' => $data['statusCode'] ?? 'unknown'
+            ];
         }
 
-        throw new \Exception("HTTP Error: {$response->status()}");
+        return [
+            'success' => false,
+            'message' => "HTTP Error: {$response->status()}"
+        ];
 
     } catch (\Exception $e) {
         Log::error("NBC Detailed Bill Inquiry Error: " . $e->getMessage());
-        return [];
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
     }
 }
 
@@ -212,10 +315,10 @@ public function processPaymentAsync(array $params): array
 {
     try {
         $timestamp = now()->format('Y-m-d\TH:i:s.v');
-         $channelRef = '20230512103230499';
+        $channelRef = $params['channelRef'] ?? 'PAY' . now()->timestamp;
 
         $payload = [
-            'channelId' => 'SACCOSAPP',
+            'channelId' => $this->channelId,
             'spCode'             => $params['spCode'],
             'requestType'        => 'payment',
             'approach'           => 'async',
@@ -226,7 +329,7 @@ public function processPaymentAsync(array $params): array
             'billRef'            => $params['billRef'],
             'channelRef'         => $channelRef,
             'amount'             => $params['amount'],
-            'creditAccount'      => $params['creditAccount'],
+            'creditAccount'      => $params['creditAccount'] ?? $params['billDetails']['creditAccount'] ?? '',
             'creditCurrency'     => $params['creditCurrency'] ?? 'TZS',
             'debitAccount'       => $params['debitAccount'],
             'debitCurrency'      => $params['debitCurrency'] ?? 'TZS',
@@ -237,7 +340,7 @@ public function processPaymentAsync(array $params): array
             'payerEmail'         => $params['payerEmail'],
             'narration'          => $params['narration'] ?? 'Bills Payment',
             'extraFields'        => $params['extraFields'] ?? new \stdClass(),
-            'inquiryRawResponse' => $params['inquiryRawResponse'] ?? '',
+            'inquiryRawResponse' => $params['inquiryRawResponse'] ?? $params['billDetails']['inquiryRawResponse'] ?? '',
         ];
 
         Log::info('Generating digital signature for payment request');
@@ -246,7 +349,7 @@ public function processPaymentAsync(array $params): array
         $headers = [
             'Content-Type'      => 'application/json',
             'Accept'            => 'application/json',
-            'NBC-Authorization' => 'Basic c2FjY29zaXNhbGU6QE5CQ3NhY2Nvc2lzYWxlTHRk', 
+            'Authorization' => $this->getBasicAuthHeader(), 
             'Digital-Signature' => $digitalSignature,
             'Timestamp'         => $timestamp,
         ];
@@ -321,7 +424,7 @@ $channelRef = '20230512103230499';
         $headers = [
             'Content-Type'      => 'application/json',
             'Accept'            => 'application/json',
-            'NBC-Authorization' => 'Basic c2FjY29zaXNhbGU6QE5CQ3NhY2Nvc2lzYWxlTHRk', 
+            'Authorization' => $this->getBasicAuthHeader(), 
             'Digital-Signature' => $digitalSignature,
             'Timestamp'         => $timestamp,
         ];

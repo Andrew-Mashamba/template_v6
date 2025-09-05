@@ -11,9 +11,15 @@ class CommitteeSeeder extends Seeder
 {
     public function run(): void
     {
+        // Check if committees already exist to avoid duplicates
+        if (Committee::count() > 0) {
+            echo "Committees already exist, skipping CommitteeSeeder\n";
+            return;
+        }
+
         $institution = Institution::where('code', 'NBC001')->first();
-        $financeDept = Department::where('department_code', 'FIN')->first();
-        $operationsDept = Department::where('department_code', 'OPS')->first();
+        $financeDept = Department::where('department_code', 'FAC')->first();
+        $operationsDept = Department::where('department_code', 'CMO')->first();
 
         // Create Loan Committees
         Committee::create([

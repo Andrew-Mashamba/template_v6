@@ -14,11 +14,14 @@ class UsersSeeder extends Seeder
      */
     public function run()
     {
-        // Clear existing data - delete instead of truncate to avoid foreign key issues
-        DB::table('users')->delete();
+        // Check if we already have users to avoid duplicates
+        if (DB::table('users')->count() > 0) {
+            echo "Users already exist, skipping UsersSeeder\n";
+            return;
+        }
 
-        // Insert existing data
-            $data = [
+        // Insert user data
+        $data = [
             [
                 'id' => 2,
                 'institution_user_id' => null,

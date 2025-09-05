@@ -37,19 +37,27 @@ class OtpService
      */
     public function generateOtp(User $user): array
     {
-        $this->logger->info('Starting OTP generation process', [
+        $this->logger->info('=== OTP GENERATION STARTED ===', [
             'timestamp' => now()->toDateTimeString(),
             'user_id' => $user->id,
             'email' => $user->email,
             'phone_number' => $user->phone_number,
             'ip' => request()->ip(),
-            'user_agent' => request()->userAgent()
+            'user_agent' => request()->userAgent(),
+            'request_method' => request()->method(),
+            'request_url' => request()->url()
         ]);
 
         try {
             // Check IP-based rate limiting
             $ipKey = 'otp_attempts_ip:' . request()->ip();
             $attempts = Cache::get($ipKey, 0);
+            
+            $this->logger->info('Rate limit check - IP', [
+                'ip_key' => $ipKey,
+                'current_attempts' => $attempts,
+                'limit' => 5
+            ]);
 
             if ($attempts >= 5) {
                 $this->logger->warning('IP rate limit exceeded for OTP generation', [
@@ -99,17 +107,42 @@ class OtpService
 
             // Dispatch OTP notification job
             try {
-                SendOtpNotification::dispatch($user, $otp);
-            } catch (\Exception $e) {
-                $this->logger->error('Failed to dispatch OTP notification job', [
+                $this->logger->info('Dispatching SendOtpNotification job', [
                     'user_id' => $user->id,
                     'email' => $user->email,
+                    'phone_number' => $user->phone_number,
+                    'otp_masked' => substr($otp, 0, 2) . '****',
+                    'timestamp' => now()->toDateTimeString()
+                ]);
+                
+                SendOtpNotification::dispatch($user, $otp);
+                
+                $this->logger->info('✓ SendOtpNotification job dispatched successfully', [
+                    'user_id' => $user->id,
+                    'timestamp' => now()->toDateTimeString()
+                ]);
+            } catch (\Exception $e) {
+                $this->logger->error('✗ Failed to dispatch OTP notification job', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'exception_class' => get_class($e),
                     'error' => $e->getMessage(),
+                    'error_code' => $e->getCode(),
+                    'error_file' => $e->getFile(),
+                    'error_line' => $e->getLine(),
                     'trace' => $e->getTraceAsString(),
                     'timestamp' => now()->toDateTimeString()
                 ]);
                 return ['success' => false, 'message' => 'An error occurred while sending the verification code.'];
             }
+
+            $this->logger->info('=== OTP GENERATION COMPLETED SUCCESSFULLY ===', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'phone_number' => $user->phone_number,
+                'otp_set' => !empty($user->otp),
+                'timestamp' => now()->toDateTimeString()
+            ]);
 
             return ['success' => true, 'message' => 'Verification code has been sent to your email and phone number.'];
         } catch (\Exception $e) {

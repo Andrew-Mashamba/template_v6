@@ -286,6 +286,7 @@
   'payments.new-order' => 'App\\Http\\Livewire\\Payments\\NewOrder',
   'payments.new-orders-table' => 'App\\Http\\Livewire\\Payments\\NewOrdersTable',
   'payments.payments' => 'App\\Http\\Livewire\\Payments\\Payments',
+  'payments.simple-gepg-payment' => 'App\\Http\\Livewire\\Payments\\SimpleGepgPayment',
   'process.matching-table' => 'App\\Http\\Livewire\\Process\\MatchingTable',
   'process.non-matching-table' => 'App\\Http\\Livewire\\Process\\NonMatchingTable',
   'process.process' => 'App\\Http\\Livewire\\Process\\Process',
