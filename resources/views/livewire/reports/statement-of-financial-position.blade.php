@@ -42,34 +42,34 @@
                 </button>
 
                 @if($showStatementView && $statementData)
-                    <button wire:click="exportStatement('pdf')"
+                    <button wire:click="exportPDF"
                             wire:loading.attr="disabled"
-                            wire:target="exportStatement"
+                            wire:target="exportPDF"
                             class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
-                        <svg wire:loading.remove wire:target="exportStatement" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg wire:loading.remove wire:target="exportPDF" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        <svg wire:loading wire:target="exportStatement" class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+                        <svg wire:loading wire:target="exportPDF" class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <span wire:loading.remove wire:target="exportStatement">Export PDF</span>
-                        <span wire:loading wire:target="exportStatement">Exporting...</span>
+                        <span wire:loading.remove wire:target="exportPDF">Export PDF</span>
+                        <span wire:loading wire:target="exportPDF">Exporting PDF...</span>
                     </button>
 
-                    <button wire:click="exportStatement('excel')"
+                    <button wire:click="exportExcel"
                             wire:loading.attr="disabled"
-                            wire:target="exportStatement"
+                            wire:target="exportExcel"
                             class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
-                        <svg wire:loading.remove wire:target="exportStatement" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg wire:loading.remove wire:target="exportExcel" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        <svg wire:loading wire:target="exportStatement" class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+                        <svg wire:loading wire:target="exportExcel" class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <span wire:loading.remove wire:target="exportStatement">Export Excel</span>
-                        <span wire:loading wire:target="exportStatement">Exporting...</span>
+                        <span wire:loading.remove wire:target="exportExcel">Export Excel</span>
+                        <span wire:loading wire:target="exportExcel">Exporting Excel...</span>
                     </button>
                 @endif
             </div>
@@ -90,7 +90,7 @@
                         <h2 class="text-2xl font-bold text-gray-900">STATEMENT OF FINANCIAL POSITION</h2>
                         <p class="text-lg text-gray-600 mt-2">As at {{ \Carbon\Carbon::parse($statementData['as_of_date'])->format('F d, Y') }}</p>
                         <p class="text-sm text-gray-500 mt-1">(All amounts in Tanzanian Shillings)</p>
-                        @if(DB::table('general_ledger')->count() > 0 && DB::table('general_ledger')->count() <= 10)
+                       {{-- @if(DB::table('general_ledger')->count() > 0 && DB::table('general_ledger')->count() <= 10)
                             <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                 <p class="text-sm text-blue-800">
                                     <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -99,7 +99,7 @@
                                     <strong>Demo Mode:</strong> This statement includes sample data for demonstration purposes. In a live system, this would show actual transaction data.
                                 </p>
                             </div>
-                        @endif
+                        @endif--}}
                     </div>
 
                     <!-- Statement Content -->
@@ -114,8 +114,8 @@
                                     <div class="ml-4 space-y-1">
                                         @foreach($category['accounts'] as $account)
                                             <div class="flex justify-between items-center py-1">
-                                                <span class="text-sm text-gray-700">{{ $account->account_name }}</span>
-                                                <span class="text-sm font-mono text-gray-900">{{ number_format($account->current_balance, 2) }}</span>
+                                                <span class="text-sm text-gray-700">{{ is_object($account) ? $account->account_name : $account['account_name'] }}</span>
+                                                <span class="text-sm font-mono text-gray-900">{{ number_format(is_object($account) ? $account->current_balance : $account['current_balance'], 2) }}</span>
                                             </div>
                                         @endforeach
                                         <div class="flex justify-between items-center py-2 border-t border-gray-200 font-semibold">
@@ -144,8 +144,8 @@
                                         <div class="ml-4 space-y-1">
                                             @foreach($category['accounts'] as $account)
                                                 <div class="flex justify-between items-center py-1">
-                                                    <span class="text-sm text-gray-700">{{ $account->account_name }}</span>
-                                                    <span class="text-sm font-mono text-gray-900">{{ number_format($account->current_balance, 2) }}</span>
+                                                    <span class="text-sm text-gray-700">{{ is_object($account) ? $account->account_name : $account['account_name'] }}</span>
+                                                    <span class="text-sm font-mono text-gray-900">{{ number_format(is_object($account) ? $account->current_balance : $account['current_balance'], 2) }}</span>
                                                 </div>
                                             @endforeach
                                             <div class="flex justify-between items-center py-2 border-t border-gray-200 font-semibold">
@@ -172,8 +172,8 @@
                                         <div class="ml-4 space-y-1">
                                             @foreach($category['accounts'] as $account)
                                                 <div class="flex justify-between items-center py-1">
-                                                    <span class="text-sm text-gray-700">{{ $account->account_name }}</span>
-                                                    <span class="text-sm font-mono text-gray-900">{{ number_format($account->current_balance, 2) }}</span>
+                                                    <span class="text-sm text-gray-700">{{ is_object($account) ? $account->account_name : $account['account_name'] }}</span>
+                                                    <span class="text-sm font-mono text-gray-900">{{ number_format(is_object($account) ? $account->current_balance : $account['current_balance'], 2) }}</span>
                                                 </div>
                                             @endforeach
                                             <div class="flex justify-between items-center py-2 border-t border-gray-200 font-semibold">

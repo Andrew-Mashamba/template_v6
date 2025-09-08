@@ -215,7 +215,7 @@
             @forelse($assets as $asset)
                 <tr class="account-row">
                     <td class="account-name">{{ is_object($asset) ? $asset->account_name : $asset['account_name'] }}</td>
-                    <td class="amount">{{ number_format(is_object($asset) ? $asset->balance : $asset['balance'], 2) }}</td>
+                    <td class="amount">{{ number_format(is_object($asset) ? $asset->current_balance : $asset['current_balance'], 2) }}</td>
                 </tr>
             @empty
                 <tr class="account-row">
@@ -236,7 +236,7 @@
             @forelse($liabilities as $liability)
                 <tr class="account-row">
                     <td class="account-name">{{ is_object($liability) ? $liability->account_name : $liability['account_name'] }}</td>
-                    <td class="amount">{{ number_format(is_object($liability) ? $liability->balance : $liability['balance'], 2) }}</td>
+                    <td class="amount">{{ number_format(is_object($liability) ? $liability->current_balance : $liability['current_balance'], 2) }}</td>
                 </tr>
             @empty
                 <tr class="account-row">
@@ -257,7 +257,7 @@
             @forelse($equity as $equityItem)
                 <tr class="account-row">
                     <td class="account-name">{{ is_object($equityItem) ? $equityItem->account_name : $equityItem['account_name'] }}</td>
-                    <td class="amount">{{ number_format(is_object($equityItem) ? $equityItem->balance : $equityItem['balance'], 2) }}</td>
+                    <td class="amount">{{ number_format(is_object($equityItem) ? $equityItem->current_balance : $equityItem['current_balance'], 2) }}</td>
                 </tr>
             @empty
                 <tr class="account-row">
