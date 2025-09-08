@@ -213,8 +213,91 @@
     
     <hr class="w-full"/>
 
-
-    <livewire:reports.portifolio-at-risk-table />
-
+    {{-- Detailed Loans Table --}}
+    <div class="mt-6">
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Portfolio at Risk Details</h3>
+                <p class="text-sm text-gray-500">Detailed view of loans in the selected risk category</p>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loan Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interest</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days in Arrears</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($loans as $index => $loan)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $index + 1 }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $loan->client_name ?? 'N/A' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($loan->principle, 2) }} TZS</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $loan->start_date ?? 'N/A' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $loan->due_date ?? 'N/A' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($loan->interest, 2) }} TZS</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($loan->outstanding_amount, 2) }} TZS</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                        @if($loan->days_in_arrears >= 90) bg-red-100 text-red-800
+                                        @elseif($loan->days_in_arrears >= 30) bg-yellow-100 text-yellow-800
+                                        @elseif($loan->days_in_arrears >= 10) bg-orange-100 text-orange-800
+                                        @else bg-green-100 text-green-800 @endif">
+                                        {{ $loan->days_in_arrears }} days
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                        @if($loan->status === 'ACTIVE') bg-green-100 text-green-800
+                                        @elseif($loan->status === 'OVERDUE') bg-red-100 text-red-800
+                                        @else bg-gray-100 text-gray-800 @endif">
+                                        {{ $loan->status }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button wire:click="downloadSchedule({{ $loan->id }})" 
+                                            class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        Download
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="10" class="px-6 py-4 text-center text-sm text-gray-500">
+                                    No loans found for the selected criteria.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            
+            @if($loans->count() > 0)
+                <div class="px-6 py-3 bg-gray-50 border-t border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-gray-700">
+                            Showing {{ $loans->count() }} loan(s) in the selected risk category
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            Total Outstanding: {{ number_format($loans->sum('outstanding_amount'), 2) }} TZS
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
 
 </div>

@@ -1,333 +1,646 @@
-<div>
-    {{-- The Master doesn't talk, he acts. --}}
-    @if (in_array(23, session()->get('permissions')))
-
-        @php
-            $menuItems = [
-                ['id' => 2, 'label' => ' New Standing Order'],
-
-            ];
-        @endphp
-
-
-        @foreach ($menuItems as $menuItem)
-            <button
-                    wire:click="menuItemClicked"
-                    class="flex hover:text-white text-center items-center
-            @if ($this->tab_id == $menuItem['id']) bg-blue-900 @else bg-blue-900 @endif
-                    @if ($this->tab_id == $menuItem['id']) text-white font-bold @else text-gray-400 font-semibold @endif
-                            py-2 px-4 rounded-lg"
-                    onmouseover="this.style.backgroundColor='#2D3D88'; this.style.color='white';"
-                    onmouseout="this.style.backgroundColor=''; this.style.color='';"
-            >
-                <div wire:loading wire:target="menuItemClicked">
-                    <svg aria-hidden="true" class="w-8 h-8 mr-2 text-gray-200 animate-spin dark:text-gray-900 fill-red-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
-                        <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+<div class="p-4">
+    {{-- Header Section --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-4">
+        <div class="bg-blue-900 text-white px-4 py-2 rounded-t-lg">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
+                    <h2 class="text-lg font-semibold">Standing Instructions Management</h2>
                 </div>
-                <div wire:loading.remove wire:target="menuItemClicked">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="red"
-                         class="w-4 h-4 mr-2 fill-current">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                <button wire:click="openModal" class="bg-white text-blue-900 px-3 py-1 text-sm rounded-md hover:bg-blue-50 transition-colors flex items-center space-x-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
-                </div>
-                {{ $menuItem['label'] }}
-            </button>
-        @endforeach
-
-
-
-
-
-
-
-    @endif
-    <div class="mt-2">
-        <livewire:accounting.standing-instruction-table />
-    </div>
-
-    @if($this->new_stannding_order)
-        <div class="fixed z-10 inset-0 overflow-y-auto"  >
-            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
-                <div class="fixed inset-0 transition-opacity">
-                    <div class="absolute inset-0 bg-gray-500 opacity-0"></div>
-                </div>
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen"></span>&#8203;
-                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                    <!-- Your form elements go here -->
-                    <div class="p-4">
-                        <div>
-                            @if (session()->has('message'))
-                                <div class="bg-teal-100 border-t-4 border-teal-500 rounded-b text-teal-900 px-4 py-3 shadow-md mb-8" role="alert">
-                                    <div class="flex">
-                                        <div class="py-1"><svg class="fill-current h-6 w-6 text-teal-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z"/></svg></div>
-                                        <div>
-                                            <p class="font-bold">The process is completed</p>
-                                            <p class="text-sm">{{ session('message') }} </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-
-                            @if (session()->has('message_fail'))
-                            <div class="bg-teal-100 border-t-4 border-teal-500 rounded-b text-teal-900 px-4 py-3 shadow-md mb-8" role="alert">
-                                <div class="flex">
-                                    <div class="py-1"><svg class="fill-current h-6 w-6 text-teal-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z"/></svg></div>
-                                    <div>
-                                        <p class="font-bold">The process is completed</p>
-                                        <p class="text-sm">{{ session('message') }} </p>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                        </div>
-                        <div class="header-elements text-center justify-center font-bold  stroke-current">
-                            <h3 class="fw-bold  text-2xl ">
-                                New Standing Instruction
-                            </h3>
-                        </div>
-
-                        <div class="flex items-center justify-center my-4">
-                            <div class="flex-grow border-t border-gray-300"></div>
-                            <span class="px-4 text-lg font-semibold text-gray-700"> Account Holder Details </span>
-                            <div class="flex-grow border-t border-gray-300"></div>
-                        </div>
-
-
-                        <div class="">
-
-                            <p for="member_id" class="block mb-2 text-sm font-medium text-slate-600 dark:text-gray-400">
-                                Select Member</p>
-                                <div class="relative w-full" x-data="{ showDropdown: @entangle('showDropdown') }" @click.away="showDropdown = false">
-                                <!-- Search Input -->
-                                <input
-                                    type="text"
-                                    wire:model="search"
-                                    wire:focus="showAllMembers"
-                                    class="w-full p-2.5 border-gray-300 focus:border-red-500 focus:ring rounded-lg focus:ring-red-200 focus:ring-opacity-50 rounded-md shadow-sm text-sm"
-                                    placeholder="Search Member..."
-                                    autocomplete="off"
-                                    value="{{ $selectedMemberId }}"
-                                >
-
-                                <!-- Dropdown Options -->
-                                 <div x-show="showDropdown">
-                                    @if($showDropdown && count($members) > 0)
-                                        <ul class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-md max-h-60 overflow-auto">
-                                            @foreach($members as $member)
-                                                <li
-                                                    wire:click="selectMember('{{ $member->id }}')"
-                                                    class="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                                                >
-                                                    {{ $member->first_name }} {{ $member->middle_name }} {{ $member->last_name }}
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    @endif
-                                 </div>
-
-
-                                <!-- Hidden Select Field for Form Submission -->
-                                <input type="hidden" name="member_id" wire:model="selectedMemberId">
-                            </div>
-                            <!-- <select id="member_id" name="member_id" class="w-full border-gray-300 focus:border-red-500 focus:ring rounded-lg focus:ring-red-200 focus:ring-opacity-50 p-2.5 rounded-md shadow-sm text-sm" wire:model="selectedMemberId">
-                                <option value="">Select Member</option>
-                                @foreach(DB::table('clients')->get() as $member)
-                                    <option value="{{ $member->id }}">{{ $member->first_name }} {{ $member->middle_name }} {{ $member->last_name }}</option>
-                                @endforeach
-                            </select> -->
-                            @error('selectedMemberId')
-                            <div class="border border-red-400 rounded-b bg-red-100 px-4 py-3 text-red-700 mt-1">
-                                <p>{{ $message }}</p>
-                            </div>
-                            @enderror
-                            <div class="mt-2"></div>
-
-                            @if($selectedMemberId)
-                                @php
-                                    $member = DB::table('clients')->find($selectedMemberId);
-                                @endphp
-                                <div class="mt-1 mx-2">
-                                    <div class="fw-bold ">
-                                        <div class="max-w-md bg-blue-50 mx-auto bg-white p-4 rounded-lg shadow">
-                                            <div class="fw-bold">Selected Member Details</div>
-                                            <tr class="text-black">
-                                                <th>Full Name: </th>
-                                                <th>{{ $member->first_name }} {{ $member->middle_name }} {{ $member->last_name }}</th>
-                                            </tr>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-
-
-
-
-                        <div class="mt-2"></div>
-
-
-                        <x-jet-label for="source_account_number" value="{{ __(' Account Number') }}" />
-                        <x-jet-input id="source_account_number" wire:model="source_account_number" name="source_account_number"  type="text"  class="mt-1 block w-full"  autofocus />
-                        @error('department_name')
-                        <div class="border border-red-400 rounded-b bg-red-100 px-4 py-3 text-red-700 mt-1">
-                            <p> Name is mandatory.</p>
-                        </div>
-                        @enderror
-
-
-
-                        <x-jet-label for="source_bank_id" value="{{ __('Bank Name ') }}" />
-                        <select wire:model="source_bank_id" name="source_bank_id" id="source_bank_id" class="mt-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                            <option value=""  unselected >Select ....</option>
-                            @foreach ($bank_list as  $bank)
-                               <option  value="{{ $bank->id }}" >{{ $bank->bank_name }} </option>
-                            @endforeach
-
-                        </select>
-
-                        {{-- <div>
-                            <label for="bank_name" class="block font-medium text-gray-700">Bank Name</label>
-                            <input type="text" id="bank_name" name="bank_name" placeholder="Bank Name" class="mt-1 block w-full border border-gray-300 p-2 rounded-md">
-                        </div> --}}
-
-
-                        <div class="flex items-center justify-center my-4">
-                            <div class="flex-grow border-t border-gray-300"></div>
-                            <span class="px-4 text-lg font-semibold text-gray-700"> Beneficiary Details (Recipient) </span>
-                            <div class="flex-grow border-t border-gray-300"></div>
-                        </div>
-
-
-
-                        <div>
-                            <label for="beneficiary_name" class="block font-medium text-gray-700">Full Name</label>
-                            <input type="text" id="beneficiary_name" wire:model="destination_account_name" name="beneficiary_name" disabled  class="mt-1 block w-full border border-gray-300 p-2 rounded-md">
-                        </div>
-
-                        <div>
-                            <label for="beneficiary_name" class="block font-medium text-gray-700">Bank Name</label>
-                            <input type="text" wire:model="bank" id="beneficiary_name" name="beneficiary_name" disabled value="{{ $bank_name }}" class="mt-1 block w-full border border-gray-300 p-2 rounded-md">
-                        </div>
-
-
-
-                        <x-jet-label for="account_id" value="{{ __('Account Number') }}" />
-                        <select  wire:model="destination_account_id" name="destination_account_id" id="destination_account_id" class="mt-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                            <option value=""  unselected >Select ....</option>
-                            @foreach (DB::table('accounts')->where('category_code',1000)->get() as  $saccoss_account)
-                               <option  value="{{ $saccoss_account->id }} " >{{ $saccoss_account->account_name.' ('. $saccoss_account->account_number .')' }} </option>
-                            @endforeach
-
-                        </select>
-
-
-                        <x-jet-label for="destination_type" value="{{ __('Branch Name ') }}" />
-                        <select wire:model="saccos_branch_id" name="saccos_branch_id" id="saccos_branch_id" class="mt-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                            <option value=""  unselected >Select ....</option>
-                            @foreach ( DB::table('branches')->where('status',"ACTIVE")->get() as  $data)
-                               <option  value="{{ $data->id }}" >{{ $data->name.' ('. $data->region.' - '. $data->wilaya  .')' }} </option>
-                            @endforeach
-                        </select>
-
-
-
-
-
-
-
-                        <div class="flex items-center justify-center my-4">
-                            <div class="flex-grow border-t border-gray-300"></div>
-                            <span class="px-4 text-lg font-semibold text-gray-700"> Debit Instruction Details </span>
-                            <div class="flex-grow border-t border-gray-300"></div>
-                        </div>
-
-
-                        <div>
-                            <label for="amount" class="block font-medium text-gray-700">Amount</label>
-                            <input wire:model="amount" type="text" id="amount" name="amount" placeholder="Amount to be Debited" class="mt-1 block w-full border border-gray-300 p-2 rounded-md">
-                        </div>
-
-
-                        <div>
-                            <label for="frequency" class="block font-medium text-gray-700">Frequency</label>
-                            <select wire:model="frequency" id="frequency" name="frequency" class="mt-1 block w-full border border-gray-300 p-2 rounded-md">
-                                <option value="">Select Frequency</option>
-                                <option value="monthly">Monthly</option>
-                                <option value="quarterly">Quarterly</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="start_date" class="block font-medium text-gray-700">Start Date</label>
-                            <input  wire:model="start_date" type="date" id="start_date" name="start_date" class="mt-1 block w-full border border-gray-300 p-2 rounded-md">
-                        </div>
-
-                        <div>
-                            <label for="end_date" class="block font-medium text-gray-700">End Date/Until Further Notice</label>
-                            <input wire:model="end_date" type="date" id="end_date" name="end_date" class="mt-1 block w-full border border-gray-300 p-2 rounded-md">
-                        </div>
-
-                        <div>
-                            <label for="payment_reference" class="block font-medium text-gray-700">Payment Reference</label>
-                            <input wire:model="reference_number" type="text" disabled id="payment_reference"  name="payment_reference" placeholder="Payment Reference" class="mt-1 block w-full border border-gray-300 p-2 rounded-md">
-                        </div>
-
-                        <div class="flex items-center justify-center my-4">
-                            <div class="flex-grow border-t border-gray-300"></div>
-                            <span class="px-4 text-lg font-semibold text-gray-700"> Select Service</span>
-                            <div class="flex-grow border-t border-gray-300"></div>
-                        </div>
-
-
-
-                        <div class="flex items-center mb-4">
-                            <input id="savings-radio" wire:model="service" type="radio" value="Savings" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                            <label for="savings-radio" class="ms-2 text-sm font-medium text-gray-400 dark:text-gray-500">Savings</label>
-                        </div>
-
-                        <div class="flex items-center">
-                            <input id="deposit-radio" wire:model="service" type="radio" value="Deposit" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                            <label for="deposit-radio" class="ms-2 text-sm font-medium text-gray-400 dark:text-gray-500">Deposit</label>
-                        </div>
-
-                        <div class="flex items-center">
-                            <input id="loan-radio" wire:model="service" type="radio" value="Loan" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                            <label for="loan-radio" class="ms-2 text-sm font-medium text-gray-400 dark:text-gray-500">Loan</label>
-                        </div>
-
-                        <div class="flex items-center">
-                            <input id="share-radio" wire:model="service" type="radio" value="Share" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                            <label for="share-radio" class="ms-2 text-sm font-medium text-gray-400 dark:text-gray-500">Shares</label>
-                        </div>
-
-
-
-                            <label for="message" class="block mt-4 mb-2 text-sm font-medium text-gray-900 dark:text-white"> Description</label>
-                            <textarea id="message" wire:model="description" rows="4" class="block p-2.5 w-full mb-4 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Write your thoughts here..."></textarea>
-
-
-
-
+                    <span>New Standing Instruction</span>
+                </button>
+            </div>
+        </div>
+        
+        {{-- Quick Stats --}}
+        <div class="grid grid-cols-4 gap-4 p-4">
+            <div class="bg-blue-50 rounded-lg p-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-blue-600 font-medium">Active Instructions</p>
+                        <p class="text-xl font-bold text-blue-900">{{ $activeCount ?? 0 }}</p>
                     </div>
-                    <!-- Add more form fields as needed -->
-                    <div class="flex items-center bg-gray-50 justify-end py-3 sm:px-6 sm:rounded-bl-lg sm:rounded-br-lg">
-                        <button type="button" wire:click="$toggle('new_stannding_order')" class="mr-4 inline-flex justify-center px-4 py-2 text-sm font-medium   border border-transparent rounded-md  focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2  bg-white">
-                            Cancel
-                        </button>
-                        <button type="submit" wire:click="register()" class="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-blue-900 border border-transparent rounded-md  focus-visible:ring-2 focus-visible:ring-offset-2 ">
-                            Proceed
-                        </button>
+                    <div class="bg-blue-100 p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-green-50 rounded-lg p-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-green-600 font-medium">Executed Today</p>
+                        <p class="text-xl font-bold text-green-900">{{ $executedToday ?? 0 }}</p>
+                    </div>
+                    <div class="bg-green-100 p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-yellow-50 rounded-lg p-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-yellow-600 font-medium">Pending</p>
+                        <p class="text-xl font-bold text-yellow-900">{{ $pendingCount ?? 0 }}</p>
+                    </div>
+                    <div class="bg-yellow-100 p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-red-50 rounded-lg p-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-red-600 font-medium">Failed</p>
+                        <p class="text-xl font-bold text-red-900">{{ $failedCount ?? 0 }}</p>
+                    </div>
+                    <div class="bg-red-100 p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
+    {{-- Standing Instructions Table --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100">
+        <div class="px-4 py-2 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-gray-700">Standing Instructions List</h3>
+                <div class="flex items-center space-x-2">
+                    <input type="text" wire:model.debounce.300ms="searchTerm" placeholder="Search instructions..." 
+                           class="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <select wire:model="statusFilter" class="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="paused">Paused</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 text-xs uppercase text-gray-700">
+                    <tr>
+                        <th class="px-3 py-2 text-left">Reference</th>
+                        <th class="px-3 py-2 text-left">Source Account</th>
+                        <th class="px-3 py-2 text-left">Destination</th>
+                        <th class="px-3 py-2 text-right">Amount</th>
+                        <th class="px-3 py-2 text-center">Frequency</th>
+                        <th class="px-3 py-2 text-center">Next Run</th>
+                        <th class="px-3 py-2 text-center">Status</th>
+                        <th class="px-3 py-2 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    @forelse($instructions ?? [] as $instruction)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-3 py-2 font-medium text-blue-600">{{ $instruction->reference_number }}</td>
+                        <td class="px-3 py-2">
+                            <div>
+                                <p class="font-medium text-gray-900">{{ $instruction->source_account_name ?? 'N/A' }}</p>
+                                <p class="text-xs text-gray-500">{{ $instruction->source_account_number }}</p>
+                            </div>
+                        </td>
+                        <td class="px-3 py-2">
+                            <div>
+                                <p class="font-medium text-gray-900">{{ $instruction->destination_account_name ?? 'N/A' }}</p>
+                                <p class="text-xs text-gray-500">{{ $instruction->destination_account_number }}</p>
+                            </div>
+                        </td>
+                        <td class="px-3 py-2 text-right font-medium">{{ number_format($instruction->amount, 2) }}</td>
+                        <td class="px-3 py-2 text-center">
+                            <span class="px-2 py-1 text-xs rounded-full 
+                                @if($instruction->frequency == 'daily') bg-purple-100 text-purple-700
+                                @elseif($instruction->frequency == 'weekly') bg-indigo-100 text-indigo-700
+                                @elseif($instruction->frequency == 'monthly') bg-blue-100 text-blue-700
+                                @elseif($instruction->frequency == 'quarterly') bg-cyan-100 text-cyan-700
+                                @else bg-gray-100 text-gray-700
+                                @endif">
+                                {{ ucfirst($instruction->frequency) }}
+                            </span>
+                        </td>
+                        <td class="px-3 py-2 text-center text-xs">{{ $instruction->next_run_date ? \Carbon\Carbon::parse($instruction->next_run_date)->format('d M Y') : 'N/A' }}</td>
+                        <td class="px-3 py-2 text-center">
+                            <span class="px-2 py-1 text-xs rounded-full 
+                                @if($instruction->status == 'active') bg-green-100 text-green-700
+                                @elseif($instruction->status == 'paused') bg-yellow-100 text-yellow-700
+                                @elseif($instruction->status == 'completed') bg-gray-100 text-gray-700
+                                @else bg-red-100 text-red-700
+                                @endif">
+                                {{ ucfirst($instruction->status) }}
+                            </span>
+                        </td>
+                        <td class="px-3 py-2">
+                            <div class="flex items-center justify-center space-x-1">
+                                <button wire:click="viewInstruction({{ $instruction->id }})" 
+                                        class="p-1 text-blue-600 hover:bg-blue-50 rounded" title="View">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                                @if($instruction->status == 'active')
+                                <button wire:click="pauseInstruction({{ $instruction->id }})" 
+                                        class="p-1 text-yellow-600 hover:bg-yellow-50 rounded" title="Pause">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </button>
+                                @elseif($instruction->status == 'paused')
+                                <button wire:click="resumeInstruction({{ $instruction->id }})" 
+                                        class="p-1 text-green-600 hover:bg-green-50 rounded" title="Resume">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </button>
+                                @endif
+                                <button wire:click="confirmDelete({{ $instruction->id }})" 
+                                        class="p-1 text-red-600 hover:bg-red-50 rounded" title="Cancel">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="8" class="px-3 py-8 text-center text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                <p class="text-sm font-medium">No standing instructions found</p>
+                                <p class="text-xs text-gray-400 mt-1">Create your first standing instruction to get started</p>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        
+        {{-- Pagination --}}
+        @if(isset($instructions) && $instructions->hasPages())
+        <div class="px-4 py-2 border-t border-gray-200">
+            {{ $instructions->links() }}
+        </div>
+        @endif
+    </div>
 
+    {{-- Create/Edit Modal --}}
+    @if($showModal)
+    <div class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" wire:click="closeModal"></div>
+            
+            <div class="relative bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="bg-blue-900 text-white px-4 py-3 rounded-t-lg">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold">{{ $editMode ? 'Edit' : 'Create New' }} Standing Instruction</h3>
+                        <button wire:click="closeModal" class="text-white hover:text-gray-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <form wire:submit.prevent="saveInstruction">
+                    <div class="p-4">
+                        {{-- Progress Steps --}}
+                        <div class="mb-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full {{ $currentStep >= 1 ? 'bg-blue-900 text-white' : 'bg-gray-300 text-gray-600' }} flex items-center justify-center text-xs font-bold">1</div>
+                                    <span class="ml-2 text-xs {{ $currentStep >= 1 ? 'text-blue-900 font-semibold' : 'text-gray-500' }}">Source</span>
+                                </div>
+                                <div class="flex-1 h-0.5 mx-2 {{ $currentStep >= 2 ? 'bg-blue-900' : 'bg-gray-300' }}"></div>
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full {{ $currentStep >= 2 ? 'bg-blue-900 text-white' : 'bg-gray-300 text-gray-600' }} flex items-center justify-center text-xs font-bold">2</div>
+                                    <span class="ml-2 text-xs {{ $currentStep >= 2 ? 'text-blue-900 font-semibold' : 'text-gray-500' }}">Destination</span>
+                                </div>
+                                <div class="flex-1 h-0.5 mx-2 {{ $currentStep >= 3 ? 'bg-blue-900' : 'bg-gray-300' }}"></div>
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full {{ $currentStep >= 3 ? 'bg-blue-900 text-white' : 'bg-gray-300 text-gray-600' }} flex items-center justify-center text-xs font-bold">3</div>
+                                    <span class="ml-2 text-xs {{ $currentStep >= 3 ? 'text-blue-900 font-semibold' : 'text-gray-500' }}">Schedule</span>
+                                </div>
+                                <div class="flex-1 h-0.5 mx-2 {{ $currentStep >= 4 ? 'bg-blue-900' : 'bg-gray-300' }}"></div>
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full {{ $currentStep >= 4 ? 'bg-blue-900 text-white' : 'bg-gray-300 text-gray-600' }} flex items-center justify-center text-xs font-bold">4</div>
+                                    <span class="ml-2 text-xs {{ $currentStep >= 4 ? 'text-blue-900 font-semibold' : 'text-gray-500' }}">Review</span>
+                                </div>
+                            </div>
+                        </div>
 
+                        {{-- Step 1: Source Account --}}
+                        @if($currentStep == 1)
+                        <div class="space-y-4">
+                            <h4 class="text-sm font-semibold text-gray-700 border-b pb-2">Source Account Details</h4>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Account Type</label>
+                                    <select wire:model="source_account_type" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Select Type</option>
+                                        <option value="member">Member Account</option>
+                                        <option value="internal">Internal Account</option>
+                                        <option value="external">External Bank Account</option>
+                                    </select>
+                                    @error('source_account_type') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                                </div>
+                                
+                                @if($source_account_type == 'member')
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Select Member</label>
+                                    <div class="relative">
+                                        <input type="text" 
+                                               wire:model.debounce.300ms="member_search"
+                                               wire:focus="$set('showMemberDropdown', true)"
+                                               placeholder="Search member..."
+                                               class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                        
+                                        @if($showMemberDropdown && count($members ?? []) > 0)
+                                        <div class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-auto">
+                                            @foreach($members as $member)
+                                            <div wire:click="selectMember({{ $member->id }})" 
+                                                 class="px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer">
+                                                <p class="font-medium">{{ $member->first_name }} {{ $member->last_name }}</p>
+                                                <p class="text-xs text-gray-500">{{ $member->client_number }}</p>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                        @endif
+                                    </div>
+                                    @error('member_id') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                                </div>
+                                @endif
+                                
+                                @if($member_id || $source_account_type == 'internal')
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Source Account</label>
+                                    <select wire:model="source_account_id" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Select Account</option>
+                                        @foreach($sourceAccounts ?? [] as $account)
+                                        <option value="{{ $account->id }}">
+                                            {{ $account->account_name }} ({{ $account->account_number }})
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                    @error('source_account_id') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                                </div>
+                                @endif
+                                
+                                @if($source_account_type == 'external')
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Bank</label>
+                                    <select wire:model="source_bank_id" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Select Bank</option>
+                                        @foreach($banks ?? [] as $bank)
+                                        <option value="{{ $bank->id }}">{{ $bank->bank_name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('source_bank_id') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Account Number</label>
+                                    <input type="text" wire:model="source_account_number" 
+                                           class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                           placeholder="Enter account number">
+                                    @error('source_account_number') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                                </div>
+                                @endif
+                            </div>
+                            
+                            @if($source_account_id)
+                            <div class="bg-blue-50 rounded-lg p-3">
+                                <h5 class="text-xs font-semibold text-blue-900 mb-2">Selected Account Details</h5>
+                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                    <div>
+                                        <p class="text-gray-600">Account Name:</p>
+                                        <p class="font-medium">{{ $sourceAccount->account_name ?? 'N/A' }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600">Account Number:</p>
+                                        <p class="font-medium">{{ $sourceAccount->account_number ?? 'N/A' }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600">Available Balance:</p>
+                                        <p class="font-medium text-green-600">{{ number_format($sourceAccount->balance ?? 0, 2) }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                        @endif
 
+                        {{-- Step 2: Destination Account --}}
+                        @if($currentStep == 2)
+                        <div class="space-y-4">
+                            <h4 class="text-sm font-semibold text-gray-700 border-b pb-2">Destination Account Details</h4>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Destination Type</label>
+                                    <select wire:model="destination_type" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Select Type</option>
+                                        <option value="member">Member Account</option>
+                                        <option value="internal">Internal Account</option>
+                                        <option value="loan">Loan Repayment</option>
+                                        <option value="savings">Savings Account</option>
+                                        <option value="shares">Share Purchase</option>
+                                    </select>
+                                    @error('destination_type') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                                </div>
+                                
+                                @if($destination_type)
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Destination Account</label>
+                                    <select wire:model="destination_account_id" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Select Account</option>
+                                        @foreach($destinationAccounts ?? [] as $account)
+                                        <option value="{{ $account->id }}">
+                                            {{ $account->account_name }} ({{ $account->account_number }})
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                    @error('destination_account_id') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                                </div>
+                                @endif
+                            </div>
+                            
+                            @if($destination_account_id)
+                            <div class="bg-green-50 rounded-lg p-3">
+                                <h5 class="text-xs font-semibold text-green-900 mb-2">Destination Account Details</h5>
+                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                    <div>
+                                        <p class="text-gray-600">Account Name:</p>
+                                        <p class="font-medium">{{ $destinationAccount->account_name ?? 'N/A' }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600">Account Number:</p>
+                                        <p class="font-medium">{{ $destinationAccount->account_number ?? 'N/A' }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600">Account Type:</p>
+                                        <p class="font-medium">{{ ucfirst($destination_type) }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                        @endif
+
+                        {{-- Step 3: Schedule & Amount --}}
+                        @if($currentStep == 3)
+                        <div class="space-y-4">
+                            <h4 class="text-sm font-semibold text-gray-700 border-b pb-2">Schedule & Amount Details</h4>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Amount</label>
+                                    <div class="relative">
+                                        <span class="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">TZS</span>
+                                        <input type="number" wire:model="amount" step="0.01"
+                                               class="w-full pl-12 pr-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                               placeholder="0.00">
+                                    </div>
+                                    @error('amount') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Frequency</label>
+                                    <select wire:model="frequency" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Select Frequency</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="bi-weekly">Bi-Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                        <option value="quarterly">Quarterly</option>
+                                        <option value="annually">Annually</option>
+                                    </select>
+                                    @error('frequency') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                                </div>
+                                
+                                @if($frequency == 'weekly' || $frequency == 'bi-weekly')
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Day of Week</label>
+                                    <select wire:model="day_of_week" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Select Day</option>
+                                        <option value="1">Monday</option>
+                                        <option value="2">Tuesday</option>
+                                        <option value="3">Wednesday</option>
+                                        <option value="4">Thursday</option>
+                                        <option value="5">Friday</option>
+                                        <option value="6">Saturday</option>
+                                        <option value="0">Sunday</option>
+                                    </select>
+                                    @error('day_of_week') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                                </div>
+                                @endif
+                                
+                                @if($frequency == 'monthly' || $frequency == 'quarterly' || $frequency == 'annually')
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Day of Month</label>
+                                    <select wire:model="day_of_month" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Select Day</option>
+                                        @for($i = 1; $i <= 28; $i++)
+                                        <option value="{{ $i }}">{{ $i }}</option>
+                                        @endfor
+                                        <option value="last">Last Day</option>
+                                    </select>
+                                    @error('day_of_month') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                                </div>
+                                @endif
+                                
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
+                                    <input type="date" wire:model="start_date" 
+                                           class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                    @error('start_date') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">End Date (Optional)</label>
+                                    <input type="date" wire:model="end_date" 
+                                           class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                    <p class="text-xs text-gray-500 mt-1">Leave empty for indefinite</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Maximum Executions (Optional)</label>
+                                    <input type="number" wire:model="max_executions" 
+                                           class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                           placeholder="Leave empty for unlimited">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Narration/Description</label>
+                                <textarea wire:model="description" rows="2"
+                                          class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                          placeholder="Enter description for this standing instruction"></textarea>
+                                @error('description') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+                            </div>
+                            
+                            {{-- Schedule Preview --}}
+                            @if($frequency && $startDate)
+                            <div class="bg-yellow-50 rounded-lg p-3">
+                                <h5 class="text-xs font-semibold text-yellow-900 mb-2">Execution Schedule Preview</h5>
+                                <div class="text-xs space-y-1">
+                                    <p>First execution: <span class="font-medium">{{ \Carbon\Carbon::parse($startDate)->format('d M Y') }}</span></p>
+                                    <p>Frequency: <span class="font-medium">{{ ucfirst($frequency) }}</span></p>
+                                    @if($endDate)
+                                    <p>Last execution: <span class="font-medium">{{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</span></p>
+                                    @endif
+                                    @if($maxExecutions)
+                                    <p>Total executions: <span class="font-medium">{{ $maxExecutions }}</span></p>
+                                    @endif
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                        @endif
+
+                        {{-- Step 4: Review & Confirm --}}
+                        @if($currentStep == 4)
+                        <div class="space-y-4">
+                            <h4 class="text-sm font-semibold text-gray-700 border-b pb-2">Review Standing Instruction</h4>
+                            
+                            <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <p class="text-xs text-gray-600 mb-1">Source Account</p>
+                                        <p class="font-medium">{{ $sourceAccount->account_name ?? 'N/A' }}</p>
+                                        <p class="text-xs text-gray-500">{{ $sourceAccount->account_number ?? 'N/A' }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-600 mb-1">Destination Account</p>
+                                        <p class="font-medium">{{ $destinationAccount->account_name ?? 'N/A' }}</p>
+                                        <p class="text-xs text-gray-500">{{ $destinationAccount->account_number ?? 'N/A' }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-600 mb-1">Amount</p>
+                                        <p class="font-medium text-lg text-blue-900">TZS {{ number_format($amount, 2) }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-600 mb-1">Frequency</p>
+                                        <p class="font-medium">{{ ucfirst($frequency) }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-600 mb-1">Start Date</p>
+                                        <p class="font-medium">{{ \Carbon\Carbon::parse($startDate)->format('d M Y') }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-600 mb-1">End Date</p>
+                                        <p class="font-medium">{{ $endDate ? \Carbon\Carbon::parse($endDate)->format('d M Y') : 'Until Further Notice' }}</p>
+                                    </div>
+                                </div>
+                                
+                                @if($narration)
+                                <div>
+                                    <p class="text-xs text-gray-600 mb-1">Description</p>
+                                    <p class="text-sm">{{ $narration }}</p>
+                                </div>
+                                @endif
+                            </div>
+                            
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <div class="text-xs">
+                                        <p class="font-semibold text-blue-900 mb-1">Important Information</p>
+                                        <ul class="space-y-1 text-blue-700">
+                                            <li>• This instruction will execute automatically on the scheduled dates</li>
+                                            <li>• Ensure sufficient balance in the source account</li>
+                                            <li>• You can pause or cancel this instruction at any time</li>
+                                            <li>• Email notifications will be sent for each execution</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                    
+                    <div class="bg-gray-50 px-4 py-3 flex items-center justify-between rounded-b-lg">
+                        <div>
+                            @if($currentStep > 1)
+                            <button type="button" wire:click="previousStep" 
+                                    class="px-3 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                                Previous
+                            </button>
+                            @endif
+                        </div>
+                        
+                        <div class="flex items-center space-x-2">
+                            <button type="button" wire:click="closeModal" 
+                                    class="px-3 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            
+                            @if($currentStep < 4)
+                            <button type="button" wire:click="nextStep" 
+                                    class="px-3 py-1.5 text-sm text-white bg-blue-900 rounded-md hover:bg-blue-800">
+                                Next
+                            </button>
+                            @else
+                            <button type="submit" 
+                                    class="px-4 py-1.5 text-sm text-white bg-green-600 rounded-md hover:bg-green-700 flex items-center space-x-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Create Standing Instruction</span>
+                            </button>
+                            @endif
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     @endif
 
+    {{-- Success/Error Messages --}}
+    @if(session()->has('success'))
+    <div class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>{{ session('success') }}</span>
+    </div>
+    @endif
+
+    @if(session()->has('error'))
+    <div class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>{{ session('error') }}</span>
+    </div>
+    @endif
 </div>

@@ -48,6 +48,16 @@
                         <option value="100">100 per page</option>
                     </select>
                     
+                    <!-- Batch Payment Button -->
+                    @if(count($selectedExpenses) > 0)
+                    <button wire:click="processBatchPayment" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        Pay Selected ({{ count($selectedExpenses) }})
+                    </button>
+                    @endif
+                    
                     <!-- Export Button -->
                     <button wire:click="exportToExcel" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,6 +74,9 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <input type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <button wire:click="sortBy('id')" class="flex items-center space-x-1 hover:text-gray-700">
                                 <span>ID</span>
@@ -134,6 +147,14 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($expenses as $expense)
                         <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if($expense->status !== 'PAID' && $expense->approval && $expense->approval->approval_status === 'APPROVED')
+                                    <input type="checkbox" 
+                                           wire:click="toggleExpenseSelection({{ $expense->id }})"
+                                           {{ in_array($expense->id, $selectedExpenses) ? 'checked' : '' }}
+                                           class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                @endif
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 #{{ $expense->id }}
                             </td>
@@ -268,7 +289,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="px-6 py-4 text-center text-gray-500">
+                            <td colspan="11" class="px-6 py-4 text-center text-gray-500">
                                 <div class="flex flex-col items-center justify-center py-8">
                                     <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -311,256 +332,6 @@
         @endif
     </div>
     
-    <!-- Payment Modal -->
-    @if($showPaymentModal && $selectedExpense)
-    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <!-- Background overlay -->
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
-                 wire:click="closePaymentModal" aria-hidden="true"></div>
-
-            <!-- Modal panel -->
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-                <!-- Modal Header -->
-                <div class="bg-gradient-to-r from-blue-900 to-blue-700 px-6 py-4">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg leading-6 font-medium text-white flex items-center" id="modal-title">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                            </svg>
-                            Process Expense Payment
-                        </h3>
-                        <button wire:click="closePaymentModal" class="text-white hover:text-gray-200">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="bg-white px-6 pt-5 pb-4">
-                    <!-- Error Messages -->
-                    @if(count($paymentErrors) > 0)
-                        <div class="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                            <div class="flex">
-                                <div class="flex-shrink-0">
-                                    <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                                    </svg>
-                                </div>
-                                <div class="ml-3">
-                                    <h3 class="text-sm font-medium text-red-800">Validation Errors</h3>
-                                    <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
-                                        @foreach($paymentErrors as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-
-                    <!-- Expense Details Section -->
-                    <div class="mb-6">
-                        <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            Expense Details
-                        </h4>
-                        
-                        <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                            <div class="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <label class="font-medium text-gray-700">Description:</label>
-                                    <p class="text-gray-900">{{ $selectedExpense->description }}</p>
-                                </div>
-                                <div>
-                                    <label class="font-medium text-gray-700">Amount:</label>
-                                    <p class="text-gray-900 font-semibold">{{ number_format($selectedExpense->amount, 2) }} TZS</p>
-                                </div>
-                                <div>
-                                    <label class="font-medium text-gray-700">Account:</label>
-                                    <p class="text-gray-900">{{ $selectedExpense->account->account_name ?? 'N/A' }}</p>
-                                </div>
-                                <div>
-                                    <label class="font-medium text-gray-700">Submitted By:</label>
-                                    <p class="text-gray-900">{{ $selectedExpense->user->name ?? 'N/A' }}</p>
-                                </div>
-                                <div>
-                                    <label class="font-medium text-gray-700">Approval Status:</label>
-                                    <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                                        {{ $selectedExpense->approval->approval_status ?? 'N/A' }}
-                                    </span>
-                                </div>
-                                <div>
-                                    <label class="font-medium text-gray-700">Current Status:</label>
-                                    <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                                        {{ str_replace('_', ' ', $selectedExpense->status) }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Payment Method Section -->
-                    <div class="mb-6">
-                        <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                            </svg>
-                            Payment Configuration
-                        </h4>
-
-                        <div class="bg-teal-50 rounded-lg p-4 border border-teal-200">
-                            <!-- Payment Method Selection -->
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method *</label>
-                                <select wire:model="paymentMethod" wire:change="validatePaymentForm"
-                                        @if($isProcessingPayment) disabled @endif
-                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                    <option value="">Select Payment Method</option>
-                                    <option value="cash">Cash</option>
-                                    <option value="bank_transfer">Bank Transfer</option>
-                                    <option value="mobile_money">Mobile Money</option>
-                                </select>
-                            </div>
-
-                            <!-- CASH Payment Method -->
-                            @if($paymentMethod === 'cash')
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Cash Account *</label>
-                                        <select wire:model="bankAccount" wire:change="validatePaymentForm"
-                                                @if($isProcessingPayment) disabled @endif
-                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                            <option value="">Select Account</option>
-                                            @foreach($availableBankAccounts as $account)
-                                                @if(str_contains(strtolower($account->account_name), 'cash'))
-                                                    <option value="{{ $account->id }}">{{ $account->account_name }} - {{ $account->account_code }}</option>
-                                                @endif
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                            @endif
-
-                            <!-- BANK_TRANSFER Payment Method -->
-                            @if($paymentMethod === 'bank_transfer')
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Bank Account *</label>
-                                        <select wire:model="bankAccount" wire:change="validatePaymentForm"
-                                                @if($isProcessingPayment) disabled @endif
-                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                            <option value="">Select Account</option>
-                                            @foreach($availableBankAccounts as $account)
-                                                @if(str_contains(strtolower($account->account_name), 'bank'))
-                                                    <option value="{{ $account->id }}">{{ $account->account_name }} - {{ $account->account_code }}</option>
-                                                @endif
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Account Holder Name *</label>
-                                        <input type="text" wire:model="accountHolderName" wire:change="validatePaymentForm"
-                                               @if($isProcessingPayment) disabled @endif
-                                               placeholder="Enter recipient name"
-                                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                    </div>
-                                </div>
-                            @endif
-
-                            <!-- MOBILE_MONEY Payment Method -->
-                            @if($paymentMethod === 'mobile_money')
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Mobile Network Operator *</label>
-                                        <select wire:model="mnoProvider" wire:change="validatePaymentForm"
-                                                @if($isProcessingPayment) disabled @endif
-                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                            <option value="">Select Provider</option>
-                                            <option value="vodacom">Vodacom (M-Pesa)</option>
-                                            <option value="tigo">Tigo Pesa</option>
-                                            <option value="airtel">Airtel Money</option>
-                                            <option value="halotel">HaloPesa</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
-                                        <input type="text" wire:model="phoneNumber" wire:change="validatePaymentForm"
-                                               @if($isProcessingPayment) disabled @endif
-                                               placeholder="07XXXXXXXX"
-                                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                    </div>
-                                </div>
-                            @endif
-
-                            <!-- Payment Notes (Optional) -->
-                            <div class="mt-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Payment Notes (Optional)</label>
-                                <textarea wire:model="paymentNotes" 
-                                          @if($isProcessingPayment) disabled @endif
-                                          rows="3"
-                                          placeholder="Enter any additional notes about this payment..."
-                                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Payment Summary -->
-                    <div class="mb-6">
-                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Payment Summary</h4>
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-600">Total Amount to Pay:</span>
-                                <span class="text-2xl font-bold text-gray-900">{{ number_format($selectedExpense->amount, 2) }} TZS</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Modal Footer -->
-                <div class="bg-gray-50 px-6 py-3 flex items-center justify-between">
-                    <div class="text-xs text-gray-500">
-                        @if($isProcessingPayment)
-                            Processing payment, please wait...
-                        @else
-                            Please review the details before processing payment
-                        @endif
-                    </div>
-                    
-                    <div class="flex space-x-3">
-                        <button wire:click="closePaymentModal" 
-                                @if($isProcessingPayment) disabled @endif
-                                type="button" 
-                                class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm
-                                       @if($isProcessingPayment) opacity-50 cursor-not-allowed @endif">
-                            Cancel
-                        </button>
-                        
-                        <button wire:click="processPayment" 
-                                @if($isProcessingPayment) disabled @endif
-                                type="button" 
-                                class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-900 text-base font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm
-                                       @if($isProcessingPayment) opacity-50 cursor-not-allowed @endif">
-                            @if($isProcessingPayment)
-                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Processing Payment...
-                            @else
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                                </svg>
-                                Process Payment
-                            @endif
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
+    <!-- Include Enhanced Payment Modal -->
+    @include('livewire.expenses.enhanced-payment-modal')
 </div>

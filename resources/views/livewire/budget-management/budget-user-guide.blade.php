@@ -2,7 +2,7 @@
 <div class="max-w-7xl mx-auto">
     <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-lg p-8 mb-8">
         <h1 class="text-3xl font-bold text-white mb-2">Budget Management User Guide</h1>
-        <p class="text-blue-100">Complete guide to using the advanced budget management system</p>
+        <p class="text-gray-500">Complete guide to using the advanced budget management system</p>
     </div>
 
     {{-- Quick Navigation --}}

@@ -1,437 +1,366 @@
-<div class="bg-white rounded rounded-lg shadow-md p-4">
-
-    @if (session()->has('message'))
-        <div class="alert alert-success text-green-600">
-            {{ session('message') }}
+<div class="bg-white rounded-lg shadow-sm">
+    <!-- Compact Header -->
+    <div class="bg-blue-900 text-white px-4 py-2 rounded-t-lg">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+                <h2 class="text-sm font-semibold">Manual Transaction Posting</h2>
+            </div>
+            <span class="text-xs bg-blue-800 px-2 py-1 rounded">Double Entry</span>
         </div>
-    @endif
-
-    @if (session()->has('error'))
-        <div class="alert alert-danger text-red-600">
-            {{ session('error') }}
-        </div>
-    @endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        <div class="flex items-center text-sm mb-2 font-semibold text-slate-600">
-        POST A TRANSACTION
     </div>
 
-    <div class="flex items-stretch p-2 bg-gray-100 gap-2 rounded-md">
-        <!-- Debit Section -->
-        <div class="w-1/2  rounded-md p-4 bg-white">
-            <div class="flex items-center text-sm mb-2 font-semibold text-slate-600">
-                DEBIT
-            </div>
-            <hr class="boder-b-0 my-6"/>
-            <label for="debit_category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
-                Select Debit Category
-            </label>
-
-
-            {{-- <select wire:model="debit_category" id="debit_category"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
-                <option value="">Select</option>
-                @foreach($gl_accounts as $account)
-                    <option value="{{ $account->account_name }}">{{ $account->account_name }}</option>
-                @endforeach
-            </select> --}}
-
-            <div class="p-4 relative">
-                <!-- Search Input -->
-                <input type="text" wire:model.debounce.300ms="search" placeholder="Search accounts..."
-                       class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5" />
-
-                <!-- Search Dropdown -->
-                @if ($showDropdown && !empty($results))
-                <div class="absolute bg-white border rounded shadow mt-1 w-full z-10 max-h-60 overflow-y-auto">
-                    <ul>
-                        @foreach ($results as $result)
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                wire:click="selectAccount('{{ $result->id }}', '{{ $result->source }}')">
-                                <div>{{ $result->account_name }} ({{ $result->account_number }})</div>
-                                <div class="text-sm text-gray-500">Source: {{ ucfirst($result->source) }}</div>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-
-                <!-- Display Selected Account Details -->
-                @if (!empty($selectedAccount))
-                    <div class="mt-6 p-4 border rounded bg-gray-50">
-                        <h3 class="text-lg font-semibold mb-2">Account Details</h3>
-                        <p><strong>Account Name:</strong> {{ $selectedAccount['account_name'] }}</p>
-                        <p><strong>Account Number:</strong> {{ $selectedAccount['account_number'] }}</p>
-                        <p><strong>Balance:</strong> {{ number_format($selectedAccount['balance'] ?? 0, 2) }}</p>
-                        <p><strong>Status:</strong> {{ $selectedAccount['status'] }}</p>
-                        <p><strong>Created At:</strong> {{ $selectedAccount['created_at'] ?? 'N/A' }}</p>
-                        <p><strong>Updated At:</strong> {{ $selectedAccount['updated_at'] ?? 'N/A' }}</p>
-                    </div>
-                @endif
-            </div>
-
-{{--
-            @error('debit_category')
-            <span class="text-red-500 text-sm">{{ $message }}</span>
-            @enderror
-
-            @if($debit_category)
-                <!-- Debit Sub Category -->
-                <div class="mt-2">
-                    <label for="debit_category_code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
-                        Select Debit Sub Category
-                    </label>
-                    <select wire:model="debit_category_code" id="debit_category_code"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
-                        <option value="">Select</option>
-                        @foreach($debit_sub_categories as $category)
-                            <option value="{{ $category->category_code }}">{{ $category->category_name }}</option>
-                        @endforeach
-                    </select>
-                    @error('debit_category_code')
-                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
-            @endif
-
-            @if($debit_category_code)
-                <!-- Debit Account -->
-                <div class="mt-2">
-                    <label for="debit_account" class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
-                        Select Debit Account
-                    </label>
-                    <select wire:model="debit_account" id="debit_account"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
-                        <option value="">Select</option>
-                        @foreach($debit_accounts as $account)
-                            <option value="{{ $account->account_number }}">
-                                {{ $account->account_name }} - {{ $account->account_number }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('debit_account')
-                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
-            @endif
-
-
-        @if($this->debit_account)
-            <hr class="boder-b-0 my-6"/>
-
-
-
-            <p for="stability" class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-400"> Summary </p>
-            <div id="stability" class="w-full bg-gray-50 rounded rounded-lg shadow-sm   p-1 mb-4" >
-                <div class="w-full bg-white rounded rounded-lg shadow-sm  p-2 " >
-
-
-
-
-                    <table class="w-full ">
-
-                        <tbody>
-
-
-
-
-
-                        <tr class=" border-slate-100 border-b p-4">
-                            <td class="text-xs text-slate-400 dark:text-white capitalize  text-left">
-                                <p> Account Name </p>
-                            </td>
-                            <td class="text-xs text-slate-400 dark:text-white text-right">
-
-                                <p class="text-red-500 font-bold  ">
-                                    {{DB::table('accounts')->where('account_number', $this->debit_account)->value('account_name')}}
-                                </p>
-
-
-                            </td>
-                        </tr>
-
-                        <tr class=" border-slate-100 border-b p-4">
-                            <td class="text-xs text-slate-400 dark:text-white capitalize  text-left">
-                                <p> Account Number</p>
-                            </td>
-                            <td class="text-xs text-slate-400 dark:text-white text-right">
-
-                                <p class="text-red-500 font-bold  ">
-                                    {{$this->debit_account}}
-                                </p>
-
-
-                            </td>
-                        </tr>
-
-                        <tr class=" border-slate-100 border-b p-4">
-                            <td class="text-xs text-slate-400 dark:text-white capitalize  text-left">
-                                <p> Account Balance </p>
-                            </td>
-                            <td class="text-xs text-slate-400 dark:text-white text-right">
-
-                                <p class="text-red-500 font-bold  ">
-                                    {{DB::table('accounts')->where('account_number', $this->debit_account)->value('balance')}}
-                                </p>
-
-
-                            </td>
-                        </tr>
-
-
-
-                        </tbody>
-                    </table>
-
+    <!-- Alert Messages -->
+    <div class="px-4 pt-2">
+        @if (session()->has('message'))
+            <div class="bg-green-50 border border-green-200 text-green-700 px-2 py-1 rounded text-xs mb-2">
+                <div class="flex items-center">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>{{ session('message') }}</span>
                 </div>
             </div>
+        @endif
 
-        @endif --}}
-
-
-        </div>
-
-        <!-- Credit Section -->
-        <div class="w-1/2  rounded-md p-4 bg-white">
-            <div class="flex items-center text-sm mb-2 font-semibold text-slate-600">
-                CREDIT
-            </div>
-            <hr class="boder-b-0 my-6"/>
-            <label for="credit_category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
-                Select Credit Category
-            </label>
-
-
-
-            <div class="p-4 relative">
-                <!-- Search Input -->
-                <input type="text" wire:model.debounce.300ms="searchTwo" placeholder="Search accounts..."
-                       class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5" />
-
-                <!-- Search Dropdown -->
-                @if ($showDropdownTwo && !empty($resultsTwo))
-                <div class="absolute bg-white border rounded shadow mt-1 w-full z-10 max-h-60 overflow-y-auto">
-                    <ul>
-                        @foreach ($resultsTwo as $result)
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                wire:click="selectAccountTwo('{{ $result->id }}', '{{ $result->source }}')">
-                                <div>{{ $result->account_name }} ({{ $result->account_number }})</div>
-                                <div class="text-sm text-gray-500">Source: {{ ucfirst($result->source) }}</div>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-
-                <!-- Display Selected Account Details -->
-                @if (!empty($selectedAccountTwo))
-                    <div class="mt-6 p-4 border rounded bg-gray-50">
-                        <h3 class="text-lg font-semibold mb-2">Account Details</h3>
-                        <p><strong>Account Name:</strong> {{ $selectedAccountTwo['account_name'] }}</p>
-                        <p><strong>Account Number:</strong> {{ $selectedAccountTwo['account_number'] }}</p>
-                        <p><strong>Balance:</strong> {{ number_format($selectedAccountTwo['balance'] ?? 0, 2) }}</p>
-                         <p><strong>Status:</strong> {{ $selectedAccountTwo['status'] }}</p>
-                        <p><strong>Created At:</strong> {{ $selectedAccountTwo['created_at'] ?? 'N/A' }}</p>
-                        <p><strong>Updated At:</strong> {{ $selectedAccountTwo['updated_at'] ?? 'N/A' }}</p>
-                    </div>
-                @endif
-            </div>
-
-
-
-            {{-- <select wire:model="credit_category" id="credit_category"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
-                <option value="">Select</option>
-                @foreach($gl_accounts as $account)
-                    <option value="{{ $account->account_name }}">{{ $account->account_name }}</option>
-                @endforeach
-            </select>
-            @error('credit_category')
-            <span class="text-red-500 text-sm">{{ $message }}</span>
-            @enderror --}}
-            {{-- @if($credit_category)
-                <!-- Credit Sub Category -->
-                <div class="mt-2">
-                    <label for="credit_category_code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
-                        Select Credit Sub Category
-                    </label>
-                    <select wire:model="credit_category_code" id="credit_category_code"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
-                        <option value="">Select</option>
-                        @foreach($credit_sub_categories as $category)
-                            <option value="{{ $category->category_code }}">{{ $category->category_name }}</option>
-                        @endforeach
-                    </select>
-                    @error('credit_category_code')
-                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
-            @endif
-            @if($credit_category_code)
-                <!-- Credit Account -->
-                <div class="mt-2">
-                    <label for="credit_account" class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">
-                        Select Credit Account
-                    </label>
-                    <select wire:model="credit_account" id="credit_account"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
-                        <option value="">Select</option>
-                        @foreach($credit_accounts as $account)
-                            <option value="{{ $account->account_number }}">
-                                {{ $account->account_name }} - {{ $account->account_number }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('credit_account')
-                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
-            @endif --}}
-
-            {{-- @if($this->credit_account)
-            <hr class="boder-b-0 my-6"/>
-            <p for="stability" class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-400"> Summary </p>
-            <div id="stability" class="w-full bg-gray-50 rounded rounded-lg shadow-sm   p-1 mb-4" >
-                <div class="w-full bg-white rounded rounded-lg shadow-sm  p-2 " >
-
-
-
-
-                    <table class="w-full ">
-
-                        <tbody>
-
-
-
-
-
-                        <tr class=" border-slate-100 border-b p-4">
-                            <td class="text-xs text-slate-400 dark:text-white capitalize  text-left">
-                                <p> Account Name </p>
-                            </td>
-                            <td class="text-xs text-slate-400 dark:text-white text-right">
-
-                                <p class="text-red-500 font-bold  ">
-                                    {{DB::table('accounts')->where('account_number', $this->credit_account)->value('account_name')}}
-                                </p>
-
-
-                            </td>
-                        </tr>
-
-                        <tr class=" border-slate-100 border-b p-4">
-                            <td class="text-xs text-slate-400 dark:text-white capitalize  text-left">
-                                <p> Account Number</p>
-                            </td>
-                            <td class="text-xs text-slate-400 dark:text-white text-right">
-
-                                <p class="text-red-500 font-bold  ">
-                                    {{$this->credit_account}}
-                                </p>
-
-
-                            </td>
-                        </tr>
-
-                        <tr class=" border-slate-100 border-b p-4">
-                            <td class="text-xs text-slate-400 dark:text-white capitalize  text-left">
-                                <p> Account Balance </p>
-                            </td>
-                            <td class="text-xs text-slate-400 dark:text-white text-right">
-
-                                <p class="text-red-500 font-bold  ">
-                                    {{DB::table('accounts')->where('account_number', $this->credit_account)->value('balance')}}
-                                </p>
-
-
-                            </td>
-                        </tr>
-
-
-
-                        </tbody>
-                    </table>
-
+        @if (session()->has('error'))
+            <div class="bg-red-50 border border-red-200 text-red-700 px-2 py-1 rounded text-xs mb-2">
+                <div class="flex items-center">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>{{ session('error') }}</span>
                 </div>
             </div>
-
-            @endif --}}
-
-
-        </div>
-
-
+        @endif
     </div>
 
 
-    <div class="flex items-stretch p-2 bg-gray-100 gap-2 rounded-md">
-
-        <div class="rounded-md p-4 bg-white w-full">
 
 
-            <div class="grid gap-2 mb-2 grid-cols-3 w-full">
-                <div>
-                    <label class="block mb-2 text-xs font-medium text-gray-900 dark:text-white">Amount</label>
-                    <input wire:model="amount" type="number" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-blue-500
-                            focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500
-                            dark:focus:border-blue-500" placeholder="" required />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Main Content -->
+    <div class="p-4">
+        <!-- Account Selection Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
+            <!-- Debit Account Section -->
+            <div class="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-2">
+                            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-700">DEBIT ACCOUNT</h3>
+                    </div>
+                    <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">DR</span>
                 </div>
-                <div>
-                    <label class="block mb-2 text-xs font-medium text-gray-900 dark:text-white">Narration</label>
-                    <input wire:model="narration" type="text" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-blue-500
-                            focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500
-                            dark:focus:border-blue-500" placeholder="" required />
-                </div>
-                <div >
-                    <!-- Submit Button -->
-                    <div class="flex justify-end mt-4">
-                        <div wire:loading wire:target="post">
-                            <button class="text-white bg-blue-400 hover:bg-blue-400 font-medium rounded-lg text-sm px-4 py-2" disabled>
-                                <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="animate-spin h-5 w-5 mr-2" fill="white" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v4m0 4v8m4-8H8m12 0a8 8 0 11-16 0 8 8 0 0116 0z" />
-                                    </svg>
-                                    Posting...
+
+
+                <!-- Search Input -->
+                <div class="relative">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Search Account</label>
+                    <div class="relative">
+                        <input type="text" 
+                               wire:model.debounce.300ms="search" 
+                               placeholder="Type account name or number..."
+                               class="w-full bg-white border border-gray-300 text-sm rounded-md px-2 py-1.5 pr-8 focus:border-blue-900 focus:ring-1 focus:ring-blue-900" />
+                        <svg class="w-4 h-4 text-gray-400 absolute right-2 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+
+                    <!-- Search Results Dropdown -->
+                    @if ($showDropdown && !empty($results))
+                        <div class="absolute bg-white border border-gray-200 rounded-md shadow-lg mt-1 w-full z-20 max-h-48 overflow-y-auto">
+                            @foreach ($results as $result)
+                                <div class="px-2 py-1.5 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-0"
+                                     wire:click="selectAccount('{{ $result->id }}', '{{ $result->source }}')">
+                                    <div class="text-sm font-medium text-gray-900">{{ $result->account_name }}</div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-gray-500">{{ $result->account_number }}</span>
+                                        <span class="text-xs bg-gray-100 text-gray-600 px-1 py-0.5 rounded">{{ ucfirst($result->source) }}</span>
+                                    </div>
                                 </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Selected Account Display -->
+                @if (!empty($selectedAccount))
+                    <div class="mt-2 bg-white border border-blue-200 rounded-md p-2">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-semibold text-blue-900">Selected Account</span>
+                            <button wire:click="$set('selectedAccount', [])" class="text-gray-400 hover:text-red-500">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
                             </button>
                         </div>
-                        <button wire:loading.remove wire:click="post" class="text-white bg-blue-900 hover:bg-blue-800 font-medium rounded-lg text-sm px-4 py-2">
-                            Post Transaction
-                        </button>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <span class="text-gray-500">Name:</span>
+                                <p class="font-medium text-gray-900 truncate">{{ $selectedAccount['account_name'] }}</p>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Number:</span>
+                                <p class="font-mono text-gray-900">{{ $selectedAccount['account_number'] }}</p>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Balance:</span>
+                                <p class="font-semibold text-gray-900">{{ number_format($selectedAccount['balance'] ?? 0, 2) }}</p>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Status:</span>
+                                <span class="inline-flex px-1 py-0.5 rounded text-xs font-medium
+                                    {{ $selectedAccount['status'] == 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700' }}">
+                                    {{ $selectedAccount['status'] }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="mt-2 bg-gray-100 border border-gray-200 rounded-md p-2 text-center">
+                        <p class="text-xs text-gray-500">No account selected</p>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Credit Account Section -->
+            <div class="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-2">
+                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-700">CREDIT ACCOUNT</h3>
+                    </div>
+                    <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">CR</span>
+                </div>
+
+
+
+                <!-- Search Input -->
+                <div class="relative">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Search Account</label>
+                    <div class="relative">
+                        <input type="text" 
+                               wire:model.debounce.300ms="searchTwo" 
+                               placeholder="Type account name or number..."
+                               class="w-full bg-white border border-gray-300 text-sm rounded-md px-2 py-1.5 pr-8 focus:border-blue-900 focus:ring-1 focus:ring-blue-900" />
+                        <svg class="w-4 h-4 text-gray-400 absolute right-2 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
                     </div>
 
+                    <!-- Search Results Dropdown -->
+                    @if ($showDropdownTwo && !empty($resultsTwo))
+                        <div class="absolute bg-white border border-gray-200 rounded-md shadow-lg mt-1 w-full z-20 max-h-48 overflow-y-auto">
+                            @foreach ($resultsTwo as $result)
+                                <div class="px-2 py-1.5 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-0"
+                                     wire:click="selectAccountTwo('{{ $result->id }}', '{{ $result->source }}')">
+                                    <div class="text-sm font-medium text-gray-900">{{ $result->account_name }}</div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-gray-500">{{ $result->account_number }}</span>
+                                        <span class="text-xs bg-gray-100 text-gray-600 px-1 py-0.5 rounded">{{ ucfirst($result->source) }}</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
 
+                <!-- Selected Account Display -->
+                @if (!empty($selectedAccountTwo))
+                    <div class="mt-2 bg-white border border-blue-200 rounded-md p-2">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-semibold text-blue-900">Selected Account</span>
+                            <button wire:click="$set('selectedAccountTwo', [])" class="text-gray-400 hover:text-red-500">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <span class="text-gray-500">Name:</span>
+                                <p class="font-medium text-gray-900 truncate">{{ $selectedAccountTwo['account_name'] }}</p>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Number:</span>
+                                <p class="font-mono text-gray-900">{{ $selectedAccountTwo['account_number'] }}</p>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Balance:</span>
+                                <p class="font-semibold text-gray-900">{{ number_format($selectedAccountTwo['balance'] ?? 0, 2) }}</p>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Status:</span>
+                                <span class="inline-flex px-1 py-0.5 rounded text-xs font-medium
+                                    {{ $selectedAccountTwo['status'] == 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700' }}">
+                                    {{ $selectedAccountTwo['status'] }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="mt-2 bg-gray-100 border border-gray-200 rounded-md p-2 text-center">
+                        <p class="text-xs text-gray-500">No account selected</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+
+
+        <!-- Transaction Details Section -->
+        <div class="bg-white border border-gray-200 rounded-lg p-3">
+            <div class="flex items-center mb-2">
+                <svg class="w-4 h-4 text-blue-900 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <h3 class="text-sm font-semibold text-gray-700">TRANSACTION DETAILS</h3>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <!-- Amount Input -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Amount</label>
+                    <div class="relative">
+                        <span class="absolute left-2 top-1.5 text-gray-500 text-sm">$</span>
+                        <input wire:model="amount" 
+                               type="number" 
+                               step="0.01" 
+                               min="0.01" 
+                               class="w-full pl-6 pr-2 py-1.5 bg-white border @error('amount') border-red-500 @else border-gray-300 @enderror text-sm rounded-md focus:border-blue-900 focus:ring-1 focus:ring-blue-900" 
+                               placeholder="0.00" 
+                               required />
+                    </div>
+                    @error('amount')
+                        <span class="text-red-500 text-xs mt-0.5 block">{{ $message }}</span>
+                    @enderror
+                </div>
+                
+                <!-- Narration Input -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Description/Narration</label>
+                    <input wire:model="narration" 
+                           type="text" 
+                           class="w-full px-2 py-1.5 bg-white border @error('narration') border-red-500 @else border-gray-300 @enderror text-sm rounded-md focus:border-blue-900 focus:ring-1 focus:ring-blue-900" 
+                           placeholder="Enter transaction description" 
+                           required />
+                    @error('narration')
+                        <span class="text-red-500 text-xs mt-0.5 block">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
 
+            <!-- Transaction Summary -->
+            @if(!empty($selectedAccount) && !empty($selectedAccountTwo) && $amount)
+                <div class="mt-3 bg-blue-50 border border-blue-200 rounded-md p-2">
+                    <h4 class="text-xs font-semibold text-blue-900 mb-1">Transaction Preview</h4>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="flex items-center">
+                            <span class="text-red-600 mr-1">DR:</span>
+                            <span class="text-gray-700">{{ $selectedAccount['account_name'] ?? 'Not selected' }}</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-green-600 mr-1">CR:</span>
+                            <span class="text-gray-700">{{ $selectedAccountTwo['account_name'] ?? 'Not selected' }}</span>
+                        </div>
+                        <div class="col-span-2 pt-1 border-t border-blue-200">
+                            <span class="text-gray-600">Amount:</span>
+                            <span class="font-semibold text-gray-900 ml-1">${{ number_format($amount ?? 0, 2) }}</span>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
+            <!-- Action Buttons -->
+            <div class="flex justify-between items-center mt-3">
+                <button wire:click="resetInputFields" 
+                        type="button"
+                        class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Clear
+                </button>
+                
+                <div class="flex items-center space-x-2">
+                    <!-- Loading State -->
+                    <div wire:loading wire:target="post">
+                        <button class="px-3 py-1.5 text-xs font-medium text-white bg-blue-400 rounded-md cursor-not-allowed" disabled>
+                            <svg class="animate-spin h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Posting...
+                        </button>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <button wire:loading.remove 
+                            wire:click="post" 
+                            @if(empty($selectedAccount) || empty($selectedAccountTwo) || !$amount || !$narration) disabled @endif
+                            class="px-4 py-1.5 text-xs font-medium text-white bg-blue-900 rounded-md hover:bg-blue-800 transition-colors
+                                   @if(empty($selectedAccount) || empty($selectedAccountTwo) || !$amount || !$narration) opacity-50 cursor-not-allowed @endif">
+                        <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Post Transaction
+                    </button>
+                </div>
+            </div>
 
         </div>
-
     </div>
-
-
-
+    
+    <!-- Optional: Recent Transactions Quick View -->
+    <div class="px-4 pb-3">
+        <div class="bg-gray-50 rounded-lg p-2 border border-gray-200">
+            <div class="flex items-center justify-between mb-1">
+                <h4 class="text-xs font-semibold text-gray-700">Quick Tips</h4>
+                <svg class="w-3 h-3 text-blue-900" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <ul class="text-xs text-gray-600 space-y-0.5">
+                <li class="flex items-start">
+                    <span class="text-blue-900 mr-1">•</span>
+                    <span>Search accounts by typing name or account number</span>
+                </li>
+                <li class="flex items-start">
+                    <span class="text-blue-900 mr-1">•</span>
+                    <span>The system automatically determines debit/credit based on account types</span>
+                </li>
+                <li class="flex items-start">
+                    <span class="text-blue-900 mr-1">•</span>
+                    <span>All transactions are recorded with unique reference numbers for tracking</span>
+                </li>
+            </ul>
+        </div>
+    </div>
 </div>

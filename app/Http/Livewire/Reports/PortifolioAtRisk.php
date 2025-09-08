@@ -4,27 +4,41 @@ namespace App\Http\Livewire\Reports;
 
 use Livewire\Component;
 use App\Models\LoansModel;
+use App\Models\ClientsModel;
+use App\Models\loans_schedules;
+use App\Exports\LoanScheduleReport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PortifolioAtRisk extends Component
 {
-    public $selected=10;
+    public $selected = 10;
+    public $loans = [];
+    public $parRange = [1, 9]; // Default range for PAR 1-10 days
 
     public function visit($id){
 
         switch($id){
 
-            case(10): $this->emit('setRangeBetween',[1,9]); break;
+            case(10): 
+                $this->parRange = [1, 9];
+                break;
 
-            case(30) : $this->emit('setRangeBetween',[10,29]); break;
+            case(30): 
+                $this->parRange = [10, 29];
+                break;
 
-            case(40) : $this->emit('setRangeBetween',[30,89]); break;
+            case(40): 
+                $this->parRange = [30, 89];
+                break;
 
-            case(50) : $this->emit('setAbove',90); break;
+            case(50): 
+                $this->parRange = [90, 9999]; // Above 90 days
+                break;
 
         }
 
-
-        $this->selected=$id;
+        $this->selected = $id;
+        $this->loadLoans();
 
     }
 
@@ -55,7 +69,55 @@ class PortifolioAtRisk extends Component
 
      }
 
+    public function loadLoans()
+    {
+        $query = LoansModel::query()->where('status', 'ACTIVE');
 
+        if ($this->parRange[1] == 9999) {
+            // For above 90 days
+            $query->where('days_in_arrears', '>=', $this->parRange[0]);
+        } else {
+            $query->whereBetween('days_in_arrears', $this->parRange);
+        }
+
+        $this->loans = $query->get()->map(function ($loan) {
+            // Get client name
+            $client = ClientsModel::where('client_number', $loan->client_number)->first();
+            $loan->client_name = $client ? trim($client->first_name . ' ' . $client->middle_name . ' ' . $client->last_name) : 'N/A';
+
+            // Get start date (oldest installment)
+            $startDate = loans_schedules::where('loan_id', $loan->id)->oldest()->value('installment_date');
+            $loan->start_date = $startDate ? date('Y-m-d', strtotime($startDate)) : 'N/A';
+
+            // Get due date (latest installment)
+            $dueDate = loans_schedules::where('loan_id', $loan->id)->latest()->value('installment_date');
+            $loan->due_date = $dueDate ? date('Y-m-d', strtotime($dueDate)) : 'N/A';
+
+            // Calculate outstanding amount
+            $scheduleQuery = loans_schedules::where('loan_id', $loan->id);
+            $totalPrinciple = $scheduleQuery->sum('principle');
+            $totalPayment = $scheduleQuery->sum('payment');
+            $totalInterest = $scheduleQuery->sum('interest');
+            
+            $loan->outstanding_amount = $totalPrinciple - ($totalPayment ? $totalPayment - $totalInterest : 0);
+
+            return $loan;
+        });
+    }
+
+    public function downloadSchedule($loanId)
+    {
+        try {
+            return Excel::download(new LoanScheduleReport($loanId), 'LoanScheduleReport.xlsx');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error downloading schedule: ' . $e->getMessage());
+        }
+    }
+
+    public function mount()
+    {
+        $this->loadLoans();
+    }
 
     public function render()
     {

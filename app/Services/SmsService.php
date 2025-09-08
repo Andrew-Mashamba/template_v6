@@ -32,6 +32,19 @@ class SmsService
     }
 
     /**
+     * Send OTP via SMS
+     */
+    public function sendOTP($phoneNumber, $otp)
+    {
+        $message = "NBC SACCOS OTP: {$otp}\n\nValid for 5 minutes. Do not share this code with anyone.";
+        return $this->send($phoneNumber, $message, null, [
+            'smsType' => 'TRANSACTIONAL',
+            'serviceName' => 'SACCOSS',
+            'language' => 'English'
+        ]);
+    }
+
+    /**
      * Send SMS using NBC SMS Notification Engine API v2.0.0
      */
     public function send($phoneNumber, $message, $recipient = null, $options = [])

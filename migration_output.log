@@ -1,264 +1,268 @@
 
-  Dropping all tables ............................................. 290ms DONE
+  Dropping all tables ............................................. 256ms DONE
 
    INFO  Preparing database.  
 
-  Creating migration table ......................................... 22ms DONE
+  Creating migration table .......................................... 7ms DONE
 
    INFO  Running migrations.  
 
-  2019_12_14_000001_create_personal_access_tokens_table ............ 20ms DONE
-  2022_03_23_163443_create_sessions_table .......................... 21ms DONE
-  2023_01_01_000001_create_datafeeds_table .......................... 8ms DONE
-  2023_01_01_000002_create_employeefiles_table ..................... 13ms DONE
-  2023_01_01_000003_create_banks_table ............................. 12ms DONE
-  2023_01_01_000004_create_currencies_table ......................... 8ms DONE
-  2023_01_01_000005_create_document_types_table .................... 12ms DONE
-  2023_01_01_000006_create_member_categories_table ................. 12ms DONE
-  2023_01_01_000007_create_payment_methods_table .................... 7ms DONE
-  2023_01_01_000008_create_mnos_table ............................... 7ms DONE
-  2023_01_01_000009_create_cash_in_transit_providers_table ......... 29ms DONE
-  2023_01_01_000010_create_complaint_categories_table .............. 21ms DONE
-  2023_01_01_000011_create_complaint_statuses_table ................ 19ms DONE
-  2023_01_01_000012_create_leaderships_table ....................... 10ms DONE
-  2023_01_02_000001_create_institutions_table ...................... 13ms DONE
-  2023_01_02_000002_create_users_table ............................. 13ms DONE
-  2023_01_02_000003_create_permissions_table ....................... 17ms DONE
-  2023_01_03_000001_create_departments_table ....................... 28ms DONE
-  2023_01_03_000002_create_roles_table ............................. 28ms DONE
-  2023_01_03_000003_create_branches_table .......................... 19ms DONE
-  2023_01_03_000004_create_accounts_table .......................... 36ms DONE
-  2023_01_03_000005_create_clients_table ........................... 18ms DONE
-  2023_01_03_000006_create_employees_table ......................... 10ms DONE
-  2023_01_03_000007_create_committees_table ........................ 34ms DONE
-  2023_01_03_000008_create_menus_table ............................. 13ms DONE
-  2023_01_03_000009_create_sub_products_table ...................... 13ms DONE
-  2023_01_03_000010_create_services_table .......................... 22ms DONE
-  2023_01_03_000011_create_vaults_table ............................ 29ms DONE
-  2023_01_03_000012_create_tills_table ............................. 35ms DONE
-  2023_01_03_000015_create_issued_shares_table ..................... 27ms DONE
-  2023_01_04_000001_create_menu_actions_table ...................... 14ms DONE
-  2023_01_04_000002_create_sub_roles_table ......................... 15ms DONE
-  2023_01_04_000003_create_role_permissions_table .................. 24ms DONE
-  2023_01_04_000004_create_bank_accounts_table ..................... 30ms DONE
-  2023_01_04_000005_create_loans_table ............................. 32ms DONE
-  2023_01_04_000006_create_transactions_table ..................... 106ms DONE
-  2023_01_04_000007_create_tellers_table ........................... 15ms DONE
-  2023_01_04_000008_create_approvals_table ......................... 21ms DONE
-  2023_01_04_000009_create_strongroom_ledgers_table ................ 24ms DONE
-  2023_01_04_000010_create_budget_managements_table ................ 13ms DONE
-  2023_01_05_000001_create_api_keys_table .......................... 24ms DONE
-  2023_01_05_000002_create_user_roles_table ........................ 11ms DONE
-  2023_01_05_000003_create_user_profiles_table ..................... 20ms DONE
-  2023_01_05_000004_create_cash_movements_table .................... 38ms DONE
-  2023_01_05_000005_create_expenses_table .......................... 18ms DONE
-  2023_01_05_000006_create_bills_table ............................. 34ms DONE
-  2023_01_06_000005_create_bank_statements_staging_table ............ 7ms DONE
-  2023_01_06_000006_create_benefits_table ........................... 6ms DONE
-  2023_01_06_000007_create_budget_approvers_table .................. 10ms DONE
-  2023_01_06_000008_create_call_back_table ......................... 11ms DONE
-  2023_01_06_000009_create_capital_accounts_table .................. 11ms DONE
-  2023_01_06_000010_create_cash_flow_configurations_table .......... 13ms DONE
-  2023_01_06_000011_create_charges_table ............................ 9ms DONE
-  2023_01_06_000012_create_chargeslist_table ........................ 8ms DONE
-  2023_01_06_000013_create_cheque_books_table ....................... 8ms DONE
-  2023_01_06_000014_create_collateral_types_table ................... 7ms DONE
-  2023_01_06_000015_create_collaterals_table ....................... 19ms DONE
-  2023_01_06_000016_create_contract_managements_table .............. 16ms DONE
-  2023_01_06_000017_create_current_loans_stages_table .............. 14ms DONE
-  2023_01_06_000018_create_custom_collaterals_table ................. 8ms DONE
-  2023_01_06_000019_create_entries_amount_table ..................... 9ms DONE
-  2023_01_06_000020_create_entries_table ........................... 10ms DONE
-  2023_01_06_000021_create_expense_accounts_table ................... 9ms DONE
-  2023_01_06_000022_create_expense_approvals_table ................. 11ms DONE
-  2023_01_06_000023_create_financial_data_table ..................... 8ms DONE
-  2023_01_06_000024_create_financial_position_table ................. 7ms DONE
-  2023_01_06_000025_create_financial_ratios_table ................... 7ms DONE
-  2023_01_06_000026_create_general_ledger_table .................... 11ms DONE
-  2023_01_06_000027_create_groups_table ............................ 10ms DONE
-  2023_01_06_000028_create_hires_approvals_table ................... 11ms DONE
-  2023_01_06_000029_create_income_accounts_table .................... 9ms DONE
-  2023_01_06_000030_create_insurancelist_table ...................... 7ms DONE
-  2023_01_06_000031_create_insurances_table ......................... 9ms DONE
-  2023_01_06_000032_create_interest_payables_table .................. 7ms DONE
-  2023_01_06_000033_create_inventories_table ........................ 9ms DONE
-  2023_01_06_000034_create_investment_types_table ................... 7ms DONE
-  2023_01_06_000035_create_investments_list_table .................. 14ms DONE
-  2023_01_06_000036_create_jobs_table ............................... 7ms DONE
-  2023_01_06_000037_create_landed_property_types_table .............. 7ms DONE
-  2023_01_06_000038_create_leave_management_table ................... 5ms DONE
-  2023_01_06_000039_create_leaves_table ............................. 8ms DONE
-  2023_01_06_000040_create_liability_accounts_table ................. 9ms DONE
-  2023_01_06_000041_create_loan_provision_settings_table ............ 9ms DONE
-  2023_01_06_000042_create_loan_stages_table ........................ 5ms DONE
-  2023_01_06_000043_create_loan_sub_products_table ................. 11ms DONE
-  2023_01_06_000044_create_loans_arrears_table ..................... 11ms DONE
-  2023_01_06_000045_create_loans_originated_table ................... 9ms DONE
-  2023_01_06_000046_create_loans_schedules_table .................... 9ms DONE
-  2023_01_06_000047_create_loans_summary_table ...................... 6ms DONE
-  2023_01_06_000048_create_loss_reserves_table ...................... 6ms DONE
-  2023_01_06_000049_create_maendeleo_loans_table .................... 7ms DONE
-  2023_01_06_000050_create_main_budget_pending_table ................ 9ms DONE
-  2023_01_06_000051_create_main_budget_table ....................... 10ms DONE
-  2023_01_06_000052_create_main_collateral_types_table .............. 7ms DONE
-  2023_01_06_000053_create_menu_list_table .......................... 6ms DONE
-  2023_01_06_000054_create_movable_property_types_table ............. 6ms DONE
-  2023_01_06_000055_create_orders_table ............................. 8ms DONE
-  2023_01_06_000056_create_password_policies_table .................. 8ms DONE
-  2023_01_06_000057_create_payables_table .......................... 11ms DONE
-  2023_01_06_000058_create_pending_registrations_table .............. 7ms DONE
-  2023_01_06_000059_create_product_has_charges_table ............... 10ms DONE
-  2023_01_06_000060_create_product_has_insurance_table .............. 8ms DONE
-  2023_01_06_000061_create_project_table ............................ 9ms DONE
-  2023_01_06_000062_create_purchases_table .......................... 6ms DONE
-  2023_01_06_000063_create_query_responses_table .................... 9ms DONE
-  2023_01_06_000064_create_reconciled_transactions_table ........... 10ms DONE
-  2023_01_06_000065_create_reconciliation_staging_table ............. 8ms DONE
-  2023_01_06_000066_create_savings_types_table ..................... 13ms DONE
-  2023_01_06_000067_create_scores_table ............................ 11ms DONE
-  2023_01_06_000068_create_settled_loans_table ...................... 6ms DONE
-  2023_01_06_000069_create_setup_accounts_table ..................... 9ms DONE
-  2023_01_06_000070_create_short_long_term_loans_table .............. 9ms DONE
-  2023_01_06_000071_create_standing_instructions_table ............. 25ms DONE
-  2023_01_06_000072_create_sub_accounts_table ...................... 10ms DONE
-  2023_01_06_000073_create_sub_menus_table .......................... 8ms DONE
-  2023_01_06_000074_create_taxes_table .............................. 6ms DONE
-  2023_01_06_000075_create_teller_end_of_day_positions_table ........ 9ms DONE
-  2023_01_06_000076_create_temp_permissions_table .................. 13ms DONE
-  2023_01_06_000077_create_tenders_table ............................ 8ms DONE
-  2023_01_06_000078_create_unearned_deferred_revenue_table .......... 8ms DONE
-  2023_01_06_000079_create_user_sub_menus_table .................... 12ms DONE
-  2023_01_06_000080_create_vendors_table ............................ 6ms DONE
-  2023_01_06_000081_create_deposit_types_table ...................... 8ms DONE
-  2023_01_06_000082_create_committee_approvals_table ............... 21ms DONE
-  2023_01_06_000083_create_user_action_logs_table .................. 11ms DONE
-  2023_01_06_000084_create_user_security_profiles_table ............. 7ms DONE
-  2023_01_06_000085_create_share_ownership_table .................... 7ms DONE
-  2023_01_06_000086_create_gepg_transactions_table ................. 20ms DONE
-  2023_01_06_000087_create_role_menu_actions_table ................. 15ms DONE
-  2023_01_06_000088_create_job_postings_table ...................... 13ms DONE
-  2023_01_06_000089_create_applicants_table ........................ 11ms DONE
-  2023_01_06_000090_create_interviews_table ........................ 14ms DONE
-  2023_01_06_000091_create_onboarding_table ........................ 23ms DONE
-  2023_01_06_000092_create_audit_logs_table ........................ 11ms DONE
-  2023_01_06_000093_create_approval_matrix_configs_table ............ 7ms DONE
-  2023_01_06_000094_create_employee_roles_table .................... 13ms DONE
-  2023_01_06_000095_create_reports_table ............................ 7ms DONE
-  2023_01_06_000096_create_transaction_reversals_table ............. 59ms DONE
-  2023_01_06_000097_create_loan_product_charges_table ............... 9ms DONE
-  2023_01_06_000098_create_approval_actions_table ................... 9ms DONE
-  2023_01_06_000099_create_approvers_of_loans_stages_table ......... 11ms DONE
-  2023_01_06_000100_create_asset_accounts_table .................... 11ms DONE
-  2023_01_06_000101_create_asset_url_table .......................... 8ms DONE
-  2023_01_06_000102_create_assets_list_table ....................... 12ms DONE
-  2023_01_06_000103_create_budget_accounts_table .................... 8ms DONE
-  2023_01_06_000104_create_cheques_table ............................ 6ms DONE
-  2023_01_06_000105_create_institution_files_table .................. 8ms DONE
-  2023_01_06_000106_create_committee_members_table .................. 9ms DONE
-  2023_01_06_000107_create_meetings_table .......................... 11ms DONE
-  2023_01_06_000108_create_meeting_documents_table ................. 10ms DONE
-  2023_01_06_000109_create_pay_rolls_table ......................... 14ms DONE
-  2023_01_06_000110_create_districts_table ......................... 15ms DONE
-  2023_01_06_000111_create_loan_approvals_table .................... 20ms DONE
-  2023_01_06_000112_create_loan_collateral_table ................... 18ms DONE
-  2023_01_06_000113_create_loan_audit_logs_table ................... 26ms DONE
-  2023_01_06_000114_create_mandatory_savings_tracking_table ........ 56ms DONE
-  2023_01_06_000115_create_sub_role_permissions_table .............. 17ms DONE
-  2023_01_06_000116_create_bank_transfers_table .................... 37ms DONE
-  2023_01_06_000117_create_billing_cycles_table .................... 16ms DONE
-  2023_01_06_000118_create_payments_table .......................... 35ms DONE
-  2023_01_06_000119_create_payment_notifications_table ............. 13ms DONE
-  2023_01_06_000120_create_user_sub_roles_table ..................... 8ms DONE
-  2023_01_06_000121_create_client_documents_table .................. 15ms DONE
-  2023_01_06_000122_create_guarantors_table ........................ 12ms DONE
-  2023_01_06_000123_create_share_withdrawals_table ................. 19ms DONE
-  2023_01_06_000124_create_share_transfers_table ................... 39ms DONE
-  2023_01_06_000125_create_loan_process_progress_table ............. 15ms DONE
-  2023_01_06_000126_create_loan_guarantors_table ................... 25ms DONE
-  2023_01_06_000127_create_loan_collaterals_table .................. 33ms DONE
-  2023_01_06_000128_create_notification_logs_table ................. 31ms DONE
-  2023_01_06_000129_create_analysis_sessions_table .................. 8ms DONE
-  2023_01_06_000130_create_im_bank_transactions_table ............... 8ms DONE
-  2023_01_06_000131_create_bank_transactions_table ................. 30ms DONE
-  2023_01_06_000132_create_employee_requests_table ................. 15ms DONE
-  2023_01_06_000133_create_scheduled_reports_table ................. 37ms DONE
-  2023_01_06_000134_create_account_historical_balances_table ....... 34ms DONE
-  2023_01_06_000135_create_historical_balances_table ............... 23ms DONE
-  2023_01_06_000136_create_internal_transfers_table ................ 30ms DONE
-  2023_01_06_000137_create_till_transactions_table ................. 48ms DONE
-  2023_01_06_000138_create_till_reconciliations_table .............. 32ms DONE
-  2023_01_06_000139_create_security_transport_logs_table ........... 45ms DONE
-  2023_01_06_000140_create_complaints_table ........................ 61ms DONE
-  2023_01_06_000141_create_web_portal_users_table .................. 65ms DONE
-  2023_01_06_000143_create_ppes_table .............................. 11ms DONE
-  2023_01_06_000144_create_dividends_table ......................... 36ms DONE
-  2023_01_06_000145_create_notifications_table ..................... 44ms DONE
-  2023_01_06_000146_create_ai_interactions_table ................... 27ms DONE
-  2023_01_06_000147_create_loan_images_table ....................... 12ms DONE
-  2023_01_06_000148_create_receivables_table ....................... 17ms DONE
-  2023_01_06_000149_create_process_code_configs_table .............. 16ms DONE
-  2023_01_06_000150_create_meeting_attendance_table ................ 13ms DONE
-  2023_01_06_000151_create_locked_amounts_table .................... 38ms DONE
-  2023_01_06_000152_create_approval_comments_table ................. 12ms DONE
-  2024_08_30_000001_add_payment_link_columns_to_bills_table ........ 29ms DONE
-  2024_08_30_000002_fix_general_ledger_sequence .................... 17ms DONE
-  2025_01_27_100000_create_email_templates_table ................... 22ms DONE
-  2025_01_27_110000_create_email_signatures_table .................. 18ms DONE
-  2025_01_27_120000_create_email_tracking_table .................... 40ms DONE
-  2025_01_27_130000_create_email_reminders_table ................... 30ms DONE
-  2025_01_27_140000_create_email_labels_table ...................... 37ms DONE
-  2025_01_27_150000_create_quick_steps_table ....................... 18ms DONE
-  2025_01_27_170000_add_receipt_columns_to_emails_table ............. 4ms DONE
-  2025_01_27_170001_create_email_receipts_table .................... 33ms DONE
-  2025_01_27_180000_create_search_folders_table .................... 28ms DONE
-  2025_01_27_190000_add_focused_inbox_columns_to_emails_table ...... 35ms DONE
-  2025_01_27_add_message_id_to_emails_table ......................... 9ms DONE
-  2025_01_27_add_rules_processed_to_emails_table .................... 8ms DONE
-  2025_01_27_create_email_attachments_table ........................ 39ms DONE
-  2025_01_27_create_email_rules_table .............................. 17ms DONE
-  2025_03_19_000003_create_share_registers_table ................... 17ms DONE
-  2025_07_27_171054_add_read_at_column_to_emails_table .............. 9ms DONE
-  2025_07_27_172704_drop_smart_compose_history_table ................ 2ms DONE
-  2025_07_28_155139_create_email_drafts_table ...................... 26ms DONE
-  2025_07_28_161604_create_user_permissions_table .................. 24ms DONE
-  2025_07_28_162302_create_failed_jobs_table ....................... 17ms DONE
-  2025_07_29_070122_create_transaction_audit_logs_table ............ 22ms DONE
-  2025_07_29_102258_add_timestamps_to_loan_images_table ............. 4ms DONE
-  2025_07_29_103502_change_balance_column_type_in_accounts_table ... 38ms DONE
-  2025_07_30_100527_fix_process_code_config_json_data ............... 2ms DONE
-  2025_07_30_101709_add_account_type_to_accounts_table .............. 4ms DONE
-  2025_07_30_102828_add_timestamps_to_expenses_table ................ 3ms DONE
-  2025_07_30_103144_change_budget_columns_to_numeric_in_budget_managements_table  40ms DONE
-  2025_07_30_104805_add_timestamps_to_ppes_table .................... 3ms DONE
-  2025_08_05_021104_add_approval_stage_to_loans_table ............... 3ms DONE
-  2025_08_05_030944_add_approval_stage_role_name_to_loans_table ..... 4ms DONE
-  2025_08_13_084029_add_approval_columns_to_loans_table ............ 35ms DONE
-  2025_08_13_084057_create_loan_approval_logs_table ................ 24ms DONE
-  2025_08_15_094714_add_status_to_loans_schedules_table ............ 13ms DONE
-  2025_08_16_065303_add_top_up_penalty_amount_to_loans_table ........ 3ms DONE
-  2025_08_16_234555_add_min_max_caps_to_loan_product_charges_table .. 3ms DONE
-  2025_08_17_004746_modify_penalty_value_column_in_loan_sub_products_table  14ms DONE
-  2025_08_17_072339_create_api_disbursement_logs_table ............. 34ms DONE
-  2025_08_17_072410_add_top_up_columns_to_loans_table ............... 8ms DONE
-  2025_08_17_072703_add_restructure_columns_to_loans_table .......... 9ms DONE
-  2025_08_17_120000_create_loan_repayment_tables ................... 98ms DONE
-  2025_08_17_142818_add_source_column_to_loans_table ................ 8ms DONE
-  2025_08_18_000001_add_next_role_name_and_committee_minutes_to_approvals_table  3ms DONE
-  2025_08_18_071531_create_payment_links_table ..................... 31ms DONE
-  2025_08_18_090343_add_early_settlement_waiver_to_loan_sub_products_table  15ms DONE
-  2025_08_18_123008_add_loan_classification_and_arrears_to_loans_table  19ms DONE
-  2025_08_18_124013_add_payment_tracking_columns_to_loans_table .... 15ms DONE
-  2025_08_18_131500_create_loan_loss_provisions_table .............. 59ms DONE
-  2025_08_19_085158_add_exception_tracking_to_loans_table .......... 14ms DONE
-  2025_08_19_095243_fix_loans_table_loan_id_constraint ............ 118ms DONE
-  2025_08_19_150000_update_existing_loans_approval_stage ............ 6ms DONE
-  2025_08_19_151000_update_approval_stage_role_names ................ 7ms DONE
-  2025_08_20_015101_alter_loan_product_charges_value_precision ..... 25ms DONE
-  2025_08_20_142903_create_member_groups_table ..................... 14ms DONE
-  2025_08_20_144201_modify_payrol_date_in_member_groups_table ....... 5ms DONE
-  2025_08_20_145030_add_member_group_to_clients_table ............... 8ms DONE
-  2025_08_20_155450_create_loan_repayments_table ................... 29ms DONE
-  2025_08_20_155518_create_loan_liquidations_table ................. 29ms DONE
+  2019_12_14_000001_create_personal_access_tokens_table ............. 6ms DONE
+  2022_03_23_163443_create_sessions_table ........................... 3ms DONE
+  2023_01_01_000001_create_datafeeds_table .......................... 1ms DONE
+  2023_01_01_000002_create_employeefiles_table ...................... 1ms DONE
+  2023_01_01_000003_create_banks_table .............................. 2ms DONE
+  2023_01_01_000004_create_currencies_table ......................... 1ms DONE
+  2023_01_01_000005_create_document_types_table ..................... 1ms DONE
+  2023_01_01_000006_create_member_categories_table .................. 1ms DONE
+  2023_01_01_000007_create_payment_methods_table .................... 1ms DONE
+  2023_01_01_000008_create_mnos_table ............................... 2ms DONE
+  2023_01_01_000009_create_cash_in_transit_providers_table .......... 4ms DONE
+  2023_01_01_000010_create_complaint_categories_table ............... 2ms DONE
+  2023_01_01_000011_create_complaint_statuses_table ................. 2ms DONE
+  2023_01_01_000012_create_leaderships_table ........................ 4ms DONE
+  2023_01_02_000001_create_institutions_table ....................... 3ms DONE
+  2023_01_02_000002_create_users_table .............................. 2ms DONE
+  2023_01_02_000003_create_permissions_table ........................ 2ms DONE
+  2023_01_03_000001_create_departments_table ........................ 4ms DONE
+  2023_01_03_000002_create_roles_table .............................. 4ms DONE
+  2023_01_03_000003_create_branches_table ........................... 3ms DONE
+  2023_01_03_000004_create_accounts_table ........................... 5ms DONE
+  2023_01_03_000005_create_clients_table ............................ 3ms DONE
+  2023_01_03_000006_create_employees_table .......................... 2ms DONE
+  2023_01_03_000007_create_committees_table ......................... 5ms DONE
+  2023_01_03_000008_create_menus_table .............................. 1ms DONE
+  2023_01_03_000009_create_sub_products_table ....................... 2ms DONE
+  2023_01_03_000010_create_services_table ........................... 3ms DONE
+  2023_01_03_000011_create_vaults_table ............................. 3ms DONE
+  2023_01_03_000012_create_tills_table .............................. 5ms DONE
+  2023_01_03_000015_create_issued_shares_table ...................... 4ms DONE
+  2023_01_04_000001_create_menu_actions_table ....................... 2ms DONE
+  2023_01_04_000002_create_sub_roles_table .......................... 2ms DONE
+  2023_01_04_000003_create_role_permissions_table ................... 3ms DONE
+  2023_01_04_000004_create_bank_accounts_table ...................... 4ms DONE
+  2023_01_04_000005_create_loans_table .............................. 4ms DONE
+  2023_01_04_000006_create_transactions_table ...................... 13ms DONE
+  2023_01_04_000007_create_tellers_table ............................ 3ms DONE
+  2023_01_04_000008_create_approvals_table .......................... 3ms DONE
+  2023_01_04_000009_create_strongroom_ledgers_table ................. 3ms DONE
+  2023_01_04_000010_create_budget_managements_table ................. 3ms DONE
+  2023_01_05_000001_create_api_keys_table ........................... 3ms DONE
+  2023_01_05_000002_create_user_roles_table ......................... 2ms DONE
+  2023_01_05_000003_create_user_profiles_table ...................... 4ms DONE
+  2023_01_05_000004_create_cash_movements_table ..................... 6ms DONE
+  2023_01_05_000005_create_expenses_table ........................... 3ms DONE
+  2023_01_05_000006_create_bills_table .............................. 5ms DONE
+  2023_01_06_000005_create_bank_statements_staging_table ............ 1ms DONE
+  2023_01_06_000006_create_benefits_table ........................... 1ms DONE
+  2023_01_06_000007_create_budget_approvers_table ................... 1ms DONE
+  2023_01_06_000008_create_call_back_table .......................... 2ms DONE
+  2023_01_06_000009_create_capital_accounts_table ................... 1ms DONE
+  2023_01_06_000010_create_cash_flow_configurations_table ........... 3ms DONE
+  2023_01_06_000011_create_charges_table ............................ 1ms DONE
+  2023_01_06_000012_create_chargeslist_table ........................ 1ms DONE
+  2023_01_06_000013_create_cheque_books_table ....................... 2ms DONE
+  2023_01_06_000014_create_collateral_types_table ................... 1ms DONE
+  2023_01_06_000015_create_collaterals_table ........................ 2ms DONE
+  2023_01_06_000016_create_contract_managements_table ............... 1ms DONE
+  2023_01_06_000017_create_current_loans_stages_table ............... 1ms DONE
+  2023_01_06_000018_create_custom_collaterals_table ................. 1ms DONE
+  2023_01_06_000019_create_entries_amount_table ..................... 1ms DONE
+  2023_01_06_000020_create_entries_table ............................ 2ms DONE
+  2023_01_06_000021_create_expense_accounts_table ................... 1ms DONE
+  2023_01_06_000022_create_expense_approvals_table .................. 1ms DONE
+  2023_01_06_000023_create_financial_data_table ..................... 1ms DONE
+  2023_01_06_000024_create_financial_position_table ................. 1ms DONE
+  2023_01_06_000025_create_financial_ratios_table ................... 1ms DONE
+  2023_01_06_000026_create_general_ledger_table ..................... 2ms DONE
+  2023_01_06_000027_create_groups_table ............................. 1ms DONE
+  2023_01_06_000028_create_hires_approvals_table .................... 2ms DONE
+  2023_01_06_000029_create_income_accounts_table .................... 1ms DONE
+  2023_01_06_000030_create_insurancelist_table ...................... 1ms DONE
+  2023_01_06_000031_create_insurances_table ......................... 1ms DONE
+  2023_01_06_000032_create_interest_payables_table .................. 3ms DONE
+  2023_01_06_000033_create_inventories_table ........................ 1ms DONE
+  2023_01_06_000034_create_investment_types_table ................... 1ms DONE
+  2023_01_06_000035_create_investments_list_table ................... 1ms DONE
+  2023_01_06_000036_create_jobs_table ............................... 1ms DONE
+  2023_01_06_000037_create_landed_property_types_table .............. 1ms DONE
+  2023_01_06_000038_create_leave_management_table ................... 1ms DONE
+  2023_01_06_000039_create_leaves_table ............................. 1ms DONE
+  2023_01_06_000040_create_liability_accounts_table ................. 1ms DONE
+  2023_01_06_000041_create_loan_provision_settings_table ............ 1ms DONE
+  2023_01_06_000042_create_loan_stages_table ........................ 1ms DONE
+  2023_01_06_000043_create_loan_sub_products_table .................. 1ms DONE
+  2023_01_06_000044_create_loans_arrears_table ...................... 1ms DONE
+  2023_01_06_000045_create_loans_originated_table ................... 1ms DONE
+  2023_01_06_000046_create_loans_schedules_table .................... 2ms DONE
+  2023_01_06_000047_create_loans_summary_table ...................... 1ms DONE
+  2023_01_06_000048_create_loss_reserves_table ...................... 1ms DONE
+  2023_01_06_000049_create_maendeleo_loans_table .................... 1ms DONE
+  2023_01_06_000050_create_main_budget_pending_table ................ 1ms DONE
+  2023_01_06_000051_create_main_budget_table ........................ 1ms DONE
+  2023_01_06_000052_create_main_collateral_types_table .............. 1ms DONE
+  2023_01_06_000053_create_menu_list_table .......................... 1ms DONE
+  2023_01_06_000054_create_movable_property_types_table ............. 1ms DONE
+  2023_01_06_000055_create_orders_table ............................. 1ms DONE
+  2023_01_06_000056_create_password_policies_table .................. 1ms DONE
+  2023_01_06_000057_create_payables_table ........................... 1ms DONE
+  2023_01_06_000058_create_pending_registrations_table .............. 1ms DONE
+  2023_01_06_000059_create_product_has_charges_table ................ 1ms DONE
+  2023_01_06_000060_create_product_has_insurance_table .............. 1ms DONE
+  2023_01_06_000061_create_project_table ............................ 1ms DONE
+  2023_01_06_000062_create_purchases_table .......................... 1ms DONE
+  2023_01_06_000063_create_query_responses_table .................... 1ms DONE
+  2023_01_06_000064_create_reconciled_transactions_table ............ 2ms DONE
+  2023_01_06_000065_create_reconciliation_staging_table ............. 1ms DONE
+  2023_01_06_000066_create_savings_types_table ...................... 2ms DONE
+  2023_01_06_000067_create_scores_table ............................. 1ms DONE
+  2023_01_06_000068_create_settled_loans_table ...................... 1ms DONE
+  2023_01_06_000069_create_setup_accounts_table ..................... 1ms DONE
+  2023_01_06_000070_create_short_long_term_loans_table .............. 1ms DONE
+  2023_01_06_000071_create_standing_instructions_table .............. 3ms DONE
+  2023_01_06_000072_create_sub_accounts_table ....................... 2ms DONE
+  2023_01_06_000073_create_sub_menus_table .......................... 1ms DONE
+  2023_01_06_000074_create_taxes_table .............................. 1ms DONE
+  2023_01_06_000075_create_teller_end_of_day_positions_table ........ 1ms DONE
+  2023_01_06_000076_create_temp_permissions_table ................... 3ms DONE
+  2023_01_06_000077_create_tenders_table ............................ 2ms DONE
+  2023_01_06_000078_create_unearned_deferred_revenue_table .......... 1ms DONE
+  2023_01_06_000079_create_user_sub_menus_table ..................... 1ms DONE
+  2023_01_06_000080_create_vendors_table ............................ 1ms DONE
+  2023_01_06_000081_create_deposit_types_table ...................... 1ms DONE
+  2023_01_06_000082_create_committee_approvals_table ................ 3ms DONE
+  2023_01_06_000083_create_user_action_logs_table ................... 2ms DONE
+  2023_01_06_000084_create_user_security_profiles_table ............. 1ms DONE
+  2023_01_06_000085_create_share_ownership_table .................... 1ms DONE
+  2023_01_06_000086_create_gepg_transactions_table .................. 2ms DONE
+  2023_01_06_000087_create_role_menu_actions_table .................. 2ms DONE
+  2023_01_06_000088_create_job_postings_table ....................... 2ms DONE
+  2023_01_06_000089_create_applicants_table ......................... 2ms DONE
+  2023_01_06_000090_create_interviews_table ......................... 2ms DONE
+  2023_01_06_000091_create_onboarding_table ......................... 4ms DONE
+  2023_01_06_000092_create_audit_logs_table ......................... 2ms DONE
+  2023_01_06_000093_create_approval_matrix_configs_table ............ 2ms DONE
+  2023_01_06_000094_create_employee_roles_table ..................... 2ms DONE
+  2023_01_06_000095_create_reports_table ............................ 1ms DONE
+  2023_01_06_000096_create_transaction_reversals_table .............. 7ms DONE
+  2023_01_06_000097_create_loan_product_charges_table ............... 1ms DONE
+  2023_01_06_000098_create_approval_actions_table ................... 1ms DONE
+  2023_01_06_000099_create_approvers_of_loans_stages_table .......... 2ms DONE
+  2023_01_06_000100_create_asset_accounts_table ..................... 1ms DONE
+  2023_01_06_000101_create_asset_url_table .......................... 1ms DONE
+  2023_01_06_000102_create_assets_list_table ........................ 1ms DONE
+  2023_01_06_000103_create_budget_accounts_table .................... 1ms DONE
+  2023_01_06_000104_create_cheques_table ............................ 1ms DONE
+  2023_01_06_000105_create_institution_files_table .................. 1ms DONE
+  2023_01_06_000106_create_committee_members_table .................. 2ms DONE
+  2023_01_06_000107_create_meetings_table ........................... 2ms DONE
+  2023_01_06_000108_create_meeting_documents_table .................. 2ms DONE
+  2023_01_06_000109_create_pay_rolls_table .......................... 2ms DONE
+  2023_01_06_000110_create_districts_table .......................... 1ms DONE
+  2023_01_06_000111_create_loan_approvals_table ..................... 3ms DONE
+  2023_01_06_000112_create_loan_collateral_table .................... 3ms DONE
+  2023_01_06_000113_create_loan_audit_logs_table .................... 3ms DONE
+  2023_01_06_000114_create_mandatory_savings_tracking_table ......... 7ms DONE
+  2023_01_06_000115_create_sub_role_permissions_table ............... 3ms DONE
+  2023_01_06_000116_create_bank_transfers_table ..................... 6ms DONE
+  2023_01_06_000117_create_billing_cycles_table ..................... 2ms DONE
+  2023_01_06_000118_create_payments_table ........................... 5ms DONE
+  2023_01_06_000119_create_payment_notifications_table .............. 2ms DONE
+  2023_01_06_000120_create_user_sub_roles_table ..................... 2ms DONE
+  2023_01_06_000121_create_client_documents_table ................... 3ms DONE
+  2023_01_06_000122_create_guarantors_table ......................... 2ms DONE
+  2023_01_06_000123_create_share_withdrawals_table .................. 2ms DONE
+  2023_01_06_000124_create_share_transfers_table .................... 4ms DONE
+  2023_01_06_000125_create_loan_process_progress_table .............. 2ms DONE
+  2023_01_06_000126_create_loan_guarantors_table .................... 4ms DONE
+  2023_01_06_000127_create_loan_collaterals_table ................... 4ms DONE
+  2023_01_06_000128_create_notification_logs_table .................. 4ms DONE
+  2023_01_06_000129_create_analysis_sessions_table .................. 1ms DONE
+  2023_01_06_000130_create_im_bank_transactions_table ............... 1ms DONE
+  2023_01_06_000131_create_bank_transactions_table .................. 4ms DONE
+  2023_01_06_000132_create_employee_requests_table .................. 2ms DONE
+  2023_01_06_000133_create_scheduled_reports_table .................. 4ms DONE
+  2023_01_06_000134_create_account_historical_balances_table ........ 6ms DONE
+  2023_01_06_000135_create_historical_balances_table ................ 3ms DONE
+  2023_01_06_000136_create_internal_transfers_table ................. 4ms DONE
+  2023_01_06_000137_create_till_transactions_table .................. 6ms DONE
+  2023_01_06_000138_create_till_reconciliations_table ............... 6ms DONE
+  2023_01_06_000139_create_security_transport_logs_table ............ 9ms DONE
+  2023_01_06_000140_create_complaints_table ......................... 7ms DONE
+  2023_01_06_000141_create_web_portal_users_table .................. 11ms DONE
+  2023_01_06_000143_create_ppes_table ............................... 2ms DONE
+  2023_01_06_000144_create_dividends_table .......................... 4ms DONE
+  2023_01_06_000145_create_notifications_table ...................... 4ms DONE
+  2023_01_06_000146_create_ai_interactions_table .................... 2ms DONE
+  2023_01_06_000147_create_loan_images_table ........................ 1ms DONE
+  2023_01_06_000148_create_receivables_table ........................ 3ms DONE
+  2023_01_06_000149_create_process_code_configs_table ............... 2ms DONE
+  2023_01_06_000150_create_meeting_attendance_table ................. 2ms DONE
+  2023_01_06_000151_create_locked_amounts_table ..................... 4ms DONE
+  2023_01_06_000152_create_approval_comments_table .................. 2ms DONE
+  2024_08_30_000001_add_payment_link_columns_to_bills_table ......... 7ms DONE
+  2024_08_30_000002_fix_general_ledger_sequence ..................... 2ms DONE
+  2025_01_06_add_budget_tracking_fields ............................. 9ms DONE
+  2025_01_06_add_milestone_tracking_fields .......................... 1ms DONE
+  2025_01_06_add_period_close_tracking_fields ....................... 5ms DONE
+  2025_01_06_enhance_budget_system_comprehensive ................... 25ms DONE
+  2025_01_27_100000_create_email_templates_table .................... 3ms DONE
+  2025_01_27_110000_create_email_signatures_table ................... 2ms DONE
+  2025_01_27_120000_create_email_tracking_table ..................... 6ms DONE
+  2025_01_27_130000_create_email_reminders_table .................... 3ms DONE
+  2025_01_27_140000_create_email_labels_table ....................... 4ms DONE
+  2025_01_27_150000_create_quick_steps_table ........................ 3ms DONE
+  2025_01_27_170000_add_receipt_columns_to_emails_table ............. 1ms DONE
+  2025_01_27_170001_create_email_receipts_table ..................... 3ms DONE
+  2025_01_27_180000_create_search_folders_table ..................... 2ms DONE
+  2025_01_27_190000_add_focused_inbox_columns_to_emails_table ...... 11ms DONE
+  2025_01_27_add_message_id_to_emails_table ......................... 1ms DONE
+  2025_01_27_add_rules_processed_to_emails_table .................... 1ms DONE
+  2025_01_27_create_email_attachments_table ......................... 5ms DONE
+  2025_01_27_create_email_rules_table ............................... 2ms DONE
+  2025_03_19_000003_create_share_registers_table .................... 2ms DONE
+  2025_07_27_171054_add_read_at_column_to_emails_table .............. 2ms DONE
+  2025_07_27_172704_drop_smart_compose_history_table ................ 0ms DONE
+  2025_07_28_155139_create_email_drafts_table ....................... 3ms DONE
+  2025_07_28_161604_create_user_permissions_table ................... 3ms DONE
+  2025_07_28_162302_create_failed_jobs_table ........................ 2ms DONE
+  2025_07_29_070122_create_transaction_audit_logs_table ............. 3ms DONE
+  2025_07_29_102258_add_timestamps_to_loan_images_table ............. 0ms DONE
+  2025_07_29_103502_change_balance_column_type_in_accounts_table .... 4ms DONE
+  2025_07_30_100527_fix_process_code_config_json_data ............... 0ms DONE
+  2025_07_30_101709_add_account_type_to_accounts_table .............. 1ms DONE
+  2025_07_30_102828_add_timestamps_to_expenses_table ................ 0ms DONE
+  2025_07_30_103144_change_budget_columns_to_numeric_in_budget_managements_table  10ms DONE
+  2025_07_30_104805_add_timestamps_to_ppes_table .................... 0ms DONE
+  2025_08_05_021104_add_approval_stage_to_loans_table ............... 1ms DONE
+  2025_08_05_030944_add_approval_stage_role_name_to_loans_table ..... 1ms DONE
+  2025_08_13_084029_add_approval_columns_to_loans_table ............ 10ms DONE
+  2025_08_13_084057_create_loan_approval_logs_table ................. 4ms DONE
+  2025_08_15_094714_add_status_to_loans_schedules_table ............. 2ms DONE
+  2025_08_16_065303_add_top_up_penalty_amount_to_loans_table ........ 1ms DONE
+  2025_08_16_234555_add_min_max_caps_to_loan_product_charges_table .. 0ms DONE
+  2025_08_17_004746_modify_penalty_value_column_in_loan_sub_products_table  2ms DONE
+  2025_08_17_072339_create_api_disbursement_logs_table .............. 3ms DONE
+  2025_08_17_072410_add_top_up_columns_to_loans_table ............... 2ms DONE
+  2025_08_17_072703_add_restructure_columns_to_loans_table .......... 2ms DONE
+  2025_08_17_120000_create_loan_repayment_tables ................... 19ms DONE
+  2025_08_17_142818_add_source_column_to_loans_table ................ 2ms DONE
+  2025_08_18_000001_add_next_role_name_and_committee_minutes_to_approvals_table  1ms DONE
+  2025_08_18_071531_create_payment_links_table ...................... 4ms DONE
+  2025_08_18_090343_add_early_settlement_waiver_to_loan_sub_products_table  2ms DONE
+  2025_08_18_123008_add_loan_classification_and_arrears_to_loans_table  6ms DONE
+  2025_08_18_124013_add_payment_tracking_columns_to_loans_table ..... 5ms DONE
+  2025_08_18_131500_create_loan_loss_provisions_table ............... 7ms DONE
+  2025_08_19_085158_add_exception_tracking_to_loans_table ........... 2ms DONE
+  2025_08_19_095243_fix_loans_table_loan_id_constraint ............. 29ms DONE
+  2025_08_19_150000_update_existing_loans_approval_stage ............ 1ms DONE
+  2025_08_19_151000_update_approval_stage_role_names ................ 1ms DONE
+  2025_08_20_015101_alter_loan_product_charges_value_precision ...... 5ms DONE
+  2025_08_20_142903_create_member_groups_table ...................... 2ms DONE
+  2025_08_20_144201_modify_payrol_date_in_member_groups_table ....... 1ms DONE
+  2025_08_20_145030_add_member_group_to_clients_table ............... 1ms DONE
+  2025_08_20_155450_create_loan_repayments_table .................... 3ms DONE
+  2025_08_20_155518_create_loan_liquidations_table .................. 3ms DONE
   2025_08_22_111138_add_branch_id_to_multiple_tables ✅ Added branch_id to table: users
 ⏭️  Table clients already has branch_id
 ⏭️  Table employees already has branch_id
@@ -414,34 +418,1128 @@
 ✅ Added branch_id to table: account_historical_balances
 ✅ Added branch_id to table: setup_accounts
 ⏭️  Table general_ledger already has branch_id
-............ 2,083ms DONE
-  2025_08_29_091325_update_scheduled_reports_table_add_missing_columns  36ms DONE
-  2025_08_29_add_member_group_to_clients ........................... 14ms DONE
-  2025_08_29_create_receipts_table ................................. 40ms DONE
-  2025_08_30_110431_create_member_exits_table ...................... 18ms DONE
-  2025_08_30_110450_add_exit_fields_to_clients_table ................ 3ms DONE
-  2025_08_30_164154_add_comprehensive_fields_to_member_exits_table .. 3ms DONE
-  2025_09_02_090635_create_jobs_table ............................... 5ms FAIL
+.............. 423ms DONE
+  2025_08_29_091325_update_scheduled_reports_table_add_missing_columns  10ms DONE
+  2025_08_29_add_member_group_to_clients ............................ 4ms DONE
+  2025_08_29_create_receipts_table .................................. 4ms DONE
+  2025_08_30_110431_create_member_exits_table ....................... 2ms DONE
+  2025_08_30_110450_add_exit_fields_to_clients_table ................ 0ms DONE
+  2025_08_30_164154_add_comprehensive_fields_to_member_exits_table .. 1ms DONE
+  2025_09_03_170715_create_payment_transactions_table ............... 4ms DONE
+  2025_09_05_103510_create_budget_allocations_table ................. 4ms DONE
+  2025_09_05_103539_create_budget_advances_table .................... 5ms DONE
+  2025_09_05_103630_create_supplementary_requests_table ............. 5ms DONE
+  2025_09_05_103650_create_budget_alerts_table ...................... 1ms DONE
+  2025_09_05_114258_add_budget_allocation_id_to_expenses_table ...... 2ms DONE
+  2025_09_05_125301_add_payment_fields_to_expenses_table ............ 2ms DONE
+  2025_09_05_172824_add_month_year_status_to_pay_rolls_table ........ 1ms DONE
+  2025_09_05_add_approval_integration_to_budget_management .......... 3ms DONE
+  2025_09_05_add_expense_reg_process_code ........................... 2ms DONE
+  2025_09_06_053732_add_smtp_error_to_emails_table .................. 0ms DONE
+  2025_09_06_062353_create_email_activity_logs_table ................ 2ms DONE
+  2025_09_06_080917_create_employee_attendances_table ............... 3ms DONE
+  2025_09_07_053327_create_daily_activity_status_table .............. 3ms DONE
 
-   Illuminate\Database\QueryException 
+   INFO  Seeding database.  
 
-  SQLSTATE[42P07]: Duplicate table: 7 ERROR:  relation "jobs" already exists (SQL: create table "jobs" ("id" bigserial primary key not null, "queue" varchar(255) not null, "payload" text not null, "attempts" smallint not null, "reserved_at" integer null, "available_at" integer not null, "created_at" integer not null))
 
-  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:760
-    756▕         // If an exception occurs when attempting to run a query, we'll format the error
-    757▕         // message to include the bindings with SQL, which will make this exception a
-    758▕         // lot more helpful to the developer instead of just the database's errors.
-    759▕         catch (Exception $e) {
-  ➜ 760▕             throw new QueryException(
-    761▕                 $query, $this->prepareBindings($bindings), $e
-    762▕             );
-    763▕         }
-    764▕     }
+=== DATABASE SEEDING STARTED ===
+[1/200] Running InstitutionsSeeder...
+  Database\Seeders\InstitutionsSeeder ................................ RUNNING  
+  Database\Seeders\InstitutionsSeeder .......................... 45.52 ms DONE  
 
-      [2m+9 vendor frames [22m
-  10  database/migrations/2025_09_02_090635_create_jobs_table.php:16
-      Illuminate\Support\Facades\Facade::__callStatic()
+✅ [1/200] InstitutionsSeeder completed successfully
+[2/200] Running BranchesSeeder...
+  Database\Seeders\BranchesSeeder .................................... RUNNING  
+  Database\Seeders\BranchesSeeder ............................... 0.69 ms DONE  
 
-      [2m+37 vendor frames [22m
-  48  artisan:35
-      Illuminate\Foundation\Console\Kernel::handle()
+✅ [2/200] BranchesSeeder completed successfully
+  → Data check after BranchesSeeder: Branches=1, Users=0
+[3/200] Running DepartmentsSeeder...
+  Database\Seeders\DepartmentsSeeder ................................. RUNNING  
+  Database\Seeders\DepartmentsSeeder ........................... 18.76 ms DONE  
+
+✅ [3/200] DepartmentsSeeder completed successfully
+[4/200] Running RolesSeeder...
+  Database\Seeders\RolesSeeder ....................................... RUNNING  
+  Database\Seeders\RolesSeeder .................................. 6.70 ms DONE  
+
+✅ [4/200] RolesSeeder completed successfully
+[5/200] Running SubrolesSeeder...
+  Database\Seeders\SubrolesSeeder .................................... RUNNING  
+  Database\Seeders\SubrolesSeeder ............................... 3.14 ms DONE  
+
+✅ [5/200] SubrolesSeeder completed successfully
+[6/200] Running PermissionsSeeder...
+  Database\Seeders\PermissionsSeeder ................................. RUNNING  
+  Database\Seeders\PermissionsSeeder ............................ 4.97 ms DONE  
+
+✅ [6/200] PermissionsSeeder completed successfully
+[7/200] Running UsersSeeder...
+  Database\Seeders\UsersSeeder ....................................... RUNNING  
+  Database\Seeders\UsersSeeder .................................. 0.95 ms DONE  
+
+✅ [7/200] UsersSeeder completed successfully
+  → Data check after UsersSeeder: Branches=1, Users=2
+[8/200] Running UserrolesSeeder...
+  Database\Seeders\UserrolesSeeder ................................... RUNNING  
+UserRolesSeeder: Assigned roles to 2 users
+  Database\Seeders\UserrolesSeeder .............................. 1.88 ms DONE  
+
+✅ [8/200] UserrolesSeeder completed successfully
+[9/200] Running UserpermissionsSeeder...
+  Database\Seeders\UserpermissionsSeeder ............................. RUNNING  
+  Database\Seeders\UserpermissionsSeeder ........................ 1.88 ms DONE  
+
+✅ [9/200] UserpermissionsSeeder completed successfully
+[10/200] Running SubrolepermissionsSeeder...
+  Database\Seeders\SubrolepermissionsSeeder .......................... RUNNING  
+  Database\Seeders\SubrolepermissionsSeeder ..................... 2.41 ms DONE  
+
+✅ [10/200] SubrolepermissionsSeeder completed successfully
+[11/200] Running RolepermissionsSeeder...
+  Database\Seeders\RolepermissionsSeeder ............................. RUNNING  
+  Database\Seeders\RolepermissionsSeeder ........................ 1.78 ms DONE  
+
+✅ [11/200] RolepermissionsSeeder completed successfully
+[12/200] Running UsersubmenusSeeder...
+  Database\Seeders\UsersubmenusSeeder ................................ RUNNING  
+  Database\Seeders\UsersubmenusSeeder ........................... 1.12 ms DONE  
+
+✅ [12/200] UsersubmenusSeeder completed successfully
+[13/200] Running UsersubrolesSeeder...
+  Database\Seeders\UsersubrolesSeeder ................................ RUNNING  
+  Database\Seeders\UsersubrolesSeeder ........................... 1.49 ms DONE  
+
+✅ [13/200] UsersubrolesSeeder completed successfully
+[14/200] Running UserprofilesSeeder...
+  Database\Seeders\UserprofilesSeeder ................................ RUNNING  
+  Database\Seeders\UserprofilesSeeder ........................... 2.36 ms DONE  
+
+✅ [14/200] UserprofilesSeeder completed successfully
+[15/200] Running UsersecurityprofilesSeeder...
+  Database\Seeders\UsersecurityprofilesSeeder ........................ RUNNING  
+  Database\Seeders\UsersecurityprofilesSeeder ................... 1.34 ms DONE  
+
+✅ [15/200] UsersecurityprofilesSeeder completed successfully
+[16/200] Running PasswordpoliciesSeeder...
+  Database\Seeders\PasswordpoliciesSeeder ............................ RUNNING  
+  Database\Seeders\PasswordpoliciesSeeder ....................... 1.29 ms DONE  
+
+✅ [16/200] PasswordpoliciesSeeder completed successfully
+[17/200] Running PasswordPolicySeeder...
+  Database\Seeders\PasswordPolicySeeder .............................. RUNNING  
+  Database\Seeders\PasswordPolicySeeder ......................... 0.66 ms DONE  
+
+✅ [17/200] PasswordPolicySeeder completed successfully
+[18/200] Running MenuSeeder...
+  Database\Seeders\MenuSeeder ........................................ RUNNING  
+MenuSeeder: Inserted 31 menus with names, routes, and icons
+  Database\Seeders\MenuSeeder .................................. 13.07 ms DONE  
+
+✅ [18/200] MenuSeeder completed successfully
+[19/200] Running SubMenusSeeder...
+  Database\Seeders\SubMenusSeeder .................................... RUNNING  
+  Database\Seeders\SubMenusSeeder .............................. 19.41 ms DONE  
+
+✅ [19/200] SubMenusSeeder completed successfully
+[20/200] Running MenuActionsSeeder...
+  Database\Seeders\MenuActionsSeeder ................................. RUNNING  
+  Database\Seeders\MenuActionsSeeder ........................... 31.84 ms DONE  
+
+✅ [20/200] MenuActionsSeeder completed successfully
+[21/200] Running RoleMenuActionSeeder...
+  Database\Seeders\RoleMenuActionSeeder .............................. RUNNING  
+  Database\Seeders\RoleMenuActionSeeder ........................ 10.04 ms DONE  
+
+✅ [21/200] RoleMenuActionSeeder completed successfully
+[22/200] Running RoleMenuActionsSeeder...
+  Database\Seeders\RoleMenuActionsSeeder ............................. RUNNING  
+  Database\Seeders\RoleMenuActionsSeeder ........................ 9.41 ms DONE  
+
+✅ [22/200] RoleMenuActionsSeeder completed successfully
+[23/200] Running ClientsSeeder...
+  Database\Seeders\ClientsSeeder ..................................... RUNNING  
+  Database\Seeders\ClientsSeeder ............................... 20.86 ms DONE  
+
+✅ [23/200] ClientsSeeder completed successfully
+[24/200] Running ExampleMembersSeeder...
+  Database\Seeders\ExampleMembersSeeder .............................. RUNNING  
+  Database\Seeders\ExampleMembersSeeder ........................ 24.43 ms DONE  
+
+✅ [24/200] ExampleMembersSeeder completed successfully
+[25/200] Running MembercategoriesSeeder...
+  Database\Seeders\MembercategoriesSeeder ............................ RUNNING  
+  Database\Seeders\MembercategoriesSeeder ....................... 1.63 ms DONE  
+
+✅ [25/200] MembercategoriesSeeder completed successfully
+[26/200] Running ClientdocumentsSeeder...
+  Database\Seeders\ClientdocumentsSeeder ............................. RUNNING  
+  Database\Seeders\ClientdocumentsSeeder ........................ 1.83 ms DONE  
+
+✅ [26/200] ClientdocumentsSeeder completed successfully
+[27/200] Running PendingregistrationsSeeder...
+  Database\Seeders\PendingregistrationsSeeder ........................ RUNNING  
+  Database\Seeders\PendingregistrationsSeeder ................... 0.89 ms DONE  
+
+✅ [27/200] PendingregistrationsSeeder completed successfully
+[28/200] Running WebportalusersSeeder...
+  Database\Seeders\WebportalusersSeeder .............................. RUNNING  
+  Database\Seeders\WebportalusersSeeder ......................... 4.50 ms DONE  
+
+✅ [28/200] WebportalusersSeeder completed successfully
+[29/200] Running ServicesSeeder...
+  Database\Seeders\ServicesSeeder .................................... RUNNING  
+  Database\Seeders\ServicesSeeder ............................... 5.05 ms DONE  
+
+✅ [29/200] ServicesSeeder completed successfully
+[30/200] Running SubProductsSeeder...
+  Database\Seeders\SubProductsSeeder ................................. RUNNING  
+  Database\Seeders\SubProductsSeeder ............................ 1.46 ms DONE  
+
+✅ [30/200] SubProductsSeeder completed successfully
+[31/200] Running LoanSubProductsSeeder...
+  Database\Seeders\LoanSubProductsSeeder ............................. RUNNING  
+Inserted: NBCSaccos butua
+Inserted: ONJA
+Inserted: MKOKO WA DHARURA
+Inserted: MKOKO WA MAENDELEO MDOGO
+Inserted: MKOKO WA MAENDELEO MKUBWA
+Inserted: MKOKO WA BIDHAA ZA NYUMBANI
+Inserted: MKOKO WA WASTAAFU
+Inserted: MKOKO WA WASTAAFU (DHARURA)
+Inserted: MKOKO WA CHAPCHAP
+Inserted: MKOKO WA BIASHARA
+Inserted: MKOKO WA SIKUKUUU
+
+Loan sub-products seeding completed successfully!
+  Database\Seeders\LoanSubProductsSeeder ........................ 4.55 ms DONE  
+
+✅ [31/200] LoanSubProductsSeeder completed successfully
+[32/200] Running ProducthaschargesSeeder...
+  Database\Seeders\ProducthaschargesSeeder ........................... RUNNING  
+  Database\Seeders\ProducthaschargesSeeder ...................... 1.57 ms DONE  
+
+✅ [32/200] ProducthaschargesSeeder completed successfully
+[33/200] Running ProducthasinsuranceSeeder...
+  Database\Seeders\ProducthasinsuranceSeeder ......................... RUNNING  
+  Database\Seeders\ProducthasinsuranceSeeder .................... 1.77 ms DONE  
+
+✅ [33/200] ProducthasinsuranceSeeder completed successfully
+[34/200] Running SavingstypesSeeder...
+  Database\Seeders\SavingstypesSeeder ................................ RUNNING  
+  Database\Seeders\SavingstypesSeeder ........................... 1.60 ms DONE  
+
+✅ [34/200] SavingstypesSeeder completed successfully
+[35/200] Running DeposittypesSeeder...
+  Database\Seeders\DeposittypesSeeder ................................ RUNNING  
+  Database\Seeders\DeposittypesSeeder ........................... 1.77 ms DONE  
+
+✅ [35/200] DeposittypesSeeder completed successfully
+[36/200] Running AccountsSeeder...
+  Database\Seeders\AccountsSeeder .................................... RUNNING  
+  Database\Seeders\AccountsSeeder .............................. 96.66 ms DONE  
+
+✅ [36/200] AccountsSeeder completed successfully
+[37/200] Running GeneralledgerSeeder...
+  Database\Seeders\GeneralledgerSeeder ............................... RUNNING  
+  Database\Seeders\GeneralledgerSeeder .......................... 2.45 ms DONE  
+
+✅ [37/200] GeneralledgerSeeder completed successfully
+[38/200] Running SubaccountsSeeder...
+  Database\Seeders\SubaccountsSeeder ................................. RUNNING  
+  Database\Seeders\SubaccountsSeeder ............................ 1.82 ms DONE  
+
+✅ [38/200] SubaccountsSeeder completed successfully
+[39/200] Running AssetaccountsSeeder...
+  Database\Seeders\AssetaccountsSeeder ............................... RUNNING  
+  Database\Seeders\AssetaccountsSeeder .......................... 0.92 ms DONE  
+
+✅ [39/200] AssetaccountsSeeder completed successfully
+[40/200] Running CapitalaccountsSeeder...
+  Database\Seeders\CapitalaccountsSeeder ............................. RUNNING  
+  Database\Seeders\CapitalaccountsSeeder ........................ 1.62 ms DONE  
+
+✅ [40/200] CapitalaccountsSeeder completed successfully
+[41/200] Running ExpenseaccountsSeeder...
+  Database\Seeders\ExpenseaccountsSeeder ............................. RUNNING  
+  Database\Seeders\ExpenseaccountsSeeder ........................ 1.39 ms DONE  
+
+✅ [41/200] ExpenseaccountsSeeder completed successfully
+[42/200] Running IncomeaccountsSeeder...
+  Database\Seeders\IncomeaccountsSeeder .............................. RUNNING  
+  Database\Seeders\IncomeaccountsSeeder ......................... 2.43 ms DONE  
+
+✅ [42/200] IncomeaccountsSeeder completed successfully
+[43/200] Running LiabilityaccountsSeeder...
+  Database\Seeders\LiabilityaccountsSeeder ........................... RUNNING  
+  Database\Seeders\LiabilityaccountsSeeder ...................... 1.34 ms DONE  
+
+✅ [43/200] LiabilityaccountsSeeder completed successfully
+[44/200] Running BudgetaccountsSeeder...
+  Database\Seeders\BudgetaccountsSeeder .............................. RUNNING  
+  Database\Seeders\BudgetaccountsSeeder ......................... 0.95 ms DONE  
+
+✅ [44/200] BudgetaccountsSeeder completed successfully
+[45/200] Running AccounthistoricalbalancesSeeder...
+  Database\Seeders\AccounthistoricalbalancesSeeder ................... RUNNING  
+  Database\Seeders\AccounthistoricalbalancesSeeder .............. 2.78 ms DONE  
+
+✅ [45/200] AccounthistoricalbalancesSeeder completed successfully
+[46/200] Running HistoricalbalancesSeeder...
+  Database\Seeders\HistoricalbalancesSeeder .......................... RUNNING  
+  Database\Seeders\HistoricalbalancesSeeder ..................... 2.16 ms DONE  
+
+✅ [46/200] HistoricalbalancesSeeder completed successfully
+[47/200] Running SetupAccountsSeeder...
+  Database\Seeders\SetupAccountsSeeder ............................... RUNNING  
+  Database\Seeders\SetupAccountsSeeder .......................... 1.32 ms DONE  
+
+✅ [47/200] SetupAccountsSeeder completed successfully
+[48/200] Running LoansSeeder...
+  Database\Seeders\LoansSeeder ....................................... RUNNING  
+  Database\Seeders\LoansSeeder ................................. 17.10 ms DONE  
+
+✅ [48/200] LoansSeeder completed successfully
+[49/200] Running LoanssummarySeeder...
+  Database\Seeders\LoanssummarySeeder ................................ RUNNING  
+  Database\Seeders\LoanssummarySeeder ........................... 1.24 ms DONE  
+
+✅ [49/200] LoanssummarySeeder completed successfully
+[50/200] Running LoansschedulesSeeder...
+  Database\Seeders\LoansschedulesSeeder .............................. RUNNING  
+  Database\Seeders\LoansschedulesSeeder ......................... 1.71 ms DONE  
+
+✅ [50/200] LoansschedulesSeeder completed successfully
+[51/200] Running LoansarreasSeeder...
+  Database\Seeders\LoansarreasSeeder ................................. RUNNING  
+  Database\Seeders\LoansarreasSeeder ............................ 1.52 ms DONE  
+
+✅ [51/200] LoansarreasSeeder completed successfully
+[52/200] Running LoansoriginatedSeeder...
+  Database\Seeders\LoansoriginatedSeeder ............................. RUNNING  
+  Database\Seeders\LoansoriginatedSeeder ........................ 2.33 ms DONE  
+
+✅ [52/200] LoansoriginatedSeeder completed successfully
+[53/200] Running LoanapprovalsSeeder...
+  Database\Seeders\LoanapprovalsSeeder ............................... RUNNING  
+  Database\Seeders\LoanapprovalsSeeder .......................... 1.96 ms DONE  
+
+✅ [53/200] LoanapprovalsSeeder completed successfully
+[54/200] Running LoanauditlogsSeeder...
+  Database\Seeders\LoanauditlogsSeeder ............................... RUNNING  
+  Database\Seeders\LoanauditlogsSeeder .......................... 2.03 ms DONE  
+
+✅ [54/200] LoanauditlogsSeeder completed successfully
+[55/200] Running LoanstagesSeeder...
+  Database\Seeders\LoanstagesSeeder .................................. RUNNING  
+  Database\Seeders\LoanstagesSeeder ............................. 1.95 ms DONE  
+
+✅ [55/200] LoanstagesSeeder completed successfully
+[56/200] Running CurrentloansstagesSeeder...
+  Database\Seeders\CurrentloansstagesSeeder .......................... RUNNING  
+  Database\Seeders\CurrentloansstagesSeeder ..................... 1.65 ms DONE  
+
+✅ [56/200] CurrentloansstagesSeeder completed successfully
+[57/200] Running LoanprocessprogressSeeder...
+  Database\Seeders\LoanprocessprogressSeeder ......................... RUNNING  
+  Database\Seeders\LoanprocessprogressSeeder .................... 1.67 ms DONE  
+
+✅ [57/200] LoanprocessprogressSeeder completed successfully
+[58/200] Running LoanproductchargesSeeder...
+  Database\Seeders\LoanproductchargesSeeder .......................... RUNNING  
+  Database\Seeders\LoanproductchargesSeeder ..................... 1.50 ms DONE  
+
+✅ [58/200] LoanproductchargesSeeder completed successfully
+[59/200] Running LoanprovisionsettingsSeeder...
+  Database\Seeders\LoanprovisionsettingsSeeder ....................... RUNNING  
+  Database\Seeders\LoanprovisionsettingsSeeder .................. 1.38 ms DONE  
+
+✅ [59/200] LoanprovisionsettingsSeeder completed successfully
+[60/200] Running LoanimagesSeeder...
+  Database\Seeders\LoanimagesSeeder .................................. RUNNING  
+  Database\Seeders\LoanimagesSeeder ............................. 1.44 ms DONE  
+
+✅ [60/200] LoanimagesSeeder completed successfully
+[61/200] Running LoancollateralSeeder...
+  Database\Seeders\LoancollateralSeeder .............................. RUNNING  
+  Database\Seeders\LoancollateralSeeder ......................... 2.96 ms DONE  
+
+✅ [61/200] LoancollateralSeeder completed successfully
+[62/200] Running LoancollateralsSeeder...
+  Database\Seeders\LoancollateralsSeeder ............................. RUNNING  
+Skipping loan collateral with loan_guarantor_id 1 - guarantor doesn't exist
+  Database\Seeders\LoancollateralsSeeder ........................ 2.40 ms DONE  
+
+✅ [62/200] LoancollateralsSeeder completed successfully
+[63/200] Running LoanguarantorsSeeder...
+  Database\Seeders\LoanguarantorsSeeder .............................. RUNNING  
+  Database\Seeders\LoanguarantorsSeeder ......................... 3.81 ms DONE  
+
+✅ [63/200] LoanguarantorsSeeder completed successfully
+[64/200] Running GuarantorsSeeder...
+  Database\Seeders\GuarantorsSeeder .................................. RUNNING  
+  Database\Seeders\GuarantorsSeeder ............................. 1.74 ms DONE  
+
+✅ [64/200] GuarantorsSeeder completed successfully
+[65/200] Running CollateralsSeeder...
+  Database\Seeders\CollateralsSeeder ................................. RUNNING  
+  Database\Seeders\CollateralsSeeder ............................ 2.16 ms DONE  
+
+✅ [65/200] CollateralsSeeder completed successfully
+[66/200] Running CollateralTypesSeeder...
+  Database\Seeders\CollateralTypesSeeder ............................. RUNNING  
+  Database\Seeders\CollateralTypesSeeder ........................ 2.78 ms DONE  
+
+✅ [66/200] CollateralTypesSeeder completed successfully
+[67/200] Running MaincollateraltypesSeeder...
+  Database\Seeders\MaincollateraltypesSeeder ......................... RUNNING  
+  Database\Seeders\MaincollateraltypesSeeder .................... 1.05 ms DONE  
+
+✅ [67/200] MaincollateraltypesSeeder completed successfully
+[68/200] Running CustomcollateralsSeeder...
+  Database\Seeders\CustomcollateralsSeeder ........................... RUNNING  
+  Database\Seeders\CustomcollateralsSeeder ...................... 1.29 ms DONE  
+
+✅ [68/200] CustomcollateralsSeeder completed successfully
+[69/200] Running SampleLoanCollateralSeeder...
+  Database\Seeders\SampleLoanCollateralSeeder ........................ RUNNING  
+No active loans found. Creating a sample loan first...
+  Database\Seeders\SampleLoanCollateralSeeder ................... 0.29 ms DONE  
+
+✅ [69/200] SampleLoanCollateralSeeder completed successfully
+[70/200] Running MaendeleoloansSeeder...
+  Database\Seeders\MaendeleoloansSeeder .............................. RUNNING  
+  Database\Seeders\MaendeleoloansSeeder ......................... 1.58 ms DONE  
+
+✅ [70/200] MaendeleoloansSeeder completed successfully
+[71/200] Running SettledloansSeeder...
+  Database\Seeders\SettledloansSeeder ................................ RUNNING  
+  Database\Seeders\SettledloansSeeder ........................... 1.33 ms DONE  
+
+✅ [71/200] SettledloansSeeder completed successfully
+[72/200] Running ShortlongtermloansSeeder...
+  Database\Seeders\ShortlongtermloansSeeder .......................... RUNNING  
+  Database\Seeders\ShortlongtermloansSeeder ..................... 2.12 ms DONE  
+
+✅ [72/200] ShortlongtermloansSeeder completed successfully
+[73/200] Running ApproversofloansstagesSeeder...
+  Database\Seeders\ApproversofloansstagesSeeder ...................... RUNNING  
+  Database\Seeders\ApproversofloansstagesSeeder ................. 1.47 ms DONE  
+
+✅ [73/200] ApproversofloansstagesSeeder completed successfully
+[74/200] Running BanksSeeder...
+  Database\Seeders\BanksSeeder ....................................... RUNNING  
+  Database\Seeders\BanksSeeder .................................. 2.05 ms DONE  
+
+✅ [74/200] BanksSeeder completed successfully
+[75/200] Running BankaccountsSeeder...
+  Database\Seeders\BankaccountsSeeder ................................ RUNNING  
+  Database\Seeders\BankaccountsSeeder ........................... 4.35 ms DONE  
+
+✅ [75/200] BankaccountsSeeder completed successfully
+[76/200] Running BanktransactionsSeeder...
+  Database\Seeders\BanktransactionsSeeder ............................ RUNNING  
+  Database\Seeders\BanktransactionsSeeder ....................... 3.82 ms DONE  
+
+✅ [76/200] BanktransactionsSeeder completed successfully
+[77/200] Running BanktransfersSeeder...
+  Database\Seeders\BanktransfersSeeder ............................... RUNNING  
+  Database\Seeders\BanktransfersSeeder .......................... 4.47 ms DONE  
+
+✅ [77/200] BanktransfersSeeder completed successfully
+[78/200] Running BankstatementsstagingtableSeeder...
+  Database\Seeders\BankstatementsstagingtableSeeder .................. RUNNING  
+  Database\Seeders\BankstatementsstagingtableSeeder ............. 1.41 ms DONE  
+
+✅ [78/200] BankstatementsstagingtableSeeder completed successfully
+[79/200] Running TransactionsSeeder...
+  Database\Seeders\TransactionsSeeder ................................ RUNNING  
+  Database\Seeders\TransactionsSeeder .......................... 20.94 ms DONE  
+
+✅ [79/200] TransactionsSeeder completed successfully
+[80/200] Running TransactionauditlogsSeeder...
+  Database\Seeders\TransactionauditlogsSeeder ........................ RUNNING  
+  Database\Seeders\TransactionauditlogsSeeder ................... 3.14 ms DONE  
+
+✅ [80/200] TransactionauditlogsSeeder completed successfully
+[81/200] Running TransactionreversalsSeeder...
+  Database\Seeders\TransactionreversalsSeeder ........................ RUNNING  
+  Database\Seeders\TransactionreversalsSeeder ................... 5.51 ms DONE  
+
+✅ [81/200] TransactionreversalsSeeder completed successfully
+[82/200] Running ReconciledtransactionsSeeder...
+  Database\Seeders\ReconciledtransactionsSeeder ...................... RUNNING  
+  Database\Seeders\ReconciledtransactionsSeeder ................. 1.63 ms DONE  
+
+✅ [82/200] ReconciledtransactionsSeeder completed successfully
+[83/200] Running ReconciliationstagingtableSeeder...
+  Database\Seeders\ReconciliationstagingtableSeeder .................. RUNNING  
+  Database\Seeders\ReconciliationstagingtableSeeder ............. 1.17 ms DONE  
+
+✅ [83/200] ReconciliationstagingtableSeeder completed successfully
+[84/200] Running ImbanktransactionsSeeder...
+  Database\Seeders\ImbanktransactionsSeeder .......................... RUNNING  
+  Database\Seeders\ImbanktransactionsSeeder ..................... 2.20 ms DONE  
+
+✅ [84/200] ImbanktransactionsSeeder completed successfully
+[85/200] Running GepgtransactionsSeeder...
+  Database\Seeders\GepgtransactionsSeeder ............................ RUNNING  
+  Database\Seeders\GepgtransactionsSeeder ....................... 2.50 ms DONE  
+
+✅ [85/200] GepgtransactionsSeeder completed successfully
+[86/200] Running InternaltransfersSeeder...
+  Database\Seeders\InternaltransfersSeeder ........................... RUNNING  
+  Database\Seeders\InternaltransfersSeeder ...................... 3.43 ms DONE  
+
+✅ [86/200] InternaltransfersSeeder completed successfully
+[87/200] Running TillsSeeder...
+  Database\Seeders\TillsSeeder ....................................... RUNNING  
+  Database\Seeders\TillsSeeder .................................. 8.90 ms DONE  
+
+✅ [87/200] TillsSeeder completed successfully
+[88/200] Running TilltransactionsSeeder...
+  Database\Seeders\TilltransactionsSeeder ............................ RUNNING  
+  Database\Seeders\TilltransactionsSeeder ....................... 3.95 ms DONE  
+
+✅ [88/200] TilltransactionsSeeder completed successfully
+[89/200] Running TillreconciliationsSeeder...
+  Database\Seeders\TillreconciliationsSeeder ......................... RUNNING  
+  Database\Seeders\TillreconciliationsSeeder .................... 3.45 ms DONE  
+
+✅ [89/200] TillreconciliationsSeeder completed successfully
+[90/200] Running TellerendofdaypositionsSeeder...
+  Database\Seeders\TellerendofdaypositionsSeeder ..................... RUNNING  
+  Database\Seeders\TellerendofdaypositionsSeeder ................ 1.84 ms DONE  
+
+✅ [90/200] TellerendofdaypositionsSeeder completed successfully
+[91/200] Running TellersSeeder...
+  Database\Seeders\TellersSeeder ..................................... RUNNING  
+  Database\Seeders\TellersSeeder ................................ 7.24 ms DONE  
+
+✅ [91/200] TellersSeeder completed successfully
+[92/200] Running CashmovementsSeeder...
+  Database\Seeders\CashmovementsSeeder ............................... RUNNING  
+  Database\Seeders\CashmovementsSeeder .......................... 2.87 ms DONE  
+
+✅ [92/200] CashmovementsSeeder completed successfully
+[93/200] Running CashflowconfigurationsSeeder...
+  Database\Seeders\CashflowconfigurationsSeeder ...................... RUNNING  
+  Database\Seeders\CashflowconfigurationsSeeder ................. 2.26 ms DONE  
+
+✅ [93/200] CashflowconfigurationsSeeder completed successfully
+[94/200] Running CashInTransitProvidersSeeder...
+  Database\Seeders\CashInTransitProvidersSeeder ...................... RUNNING  
+  Database\Seeders\CashInTransitProvidersSeeder ............... 231.27 ms DONE  
+
+✅ [94/200] CashInTransitProvidersSeeder completed successfully
+[95/200] Running VaultsSeeder...
+  Database\Seeders\VaultsSeeder ...................................... RUNNING  
+No branches found. Skipping VaultsSeeder.
+  Database\Seeders\VaultsSeeder ................................ 11.55 ms DONE  
+
+✅ [95/200] VaultsSeeder completed successfully
+[96/200] Running StrongroomledgersSeeder...
+  Database\Seeders\StrongroomledgersSeeder ........................... RUNNING  
+  Database\Seeders\StrongroomledgersSeeder ...................... 4.54 ms DONE  
+
+✅ [96/200] StrongroomledgersSeeder completed successfully
+[97/200] Running SecuritytransportlogsSeeder...
+  Database\Seeders\SecuritytransportlogsSeeder ....................... RUNNING  
+  Database\Seeders\SecuritytransportlogsSeeder .................. 3.77 ms DONE  
+
+✅ [97/200] SecuritytransportlogsSeeder completed successfully
+[98/200] Running PaymentmethodsSeeder...
+  Database\Seeders\PaymentmethodsSeeder .............................. RUNNING  
+  Database\Seeders\PaymentmethodsSeeder ......................... 1.55 ms DONE  
+
+✅ [98/200] PaymentmethodsSeeder completed successfully
+[99/200] Running PaymentsSeeder...
+  Database\Seeders\PaymentsSeeder .................................... RUNNING  
+  Database\Seeders\PaymentsSeeder ............................... 3.21 ms DONE  
+
+✅ [99/200] PaymentsSeeder completed successfully
+[100/200] Running PaymentnotificationsSeeder...
+  Database\Seeders\PaymentnotificationsSeeder ........................ RUNNING  
+  Database\Seeders\PaymentnotificationsSeeder ................... 2.25 ms DONE  
+
+✅ [100/200] PaymentnotificationsSeeder completed successfully
+[101/200] Running BillsSeeder...
+  Database\Seeders\BillsSeeder ....................................... RUNNING  
+Skipping bill - no services found
+Skipping bill - no services found
+Skipping bill - no services found
+Skipping bill - no services found
+Skipping bill - no services found
+Skipping bill - no services found
+Skipping bill - no services found
+Skipping bill - no services found
+Skipping bill - no services found
+Skipping bill - no services found
+  Database\Seeders\BillsSeeder .................................. 6.83 ms DONE  
+
+✅ [101/200] BillsSeeder completed successfully
+[102/200] Running BillingcyclesSeeder...
+  Database\Seeders\BillingcyclesSeeder ............................... RUNNING  
+  Database\Seeders\BillingcyclesSeeder .......................... 1.76 ms DONE  
+
+✅ [102/200] BillingcyclesSeeder completed successfully
+[103/200] Running OrdersSeeder...
+  Database\Seeders\OrdersSeeder ...................................... RUNNING  
+  Database\Seeders\OrdersSeeder ................................. 1.86 ms DONE  
+
+✅ [103/200] OrdersSeeder completed successfully
+[104/200] Running ChequesSeeder...
+  Database\Seeders\ChequesSeeder ..................................... RUNNING  
+  Database\Seeders\ChequesSeeder ................................ 1.51 ms DONE  
+
+✅ [104/200] ChequesSeeder completed successfully
+[105/200] Running ChequebooksSeeder...
+  Database\Seeders\ChequebooksSeeder ................................. RUNNING  
+  Database\Seeders\ChequebooksSeeder ............................ 1.54 ms DONE  
+
+✅ [105/200] ChequebooksSeeder completed successfully
+[106/200] Running ShareownershipSeeder...
+  Database\Seeders\ShareownershipSeeder .............................. RUNNING  
+  Database\Seeders\ShareownershipSeeder ......................... 1.43 ms DONE  
+
+✅ [106/200] ShareownershipSeeder completed successfully
+[107/200] Running SharetransfersSeeder...
+  Database\Seeders\SharetransfersSeeder .............................. RUNNING  
+  Database\Seeders\SharetransfersSeeder ......................... 3.37 ms DONE  
+
+✅ [107/200] SharetransfersSeeder completed successfully
+[108/200] Running SharewithdrawalsSeeder...
+  Database\Seeders\SharewithdrawalsSeeder ............................ RUNNING  
+  Database\Seeders\SharewithdrawalsSeeder ....................... 2.07 ms DONE  
+
+✅ [108/200] SharewithdrawalsSeeder completed successfully
+[109/200] Running IssuedsharesSeeder...
+  Database\Seeders\IssuedsharesSeeder ................................ RUNNING  
+  Database\Seeders\IssuedsharesSeeder ........................... 3.51 ms DONE  
+
+✅ [109/200] IssuedsharesSeeder completed successfully
+[110/200] Running InvestmentslistSeeder...
+  Database\Seeders\InvestmentslistSeeder ............................. RUNNING  
+  Database\Seeders\InvestmentslistSeeder ........................ 1.86 ms DONE  
+
+✅ [110/200] InvestmentslistSeeder completed successfully
+[111/200] Running InvestmenttypesSeeder...
+  Database\Seeders\InvestmenttypesSeeder ............................. RUNNING  
+  Database\Seeders\InvestmenttypesSeeder ........................ 1.42 ms DONE  
+
+✅ [111/200] InvestmenttypesSeeder completed successfully
+[112/200] Running DividendsSeeder...
+  Database\Seeders\DividendsSeeder ................................... RUNNING  
+  Database\Seeders\DividendsSeeder .............................. 3.31 ms DONE  
+
+✅ [112/200] DividendsSeeder completed successfully
+[113/200] Running ExpensesSeeder...
+  Database\Seeders\ExpensesSeeder .................................... RUNNING  
+Skipping expense - no suitable account found
+Skipping expense - no suitable account found
+  Database\Seeders\ExpensesSeeder ............................... 4.00 ms DONE  
+
+✅ [113/200] ExpensesSeeder completed successfully
+[114/200] Running ExpenseapprovalsSeeder...
+  Database\Seeders\ExpenseapprovalsSeeder ............................ RUNNING  
+  Database\Seeders\ExpenseapprovalsSeeder ....................... 2.01 ms DONE  
+
+✅ [114/200] ExpenseapprovalsSeeder completed successfully
+[115/200] Running BudgetmanagementsSeeder...
+  Database\Seeders\BudgetmanagementsSeeder ........................... RUNNING  
+  Database\Seeders\BudgetmanagementsSeeder ..................... 21.54 ms DONE  
+
+✅ [115/200] BudgetmanagementsSeeder completed successfully
+[116/200] Running BudgetapproversSeeder...
+  Database\Seeders\BudgetapproversSeeder ............................. RUNNING  
+  Database\Seeders\BudgetapproversSeeder ........................ 2.24 ms DONE  
+
+✅ [116/200] BudgetapproversSeeder completed successfully
+[117/200] Running MainbudgetSeeder...
+  Database\Seeders\MainbudgetSeeder .................................. RUNNING  
+  Database\Seeders\MainbudgetSeeder ............................. 1.53 ms DONE  
+
+✅ [117/200] MainbudgetSeeder completed successfully
+[118/200] Running MainbudgetpendingSeeder...
+  Database\Seeders\MainbudgetpendingSeeder ........................... RUNNING  
+  Database\Seeders\MainbudgetpendingSeeder ...................... 2.97 ms DONE  
+
+✅ [118/200] MainbudgetpendingSeeder completed successfully
+[119/200] Running EmployeesSeeder...
+  Database\Seeders\EmployeesSeeder ................................... RUNNING  
+  Database\Seeders\EmployeesSeeder .............................. 8.58 ms DONE  
+
+✅ [119/200] EmployeesSeeder completed successfully
+[120/200] Running EmployeerolesSeeder...
+  Database\Seeders\EmployeerolesSeeder ............................... RUNNING  
+  Database\Seeders\EmployeerolesSeeder .......................... 1.24 ms DONE  
+
+✅ [120/200] EmployeerolesSeeder completed successfully
+[121/200] Running EmployeerequestsSeeder...
+  Database\Seeders\EmployeerequestsSeeder ............................ RUNNING  
+  Database\Seeders\EmployeerequestsSeeder ....................... 1.23 ms DONE  
+
+✅ [121/200] EmployeerequestsSeeder completed successfully
+[122/200] Running EmployeefilesSeeder...
+  Database\Seeders\EmployeefilesSeeder ............................... RUNNING  
+  Database\Seeders\EmployeefilesSeeder .......................... 1.14 ms DONE  
+
+✅ [122/200] EmployeefilesSeeder completed successfully
+[123/200] Running PayrollsSeeder...
+  Database\Seeders\PayrollsSeeder .................................... RUNNING  
+  Database\Seeders\PayrollsSeeder ............................... 2.22 ms DONE  
+
+✅ [123/200] PayrollsSeeder completed successfully
+[124/200] Running LeavesSeeder...
+  Database\Seeders\LeavesSeeder ...................................... RUNNING  
+  Database\Seeders\LeavesSeeder ................................. 1.95 ms DONE  
+
+✅ [124/200] LeavesSeeder completed successfully
+[125/200] Running LeavemanagementSeeder...
+  Database\Seeders\LeavemanagementSeeder ............................. RUNNING  
+  Database\Seeders\LeavemanagementSeeder ........................ 2.07 ms DONE  
+
+✅ [125/200] LeavemanagementSeeder completed successfully
+[126/200] Running BenefitsSeeder...
+  Database\Seeders\BenefitsSeeder .................................... RUNNING  
+  Database\Seeders\BenefitsSeeder ............................... 2.41 ms DONE  
+
+✅ [126/200] BenefitsSeeder completed successfully
+[127/200] Running HiresapprovalsSeeder...
+  Database\Seeders\HiresapprovalsSeeder .............................. RUNNING  
+Skipping hires_approval - no users found
+Skipping hires_approval - no users found
+  Database\Seeders\HiresapprovalsSeeder ......................... 2.02 ms DONE  
+
+✅ [127/200] HiresapprovalsSeeder completed successfully
+[128/200] Running InterviewsSeeder...
+  Database\Seeders\InterviewsSeeder .................................. RUNNING  
+  Database\Seeders\InterviewsSeeder ............................. 1.27 ms DONE  
+
+✅ [128/200] InterviewsSeeder completed successfully
+[129/200] Running JobpostingsSeeder...
+  Database\Seeders\JobpostingsSeeder ................................. RUNNING  
+  Database\Seeders\JobpostingsSeeder ............................ 5.20 ms DONE  
+
+✅ [129/200] JobpostingsSeeder completed successfully
+[130/200] Running ApprovalsSeeder...
+  Database\Seeders\ApprovalsSeeder ................................... RUNNING  
+  Database\Seeders\ApprovalsSeeder ............................. 30.05 ms DONE  
+
+✅ [130/200] ApprovalsSeeder completed successfully
+[131/200] Running ApprovalactionsSeeder...
+  Database\Seeders\ApprovalactionsSeeder ............................. RUNNING  
+  Database\Seeders\ApprovalactionsSeeder ........................ 1.62 ms DONE  
+
+✅ [131/200] ApprovalactionsSeeder completed successfully
+[132/200] Running ApprovalcommentsSeeder...
+  Database\Seeders\ApprovalcommentsSeeder ............................ RUNNING  
+  Database\Seeders\ApprovalcommentsSeeder ....................... 1.59 ms DONE  
+
+✅ [132/200] ApprovalcommentsSeeder completed successfully
+[133/200] Running ApprovalmatrixconfigsSeeder...
+  Database\Seeders\ApprovalmatrixconfigsSeeder ....................... RUNNING  
+  Database\Seeders\ApprovalmatrixconfigsSeeder .................. 1.23 ms DONE  
+
+✅ [133/200] ApprovalmatrixconfigsSeeder completed successfully
+[134/200] Running CommitteesSeeder...
+  Database\Seeders\CommitteesSeeder .................................. RUNNING  
+  Database\Seeders\CommitteesSeeder ............................. 8.19 ms DONE  
+
+✅ [134/200] CommitteesSeeder completed successfully
+[135/200] Running CommitteemembersSeeder...
+  Database\Seeders\CommitteemembersSeeder ............................ RUNNING  
+  Database\Seeders\CommitteemembersSeeder ....................... 2.78 ms DONE  
+
+✅ [135/200] CommitteemembersSeeder completed successfully
+[136/200] Running CommitteeSeeder...
+  Database\Seeders\CommitteeSeeder ................................... RUNNING  
+Committees already exist, skipping CommitteeSeeder
+  Database\Seeders\CommitteeSeeder .............................. 1.04 ms DONE  
+
+✅ [136/200] CommitteeSeeder completed successfully
+[137/200] Running CommitteeapprovalsSeeder...
+  Database\Seeders\CommitteeapprovalsSeeder .......................... RUNNING  
+  Database\Seeders\CommitteeapprovalsSeeder ..................... 2.76 ms DONE  
+
+✅ [137/200] CommitteeapprovalsSeeder completed successfully
+[138/200] Running ComplaintCategoriesSeeder...
+  Database\Seeders\ComplaintCategoriesSeeder ......................... RUNNING  
+  Database\Seeders\ComplaintCategoriesSeeder .................... 5.20 ms DONE  
+
+✅ [138/200] ComplaintCategoriesSeeder completed successfully
+[139/200] Running ComplaintStatusesSeeder...
+  Database\Seeders\ComplaintStatusesSeeder ........................... RUNNING  
+  Database\Seeders\ComplaintStatusesSeeder ...................... 5.04 ms DONE  
+
+✅ [139/200] ComplaintStatusesSeeder completed successfully
+[140/200] Running ComplaintsSeeder...
+  Database\Seeders\ComplaintsSeeder .................................. RUNNING  
+  Database\Seeders\ComplaintsSeeder ............................. 5.22 ms DONE  
+
+✅ [140/200] ComplaintsSeeder completed successfully
+[141/200] Running ReportsSeeder...
+  Database\Seeders\ReportsSeeder ..................................... RUNNING  
+  Database\Seeders\ReportsSeeder ................................ 2.11 ms DONE  
+
+✅ [141/200] ReportsSeeder completed successfully
+[142/200] Running ScheduledreportsSeeder...
+  Database\Seeders\ScheduledreportsSeeder ............................ RUNNING  
+Skipping scheduled_report - no users found
+Skipping scheduled_report - no users found
+  Database\Seeders\ScheduledreportsSeeder ....................... 3.05 ms DONE  
+
+✅ [142/200] ScheduledreportsSeeder completed successfully
+[143/200] Running DatafeedsSeeder...
+  Database\Seeders\DatafeedsSeeder ................................... RUNNING  
+  Database\Seeders\DatafeedsSeeder ............................. 55.60 ms DONE  
+
+✅ [143/200] DatafeedsSeeder completed successfully
+[144/200] Running FinancialdataSeeder...
+  Database\Seeders\FinancialdataSeeder ............................... RUNNING  
+  Database\Seeders\FinancialdataSeeder .......................... 1.73 ms DONE  
+
+✅ [144/200] FinancialdataSeeder completed successfully
+[145/200] Running FinancialpositionSeeder...
+  Database\Seeders\FinancialpositionSeeder ........................... RUNNING  
+  Database\Seeders\FinancialpositionSeeder ...................... 1.43 ms DONE  
+
+✅ [145/200] FinancialpositionSeeder completed successfully
+[146/200] Running FinancialratiosSeeder...
+  Database\Seeders\FinancialratiosSeeder ............................. RUNNING  
+  Database\Seeders\FinancialratiosSeeder ........................ 1.79 ms DONE  
+
+✅ [146/200] FinancialratiosSeeder completed successfully
+[147/200] Running AnalysissessionsSeeder...
+  Database\Seeders\AnalysissessionsSeeder ............................ RUNNING  
+  Database\Seeders\AnalysissessionsSeeder ....................... 2.84 ms DONE  
+
+✅ [147/200] AnalysissessionsSeeder completed successfully
+[148/200] Running ScoresSeeder...
+  Database\Seeders\ScoresSeeder ...................................... RUNNING  
+  Database\Seeders\ScoresSeeder ................................. 2.22 ms DONE  
+
+✅ [148/200] ScoresSeeder completed successfully
+[149/200] Running ChargesSeeder...
+  Database\Seeders\ChargesSeeder ..................................... RUNNING  
+  Database\Seeders\ChargesSeeder ................................ 1.42 ms DONE  
+
+✅ [149/200] ChargesSeeder completed successfully
+[150/200] Running ChargeslistSeeder...
+  Database\Seeders\ChargeslistSeeder ................................. RUNNING  
+  Database\Seeders\ChargeslistSeeder ............................ 1.02 ms DONE  
+
+✅ [150/200] ChargeslistSeeder completed successfully
+[151/200] Running InsurancesSeeder...
+  Database\Seeders\InsurancesSeeder .................................. RUNNING  
+  Database\Seeders\InsurancesSeeder ............................. 1.82 ms DONE  
+
+✅ [151/200] InsurancesSeeder completed successfully
+[152/200] Running InsurancelistSeeder...
+  Database\Seeders\InsurancelistSeeder ............................... RUNNING  
+  Database\Seeders\InsurancelistSeeder .......................... 0.95 ms DONE  
+
+✅ [152/200] InsurancelistSeeder completed successfully
+[153/200] Running InterestpayablesSeeder...
+  Database\Seeders\InterestpayablesSeeder ............................ RUNNING  
+  Database\Seeders\InterestpayablesSeeder ....................... 2.07 ms DONE  
+
+✅ [153/200] InterestpayablesSeeder completed successfully
+[154/200] Running AssetslistSeeder...
+  Database\Seeders\AssetslistSeeder .................................. RUNNING  
+  Database\Seeders\AssetslistSeeder ............................. 0.95 ms DONE  
+
+✅ [154/200] AssetslistSeeder completed successfully
+[155/200] Running AsseturlSeeder...
+  Database\Seeders\AsseturlSeeder .................................... RUNNING  
+  Database\Seeders\AsseturlSeeder ............................... 0.69 ms DONE  
+
+✅ [155/200] AsseturlSeeder completed successfully
+[156/200] Running PpesSeeder...
+  Database\Seeders\PpesSeeder ........................................ RUNNING  
+  Database\Seeders\PpesSeeder ................................... 2.10 ms DONE  
+
+✅ [156/200] PpesSeeder completed successfully
+[157/200] Running InventoriesSeeder...
+  Database\Seeders\InventoriesSeeder ................................. RUNNING  
+  Database\Seeders\InventoriesSeeder ............................ 1.83 ms DONE  
+
+✅ [157/200] InventoriesSeeder completed successfully
+[158/200] Running LandedpropertytypesSeeder...
+  Database\Seeders\LandedpropertytypesSeeder ......................... RUNNING  
+  Database\Seeders\LandedpropertytypesSeeder .................... 1.11 ms DONE  
+
+✅ [158/200] LandedpropertytypesSeeder completed successfully
+[159/200] Running MovablepropertytypesSeeder...
+  Database\Seeders\MovablepropertytypesSeeder ........................ RUNNING  
+  Database\Seeders\MovablepropertytypesSeeder ................... 2.51 ms DONE  
+
+✅ [159/200] MovablepropertytypesSeeder completed successfully
+[160/200] Running VendorsSeeder...
+  Database\Seeders\VendorsSeeder ..................................... RUNNING  
+  Database\Seeders\VendorsSeeder ................................ 1.41 ms DONE  
+
+✅ [160/200] VendorsSeeder completed successfully
+[161/200] Running ContractmanagementsSeeder...
+  Database\Seeders\ContractmanagementsSeeder ......................... RUNNING  
+  Database\Seeders\ContractmanagementsSeeder .................... 1.54 ms DONE  
+
+✅ [161/200] ContractmanagementsSeeder completed successfully
+[162/200] Running TendersSeeder...
+  Database\Seeders\TendersSeeder ..................................... RUNNING  
+  Database\Seeders\TendersSeeder ................................ 1.51 ms DONE  
+
+✅ [162/200] TendersSeeder completed successfully
+[163/200] Running PurchasesSeeder...
+  Database\Seeders\PurchasesSeeder ................................... RUNNING  
+  Database\Seeders\PurchasesSeeder .............................. 2.82 ms DONE  
+
+✅ [163/200] PurchasesSeeder completed successfully
+[164/200] Running NotificationsSeeder...
+  Database\Seeders\NotificationsSeeder ............................... RUNNING  
+  Database\Seeders\NotificationsSeeder .......................... 3.81 ms DONE  
+
+✅ [164/200] NotificationsSeeder completed successfully
+[165/200] Running NotificationlogsSeeder...
+  Database\Seeders\NotificationlogsSeeder ............................ RUNNING  
+  Database\Seeders\NotificationlogsSeeder ....................... 4.10 ms DONE  
+
+✅ [165/200] NotificationlogsSeeder completed successfully
+[166/200] Running EmailsSeeder...
+  Database\Seeders\EmailsSeeder ...................................... RUNNING  
+Not enough users to seed emails. Skipping...
+  Database\Seeders\EmailsSeeder ................................. 0.15 ms DONE  
+
+✅ [166/200] EmailsSeeder completed successfully
+[167/200] Running MandatorysavingsnotificationsSeeder...
+  Database\Seeders\MandatorysavingsnotificationsSeeder ............... RUNNING  
+  Database\Seeders\MandatorysavingsnotificationsSeeder .......... 3.44 ms DONE  
+
+✅ [167/200] MandatorysavingsnotificationsSeeder completed successfully
+[168/200] Running QueryresponsesSeeder...
+  Database\Seeders\QueryresponsesSeeder .............................. RUNNING  
+  Database\Seeders\QueryresponsesSeeder ......................... 1.80 ms DONE  
+
+✅ [168/200] QueryresponsesSeeder completed successfully
+[169/200] Running AuditlogsSeeder...
+  Database\Seeders\AuditlogsSeeder ................................... RUNNING  
+Skipping audit_log - no users found
+Skipping audit_log - no users found
+  Database\Seeders\AuditlogsSeeder .............................. 1.77 ms DONE  
+
+✅ [169/200] AuditlogsSeeder completed successfully
+[170/200] Running UseractionlogsSeeder...
+  Database\Seeders\UseractionlogsSeeder .............................. RUNNING  
+Skipping user_action_log - no users found
+Skipping user_action_log - no users found
+  Database\Seeders\UseractionlogsSeeder ......................... 1.52 ms DONE  
+
+✅ [170/200] UseractionlogsSeeder completed successfully
+[171/200] Running ApikeysSeeder...
+  Database\Seeders\ApikeysSeeder ..................................... RUNNING  
+Skipping api_key - no users found
+Skipping api_key - no users found
+  Database\Seeders\ApikeysSeeder ................................ 1.87 ms DONE  
+
+✅ [171/200] ApikeysSeeder completed successfully
+[172/200] Running ProcessCodeConfigsSeeder...
+  Database\Seeders\ProcessCodeConfigsSeeder .......................... RUNNING  
+  Database\Seeders\ProcessCodeConfigsSeeder .................... 11.18 ms DONE  
+
+✅ [172/200] ProcessCodeConfigsSeeder completed successfully
+[173/200] Running CallbackSeeder...
+  Database\Seeders\CallbackSeeder .................................... RUNNING  
+  Database\Seeders\CallbackSeeder ............................... 1.90 ms DONE  
+
+✅ [173/200] CallbackSeeder completed successfully
+[174/200] Running OnboardingSeeder...
+  Database\Seeders\OnboardingSeeder .................................. RUNNING  
+Skipping onboarding record - no users found
+Skipping onboarding record - no users found
+  Database\Seeders\OnboardingSeeder ............................. 0.72 ms DONE  
+
+✅ [174/200] OnboardingSeeder completed successfully
+[175/200] Running AiinteractionsSeeder...
+  Database\Seeders\AiinteractionsSeeder .............................. RUNNING  
+Skipping ai_interaction - no users found
+Skipping ai_interaction - no users found
+  Database\Seeders\AiinteractionsSeeder ......................... 2.43 ms DONE  
+
+✅ [175/200] AiinteractionsSeeder completed successfully
+[176/200] Running CurrenciesSeeder...
+  Database\Seeders\CurrenciesSeeder .................................. RUNNING  
+  Database\Seeders\CurrenciesSeeder ............................. 1.17 ms DONE  
+
+✅ [176/200] CurrenciesSeeder completed successfully
+[177/200] Running DocumenttypesSeeder...
+  Database\Seeders\DocumenttypesSeeder ............................... RUNNING  
+  Database\Seeders\DocumenttypesSeeder .......................... 1.28 ms DONE  
+
+✅ [177/200] DocumenttypesSeeder completed successfully
+[178/200] Running MobileNetworksSeeder...
+  Database\Seeders\MobileNetworksSeeder .............................. RUNNING  
+  Database\Seeders\MobileNetworksSeeder ......................... 1.82 ms DONE  
+
+✅ [178/200] MobileNetworksSeeder completed successfully
+[179/200] Running MnosSeeder...
+  Database\Seeders\MnosSeeder ........................................ RUNNING  
+  Database\Seeders\MnosSeeder ................................... 2.54 ms DONE  
+
+✅ [179/200] MnosSeeder completed successfully
+[180/200] Running TaxesSeeder...
+  Database\Seeders\TaxesSeeder ....................................... RUNNING  
+  Database\Seeders\TaxesSeeder .................................. 1.55 ms DONE  
+
+✅ [180/200] TaxesSeeder completed successfully
+[181/200] Running StandinginstructionsSeeder...
+  Database\Seeders\StandinginstructionsSeeder ........................ RUNNING  
+  Database\Seeders\StandinginstructionsSeeder ................... 1.99 ms DONE  
+
+✅ [181/200] StandinginstructionsSeeder completed successfully
+[182/200] Running LockedamountsSeeder...
+  Database\Seeders\LockedamountsSeeder ............................... RUNNING  
+Skipping locked amount with account_id 262 - account doesn't exist
+  Database\Seeders\LockedamountsSeeder .......................... 2.49 ms DONE  
+
+✅ [182/200] LockedamountsSeeder completed successfully
+[183/200] Running LossreservesSeeder...
+  Database\Seeders\LossreservesSeeder ................................ RUNNING  
+  Database\Seeders\LossreservesSeeder ........................... 1.39 ms DONE  
+
+✅ [183/200] LossreservesSeeder completed successfully
+[184/200] Running MandatorySavingsSettingsSeeder...
+  Database\Seeders\MandatorySavingsSettingsSeeder .................... RUNNING  
+  Database\Seeders\MandatorySavingsSettingsSeeder ............... 1.61 ms DONE  
+
+✅ [184/200] MandatorySavingsSettingsSeeder completed successfully
+[185/200] Running MandatorysavingstrackingSeeder...
+  Database\Seeders\MandatorysavingstrackingSeeder .................... RUNNING  
+  Database\Seeders\MandatorysavingstrackingSeeder ............... 3.72 ms DONE  
+
+✅ [185/200] MandatorysavingstrackingSeeder completed successfully
+[186/200] Running UnearneddeferredrevenueSeeder...
+  Database\Seeders\UnearneddeferredrevenueSeeder ..................... RUNNING  
+  Database\Seeders\UnearneddeferredrevenueSeeder ................ 1.99 ms DONE  
+
+✅ [186/200] UnearneddeferredrevenueSeeder completed successfully
+[187/200] Running PayablesSeeder...
+  Database\Seeders\PayablesSeeder .................................... RUNNING  
+  Database\Seeders\PayablesSeeder ............................... 1.51 ms DONE  
+
+✅ [187/200] PayablesSeeder completed successfully
+[188/200] Running ReceivablesSeeder...
+  Database\Seeders\ReceivablesSeeder ................................. RUNNING  
+  Database\Seeders\ReceivablesSeeder ............................ 2.04 ms DONE  
+
+✅ [188/200] ReceivablesSeeder completed successfully
+[189/200] Running TemppermissionsSeeder...
+  Database\Seeders\TemppermissionsSeeder ............................. RUNNING  
+  Database\Seeders\TemppermissionsSeeder ........................ 3.49 ms DONE  
+
+✅ [189/200] TemppermissionsSeeder completed successfully
+[190/200] Running GroupsSeeder...
+  Database\Seeders\GroupsSeeder ...................................... RUNNING  
+  Database\Seeders\GroupsSeeder ................................. 1.72 ms DONE  
+
+✅ [190/200] GroupsSeeder completed successfully
+[191/200] Running MeetingsSeeder...
+  Database\Seeders\MeetingsSeeder .................................... RUNNING  
+  Database\Seeders\MeetingsSeeder ............................... 3.69 ms DONE  
+
+✅ [191/200] MeetingsSeeder completed successfully
+[192/200] Running MeetingattendanceSeeder...
+  Database\Seeders\MeetingattendanceSeeder ........................... RUNNING  
+  Database\Seeders\MeetingattendanceSeeder ...................... 2.35 ms DONE  
+
+✅ [192/200] MeetingattendanceSeeder completed successfully
+[193/200] Running MeetingdocumentsSeeder...
+  Database\Seeders\MeetingdocumentsSeeder ............................ RUNNING  
+  Database\Seeders\MeetingdocumentsSeeder ....................... 2.41 ms DONE  
+
+✅ [193/200] MeetingdocumentsSeeder completed successfully
+[194/200] Running LeadershipsSeeder...
+  Database\Seeders\LeadershipsSeeder ................................. RUNNING  
+  Database\Seeders\LeadershipsSeeder ............................ 4.88 ms DONE  
+
+✅ [194/200] LeadershipsSeeder completed successfully
+[195/200] Running ApplicantsSeeder...
+  Database\Seeders\ApplicantsSeeder .................................. RUNNING  
+  Database\Seeders\ApplicantsSeeder ............................. 4.04 ms DONE  
+
+✅ [195/200] ApplicantsSeeder completed successfully
+[196/200] Running InstitutionfilesSeeder...
+  Database\Seeders\InstitutionfilesSeeder ............................ RUNNING  
+  Database\Seeders\InstitutionfilesSeeder ....................... 1.62 ms DONE  
+
+✅ [196/200] InstitutionfilesSeeder completed successfully
+[197/200] Running ProjectSeeder...
+  Database\Seeders\ProjectSeeder ..................................... RUNNING  
+  Database\Seeders\ProjectSeeder ................................ 2.10 ms DONE  
+
+✅ [197/200] ProjectSeeder completed successfully
+[198/200] Running EntriesSeeder...
+  Database\Seeders\EntriesSeeder ..................................... RUNNING  
+  Database\Seeders\EntriesSeeder ................................ 1.93 ms DONE  
+
+✅ [198/200] EntriesSeeder completed successfully
+[199/200] Running EntriesamountSeeder...
+  Database\Seeders\EntriesamountSeeder ............................... RUNNING  
+  Database\Seeders\EntriesamountSeeder .......................... 1.83 ms DONE  
+
+✅ [199/200] EntriesamountSeeder completed successfully
+[200/200] Running VerifySetupSeeder...
+  Database\Seeders\VerifySetupSeeder ................................. RUNNING  
+
+=== VERIFYING AND FIXING DATABASE SETUP ===
+
+📋 VERIFICATION RESULTS:
+========================
+Issues Found:
+  ❌ No branches found
+  ❌ Only 0 users found (expected 3)
+  ❌ 3 users without roles
+
+Fixes Applied:
+  ✅ Created Headquarters branch
+  ✅ Created 3 default users
+  ✅ Assigned roles to 3 users
+
+📊 FINAL DATABASE STATUS:
+========================
+• Users: 3
+• Branches: 1
+• Roles: 2
+• Menus with names: 31
+• User-Role assignments: 3
+• Role-Menu actions: 62
+
+✅ All users have roles assigned
+• System Administrator has access to 31 menus
+• Institution Administrator has access to 31 menus
+
+🎉 DATABASE SETUP VERIFIED AND COMPLETE! 🎉
+===========================================
+
+  Database\Seeders\VerifySetupSeeder .......................... 143.43 ms DONE  
+
+✅ [200/200] VerifySetupSeeder completed successfully
+
+============================================================
+DATABASE SEEDING SUMMARY
+============================================================
+Total seeders: 200
+Successful: 200
+Failed: 0
+============================================================
+
+Final Database State:
+----------------------------------------
+Users: 3
+Branches: 1
+Institutions: 11
+Clients: 2
+Accounts: 0
+Loans: 0
+Transactions: 0
+----------------------------------------

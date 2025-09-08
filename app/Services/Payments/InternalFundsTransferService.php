@@ -53,36 +53,52 @@ class InternalFundsTransferService
                 throw new Exception("Invalid account number format");
             }
 
-            // For IFT, we don't need external API verification
+            // For IFT, query internal account database
             // NBC internal accounts are validated locally
             // Account format: 12 digits starting with 011 or 060
             
             $duration = round((microtime(true) - $startTime) * 1000, 2);
             
-            // Simulate successful lookup for valid NBC accounts
-            $accountName = 'NBC Account Holder';
-            $branchCode = substr($accountNumber, 0, 3);
-            $branchName = $branchCode === '011' ? 'NBC Main Branch' : 'NBC Branch';
-            
-            $this->logInfo("Internal account validated successfully", [
-                'account' => $accountNumber,
-                'name' => $accountName,
-                'branch' => $branchName,
-                'duration_ms' => $duration
-            ]);
+            // Query actual account from database or internal API
+            try {
+                // Real implementation would query internal NBC account database
+                $accountData = $this->queryInternalAccount($accountNumber);
+                
+                if (!$accountData) {
+                    throw new \Exception("Account not found");
+                }
+                
+                $this->logInfo("Internal account validated successfully", [
+                    'account' => $accountNumber,
+                    'name' => $accountData['account_name'] ?? 'Unknown',
+                    'branch' => $accountData['branch_name'] ?? 'Unknown',
+                    'duration_ms' => $duration
+                ]);
 
-            return [
-                'success' => true,
-                'account_number' => $accountNumber,
-                'account_name' => $accountName,
-                'account_status' => 'ACTIVE',
-                'branch_code' => $branchCode,
-                'branch_name' => $branchName,
-                'currency' => 'TZS',
-                'can_receive' => true,
-                'can_debit' => $accountType === 'source',
-                'response_time' => $duration
-            ];
+                return [
+                    'success' => true,
+                    'account_number' => $accountNumber,
+                    'account_name' => $accountData['account_name'] ?? 'Unknown',
+                    'account_status' => $accountData['status'] ?? 'ACTIVE',
+                    'branch_code' => $accountData['branch_code'] ?? substr($accountNumber, 0, 3),
+                    'branch_name' => $accountData['branch_name'] ?? 'Unknown',
+                    'currency' => 'TZS',
+                    'can_receive' => true,
+                    'can_debit' => $accountType === 'source',
+                    'response_time' => $duration
+                ];
+            } catch (\Exception $e) {
+                $this->logError("Internal account lookup failed", [
+                    'account' => $accountNumber,
+                    'error' => $e->getMessage()
+                ]);
+                
+                return [
+                    'success' => false,
+                    'error' => 'Account verification failed',
+                    'message' => $e->getMessage()
+                ];
+            }
 
         } catch (Exception $e) {
             $this->logError("Internal account lookup failed", [
@@ -273,6 +289,43 @@ class InternalFundsTransferService
         }
 
         return true;
+    }
+    
+    /**
+     * Query internal account from database
+     * 
+     * @param string $accountNumber
+     * @return array|null
+     */
+    private function queryInternalAccount(string $accountNumber): ?array
+    {
+        try {
+            // Query from accounts table or internal API
+            $account = \DB::table('accounts')
+                ->where('account_number', $accountNumber)
+                ->where('status', 'ACTIVE')
+                ->first();
+                
+            if ($account) {
+                return [
+                    'account_name' => $account->account_name ?? $account->name ?? 'NBC Account Holder',
+                    'branch_code' => $account->branch_code ?? substr($accountNumber, 0, 3),
+                    'branch_name' => $account->branch_name ?? 'NBC Branch',
+                    'status' => $account->status ?? 'ACTIVE',
+                    'account_type' => $account->account_type ?? 'SAVINGS'
+                ];
+            }
+            
+            // If not in database, could call internal NBC API here
+            // For now, return null if not found
+            return null;
+            
+        } catch (\Exception $e) {
+            $this->logError("Database query failed", [
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
     }
 
     /**

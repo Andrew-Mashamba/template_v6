@@ -8,8 +8,12 @@ use Livewire\Component;
 
 class Provision extends Component
 {
+    // Show new system indicator
+    public $showNewSystem = true;
+    
     public function render()
     {
+        // Keep the old functionality as backup but recommend using the new system
         $loan=$this->getLoanOnProvision();
 
         foreach($loan as $data){
@@ -19,7 +23,13 @@ class Provision extends Component
             $data['date']=$this->getLastRepaymentDate($data->id);
             $data['provision_rate']=$this->provisionPercent($data->id);
         }
-        return view('livewire.accounting.provision',['loan'=> $loan,'summary'=>$this->provisionSummary()]);
+        
+        // Show both old and new interface
+        return view('livewire.accounting.provision-enhanced',[
+            'loan'=> $loan,
+            'summary'=>$this->provisionSummary(),
+            'showNewSystem' => $this->showNewSystem
+        ]);
     }
 
 

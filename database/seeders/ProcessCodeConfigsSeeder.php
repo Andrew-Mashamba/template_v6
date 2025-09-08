@@ -853,7 +853,7 @@ class ProcessCodeConfigsSeeder extends Seeder
                 'approver_roles' => null,
             ],
             [
-                'id' => 45,
+                'id' => 68,
                 'process_code' => 'TELLER_ASSIGN',
                 'process_name' => 'Assign Teller',
                 'description' => 'Approval for teller assignments',
@@ -870,7 +870,7 @@ class ProcessCodeConfigsSeeder extends Seeder
                 'approver_roles' => null,
             ],
             [
-                'id' => 46,
+                'id' => 69,
                 'process_code' => 'TELLER_CASH',
                 'process_name' => 'Teller Cash Management',
                 'description' => 'Approval for teller cash operations',
@@ -887,7 +887,7 @@ class ProcessCodeConfigsSeeder extends Seeder
                 'approver_roles' => null,
             ],
             [
-                'id' => 47,
+                'id' => 70,
                 'process_code' => 'RECON_DAILY',
                 'process_name' => 'Daily Reconciliation',
                 'description' => 'Approval for daily reconciliations',
@@ -904,7 +904,7 @@ class ProcessCodeConfigsSeeder extends Seeder
                 'approver_roles' => null,
             ],
             [
-                'id' => 48,
+                'id' => 71,
                 'process_code' => 'RECON_MONTHLY',
                 'process_name' => 'Monthly Reconciliation',
                 'description' => 'Approval for monthly reconciliations',
@@ -921,7 +921,7 @@ class ProcessCodeConfigsSeeder extends Seeder
                 'approver_roles' => null,
             ],
             [
-                'id' => 49,
+                'id' => 72,
                 'process_code' => 'HR_HIRE',
                 'process_name' => 'Staff Hiring',
                 'description' => 'Approval for new staff hiring',
@@ -938,7 +938,7 @@ class ProcessCodeConfigsSeeder extends Seeder
                 'approver_roles' => null,
             ],
             [
-                'id' => 50,
+                'id' => 73,
                 'process_code' => 'HR_TERMINATE',
                 'process_name' => 'Staff Termination',
                 'description' => 'Approval for staff termination',

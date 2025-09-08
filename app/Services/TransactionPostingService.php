@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\AccountsModel;
 use App\Models\general_ledger;
+use App\Jobs\SendTransactionNotification;
+use App\Jobs\SendControlTransactionNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -67,11 +69,32 @@ class TransactionPostingService
                 ? $secondAccount 
                 : $firstAccount;
 
+            // Validate account balances and business rules before processing
+            $this->validateAccountBalances($debitAccountDetails, $creditAccountDetails, $amount);
+            $this->validateBusinessRules($debitAccountDetails, $creditAccountDetails, $amount);
+
             // Process the transaction
             $this->processTransaction($referenceNumber, $debitAccountDetails, $creditAccountDetails, $amount, $narration);
 
+            // Get post-transaction balances for notifications
+            $debitNewBalance = AccountsModel::where('account_number', $debitAccountDetails->account_number)->value('balance');
+            $creditNewBalance = AccountsModel::where('account_number', $creditAccountDetails->account_number)->value('balance');
+
             DB::commit();
             $this->logger->logTransactionCompletion($referenceNumber, 'success');
+
+            // Send notifications for member accounts (non-blocking via queue)
+            $this->dispatchTransactionNotifications(
+                $debitAccountDetails, 
+                $creditAccountDetails, 
+                $amount, 
+                $debitNewBalance, 
+                $creditNewBalance, 
+                $referenceNumber, 
+                $narration,
+                'success'
+            );
+
             return ['status' => 'success', 'reference_number' => $referenceNumber];
         } catch (Exception $e) {
             DB::rollBack();
@@ -79,6 +102,22 @@ class TransactionPostingService
                 'transaction_data' => $data,
                 'reference_number' => $referenceNumber ?? null
             ]);
+
+            // Send failure notifications for member accounts
+            if (isset($debitAccountDetails) && isset($creditAccountDetails)) {
+                $this->dispatchTransactionNotifications(
+                    $debitAccountDetails, 
+                    $creditAccountDetails, 
+                    $amount, 
+                    $debitAccountDetails->balance ?? 0, 
+                    $creditAccountDetails->balance ?? 0, 
+                    $referenceNumber ?? 'N/A', 
+                    $narration,
+                    'failed',
+                    $e->getMessage()
+                );
+            }
+
             throw $e;
         }
     }
@@ -439,6 +478,413 @@ class TransactionPostingService
             ]);
             throw $e;
         }
+    }
+
+    /**
+     * Validate account balances before transaction
+     * @param $debitAccount
+     * @param $creditAccount
+     * @param $amount
+     * @throws Exception
+     */
+    private function validateAccountBalances($debitAccount, $creditAccount, $amount)
+    {
+        $debitBalance = floatval($debitAccount->balance ?? 0);
+        $creditBalance = floatval($creditAccount->balance ?? 0);
+        $debitType = $debitAccount->type ?? '';
+        $creditType = $creditAccount->type ?? '';
+
+        Log::info('Validating account balances', [
+            'debit_account' => $debitAccount->account_number,
+            'debit_balance' => $debitBalance,
+            'debit_type' => $debitType,
+            'credit_account' => $creditAccount->account_number,
+            'credit_balance' => $creditBalance,
+            'credit_type' => $creditType,
+            'amount' => $amount
+        ]);
+
+        // IMPORTANT: In double-entry bookkeeping:
+        // - Debiting an asset/expense INCREASES it
+        // - Crediting an asset/expense DECREASES it
+        // - Debiting a liability/equity/income DECREASES it
+        // - Crediting a liability/equity/income INCREASES it
+
+        // GENERAL RULE: NO NEGATIVE BALANCES ALLOWED REGARDLESS OF ACCOUNT TYPE
+
+        // Check DEBIT side (account being debited)
+        // Debiting reduces balance for liability/capital/income/equity accounts
+        if (in_array($debitType, ['liability_accounts', 'capital_accounts', 'income_accounts', 'equity_accounts'])) {
+            $resultingBalance = $debitBalance - $amount;
+            if ($resultingBalance < 0) {
+                throw new Exception("Transaction would result in negative balance for {$debitAccount->account_name}. Current balance: " . number_format($debitBalance, 2) . ", Amount to debit: " . number_format($amount, 2) . ", Would result in: " . number_format($resultingBalance, 2));
+            }
+        }
+
+        // Check CREDIT side (account being credited)
+        // Crediting reduces balance for asset and expense accounts
+        if (in_array($creditType, ['asset_accounts', 'expense_accounts'])) {
+            $resultingBalance = $creditBalance - $amount;
+            if ($resultingBalance < 0) {
+                throw new Exception("Transaction would result in negative balance for {$creditAccount->account_name}. Current balance: " . number_format($creditBalance, 2) . ", Amount to credit: " . number_format($amount, 2) . ", Would result in: " . number_format($resultingBalance, 2));
+            }
+        }
+
+        // Additional check: Ensure no account currently has or would have negative balance
+        if ($debitBalance < 0) {
+            throw new Exception("Account {$debitAccount->account_name} already has a negative balance: " . number_format($debitBalance, 2) . ". Please correct this before posting new transactions.");
+        }
+
+        if ($creditBalance < 0) {
+            throw new Exception("Account {$creditAccount->account_name} already has a negative balance: " . number_format($creditBalance, 2) . ". Please correct this before posting new transactions.");
+        }
+    }
+
+    /**
+     * Validate business rules for the transaction
+     * @param $debitAccount
+     * @param $creditAccount
+     * @param $amount
+     * @throws Exception
+     */
+    private function validateBusinessRules($debitAccount, $creditAccount, $amount)
+    {
+        // Check if accounts are active
+        if (($debitAccount->status ?? 'ACTIVE') !== 'ACTIVE') {
+            throw new Exception("Debit account {$debitAccount->account_name} is not active. Status: {$debitAccount->status}");
+        }
+
+        if (($creditAccount->status ?? 'ACTIVE') !== 'ACTIVE') {
+            throw new Exception("Credit account {$creditAccount->account_name} is not active. Status: {$creditAccount->status}");
+        }
+
+        // Prevent same account transaction
+        if ($debitAccount->account_number === $creditAccount->account_number) {
+            throw new Exception("Cannot post transaction to the same account: {$debitAccount->account_number}");
+        }
+
+        // Check for locked amounts
+        if (isset($debitAccount->locked_amount) && $debitAccount->locked_amount > 0) {
+            $availableBalance = floatval($debitAccount->balance) - floatval($debitAccount->locked_amount);
+            if ($debitAccount->type === 'asset_accounts' && $availableBalance < 0) {
+                throw new Exception("Insufficient available balance in {$debitAccount->account_name} after considering locked amount. Available: " . number_format($availableBalance, 2));
+            }
+        }
+
+        if (isset($creditAccount->locked_amount) && $creditAccount->locked_amount > 0) {
+            $availableBalance = floatval($creditAccount->balance) - floatval($creditAccount->locked_amount);
+            if ($creditAccount->type === 'asset_accounts' && $availableBalance < $amount) {
+                throw new Exception("Insufficient available balance in {$creditAccount->account_name} to credit after considering locked amount. Available: " . number_format($availableBalance, 2));
+            }
+        }
+
+        // Validate minimum transaction amount
+        $minTransactionAmount = config('accounting.min_transaction_amount', 0.01);
+        if ($amount < $minTransactionAmount) {
+            throw new Exception("Transaction amount must be at least " . number_format($minTransactionAmount, 2));
+        }
+
+        // Validate maximum transaction amount
+        $maxTransactionAmount = config('accounting.max_transaction_amount', 999999999.99);
+        if ($amount > $maxTransactionAmount) {
+            throw new Exception("Transaction amount exceeds maximum allowed: " . number_format($maxTransactionAmount, 2));
+        }
+
+        // Check for suspense accounts
+        if ($debitAccount->suspense_account === 'YES' || $creditAccount->suspense_account === 'YES') {
+            Log::warning('Transaction involves suspense account', [
+                'debit_account' => $debitAccount->account_number,
+                'credit_account' => $creditAccount->account_number
+            ]);
+        }
+
+        // Validate account levels for posting
+        $minPostingLevel = config('accounting.min_posting_level', 3);
+        if ($debitAccount->account_level < $minPostingLevel) {
+            throw new Exception("Cannot post to parent account {$debitAccount->account_name}. Only detail accounts (level {$minPostingLevel}+) can be posted to.");
+        }
+
+        if ($creditAccount->account_level < $minPostingLevel) {
+            throw new Exception("Cannot post to parent account {$creditAccount->account_name}. Only detail accounts (level {$minPostingLevel}+) can be posted to.");
+        }
+    }
+
+    /**
+     * Dispatch transaction notifications for member accounts
+     * 
+     * @param $debitAccount
+     * @param $creditAccount
+     * @param $amount
+     * @param $debitNewBalance
+     * @param $creditNewBalance
+     * @param $referenceNumber
+     * @param $narration
+     * @param string $status
+     * @param string|null $errorMessage
+     */
+    private function dispatchTransactionNotifications(
+        $debitAccount, 
+        $creditAccount, 
+        $amount, 
+        $debitNewBalance, 
+        $creditNewBalance, 
+        $referenceNumber, 
+        $narration,
+        $status = 'success',
+        $errorMessage = null
+    ) {
+        try {
+            // Check if notifications are enabled
+            if (!config('accounting.notifications.enabled', true)) {
+                Log::info('Transaction notifications are disabled', [
+                    'reference_number' => $referenceNumber
+                ]);
+                return;
+            }
+
+            // Check if we should notify based on status
+            if ($status === 'success' && !config('accounting.notifications.notify_on_success', true)) {
+                return;
+            }
+
+            if ($status === 'failed' && !config('accounting.notifications.notify_on_failure', true)) {
+                return;
+            }
+
+            // Check minimum amount threshold
+            $minAmount = config('accounting.notifications.min_amount_for_notification', 0);
+            if ($amount < $minAmount) {
+                Log::info('Transaction amount below notification threshold', [
+                    'amount' => $amount,
+                    'threshold' => $minAmount,
+                    'reference_number' => $referenceNumber
+                ]);
+                return;
+            }
+
+            $queueName = config('accounting.notifications.queue_name', 'notifications');
+
+            // Check and send notification for debit account
+            if ($this->isMemberAccount($debitAccount)) {
+                Log::info('Dispatching debit notification for member account', [
+                    'account_number' => $debitAccount->account_number,
+                    'client_number' => $debitAccount->client_number,
+                    'reference_number' => $referenceNumber
+                ]);
+
+                $job = SendTransactionNotification::dispatch(
+                    $debitAccount->account_number,
+                    'debit',
+                    $amount,
+                    $debitNewBalance,
+                    $referenceNumber,
+                    $narration,
+                    $status,
+                    $creditAccount->account_name,
+                    $errorMessage
+                )->onQueue($queueName);
+
+                // Set retry attempts if configured
+                if (config('accounting.notifications.retry_failed', true)) {
+                    $job->tries = config('accounting.notifications.max_retries', 3);
+                }
+            }
+
+            // Check and send notification for credit account
+            if ($this->isMemberAccount($creditAccount)) {
+                Log::info('Dispatching credit notification for member account', [
+                    'account_number' => $creditAccount->account_number,
+                    'client_number' => $creditAccount->client_number,
+                    'reference_number' => $referenceNumber
+                ]);
+
+                $job = SendTransactionNotification::dispatch(
+                    $creditAccount->account_number,
+                    'credit',
+                    $amount,
+                    $creditNewBalance,
+                    $referenceNumber,
+                    $narration,
+                    $status,
+                    $debitAccount->account_name,
+                    $errorMessage
+                )->onQueue($queueName);
+
+                // Set retry attempts if configured
+                if (config('accounting.notifications.retry_failed', true)) {
+                    $job->tries = config('accounting.notifications.max_retries', 3);
+                }
+            }
+
+            // Determine if we need to notify control emails
+            $isDebitMember = $this->isMemberAccount($debitAccount);
+            $isCreditMember = $this->isMemberAccount($creditAccount);
+            
+            // Notify control emails for:
+            // 1. Pure internal transactions (both accounts are non-member)
+            // 2. Mixed transactions (one member, one internal)
+            if (!$isDebitMember || !$isCreditMember) {
+                // Determine transaction type for logging
+                $transactionType = 'unknown';
+                if (!$isDebitMember && !$isCreditMember) {
+                    $transactionType = 'internal';
+                    Log::info('Pure internal transaction detected, notifying control emails', [
+                        'debit_account' => $debitAccount->account_number,
+                        'credit_account' => $creditAccount->account_number,
+                        'reference_number' => $referenceNumber
+                    ]);
+                } else {
+                    $transactionType = 'mixed';
+                    Log::info('Mixed transaction detected (member + internal), notifying control emails', [
+                        'debit_account' => $debitAccount->account_number,
+                        'debit_is_member' => $isDebitMember,
+                        'credit_account' => $creditAccount->account_number,
+                        'credit_is_member' => $isCreditMember,
+                        'reference_number' => $referenceNumber
+                    ]);
+                }
+
+                // Send notification to control emails for internal/mixed transactions
+                $this->notifyControlEmails(
+                    $debitAccount,
+                    $creditAccount,
+                    $amount,
+                    $debitNewBalance,
+                    $creditNewBalance,
+                    $referenceNumber,
+                    $narration,
+                    $status,
+                    $errorMessage,
+                    $transactionType
+                );
+            }
+
+        } catch (\Exception $e) {
+            // Don't let notification errors affect the transaction
+            Log::error('Failed to dispatch transaction notifications', [
+                'error' => $e->getMessage(),
+                'reference_number' => $referenceNumber
+            ]);
+        }
+    }
+
+    /**
+     * Check if an account belongs to a member
+     * 
+     * @param $account
+     * @return bool
+     */
+    private function isMemberAccount($account)
+    {
+        return !empty($account->client_number) && 
+               $account->client_number !== null && 
+               $account->client_number !== '0000' &&
+               $account->client_number !== '0';
+    }
+
+    /**
+     * Notify control emails about internal/system account transactions
+     * 
+     * @param $debitAccount
+     * @param $creditAccount
+     * @param $amount
+     * @param $debitNewBalance
+     * @param $creditNewBalance
+     * @param $referenceNumber
+     * @param $narration
+     * @param string $status
+     * @param string|null $errorMessage
+     * @param string $transactionType
+     */
+    private function notifyControlEmails(
+        $debitAccount,
+        $creditAccount,
+        $amount,
+        $debitNewBalance,
+        $creditNewBalance,
+        $referenceNumber,
+        $narration,
+        $status = 'success',
+        $errorMessage = null,
+        $transactionType = 'internal'
+    ) {
+        try {
+            // Get control emails from environment
+            $controlEmails = env('CONTROL_EMAILS', '');
+            
+            if (empty($controlEmails)) {
+                Log::info('No control emails configured for internal transaction notifications');
+                return;
+            }
+
+            // Convert comma-separated emails to array
+            $emailList = array_map('trim', explode(',', $controlEmails));
+            $emailList = array_filter($emailList, function($email) {
+                return filter_var($email, FILTER_VALIDATE_EMAIL);
+            });
+
+            if (empty($emailList)) {
+                Log::warning('Control emails configured but none are valid', ['configured_emails' => $controlEmails]);
+                return;
+            }
+
+            // Dispatch notification job for each control email
+            foreach ($emailList as $email) {
+                Log::info('Dispatching control email notification', [
+                    'email' => $this->maskEmailForLog($email),
+                    'reference_number' => $referenceNumber,
+                    'transaction_type' => $transactionType
+                ]);
+
+                SendControlTransactionNotification::dispatch(
+                    $email,
+                    $debitAccount,
+                    $creditAccount,
+                    $amount,
+                    $debitNewBalance,
+                    $creditNewBalance,
+                    $referenceNumber,
+                    $narration,
+                    $status,
+                    $errorMessage,
+                    $transactionType
+                )->onQueue(config('accounting.notifications.queue_name', 'notifications'));
+            }
+
+            Log::info('Control email notifications dispatched', [
+                'count' => count($emailList),
+                'reference_number' => $referenceNumber
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to notify control emails', [
+                'error' => $e->getMessage(),
+                'reference_number' => $referenceNumber
+            ]);
+        }
+    }
+
+    /**
+     * Mask email for logging
+     * 
+     * @param string $email
+     * @return string
+     */
+    private function maskEmailForLog($email)
+    {
+        $parts = explode('@', $email);
+        if (count($parts) !== 2) {
+            return 'invalid_email';
+        }
+        
+        $username = $parts[0];
+        $domain = $parts[1];
+        
+        if (strlen($username) <= 3) {
+            return $username . '@' . $domain;
+        }
+        
+        return substr($username, 0, 3) . '***@' . $domain;
     }
 
     private function validateBalanceConsistency($account, $newBalance, $amount, $transactionType)

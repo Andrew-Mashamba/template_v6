@@ -47,7 +47,7 @@
         <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-blue-100 text-sm font-medium">Total Visitors</p>
+                    <p class="text-gray-500 text-sm font-medium">Total Visitors</p>
                     <p class="text-3xl font-bold">{{ $statistics['total'] }}</p>
                 </div>
                 <div class="p-3 bg-blue-400 bg-opacity-30 rounded-lg">

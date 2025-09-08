@@ -56,7 +56,7 @@ class VerifySetupSeeder extends Seeder
                     [
                         'name' => 'Andrew S. Mashamba',
                         'email' => 'andrew.s.mashamba@gmail.com',
-                        'password' => bcrypt('Admin@123'),
+                        'password' => bcrypt('1234567890'), // Updated default password
                         'status' => 'active',
                         'verification_status' => 1,
                         'department_code' => 'ICT',
@@ -67,7 +67,7 @@ class VerifySetupSeeder extends Seeder
                     [
                         'name' => 'Jane Doe',
                         'email' => 'jane.doe@example.com',
-                        'password' => bcrypt('Admin@123'),
+                        'password' => bcrypt('1234567890'), // Updated default password
                         'status' => 'active',
                         'verification_status' => 1,
                         'department_code' => 'GOV',
@@ -78,7 +78,7 @@ class VerifySetupSeeder extends Seeder
                     [
                         'name' => 'Admin User',
                         'email' => 'admin@saccos.co.tz',
-                        'password' => bcrypt('Admin@123'),
+                        'password' => bcrypt('1234567890'), // Updated default password
                         'status' => 'active',
                         'verification_status' => 1,
                         'department_code' => 'IT',

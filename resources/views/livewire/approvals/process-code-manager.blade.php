@@ -140,9 +140,9 @@
                                 <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
                                     <div class="flex items-center justify-between">
                                         <div>
-                                            <p class="text-blue-100 text-sm font-medium">Total Flows</p>
+                                            <p class="text-gray-500 text-sm font-medium">Total Flows</p>
                                             <p class="text-3xl font-bold">{{ $totalFlows }}</p>
-                                            <p class="text-blue-100 text-xs mt-1">{{ $activeFlows }} active, {{ $inactiveFlows }} inactive</p>
+                                            <p class="text-gray-500 text-xs mt-1">{{ $activeFlows }} active, {{ $inactiveFlows }} inactive</p>
                                         </div>
                                         <div class="p-3 bg-blue-400 bg-opacity-30 rounded-full">
                                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -2,58 +2,238 @@
 
 namespace App\Http\Livewire\Reports;
 
-use App\Models\general_ledger;
-use App\Models\LoansModel;
 use Livewire\Component;
-use DateTime;
+use App\Models\LoansModel;
+use App\Models\ClientsModel;
+use App\Models\BranchesModel;
+use App\Models\general_ledger;
+use App\Models\loans_schedules;
+use App\Models\LoanSubProduct;
 use Illuminate\Support\Facades\DB;
-use Mediconesystems\LivewireDatatables\Column;
-use Mediconesystems\LivewireDatatables\Http\Livewire\LivewireDatatable;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
+use Exception;
 
-class ClientRepaymentHistory extends LivewireDatatable
+class ClientRepaymentHistory extends Component
 {
+    public $selectedClient = '';
+    public $clientNumber = '';
+    public $startDate;
+    public $endDate;
+    public $clients = [];
+    public $repaymentHistory = [];
+    public $paymentSummary = [];
+    public $totalPayments = 0;
+    public $totalPrincipalPaid = 0;
+    public $totalInterestPaid = 0;
+    public $averagePaymentAmount = 0;
+    public $paymentFrequency = [];
+    public $latePayments = 0;
+    public $onTimePayments = 0;
 
-    public $explot=true;
-public function builder(){
+    public function mount()
+    {
+        $this->startDate = Carbon::now()->subMonths(6)->format('Y-m-d');
+        $this->endDate = Carbon::now()->format('Y-m-d');
+        $this->loadClients();
+    }
 
+    public function loadClients()
+    {
+        $this->clients = ClientsModel::whereHas('loans')->get()->map(function ($client) {
+            $client->full_name = trim($client->first_name . ' ' . $client->middle_name . ' ' . $client->last_name);
+            return $client;
+        });
+    }
 
-    $loan_account_number= LoansModel::pluck('loan_account_number')->toArray();
+    public function updatedSelectedClient()
+    {
+        if ($this->selectedClient) {
+            $client = ClientsModel::find($this->selectedClient);
+            $this->clientNumber = $client->client_number;
+            $this->loadRepaymentHistory();
+        }
+    }
 
-    return LoansModel::leftJoin('general_ledger','loans.loan_account_number','=', 'general_ledger.record_on_account_number') ;
+    public function updatedClientNumber()
+    {
+        if ($this->clientNumber) {
+            $this->loadRepaymentHistory();
+        }
+    }
 
-    //general_ledger::query()->whereIn('record_on_account_number',$loan_account_number);
-}
+    public function updated($propertyName)
+    {
+        if (in_array($propertyName, ['startDate', 'endDate'])) {
+            $this->loadRepaymentHistory();
+        }
+    }
 
+    public function loadRepaymentHistory()
+    {
+        if (empty($this->clientNumber)) {
+            $this->repaymentHistory = [];
+            $this->calculatePaymentSummary();
+            return;
+        }
 
-public function columns(){
+        $startDate = Carbon::parse($this->startDate)->startOfDay();
+        $endDate = Carbon::parse($this->endDate)->endOfDay();
 
-    return [
-      //  column::name('id')->label('id'),
-        column::name('general_ledger.created_at')->label('date ')->searchable(),
+        // Get loan account numbers for the client
+        $loanAccountNumbers = LoansModel::where('client_number', $this->clientNumber)
+            ->pluck('loan_account_number')
+            ->toArray();
 
-        Column::callback('general_ledger.record_on_account_number',function($record_on_account_number){
+        if (empty($loanAccountNumbers)) {
+            $this->repaymentHistory = [];
+            $this->calculatePaymentSummary();
+            return;
+        }
 
-            $client_number=LoansModel::where('loan_account_number',$record_on_account_number)->value('client_number');
-            $member= DB::table('clients')->where('client_number',$client_number)->first();
-            return $member ?->first_name.' '. $member ?->middle_name.'  '. $member ?->last_name ;
+        // Get repayment history from general ledger
+        $this->repaymentHistory = general_ledger::whereIn('record_on_account_number', $loanAccountNumbers)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->where('credit', '>', 0) // Only credit transactions (payments)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($transaction) {
+                // Get loan details
+                $loan = LoansModel::where('loan_account_number', $transaction->record_on_account_number)->first();
+                if ($loan) {
+                    $transaction->loan_id = $loan->loan_id;
+                    $transaction->loan_principal = $loan->principle;
+                    
+                    // Get client details
+                    $client = ClientsModel::where('client_number', $loan->client_number)->first();
+                    $transaction->client_name = $client ? trim($client->first_name . ' ' . $client->middle_name . ' ' . $client->last_name) : 'N/A';
+                    
+                    // Get product details
+                    $product = LoanSubProduct::where('product_id', $loan->loan_sub_product)->first();
+                    $transaction->product_name = $product ? $product->product_name : 'N/A';
+                    
+                    // Get branch details
+                    $branch = BranchesModel::find($loan->branch_id);
+                    $transaction->branch_name = $branch ? $branch->name : 'N/A';
+                }
 
+                // Format transaction date
+                $transaction->payment_date = $transaction->created_at ? $transaction->created_at->format('Y-m-d') : 'N/A';
+                
+                // Determine payment type
+                $transaction->payment_type = $this->determinePaymentType($transaction);
+                
+                return $transaction;
+            });
 
-        })->label('member name'),
+        $this->calculatePaymentSummary();
+    }
 
-       // column::name('loan_id')->label('loan id'),
+    public function determinePaymentType($transaction)
+    {
+        // This is a simplified logic - you might want to enhance this based on your business rules
+        if ($transaction->credit > 10000) {
+            return 'Full Payment';
+        } elseif ($transaction->credit > 1000) {
+            return 'Partial Payment';
+        } else {
+            return 'Interest Only';
+        }
+    }
 
-        column::name('general_ledger.credit')->label('credit'),
+    public function calculatePaymentSummary()
+    {
+        if (empty($this->repaymentHistory)) {
+            $this->totalPayments = 0;
+            $this->totalPrincipalPaid = 0;
+            $this->totalInterestPaid = 0;
+            $this->averagePaymentAmount = 0;
+            $this->latePayments = 0;
+            $this->onTimePayments = 0;
+            $this->paymentFrequency = [];
+            return;
+        }
 
-        column::name('general_ledger.debit')->label('debit'),
-        column::name('general_ledger.record_on_account_number_balance')->label('balance'),
+        $this->totalPayments = $this->repaymentHistory->count();
+        $this->totalPrincipalPaid = $this->repaymentHistory->sum('credit');
+        
+        // Calculate average payment amount
+        $this->averagePaymentAmount = $this->totalPayments > 0 ? $this->totalPrincipalPaid / $this->totalPayments : 0;
 
-        column::name('general_ledger.reference_number')->label('reference  number'),
+        // Analyze payment patterns
+        $this->analyzePaymentPatterns();
+        
+        // Calculate payment frequency by month
+        $this->calculatePaymentFrequency();
+    }
 
-        column::name('general_ledger.trans_status  ')->label('id'),
-       // column::name('destination_account_number ')->label('destination_account_number'),
-     //   column::name('destination_account_number')->label('id'),
+    public function analyzePaymentPatterns()
+    {
+        $latePayments = 0;
+        $onTimePayments = 0;
 
+        foreach ($this->repaymentHistory as $payment) {
+            // Get the corresponding loan schedule to check if payment was on time
+            $loan = LoansModel::where('loan_account_number', $payment->record_on_account_number)->first();
+            if ($loan) {
+                $schedule = loans_schedules::where('loan_id', $loan->id)
+                    ->where('installment_date', '<=', $payment->created_at)
+                    ->orderBy('installment_date', 'desc')
+                    ->first();
+                
+                if ($schedule) {
+                    $daysDifference = Carbon::parse($payment->created_at)->diffInDays(Carbon::parse($schedule->installment_date));
+                    if ($daysDifference > 7) { // More than 7 days late
+                        $latePayments++;
+                    } else {
+                        $onTimePayments++;
+                    }
+                }
+            }
+        }
 
-    ];
-}
+        $this->latePayments = $latePayments;
+        $this->onTimePayments = $onTimePayments;
+    }
+
+    public function calculatePaymentFrequency()
+    {
+        $frequency = [];
+        
+        foreach ($this->repaymentHistory as $payment) {
+            $month = Carbon::parse($payment->created_at)->format('Y-m');
+            if (!isset($frequency[$month])) {
+                $frequency[$month] = 0;
+            }
+            $frequency[$month]++;
+        }
+        
+        $this->paymentFrequency = $frequency;
+    }
+
+    public function exportReport($format = 'pdf')
+    {
+        try {
+            session()->flash('success', "Client Repayment History Report exported as {$format} successfully!");
+            
+            Log::info('Client Repayment History Report exported', [
+                'format' => $format,
+                'client_number' => $this->clientNumber,
+                'start_date' => $this->startDate,
+                'end_date' => $this->endDate,
+                'user_id' => auth()->id()
+            ]);
+        } catch (Exception $e) {
+            session()->flash('error', 'Error exporting report: ' . $e->getMessage());
+            Log::error('Client Repayment History Report export failed', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+        }
+    }
+
+    public function render()
+    {
+        return view('livewire.reports.client-repayment-history');
+    }
 }

@@ -13,7 +13,7 @@
     @endif
 
     <div class="flex items-center text-sm mb-2 font-semibold text-slate-600">
-        POST A TRANSACTION
+        POST A TRANSACTIONx
     </div>
 
     <div class="flex items-stretch p-2 bg-gray-100 gap-2 rounded-md">

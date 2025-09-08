@@ -8,7 +8,7 @@
              {{ str_replace('_', ' ', $column['label']) }}
          </span>
      </button>
-     <svg class="absolute text-blue-100 fill-current w-full inset-x-0 bottom-0"
+     <svg class="absolute text-gray-500 fill-current w-full inset-x-0 bottom-0"
           viewBox="0 0 314.16 207.25">
          <path stroke-miterlimit="10" d="M313.66 206.75H.5V1.49l157.65 204.9L313.66 1.49v205.26z" />
      </svg>

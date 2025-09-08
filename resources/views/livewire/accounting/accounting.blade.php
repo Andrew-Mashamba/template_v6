@@ -258,24 +258,6 @@
                         </svg>
                         Manual Posting
                     </button>
-                    <button wire:click="menuItemClicked(44)" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                        </svg>
-                        Internal Transfers
-                    </button>
-                    <button wire:click="menuItemClicked(45)" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                        </svg>
-                        Adjustments
-                    </button>
-                    <button wire:click="menuItemClicked(46)" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                        Till & Cash Management
-                    </button>
                     <button wire:click="menuItemClicked(5)" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -386,6 +368,7 @@
                                     @case(18) Track accounts receivable and collections @break
                                     @case(20) Manage property, plant, and equipment @break
                                     @case(21) Handle insurance policies and claims @break
+                                    @case(23) Manage bad loan write-offs and recovery processes @break
                                     @case(37) Review detailed ledger accounts @break
                                     @case(43) Manage approval workflows and processes @break
                                     @case(44) Process internal fund transfers between accounts @break
@@ -443,7 +426,7 @@
                     @elseif($this->tab_id == 7)
                         <livewire:accounting.balance-sheet/>
                     @elseif($this->tab_id == 8)
-                        <livewire:accounting.cash-flow-statement/>
+                        <livewire:accounting.statement-of-cash-flows />
                     @elseif($this->tab_id == 9)
                         @if($this->viewMemberDetails)
                             <livewire:accounting.member-clearance/>
@@ -481,7 +464,7 @@
                     @elseif($this->tab_id == 27)
                         <livewire:accounting.unearned />
                     @elseif($this->tab_id == 28)
-                        <livewire:accounting.capital-change />
+                        <livewire:accounting.statement-of-changes-in-equity />
                     @elseif($this->tab_id == 29)
                         <livewire:accounting.investiments />
                     @elseif($this->tab_id == 30)
@@ -503,20 +486,16 @@
                     @elseif($this->tab_id == 39)
                         <livewire:accounting.insurance-charges />
                     @elseif($this->tab_id == 40)
-                        <livewire:accounting.previous-inc-and-exp />
+                        <livewire:accounting.comparative-income-expense />
                     @elseif($this->tab_id == 41)
-                        <livewire:accounting.jedwali />
+                        <livewire:accounting.notes-to-accounts />
                     @elseif($this->tab_id == 42)
-                        <livewire:accounting.financial-position />
+                        <livewire:accounting.statement-of-financial-position />
+                        @elseif($this->tab_id == 23)
+                            <livewire:active-loan.write-offs />
                         @elseif($this->tab_id == 43)
                             {{-- Approvers Manager --}}
                   
-                        @elseif($this->tab_id == 44)
-                            <livewire:accounting.internal-transfers />
-                        @elseif($this->tab_id == 45)
-                            <livewire:accounting.adjustments />
-                        @elseif($this->tab_id == 46)
-                            <livewire:accounting.till-and-cash-management />
                     @endif
                     </div>
                 </div>

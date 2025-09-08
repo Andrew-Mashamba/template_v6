@@ -130,6 +130,16 @@ class User extends Authenticatable
         return $this->hasRole(1); // Role ID 1 is Systems Administrator
     }
 
+    /**
+     * Get the user's primary role ID
+     * This accessor allows $user->role_id to work
+     */
+    public function getRoleIdAttribute()
+    {
+        $role = $this->roles()->first();
+        return $role ? $role->id : null;
+    }
+
     public function securityProfile()
     {
         return $this->hasOne(UserSecurityProfile::class);

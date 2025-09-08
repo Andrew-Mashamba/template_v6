@@ -259,9 +259,9 @@
                     <div class="glass rounded-2xl p-4 max-w-2xl mx-auto">
                         <p class="text-white text-sm mb-2">&copy; {{ date('Y') }} NBC Saccos Management System. All rights reserved.</p>
                         <div class="flex justify-center space-x-6 text-sm">
-                            <a href="#" class="text-blue-100 hover:text-white transition-colors duration-200">Privacy Policy</a>
-                            <a href="#" class="text-blue-100 hover:text-white transition-colors duration-200">Terms of Service</a>
-                            <a href="#" class="text-blue-100 hover:text-white transition-colors duration-200">Contact Support</a>
+                            <a href="#" class="text-gray-500 hover:text-white transition-colors duration-200">Privacy Policy</a>
+                            <a href="#" class="text-gray-500 hover:text-white transition-colors duration-200">Terms of Service</a>
+                            <a href="#" class="text-gray-500 hover:text-white transition-colors duration-200">Contact Support</a>
                         </div>
                     </div>
                 </div>

@@ -3,221 +3,453 @@
 namespace App\Http\Livewire\Accounting;
 
 use App\Models\AccountsModel;
-use App\Models\IntangibleAsset;
+use App\Models\Loan;
+use App\Models\loans_schedules;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
-use App\Models\LoanLossReserve;
-use Illuminate\Validation\Rule;
-use App\Services\TransactionPostingService;
+use Carbon\Carbon;
 
 class LoanLossReserveManager extends Component
 {
-    public $llr_id;
-    public $profits;
-    public $percentage = 20; // Default 20%
-    public $reserve_amount;
-    public $total_llr;
-    public $editMode = false;
-
-    // Yearly details
-    public $year;
-    public $profit;
-    public $initial_allocation;
-    public $adjustments = 0;
-    public $total_allocation;
-    public $status;
-    public $actualLoanLosses;
-
-    // Validation rules
-    protected $rules = [
-        'profits' => 'required|numeric|min:0',
-        'percentage' => 'required|numeric|min:0|max:100',
-        'reserve_amount' => 'required|numeric|min:0',
-        'profit' => 'required|numeric', // For initial allocation
-        'actualLoanLosses' => 'required|numeric', // For year-end finalization
+    // View Controls
+    public $viewMode = 'dashboard'; // dashboard, provision, writeoff, history
+    
+    // Reserve Management
+    public $currentYear;
+    public $currentMonth;
+    public $profits = 0;
+    public $percentage = 5; // Default 5% provision rate
+    public $reserve_amount = 0;
+    public $source = '';
+    
+    // Portfolio Analysis
+    public $loanPortfolioValue = 0;
+    public $currentReserveBalance = 0;
+    public $requiredReserve = 0;
+    public $provisionGap = 0;
+    
+    // Loan Aging Categories
+    public $loanAging = [];
+    public $provisionRates = [
+        'current' => 1,      // 0-30 days: 1%
+        'watch' => 5,        // 31-60 days: 5%
+        'substandard' => 25, // 61-90 days: 25%
+        'doubtful' => 50,    // 91-180 days: 50%
+        'loss' => 100        // >180 days: 100%
     ];
-
+    
+    // Dashboard Statistics
+    public $stats = [
+        'coverage_ratio' => 0,
+        'npl_ratio' => 0,
+        'provision_coverage' => 0,
+        'write_off_ytd' => 0
+    ];
+    
+    // History Collections
+    public $provisionHistory = [];
+    public $writeOffHistory = [];
+    public $adjustmentHistory = [];
+    
+    // For Write-offs
+    public $selectedLoans = [];
+    public $writeOffReason = '';
+    public $actualLoanLosses = 0;
+    public $adjustments = 0;
+    
+    // GL Account Codes
+    public $reserveAccount = '2400';     // Loan Loss Reserve (Liability)
+    public $expenseAccount = '5100';     // Loan Loss Expense
+    public $recoveryAccount = '4200';    // Recovery Income
+    
+    // Status tracking
+    public $year;
+    public $status = 'pending';
+    public $editMode = false;
+    
     public function mount()
     {
-        $this->year = now()->year;
-        $this->calculateTotalLLR();
+        $this->currentYear = date('Y');
+        $this->currentMonth = date('n');
+        $this->year = $this->currentYear;
+        $this->loadDashboardData();
     }
-
-    public function updatedProfits(){
+    
+    public function loadDashboardData()
+    {
+        $this->calculateLoanPortfolio();
+        $this->calculateCurrentReserve();
+        $this->calculateLoanAging();
+        $this->calculateRequiredReserve();
+        $this->loadStatistics();
+        $this->loadHistory();
+    }
+    
+    private function calculateLoanPortfolio()
+    {
+        // Get loan account numbers from active loans
+        $loanAccountNumbers = Loan::where('status', 'ACTIVE')
+            ->pluck('loan_account_number')
+            ->filter() // Remove null values
+            ->toArray();
+        
+        // Get total balances from accounts table
+        $this->loanPortfolioValue = DB::table('accounts')
+            ->whereIn('account_number', $loanAccountNumbers)
+            ->sum(DB::raw('CAST(balance AS DECIMAL(20,2))')) ?? 0;
+    }
+    
+    private function calculateCurrentReserve()
+    {
+        // Get current reserve balance from GL
+        $credits = DB::table('general_ledger')
+            ->where('record_on_account_number', $this->reserveAccount)
+            ->sum(DB::raw('CAST(credit AS DECIMAL(20,2))')) ?? 0;
+            
+        $debits = DB::table('general_ledger')
+            ->where('record_on_account_number', $this->reserveAccount)
+            ->sum(DB::raw('CAST(debit AS DECIMAL(20,2))')) ?? 0;
+            
+        // Reserve is a credit balance account
+        $this->currentReserveBalance = $credits - $debits;
+    }
+    
+    private function calculateLoanAging()
+    {
+        $this->loanAging = [];
+        
+        // Get latest schedule entry for each active loan to get current arrears status
+        $latestSchedules = DB::table('loans_schedules as ls1')
+            ->select('ls1.*')
+            ->join('loans as l', function($join) {
+                $join->on(DB::raw('CAST(l.id AS VARCHAR)'), '=', DB::raw('CAST(ls1.loan_id AS VARCHAR)'));
+            })
+            ->where('l.status', 'ACTIVE')
+            ->whereRaw('ls1.id = (
+                SELECT MAX(ls2.id) 
+                FROM loans_schedules ls2 
+                WHERE CAST(ls2.loan_id AS VARCHAR) = CAST(ls1.loan_id AS VARCHAR)
+            )')
+            ->get();
+        
+        // Initialize aging buckets
+        $agingBuckets = [
+            'current' => [],
+            'watch' => [],
+            'substandard' => [],
+            'doubtful' => [],
+            'loss' => []
+        ];
+        
+        // Categorize loans based on days_in_arrears from loans_schedules
+        foreach ($latestSchedules as $schedule) {
+            $daysInArrears = $schedule->days_in_arrears ?? 0;
+            $loanId = $schedule->loan_id;
+            
+            // Get loan account number
+            $loan = Loan::find($loanId);
+            if (!$loan || !$loan->loan_account_number) continue;
+            
+            // Get current balance from accounts table
+            $balance = DB::table('accounts')
+                ->where('account_number', $loan->loan_account_number)
+                ->value(DB::raw('CAST(balance AS DECIMAL(20,2))')) ?? 0;
+            
+            if ($balance <= 0) continue; // Skip loans with no balance
+            
+            // Categorize based on days in arrears
+            if ($daysInArrears <= 30) {
+                $agingBuckets['current'][] = ['loan_account_number' => $loan->loan_account_number, 'balance' => $balance, 'days' => $daysInArrears];
+            } elseif ($daysInArrears <= 60) {
+                $agingBuckets['watch'][] = ['loan_account_number' => $loan->loan_account_number, 'balance' => $balance, 'days' => $daysInArrears];
+            } elseif ($daysInArrears <= 90) {
+                $agingBuckets['substandard'][] = ['loan_account_number' => $loan->loan_account_number, 'balance' => $balance, 'days' => $daysInArrears];
+            } elseif ($daysInArrears <= 180) {
+                $agingBuckets['doubtful'][] = ['loan_account_number' => $loan->loan_account_number, 'balance' => $balance, 'days' => $daysInArrears];
+            } else {
+                $agingBuckets['loss'][] = ['loan_account_number' => $loan->loan_account_number, 'balance' => $balance, 'days' => $daysInArrears];
+            }
+        }
+        
+        // Calculate totals for each category
+        foreach ($agingBuckets as $category => $loans) {
+            $totalAmount = array_sum(array_column($loans, 'balance'));
+            $count = count($loans);
+            $provisionRate = $this->provisionRates[$category] ?? 0;
+            
+            $this->loanAging[$category] = [
+                'count' => $count,
+                'amount' => $totalAmount,
+                'provision_rate' => $provisionRate,
+                'required_provision' => $totalAmount * $provisionRate / 100
+            ];
+        }
+    }
+    
+    public function calculateRequiredReserve()
+    {
+        // Sum up required provisions from all aging categories
+        $this->requiredReserve = 0;
+        foreach ($this->loanAging as $category) {
+            $this->requiredReserve += $category['required_provision'];
+        }
+        
+        // Calculate provision gap
+        $this->provisionGap = max(0, $this->requiredReserve - $this->currentReserveBalance);
+        
+        // Update reserve amount for display
+        $this->reserve_amount = $this->provisionGap;
+    }
+    
+    private function loadStatistics()
+    {
+        // Coverage Ratio: Reserve / Portfolio
+        $this->stats['coverage_ratio'] = $this->loanPortfolioValue > 0 
+            ? ($this->currentReserveBalance / $this->loanPortfolioValue) * 100 
+            : 0;
+            
+        // NPL Ratio: Non-performing loans / Total loans
+        $nplAmount = ($this->loanAging['substandard']['amount'] ?? 0) +
+                     ($this->loanAging['doubtful']['amount'] ?? 0) +
+                     ($this->loanAging['loss']['amount'] ?? 0);
+                     
+        $this->stats['npl_ratio'] = $this->loanPortfolioValue > 0
+            ? ($nplAmount / $this->loanPortfolioValue) * 100
+            : 0;
+            
+        // Provision Coverage: Current Reserve / Required Reserve
+        $this->stats['provision_coverage'] = $this->requiredReserve > 0
+            ? ($this->currentReserveBalance / $this->requiredReserve) * 100
+            : 100;
+            
+        // Year-to-date write-offs
+        $this->stats['write_off_ytd'] = DB::table('general_ledger')
+            ->where('record_on_account_number', $this->reserveAccount)
+            ->where('transaction_type', 'WRITE_OFF')
+            ->whereYear('created_at', $this->currentYear)
+            ->sum(DB::raw('CAST(debit AS DECIMAL(20,2))')) ?? 0;
+    }
+    
+    private function loadHistory()
+    {
+        // Load provision history
+        $this->provisionHistory = DB::table('general_ledger')
+            ->where('record_on_account_number', $this->reserveAccount)
+            ->where('transaction_type', 'PROVISION')
+            ->whereYear('created_at', $this->currentYear)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+            
+        // Load write-off history
+        $this->writeOffHistory = DB::table('general_ledger')
+            ->where('record_on_account_number', $this->reserveAccount)
+            ->where('transaction_type', 'WRITE_OFF')
+            ->whereYear('created_at', $this->currentYear)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+    }
+    
+    public function updatedProfits()
+    {
         $this->calculateLLR();
     }
+    
+    public function updatedPercentage()
+    {
+        $this->calculateLLR();
+    }
+    
     public function calculateLLR()
     {
-        $this->validateOnly('profits'); // Validate profits only
-        $this->reserve_amount = ($this->profits * $this->percentage) / 100;
+        // Simple percentage calculation for display
+        if ($this->profits > 0 && $this->percentage > 0) {
+            $this->reserve_amount = ($this->profits * $this->percentage) / 100;
+        } else {
+            // Use provision gap if no manual profit entered
+            $this->reserve_amount = $this->provisionGap;
+        }
     }
 
-    public function saveLLR()
+    public function makeProvision()
     {
-        $this->validate();
-        LoanLossReserve::updateOrCreate(
-            ['id' => $this->llr_id],
-            [
-                'profits' => $this->profits,
+        // Validate inputs
+        if ($this->reserve_amount <= 0) {
+            session()->flash('error', 'Please calculate reserve amount first.');
+            return;
+        }
+        
+        if (empty($this->source)) {
+            session()->flash('error', 'Please select a source account for the provision.');
+            return;
+        }
+        
+        DB::beginTransaction();
+        
+        try {
+            $transactionId = 'LLR-' . time();
+            $description = "Loan Loss Provision - " . Carbon::now()->format('F Y');
+            
+            // 1. Debit: Loan Loss Expense Account (increases expense)
+            DB::table('general_ledger')->insert([
+                'record_on_account_number' => $this->expenseAccount,
+                'debit' => $this->reserve_amount,
+                'credit' => 0,
+                'description' => $description,
+                'transaction_type' => 'PROVISION',
+                'transaction_id' => $transactionId,
+                'narration' => 'Loan loss provision expense',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            
+            // 2. Credit: Loan Loss Reserve Account (increases liability/reserve)
+            DB::table('general_ledger')->insert([
+                'record_on_account_number' => $this->reserveAccount,
+                'debit' => 0,
+                'credit' => $this->reserve_amount,
+                'description' => $description,
+                'transaction_type' => 'PROVISION',
+                'transaction_id' => $transactionId,
+                'narration' => 'Increase in loan loss reserve',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            
+            // 3. Record in loan_loss_reserves table for tracking
+            DB::table('loan_loss_reserves')->insert([
+                'year' => $this->currentYear,
+                'profits' => $this->profits ?: 0,
                 'percentage' => $this->percentage,
                 'reserve_amount' => $this->reserve_amount,
-            ]
-        );
-
-        $this->resetForm();
-        $this->calculateTotalLLR();
-        session()->flash('message', 'Loan Loss Reserve saved successfully.');
+                'initial_allocation' => $this->reserve_amount,
+                'total_allocation' => $this->currentReserveBalance + $this->reserve_amount,
+                'status' => 'allocated',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            
+            DB::commit();
+            
+            session()->flash('message', 'Loan loss provision of ' . number_format($this->reserve_amount, 2) . ' TZS has been recorded successfully.');
+            $this->loadDashboardData();
+            $this->resetForm();
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Failed to record provision: ' . $e->getMessage());
+        }
     }
 
     public function editLLR($id)
     {
-        $llr = LoanLossReserve::findOrFail($id);
-        $this->llr_id = $llr->id;
-        $this->profits = $llr->profits;
-        $this->percentage = $llr->percentage;
-        $this->reserve_amount = $llr->reserve_amount;
+        // Not needed with new structure
         $this->editMode = true;
     }
 
     public function deleteLLR($id)
     {
-        LoanLossReserve::findOrFail($id)->delete();
-        $this->calculateTotalLLR();
-        session()->flash('message', 'Loan Loss Reserve deleted successfully.');
+        // This would require proper authorization and audit trail
+        session()->flash('error', 'Deletion of reserves requires authorization.');
     }
 
     public function resetForm()
     {
         $this->editMode = false;
-        $this->llr_id = null;
-        $this->profits = null;
-        $this->percentage = 20; // Reset to default
-        $this->reserve_amount = null;
+        $this->profits = 0;
+        $this->percentage = 5; // Reset to default 5%
+        $this->reserve_amount = 0;
+        $this->source = '';
     }
 
-    public function calculateTotalLLR()
+    public function processWriteOff()
     {
-        $this->total_llr = LoanLossReserve::sum('reserve_amount');
+        if (empty($this->selectedLoans)) {
+            session()->flash('error', 'Please select loans to write off.');
+            return;
+        }
+        
+        if (empty($this->writeOffReason)) {
+            session()->flash('error', 'Please provide a reason for the write-off.');
+            return;
+        }
+        
+        DB::beginTransaction();
+        
+        try {
+            $transactionId = 'WO-' . time();
+            $totalWriteOff = 0;
+            
+            foreach ($this->selectedLoans as $loanId) {
+                $loan = Loan::find($loanId);
+                if ($loan && $loan->status === 'ACTIVE') {
+                    // Get current balance from accounts table
+                    $writeOffAmount = DB::table('accounts')
+                        ->where('account_number', $loan->loan_account_number)
+                        ->value(DB::raw('CAST(balance AS DECIMAL(20,2))')) ?? 0;
+                    
+                    if ($writeOffAmount > 0) {
+                        $totalWriteOff += $writeOffAmount;
+                    
+                    // 1. Debit: Loan Loss Reserve (reduce reserve)
+                    DB::table('general_ledger')->insert([
+                        'record_on_account_number' => $this->reserveAccount,
+                        'debit' => $writeOffAmount,
+                        'credit' => 0,
+                        'description' => "Write-off loan: " . $loan->loan_account_number,
+                        'transaction_type' => 'WRITE_OFF',
+                        'transaction_id' => $transactionId,
+                        'narration' => $this->writeOffReason,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                    
+                    // 2. Credit: Loan Account (reduce loan balance to zero)
+                    DB::table('general_ledger')->insert([
+                        'record_on_account_number' => $loan->loan_account_number,
+                        'debit' => 0,
+                        'credit' => $writeOffAmount,
+                        'description' => "Loan written off",
+                        'transaction_type' => 'WRITE_OFF',
+                        'transaction_id' => $transactionId,
+                        'narration' => $this->writeOffReason,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                    
+                        // 3. Update loan status
+                        $loan->update([
+                            'status' => 'WRITTEN_OFF'
+                        ]);
+                        
+                        // 4. Update account balance to zero
+                        DB::table('accounts')
+                            ->where('account_number', $loan->loan_account_number)
+                            ->update(['balance' => 0]);
+                    }
+                }
+            }
+            
+            DB::commit();
+            
+            session()->flash('message', 'Successfully written off ' . count($this->selectedLoans) . ' loans totaling ' . number_format($totalWriteOff, 2) . ' TZS');
+            $this->reset(['selectedLoans', 'writeOffReason']);
+            $this->loadDashboardData();
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Failed to process write-off: ' . $e->getMessage());
+        }
     }
 
-    // Initial allocation when profits are declared
+    public $writeOffCandidates = [];
+    
+    // Simplified initial allocation
     public function allocateInitial()
     {
-        //dd('bbbn');
-        //$this->validate(['profit']); // Validate profit only
-        //dd($this->profits);
-        $minAllocation = (float)$this->profits * 20/100;
-
-        LoanLossReserve::create([
-            'year' => $this->year,
-            'percentage' => $this->percentage,
-            'profits' => $this->profits,
-            'initial_allocation' => $minAllocation,
-            'adjustments' => $this->adjustments,
-            'total_allocation' => $minAllocation + $this->adjustments,
-            'status' => 'allocated',
-        ]);
-
-        $this->name = 'Initial loan loss reserve '.$this->year;
-        $this->type = 'loan_loss_reserves';
-
-
-
-        // Fetch accounts for the category
-        $get_accounts = DB::table('loan_loss_reserves')->get();
-
-        if ($get_accounts->isEmpty()) {
-            $next_code =  1301;
-
-        }else{
-
-
-            $category_code = $get_accounts->first()->category_code;
-            $existing_codes = $get_accounts->pluck('category_code')->toArray();
-            $range_start = intval($category_code) + 1;
-            $range_limit = intval($category_code) + 999;
-
-            // Generate the next unique sub_category_code
-            $next_code = $range_start;
-            while (in_array(strval($next_code), $existing_codes) && $next_code <= $range_limit) {
-                $next_code++;
-            }
-
-            // Validate next_code before inserting
-            if ($next_code > $range_limit) {
-                session()->flash('error', 'Unable to generate a unique code within the range.');
-                return;
-            }
-
-
-        }
-
-
-        // Format the account name
-        $formattedAccountName = strtolower(trim(preg_replace('/[^a-zA-Z0-9\s]/', '', $this->name)));
-        $formattedAccountName = str_replace(' ', '_', $formattedAccountName);
-$formattedAccountName = strtoupper($formattedAccountName);
-
-        $category_code = DB::table('asset_accounts')->where('category_name',$this->type)->value('category_code');
-
-        // dd($category_code);
-
-        // Create a new account based on input fields
-        DB::table($this->type)->insert([
-            'category_code' => $category_code,
-            'sub_category_code' => $next_code,
-            'sub_category_name' => $formattedAccountName,
-        ]);
-
-        // Generate account number
-        $account_number = $this->generate_account_number(auth()->user()->branch, $next_code);
-
-        // Create a new account entry in the AccountsModel
-        $id = AccountsModel::create([
-            'account_use' => 'internal',
-            'institution_number' => auth()->user()->institution_id,
-            'branch_number' => auth()->user()->branch,
-            'major_category_code' => 1000,
-            'category_code' => $category_code,
-            'sub_category_code' => $next_code,
-            'account_name' => $this->name,
-            'account_number' => $account_number,
-            'notes' => $this->name,
-            'bank_id' => null,
-            'mirror_account' => null,
-            'account_level' => '3',
-        ])->id;
-
-        // Call the CreditAndDebit method
-        //$this->newInitialAmount = 0;
-
-//            $this->creditAndDebitService = new CreditAndDebitService();
-//            $this->creditAndDebitService->
-
-        $source_account_number = AccountsModel::where("sub_category_code", $this->source)->value('account_number');
-
-        //dd($source_account_number);
-
-        $this->CreditAndDebit(
-            $source_account_number,
-            $this->value,
-            $account_number,
-            'Assets Investment : '.$this->name
-        );
-
-
-
-        IntangibleAsset::create([
-            'name' => $this->name,
-            'type' => $this->type,
-            'value' => $this->value,
-            'acquisition_date' => $this->acquisition_date,
-            'source' => $source_account_number,
-        ]);
-
-        $this->resetInputFields();
-
-        session()->flash('message', 'Initial allocation set successfully.');
+        // This is now handled by makeProvision() method
+        $this->makeProvision();
     }
 
 
@@ -241,354 +473,173 @@ $formattedAccountName = strtoupper($formattedAccountName);
 
 
 
-    // Periodic adjustment (quarterly or semi-annual)
+    // Periodic adjustment to reserves
     public function adjustReserve()
     {
 
-        $this->validate(['adjustments' => 'required|numeric']);
-
-        $llr = LoanLossReserve::where('year', $this->year)->first();
-
-        //dd($llr->total_allocation);
-
-        if ($llr) {
-            //$llr->setAdjustments($this->adjustments);
-
-
-            LoanLossReserve::where('year', $this->year)->update(
-                [
-                    'total_allocation'=>$llr->total_allocation + $this->adjustments
-                    ]);
-
-            session()->flash('message', 'LLR adjusted successfully.');
-        } else {
-            session()->flash('error', 'No allocation found for this year.');
+        if (!is_numeric($this->adjustments) || $this->adjustments == 0) {
+            session()->flash('error', 'Please enter a valid adjustment amount.');
+            return;
+        }
+        
+        DB::beginTransaction();
+        
+        try {
+            $transactionId = 'ADJ-' . time();
+            $description = $this->adjustments > 0 ? 'Increase in loan loss reserve' : 'Decrease in loan loss reserve';
+            
+            if ($this->adjustments > 0) {
+                // Increase reserve
+                DB::table('general_ledger')->insert([
+                    'record_on_account_number' => $this->expenseAccount,
+                    'debit' => abs($this->adjustments),
+                    'credit' => 0,
+                    'description' => $description,
+                    'transaction_type' => 'ADJUSTMENT',
+                    'transaction_id' => $transactionId,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+                
+                DB::table('general_ledger')->insert([
+                    'record_on_account_number' => $this->reserveAccount,
+                    'debit' => 0,
+                    'credit' => abs($this->adjustments),
+                    'description' => $description,
+                    'transaction_type' => 'ADJUSTMENT',
+                    'transaction_id' => $transactionId,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            } else {
+                // Decrease reserve (reverse provision)
+                DB::table('general_ledger')->insert([
+                    'record_on_account_number' => $this->reserveAccount,
+                    'debit' => abs($this->adjustments),
+                    'credit' => 0,
+                    'description' => $description,
+                    'transaction_type' => 'ADJUSTMENT',
+                    'transaction_id' => $transactionId,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+                
+                DB::table('general_ledger')->insert([
+                    'record_on_account_number' => $this->expenseAccount,
+                    'debit' => 0,
+                    'credit' => abs($this->adjustments),
+                    'description' => $description,
+                    'transaction_type' => 'ADJUSTMENT',
+                    'transaction_id' => $transactionId,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+            
+            DB::commit();
+            
+            session()->flash('message', 'Reserve adjusted by ' . number_format(abs($this->adjustments), 2) . ' TZS');
+            $this->adjustments = 0;
+            $this->loadDashboardData();
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Failed to adjust reserve: ' . $e->getMessage());
         }
     }
 
     // Finalize at year-end based on actual loan losses
     public function finalizeYearEnd()
     {
-        //$this->validate();
-
-        $llr = LoanLossReserve::where('year', $this->year)->first();
-        if ($llr) {
-            $llr->finalizeAtYearEnd($this->actualLoanLosses);
-
-            // Step 1: Calculate the total allocation
-            $this->total_allocation = $llr->total_allocation + $this->adjustments;
-
-            // Step 2: Compare total allocation with actual loan losses
-            if ($this->total_allocation < $this->actualLoanLosses) {
-                // If total allocation is less than actual loan losses, adjust the reserve amount
-                $difference = $this->actualLoanLosses - $this->total_allocation;
-                $this->adjustments += $difference;
-                $this->total_allocation += $difference; // Update total allocation
-            } elseif ($this->total_allocation > $this->actualLoanLosses) {
-                // If total allocation exceeds actual loan losses, consider adjusting downwards
-                $difference = $this->total_allocation - $this->actualLoanLosses;
-                $this->adjustments -= $difference;
-                $this->total_allocation -= $difference; // Update total allocation
-            }
-
-            LoanLossReserve::where('year', $this->year)->update(
-                [
-                    'total_allocation'=>$this->adjustments
-                ]);
-
-            session()->flash('message', 'Year-end adjustment completed.');
-        } else {
-            session()->flash('error', 'No allocation found for this year.');
+        if (!is_numeric($this->actualLoanLosses) || $this->actualLoanLosses < 0) {
+            session()->flash('error', 'Please enter valid actual loan losses.');
+            return;
         }
+        
+        // Compare actual losses with current reserve
+        $shortfall = $this->actualLoanLosses - $this->currentReserveBalance;
+        
+        if ($shortfall > 0) {
+            // Need to increase reserve to cover actual losses
+            $this->adjustments = $shortfall;
+            $this->adjustReserve();
+            session()->flash('message', 'Year-end finalization: Reserve increased by ' . number_format($shortfall, 2) . ' TZS to cover actual losses.');
+        } elseif ($shortfall < 0) {
+            // Reserve exceeds actual losses
+            session()->flash('message', 'Year-end finalization: Reserve adequate. Excess of ' . number_format(abs($shortfall), 2) . ' TZS can be reversed if needed.');
+        } else {
+            session()->flash('message', 'Year-end finalization: Reserve exactly matches actual losses.');
+        }
+        
+        // Update status
+        DB::table('loan_loss_reserves')
+            ->where('year', $this->year)
+            ->update(['status' => 'finalized', 'updated_at' => now()]);
     }
 
+    public function changeViewMode($mode)
+    {
+        $this->viewMode = $mode;
+        if ($mode === 'writeoff') {
+            // Load loans eligible for write-off
+            $this->loadWriteOffCandidates();
+        }
+    }
+    
+    private function loadWriteOffCandidates()
+    {
+        // Get loans that are severely delinquent (>180 days) based on loans_schedules
+        $candidates = [];
+        
+        // Get latest schedule entry for each active loan where days_in_arrears > 180
+        $severelyDelinquentSchedules = DB::table('loans_schedules as ls1')
+            ->select('ls1.*', 'l.loan_account_number', 'l.client_number')
+            ->join('loans as l', function($join) {
+                $join->on(DB::raw('CAST(l.id AS VARCHAR)'), '=', DB::raw('CAST(ls1.loan_id AS VARCHAR)'));
+            })
+            ->where('l.status', 'ACTIVE')
+            ->where('ls1.days_in_arrears', '>', 180)
+            ->whereRaw('ls1.id = (
+                SELECT MAX(ls2.id) 
+                FROM loans_schedules ls2 
+                WHERE CAST(ls2.loan_id AS VARCHAR) = CAST(ls1.loan_id AS VARCHAR)
+            )')
+            ->get();
+        
+        foreach ($severelyDelinquentSchedules as $schedule) {
+            // Get current balance from accounts table
+            $balance = DB::table('accounts')
+                ->where('account_number', $schedule->loan_account_number)
+                ->value(DB::raw('CAST(balance AS DECIMAL(20,2))')) ?? 0;
+            
+            if ($balance > 0) { // Only include loans with outstanding balance
+                $candidates[] = (object)[
+                    'id' => $schedule->loan_id,
+                    'loan_account_number' => $schedule->loan_account_number,
+                    'client_number' => $schedule->client_number,
+                    'balance' => $balance,
+                    'days_in_arrears' => $schedule->days_in_arrears,
+                    'amount_in_arrears' => $schedule->amount_in_arrears ?? 0,
+                    'installment_date' => $schedule->installment_date,
+                    'next_payment_date' => $schedule->installment_date // Use installment_date as reference
+                ];
+            }
+        }
+        
+        $this->writeOffCandidates = collect($candidates);
+    }
+    
+    public function formatNumber($number)
+    {
+        return number_format($number, 2);
+    }
+    
     public function render()
     {
-        $llr = LoanLossReserve::where('year', $this->year)->first();
-        $this->total_allocation = $llr ? $llr->calculateTotalAllocation() : 0;
-
-        return view('livewire.accounting.loan-loss-reserve-manager', [
-            'llr' => $llr,
-        ]);
+        return view('livewire.accounting.loan-loss-reserve-manager');
     }
 
 
 
 
-    function luhn_checksum($number) {
-        $digits = str_split($number);
-        $sum = 0;
-        $alt = false;
-        for ($i = count($digits) - 1; $i >= 0; $i--) {
-            $n = $digits[$i];
-            if ($alt) {
-                $n *= 2;
-                if ($n > 9) {
-                    $n -= 9;
-                }
-            }
-            $sum += $n;
-            $alt = !$alt;
-        }
-        return $sum % 10;
-    }
-
-    public function generate_account_number($branch_code, $product_code): string
-    {
-
-        //sub_category_code
-        do {
-            // Generate a 5-digit random number for the unique account identifier
-            $unique_identifier = str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT);
-
-            // Concatenate branch code, unique identifier, and product code
-            $partial_account_number = $branch_code . $unique_identifier . $product_code;
-
-            // Calculate the checksum digit
-            $checksum = (10 - $this->luhn_checksum($partial_account_number . '0')) % 10;
-
-            // Form the final 12-digit account number
-            $full_account_number = $partial_account_number . $checksum;
-
-            // Check for uniqueness using Laravel's Eloquent model
-            $is_unique = !AccountsModel::where('account_number', $full_account_number)->exists();
-
-        } while (!$is_unique);
-
-        return $full_account_number;
-    }
-
-
-    public function CreditAndDebit($source_account, $amount, $destination_accounts, $narration)
-    {
-        $reference_number = time();
-        $transactionService = new TransactionPostingService();
-        $source_account_details = AccountsModel::where("account_number", $source_account)->first();
-        $destination_account_details = AccountsModel::where("account_number", $destination_accounts)->first();
-
-        // Case 1: Both source_account and destination_account are provided
-        if ($source_account_details && $destination_account_details) {
-            // Use transaction posting service for double-entry
-            $transactionService->postTransaction([
-                'first_account' => $source_account,
-                'second_account' => $destination_accounts,
-                'amount' => $amount,
-                'narration' => $narration,
-            ]);
-            $source_account_name = $source_account_details->account_name;
-            $destination_account_name = $destination_account_details->account_name;
-            // Record on debit
-            $this->debit($reference_number, $source_account, $destination_accounts, $amount, $narration, $source_account_details->balance, $source_account_name, $destination_account_name);
-            // Record on credit
-            $this->credit($reference_number, $source_account, $destination_accounts, $amount, $narration, $destination_account_details->balance, $source_account_name, $destination_account_name);
-        }
-        // Case 2: Only source_account is provided (credit only)
-        elseif ($source_account_details && !$destination_account_details) {
-            // Only perform credit action
-            $source_account_name = $source_account_details->account_name;
-
-            // Record credit transaction
-            $this->credit($reference_number, $source_account, null, $amount, $narration, $source_account_details->balance + $amount, $source_account_name, null);
-        }
-        // Case 3: Only destination_account is provided (debit only)
-        elseif (!$source_account_details && $destination_account_details) {
-            // Only perform debit action
-            $destination_account_name = $destination_account_details->account_name;
-
-            // Record debit transaction
-            $this->debit($reference_number, null, $destination_accounts, $amount, $narration, $destination_account_details->balance - $amount, null, $destination_account_name);
-        }
-        // Case 4: Both accounts are null
-        else {
-            throw new \Exception('Both source and destination accounts cannot be null.');
-        }
-    }
-
-
-
-
-    public function debit($reference, $source_account_number, $destination_account_number, $credit, $narration, $running_balance, $source_account_name, $destinantion_account_name)
-    {
-
-
-        /**
-         * @var mixed prepare sender data
-         */
-
-        $sender_branch_id='';
-        $sender_product_id='';
-        $sender_sub_product_id='';
-        $sender_id='';
-        $sender_name='';
-
-
-        $senderInfo=  DB::table('clients')->where('client_number', DB::table('accounts')
-            ->where('account_number', $destinantion_account_name)->value('client_number'))->first();
-        if($senderInfo){
-            $accounts=DB::table('accounts')->where('account_number',$source_account_number)->first();
-            $sender_branch_id=$senderInfo->branch_id;
-            $sender_product_id=$accounts->category_code;
-            $sender_sub_product_id=$accounts->sub_category_code;
-            $sender_id=$senderInfo->client_number;
-            $sender_name=$senderInfo->first_name.' '.$senderInfo->middle_name.' .'.$senderInfo->last_name;
-
-        }
-
-        //DEBIT RECORD MEMBER
-        $beneficiary_branch_id='';
-        $beneficiary_product_id='';
-        $beneficiary_sub_product_id='';
-        $beneficiary_id='';
-        $beneficiary_name='';
-
-        $receiverInfo= DB::table('clients')->where('client_number', DB::table('accounts')
-            ->where('account_number', $destinantion_account_name)->value('client_number'))->first();
-        if($receiverInfo){
-
-//            $accounts=DB::table('accounts')->where('account_number',$source_account_number)->first();
-//            $beneficiary_branch_id=$senderInfo->branch_id;
-//            $beneficiary_product_id=$accounts->category_code;
-//            $beneficiary_sub_product_id=$accounts->sub_category_code;
-//            $beneficiary_id=$senderInfo->client_number;
-//            $beneficiary_name=$senderInfo->first_name.' '.$senderInfo->middle_name.' '.$senderInfo->last_name;
-
-
-            $beneficiary_id=$senderInfo->client_number;
-            $beneficiary_name=$senderInfo->first_name.' '.$senderInfo->middle_name.' '.$senderInfo->last_name;
-        }
-
-        $accounts=DB::table('accounts')->where('account_number',$source_account_number)->first();
-
-        $major_category_code=$accounts->major_category_code;
-        $category_code=$accounts->category_code;
-        $sub_category_code=$accounts->sub_category_code;
-
-
-        general_ledger::create([
-            'record_on_account_number' => $source_account_number  ? :0,
-            'record_on_account_number_balance' => $running_balance  ? :0,
-            'major_category_code' =>$major_category_code  ? :0,
-            'category_code' => $category_code  ? :0,
-            'sub_category_code' => $sub_category_code  ? :0,
-            'sender_sub_product_id' =>  null,
-            'beneficiary_product_id' => null,
-            'beneficiary_sub_product_id' => null,
-            'sender_id' =>  $sender_id  ?:1,
-            'beneficiary_id' => $beneficiary_id  ?:1,
-            'sender_name' => $sender_name,
-            'beneficiary_name' => $beneficiary_name,
-            'sender_account_number' => $source_account_number,
-            'beneficiary_account_number' => $destination_account_number,
-            'transaction_type' => 'IFT',
-            'sender_account_currency_type' => 'TZS',
-            'beneficiary_account_currency_type' => 'TZS',
-            'narration' => $narration,
-            'credit'  => 0,
-            'debit' => (double)$credit,
-            'reference_number' => $reference,
-            'trans_status' => 'Successful',
-            'trans_status_description' => 'Successful',
-            'swift_code' => '',
-            'destination_bank_name' => '',
-            'destination_bank_number' => '',
-            'payment_status' => 'Successful',
-            'recon_status' => 'Pending',
-            // 'partner_bank' => AccountsModel::where('account_number', $this->bank1)->value('institution_number'),
-            // 'partner_bank_name' => AccountsModel::where('account_number', $this->bank1)->value('account_name'),
-            // 'partner_bank_account_number' => $this->bank1,
-            'partner_bank_transaction_reference_number' => '0000',
-
-        ]);
-
-
-
-    }
-
-
-    public function credit($reference, $source_account_number, $destination_account_number, $credit, $narration, $running_balance, $source_account_name, $destinantion_account_name)
-    {
-
-
-        /**
-         * @var mixed prepare sender data
-         */
-
-        $sender_branch_id='';
-        $sender_product_id='';
-        $sender_sub_product_id='';
-        $sender_id='';
-        $sender_name='';
-
-
-        $senderInfo=  DB::table('clients')->where('client_number', DB::table('accounts')
-            ->where('account_number', $destinantion_account_name)->value('client_number'))->first();
-        if($senderInfo){
-            $accounts=DB::table('accounts')->where('account_number',$source_account_number)->first();
-            $sender_branch_id=$senderInfo->branch_id;
-            $sender_product_id=$accounts->category_code;
-            $sender_sub_product_id=$accounts->sub_category_code;
-            $sender_id=$senderInfo->client_number;
-            $sender_name=$senderInfo->first_name.' '.$senderInfo->middle_name.' .'.$senderInfo->last_name;
-
-        }
-
-        //DEBIT RECORD MEMBER
-        $beneficiary_branch_id='';
-        $beneficiary_product_id='';
-        $beneficiary_sub_product_id='';
-        $beneficiary_id='';
-        $beneficiary_name='';
-
-        $receiverInfo= DB::table('clients')->where('client_number', DB::table('accounts')
-            ->where('account_number', $destinantion_account_name)->value('client_number'))->first();
-        if($receiverInfo){
-
-
-            $beneficiary_id=$senderInfo->client_number;
-            $beneficiary_name=$senderInfo->first_name.' '.$senderInfo->middle_name.' '.$senderInfo->last_name;
-        }
-
-        $accounts=DB::table('accounts')->where('account_number',$destination_account_number)->first();
-
-        $major_category_code=$accounts->major_category_code;
-        $category_code=$accounts->category_code;
-        $sub_category_code=$accounts->sub_category_code;
-
-
-        general_ledger::create([
-            'record_on_account_number' => $destination_account_number ? :0,
-            'record_on_account_number_balance' => $running_balance ? :0,
-            'major_category_code' =>$major_category_code  ? :0,
-            'category_code' => $category_code  ? :0,
-            'sub_category_code' => $sub_category_code  ? :0,
-            'sender_sub_product_id' =>  null,
-            'beneficiary_product_id' => null,
-            'beneficiary_sub_product_id' => null,
-            'sender_id' =>  $sender_id  ?:1,
-            'beneficiary_id' => $beneficiary_id  ?:1,
-            'sender_name' => $sender_name,
-            'beneficiary_name' => $beneficiary_name,
-            'sender_account_number' => $source_account_number,
-            'beneficiary_account_number' => $destination_account_number,
-            'transaction_type' => 'IFT',
-            'sender_account_currency_type' => 'TZS',
-            'beneficiary_account_currency_type' => 'TZS',
-            'narration' => $narration,
-            'credit'  => (double)$credit,
-            'debit' => 0,
-            'reference_number' => $reference,
-            'trans_status' => 'Successful',
-            'trans_status_description' => 'Successful',
-            'swift_code' => '',
-            'destination_bank_name' => '',
-            'destination_bank_number' => '',
-            'payment_status' => 'Successful',
-            'recon_status' => 'Pending',
-            'partner_bank_transaction_reference_number' => '0000',
-
-        ]);
-
-
-
-    }
 }

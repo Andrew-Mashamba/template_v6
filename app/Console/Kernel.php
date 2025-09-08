@@ -50,9 +50,9 @@ class Kernel extends ConsoleKernel
                 ->withoutOverlapping()
                 ->appendOutputTo(storage_path('logs/budget-quarterly-close.log'));
         
-        // Daily system activities at the end of each day - includes budget monitoring
+        // Daily system activities at the start of each day - includes budget monitoring
         $schedule->command('system:daily-activities')
-                ->dailyAt('23:55')
+                ->dailyAt('00:05')
                 ->withoutOverlapping()
                 ->runInBackground()
                 ->appendOutputTo(storage_path('logs/daily-activities.log'));
@@ -71,6 +71,20 @@ class Kernel extends ConsoleKernel
                 ->withoutOverlapping()
                 ->runInBackground()
                 ->appendOutputTo(storage_path('logs/quarterly-activities.log'));
+        
+        // Execute standing instructions - Run daily at 6:00 AM
+        $schedule->command('standing-instructions:execute')
+                ->dailyAt('06:00')
+                ->withoutOverlapping()
+                ->runInBackground()
+                ->appendOutputTo(storage_path('logs/standing-instructions.log'));
+        
+        // Execute standing instructions - Additional run at 2:00 PM for same-day instructions
+        $schedule->command('standing-instructions:execute')
+                ->dailyAt('14:00')
+                ->withoutOverlapping()
+                ->runInBackground()
+                ->appendOutputTo(storage_path('logs/standing-instructions.log'));
     }
 
     /**

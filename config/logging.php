@@ -70,6 +70,19 @@ return [
             'permission' => 0664,
         ],
 
+        'end_of_day' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/end-of-day/end-of-day.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 30,
+            'replace_placeholders' => true,
+            'permission' => 0664,
+            'formatter' => env('LOG_STDERR_FORMATTER'),
+            'formatter_with' => [
+                'dateFormat' => 'Y-m-d H:i:s',
+            ],
+        ],
+
         'stack' => [
             'driver' => 'stack',
             'channels' => ['daily', 'luku'],

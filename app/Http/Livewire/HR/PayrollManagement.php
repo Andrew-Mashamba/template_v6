@@ -59,13 +59,17 @@ class PayrollManagement extends Component
         $transportAllowance = $basicSalary * 0.10;
         
         $grossSalary = $basicSalary + $houseAllowance + $transportAllowance;
-        $totalDeductions = $paye + $nssf + $nhif;
-        $netSalary = $grossSalary - $totalDeductions;
+        
+        // Calculate pay period dates
+        $startDate = Carbon::create($this->year, $this->month, 1);
+        $endDate = $startDate->copy()->endOfMonth();
         
         PayRoll::create([
             'employee_id' => $employee->id,
             'month' => $this->month,
             'year' => $this->year,
+            'pay_period_start' => $startDate,
+            'pay_period_end' => $endDate,
             'basic_salary' => $basicSalary,
             'house_allowance' => $houseAllowance,
             'transport_allowance' => $transportAllowance,
@@ -73,8 +77,10 @@ class PayrollManagement extends Component
             'paye' => $paye,
             'nssf' => $nssf,
             'nhif' => $nhif,
-            'total_deductions' => $totalDeductions,
-            'net_salary' => $netSalary,
+            'tax_deductions' => $paye, // Map PAYE to tax_deductions
+            'social_security' => $nssf, // Map NSSF to social_security
+            'health_insurance' => $nhif, // Map NHIF to health_insurance
+            // total_deductions and net_salary are generated columns - don't insert
             'status' => 'pending',
             'payment_date' => Carbon::create($this->year, $this->month, 25)
         ]);

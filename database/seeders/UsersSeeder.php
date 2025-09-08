@@ -28,7 +28,7 @@ class UsersSeeder extends Seeder
                 'name' => 'Jane Doe',
                 'email' => 'jane.doe@example.com',
                 'email_verified_at' => '2025-07-17 16:25:47',
-                'password' => '$2y$10$6N6fggS4OFwbUp0Rm0dAQeMIsWhJMbpZjqlKGQuuEuci.PZIgZTN.',
+                'password' => '$2y$10$TyRcJsQ01zrX4AQmwMTF6.r/lTQbgSTdh5bWXi3kDlGLYU61apKTq', // Password: 1234567890
                 'remember_token' => null,
                 'current_team_id' => 1,
                 'profile_photo_path' => null,
@@ -63,7 +63,7 @@ class UsersSeeder extends Seeder
                 'name' => 'Andrew S. Mashamba',
                 'email' => 'andrew.s.mashamba@gmail.com',
                 'email_verified_at' => '2025-07-17 16:25:47',
-                'password' => '$2y$10$xIXlpN/bmBi.rwcsu8v0EOb2Fu92ngFbkLbg.ImzN7KBxny89Is4W',
+                'password' => '$2y$10$TyRcJsQ01zrX4AQmwMTF6.r/lTQbgSTdh5bWXi3kDlGLYU61apKTq', // Password: 1234567890
                 'remember_token' => null,
                 'current_team_id' => 1,
                 'profile_photo_path' => null,

@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('budget_alerts', function (Blueprint $table) {
+        if (!Schema::hasTable('budget_alerts')) {
+            Schema::create('budget_alerts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('budget_id')->constrained('budget_managements');
             $table->enum('alert_type', [
@@ -43,6 +44,7 @@ return new class extends Migration
             $table->index(['severity', 'is_read']);
             $table->index('created_at');
         });
+        }
     }
 
     /**

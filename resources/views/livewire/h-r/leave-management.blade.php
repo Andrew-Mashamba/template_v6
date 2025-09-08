@@ -108,28 +108,37 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($leaveRequests as $request)
+                    @forelse($leaves as $leave)
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $request['employee'] }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ $request['type'] }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">
-                                {{ $request['start_date']->format('M d') }} - {{ $request['end_date']->format('M d, Y') }}
+                            <div class="text-sm font-medium text-gray-900">
+                                @if($leave->employee)
+                                    {{ $leave->employee->first_name }} {{ $leave->employee->last_name }}
+                                    <div class="text-xs text-gray-500">{{ $leave->employee->employee_number }}</div>
+                                @else
+                                    Unknown Employee
+                                @endif
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ $request['days'] }} days</div>
+                            <div class="text-sm text-gray-900">{{ ucfirst($leave->leave_type) }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @if($request['status'] == 'pending')
+                            <div class="text-sm text-gray-900">
+                                {{ \Carbon\Carbon::parse($leave->start_date)->format('M d') }} - {{ \Carbon\Carbon::parse($leave->end_date)->format('M d, Y') }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                {{ \Carbon\Carbon::parse($leave->start_date)->diffInDays(\Carbon\Carbon::parse($leave->end_date)) + 1 }} days
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if($leave->status == 'pending')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                     Pending
                                 </span>
-                            @elseif($request['status'] == 'approved')
+                            @elseif($leave->status == 'approved')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                     Approved
                                 </span>
@@ -140,17 +149,17 @@
                             @endif
                         </td>
                         <td class="px-6 py-4">
-                            <div class="text-sm text-gray-900 max-w-xs truncate">{{ $request['reason'] }}</div>
+                            <div class="text-sm text-gray-900 max-w-xs truncate">{{ $leave->reason }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            @if($request['status'] == 'pending')
-                                <button wire:click="approveLeave({{ $request['id'] }})" 
+                            @if($leave->status == 'pending')
+                                <button wire:click="approveLeave({{ $leave->id }})" 
                                         class="text-green-600 hover:text-green-900 mr-3">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </button>
-                                <button wire:click="rejectLeave({{ $request['id'] }})" 
+                                <button wire:click="rejectLeave({{ $leave->id }})" 
                                         class="text-red-600 hover:text-red-900">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -166,7 +175,13 @@
                             @endif
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                            No leave requests found
+                        </td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

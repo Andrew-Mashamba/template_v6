@@ -82,7 +82,7 @@
                 <div>
                     <p class="text-sm text-gray-600">Total Written Off</p>
                     <p class="text-2xl font-bold text-gray-900 mt-1">
-                        TZS {{ number_format(DB::table('loan_write_offs')->where('status', 'approved')->sum('amount'), 2) }}
+                        TZS {{ number_format(DB::table('loan_write_offs')->where('status', 'approved')->sum('total_amount'), 2) }}
                     </p>
                     <p class="text-xs text-gray-500 mt-1">This period</p>
                 </div>
@@ -211,7 +211,7 @@
                                 <span class="text-xs text-gray-400">{{ $writeOff->client_number }}</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                TZS {{ number_format($writeOff->amount, 2) }}
+                                TZS {{ number_format($writeOff->total_amount, 2) }}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500">
                                 {{ Str::limit($writeOff->reason, 50) }}

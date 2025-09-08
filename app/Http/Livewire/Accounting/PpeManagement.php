@@ -680,6 +680,49 @@ class PpeManagement extends Component
     {
         return PPE::limit(10)->get();
     }
+    
+    // Additional computed properties for dashboard
+    public function getTotalAssetCountProperty()
+    {
+        return PPE::count();
+    }
+    
+    public function getActiveAssetsCountProperty()
+    {
+        return PPE::where('status', 'active')->count();
+    }
+    
+    public function getPendingDisposalCountProperty()
+    {
+        return PPE::where('status', 'pending_disposal')->count();
+    }
+    
+    public function getPendingApprovalCountProperty()
+    {
+        return PPE::where('disposal_approval_status', 'pending')->count();
+    }
+    
+    public function getApprovedDisposalCountProperty()
+    {
+        return PPE::where('disposal_approval_status', 'approved')->count();
+    }
+    
+    public function getRejectedDisposalCountProperty()
+    {
+        return PPE::where('disposal_approval_status', 'rejected')->count();
+    }
+    
+    public function getCompletedDisposalCountProperty()
+    {
+        return PPE::where('status', 'disposed')->count();
+    }
+    
+    public function getAssetsForDisposalProperty()
+    {
+        return PPE::whereIn('status', ['pending_disposal', 'under_repair'])
+                  ->orderBy('created_at', 'desc')
+                  ->get();
+    }
 
     // Existing methods (updated versions)
     public function updated($field)
@@ -1042,6 +1085,11 @@ class PpeManagement extends Component
         CalculatePpeDepreciation::dispatch();
         $this->emit('showNotification', 'Depreciation calculation job has been dispatched!', 'success');
     }
+    
+    public function runDepreciation()
+    {
+        $this->runDepreciationJob();
+    }
 
     // Helper methods
     public function createNewAccountNumber($major_category_code, $category_code, $sub_category_code, $parent_account)
@@ -1101,6 +1149,7 @@ class PpeManagement extends Component
 
         return $full_account_number;
     }
+
 
     public function render()
     {

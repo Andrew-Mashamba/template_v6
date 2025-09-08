@@ -9,7 +9,7 @@
 
             <div class="w-full flex gap-4 p-4">
                 <div class="w-3/4 bg-white rounded-md p-2">
-                    <table class="w-full text-sm text-left text-blue-100 mb-4">
+                    <table class="w-full text-sm text-left text-gray-500 mb-4">
                         <thead class="text-xs text-black bg-blue-100 dark:text-white w-full">
                         <tr class="border md:border-none block md:table-row w-full">
                             <th class="p-2 border-r px-6 py-4  text-xs text-black ">Payee</th>

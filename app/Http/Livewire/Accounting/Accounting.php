@@ -76,9 +76,6 @@ class Accounting extends Component
             ['id' => 37, 'label' => 'Ledger Accounts'],
             ['id' => 47, 'label' => 'List of All Accounts'],
             ['id' => 2, 'label' => 'Manual Posting'],
-            ['id' => 44, 'label' => 'Internal Transfers'],
-            ['id' => 45, 'label' => 'Adjustments'],
-            ['id' => 46, 'label' => 'Till and Cash Management'],
             ['id' => 3, 'label' => 'External Bank Accounts'],
             ['id' => 4, 'label' => 'Loan Disbursement'],
             ['id' => 6, 'label' => 'Standing Instructions'],
@@ -119,9 +116,8 @@ class Accounting extends Component
         ];
 
         $this->menuCategories = [
-            'Core Accounting' => [1, 37, 47, 2, 44, 45, 46, 3, 4, 6],
+            'Core Accounting' => [1, 37, 47, 2, 3, 4, 6],
             'Financial Statements' => [12, 40, 41, 42, 28, 8, 5],
-            'Member Management' => [9, 33, 34, 35],
             'Asset Management' => [16, 20, 32],
             'Risk Management' => [17, 23, 31],
             'Operations' => [13, 14, 15, 18, 30, 19, 21, 22, 24, 25, 26, 27, 29, 36, 38, 39],

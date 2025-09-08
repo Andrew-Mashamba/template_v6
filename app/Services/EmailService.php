@@ -39,13 +39,17 @@ class EmailService
         Log::info('[EMAIL_SEND] Starting email send process', $logContext);
         
         try {
-            // Check rate limiting
-            Log::info('[EMAIL_SEND] Checking rate limit', ['user_id' => $userId]);
-            if (!$this->checkRateLimit($userId)) {
-                Log::warning('[EMAIL_SEND] Rate limit exceeded', ['user_id' => $userId]);
-                throw new Exception('Rate limit exceeded. Please wait before sending more emails.');
+            // Check rate limiting (skip for system/background jobs)
+            if ($userId) {
+                Log::info('[EMAIL_SEND] Checking rate limit', ['user_id' => $userId]);
+                if (!$this->checkRateLimit($userId)) {
+                    Log::warning('[EMAIL_SEND] Rate limit exceeded', ['user_id' => $userId]);
+                    throw new Exception('Rate limit exceeded. Please wait before sending more emails.');
+                }
+                Log::info('[EMAIL_SEND] Rate limit check passed', ['user_id' => $userId]);
+            } else {
+                Log::info('[EMAIL_SEND] Skipping rate limit check for system/background email');
             }
-            Log::info('[EMAIL_SEND] Rate limit check passed', ['user_id' => $userId]);
             
             // Validate recipient email with better error handling
             Log::info('[EMAIL_SEND] Validating recipient email', ['email' => $data['to']]);
@@ -97,7 +101,7 @@ class EmailService
                 'mail.mailers.smtp.username' => $smtpConfig['username'],
                 'mail.mailers.smtp.password' => $smtpConfig['password'],
                 'mail.from.address' => $smtpConfig['username'],
-                'mail.from.name' => Auth::user()->name,
+                'mail.from.name' => Auth::user() ? Auth::user()->name : ($data['from_name'] ?? 'SACCOS System'),
             ]);
             Log::info('[EMAIL_SEND] Mail configuration applied successfully');
             
@@ -113,7 +117,7 @@ class EmailService
                 Log::info('[EMAIL_SEND] Saving email to database for undo capability');
                 try {
                     $emailId = DB::table('emails')->insertGetId([
-                        'sender_id' => Auth::id(),
+                        'sender_id' => Auth::id() ?? null,
                         'recipient_email' => $data['to'],
                         'cc' => $data['cc'] ?? null,
                         'bcc' => $data['bcc'] ?? null,
@@ -137,7 +141,7 @@ class EmailService
                 Log::info('[EMAIL_SEND] Queuing email for undo service', ['email_id' => $emailId]);
                 try {
                     $undoService = new UndoSendService();
-                    $undoResult = $undoService->queueEmailForSending($emailId, Auth::id());
+                    $undoResult = $undoService->queueEmailForSending($emailId, Auth::id() ?? 0);
                     
                     if ($undoResult['success']) {
                         $undoUntil = $undoResult['undo_until'];
@@ -163,7 +167,7 @@ class EmailService
                 $emailData = [
                     'subject' => $data['subject'],
                     'body' => $data['body'],
-                    'from_name' => Auth::user()->name,
+                    'from_name' => Auth::user() ? Auth::user()->name : ($data['from_name'] ?? 'SACCOS System'),
                     'from_email' => $smtpConfig['username'],
                 ];
                 Log::info('[EMAIL_SEND] Prepared email data for immediate send', [
@@ -186,7 +190,7 @@ class EmailService
                         $receiptService = new EmailReceiptService();
                         $message->send(function($msg) use ($receiptService, $data, $emailData) {
                             $receiptService->addReceiptHeaders($msg->getSwiftMessage(), array_merge($data, [
-                                'sender_email' => Auth::user()->email
+                                'sender_email' => Auth::user() ? Auth::user()->email : ($data['from_email'] ?? config('mail.from.address'))
                             ]));
                             $msg->subject($emailData['subject'])
                                 ->html($emailData['body']);
@@ -220,7 +224,7 @@ class EmailService
                 Log::info('[EMAIL_SEND] Saving email to database after immediate send attempt');
                 try {
                     $emailId = DB::table('emails')->insertGetId([
-                        'sender_id' => Auth::id(),
+                        'sender_id' => Auth::id() ?? null,
                         'recipient_email' => $data['to'],
                         'cc' => $data['cc'] ?? null,
                         'bcc' => $data['bcc'] ?? null,
@@ -259,7 +263,7 @@ class EmailService
                     
                     try {
                         $inboxEmailId = DB::table('emails')->insertGetId([
-                            'sender_id' => Auth::id(),
+                            'sender_id' => Auth::id() ?? null,
                             'recipient_id' => $recipientUser->id,
                             'recipient_email' => $data['to'],
                             'cc' => $data['cc'] ?? null,
@@ -284,7 +288,7 @@ class EmailService
                 // Log successful send
                 Log::info('[EMAIL_SEND] Logging email activity');
                 try {
-                    $this->logEmailActivity('sent', $emailId, Auth::id());
+                    $this->logEmailActivity('sent', $emailId, Auth::id() ?? null);
                     Log::info('[EMAIL_SEND] Email activity logged successfully');
                 } catch (Exception $logError) {
                     Log::warning('[EMAIL_SEND] Failed to log email activity', ['error' => $logError->getMessage()]);
@@ -521,7 +525,7 @@ class EmailService
             $imapService->connect();
             
             $sentData = [
-                'from' => Auth::user()->name . ' <' . config('mail.from.address') . '>',
+                'from' => (Auth::user() ? Auth::user()->name : 'SACCOS System') . ' <' . config('mail.from.address') . '>',
                 'to' => $emailData['to'],
                 'cc' => $emailData['cc'] ?? '',
                 'bcc' => $emailData['bcc'] ?? '',
