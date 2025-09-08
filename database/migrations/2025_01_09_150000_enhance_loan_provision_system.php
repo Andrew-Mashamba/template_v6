@@ -110,7 +110,15 @@ return new class extends Migration
             });
         }
         
-        // Add stage threshold fields to loan_provision_settings if not exists
+        // Add provision column and stage threshold fields to loan_provision_settings if not exists
+        if (!Schema::hasColumn('loan_provision_settings', 'provision')) {
+            Schema::table('loan_provision_settings', function (Blueprint $table) {
+                $table->string('provision', 50)->nullable()->after('id');
+                $table->decimal('rate', 5, 2)->nullable()->after('provision');
+                $table->timestamps();
+            });
+        }
+        
         if (!Schema::hasColumn('loan_provision_settings', 'stage1_days')) {
             Schema::table('loan_provision_settings', function (Blueprint $table) {
                 $table->integer('stage1_days')->default(0)->after('rate');
@@ -205,10 +213,16 @@ return new class extends Migration
         Schema::dropIfExists('journal_entry_lines');
         Schema::dropIfExists('journal_entries');
         
-        // Remove stage threshold fields from loan_provision_settings
+        // Remove stage threshold fields and provision column from loan_provision_settings
         if (Schema::hasColumn('loan_provision_settings', 'stage1_days')) {
             Schema::table('loan_provision_settings', function (Blueprint $table) {
                 $table->dropColumn(['stage1_days', 'stage2_days', 'stage3_days']);
+            });
+        }
+        
+        if (Schema::hasColumn('loan_provision_settings', 'provision')) {
+            Schema::table('loan_provision_settings', function (Blueprint $table) {
+                $table->dropColumn(['provision', 'rate', 'created_at', 'updated_at']);
             });
         }
         
