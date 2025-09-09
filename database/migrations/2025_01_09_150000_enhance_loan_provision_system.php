@@ -110,22 +110,7 @@ return new class extends Migration
             });
         }
         
-        // Add provision column and stage threshold fields to loan_provision_settings if not exists
-        if (!Schema::hasColumn('loan_provision_settings', 'provision')) {
-            Schema::table('loan_provision_settings', function (Blueprint $table) {
-                $table->string('provision', 50)->nullable()->after('id');
-                $table->decimal('rate', 5, 2)->nullable()->after('provision');
-                $table->timestamps();
-            });
-        }
-        
-        if (!Schema::hasColumn('loan_provision_settings', 'stage1_days')) {
-            Schema::table('loan_provision_settings', function (Blueprint $table) {
-                $table->integer('stage1_days')->default(0)->after('rate');
-                $table->integer('stage2_days')->default(30)->after('stage1_days');
-                $table->integer('stage3_days')->default(90)->after('stage2_days');
-            });
-        }
+        // Skip loan_provision_settings modifications as it's handled in separate migration
         
         // Create journal entries table if not exists
         if (!Schema::hasTable('journal_entries')) {
@@ -162,24 +147,7 @@ return new class extends Migration
             });
         }
         
-        // Insert default provision rates if not exists
-        $defaultRates = [
-            ['provision' => 'PERFORMING', 'rate' => 1.0, 'per' => 0, 'stage1_days' => 0, 'stage2_days' => 30, 'stage3_days' => 90],
-            ['provision' => 'WATCH', 'rate' => 5.0, 'per' => 30, 'stage1_days' => 0, 'stage2_days' => 30, 'stage3_days' => 90],
-            ['provision' => 'SUBSTANDARD', 'rate' => 25.0, 'per' => 90, 'stage1_days' => 0, 'stage2_days' => 30, 'stage3_days' => 90],
-            ['provision' => 'DOUBTFUL', 'rate' => 50.0, 'per' => 180, 'stage1_days' => 0, 'stage2_days' => 30, 'stage3_days' => 90],
-            ['provision' => 'LOSS', 'rate' => 100.0, 'per' => 365, 'stage1_days' => 0, 'stage2_days' => 30, 'stage3_days' => 90],
-        ];
-        
-        foreach ($defaultRates as $rate) {
-            DB::table('loan_provision_settings')->updateOrInsert(
-                ['provision' => $rate['provision']],
-                array_merge($rate, [
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ])
-            );
-        }
+        // Skip inserting default provision settings as it's handled in separate migration
         
         // Add days_in_arrears_at_closure to loans table if not exists
         if (!Schema::hasColumn('loans', 'days_in_arrears_at_closure')) {

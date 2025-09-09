@@ -143,79 +143,46 @@
                         @error('value') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                     </div>
 
-                    {{-- Source/Cash Account --}}
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Source Account (Cash/Bank)</label>
-                        <select wire:model="cash_account" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
-                            <option value="">Select Source Account</option>
-                            @php
-                                // Get cash and bank accounts
-                                $cashAccounts = \Illuminate\Support\Facades\DB::table('accounts')
-                                    ->where('major_category_code', '1000') // Assets
-                                    ->where(function($query) {
-                                        $query->where('account_name', 'LIKE', '%CASH%')
-                                              ->orWhere('account_name', 'LIKE', '%BANK%')
-                                              ->orWhere('account_name', 'LIKE', '%PETTY%');
-                                    })
-                                    ->where('status', 'ACTIVE')
-                                    ->whereNull('deleted_at')
-                                    ->orderBy('account_name')
-                                    ->get();
-                            @endphp
-                            @foreach($cashAccounts as $account)
-                                <option value="{{ $account->account_number }}">{{ $account->account_name }}</option>
-                            @endforeach
-                        </select>
-                        @error('cash_account') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                    {{-- Account Selection - Corrected Flow --}}
+                    <div class="col-span-2 bg-gray-50 rounded-lg border border-gray-200 p-4">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Account Selection</h3>
+                        <p class="text-sm text-gray-600 mb-4">Select where to create the intangible asset account and the other account for double-entry posting</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="parent_account_number" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Parent Account (Create Asset Under) *
+                                </label>
+                                <select wire:model="parent_account_number" id="parent_account_number" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm" required>
+                                    <option value="">-- Select Parent Account --</option>
+                                    @foreach($parentAccounts as $account)
+                                        <option value="{{ $account->account_number }}">
+                                            {{ $account->account_number }} - {{ $account->account_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">New intangible asset account will be created under this parent</p>
+                                @error('parent_account_number') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                            </div>
+                            
+                            <div>
+                                <label for="other_account_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Other Account (Cash/Bank) *
+                                </label>
+                                <select wire:model="other_account_id" id="other_account_id" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm" required>
+                                    <option value="">-- Select Cash/Bank Account --</option>
+                                    @foreach($otherAccounts as $account)
+                                        <option value="{{ $account->internal_mirror_account_number }}">
+                                            {{ $account->bank_name }} - {{ $account->account_number }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Account to be credited (Cash/Bank payment)</p>
+                                @error('other_account_id') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
                     </div>
-
-                    {{-- Asset Category --}}
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Asset Category</label>
-                        <select wire:model="category_code" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
-                            <option value="">Select Asset Category</option>
-                            @php
-                                // Get asset categories (L2 accounts under assets)
-                                $assetCategories = \Illuminate\Support\Facades\DB::table('accounts')
-                                    ->where('major_category_code', '1000') // Assets
-                                    ->where('account_level', '2') // Category level
-                                    ->where('status', 'ACTIVE')
-                                    ->whereNull('deleted_at')
-                                    ->orderBy('account_name')
-                                    ->get();
-                            @endphp
-                            @foreach($assetCategories as $category)
-                                <option value="{{ $category->category_code }}">{{ $category->account_name }}</option>
-                            @endforeach
-                        </select>
-                        @error('category_code') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
-                    </div>
-
-                    {{-- Asset Sub-Category (conditional) --}}
-                    @if($this->category_code)
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Asset Sub-Category</label>
-                        <select wire:model="asset_sub_category_code" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
-                            <option value="">Select Sub-Category</option>
-                            @php
-                                $subCategories = \Illuminate\Support\Facades\DB::table('accounts')
-                                    ->where('category_code', $this->category_code)
-                                    ->where('account_level', '3') // Sub-category level
-                                    ->where('status', 'ACTIVE')
-                                    ->whereNull('deleted_at')
-                                    ->orderBy('account_name')
-                                    ->get();
-                            @endphp
-                            @foreach($subCategories as $subCategory)
-                                <option value="{{ $subCategory->sub_category_code }}">{{ $subCategory->account_name }}</option>
-                            @endforeach
-                        </select>
-                        @error('asset_sub_category_code') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
-                    </div>
-                    @endif
 
                     {{-- Acquisition Date --}}
                     <div>

@@ -1,7 +1,7 @@
 # Comprehensive Loan Provision Management System
 
 ## Overview
-A complete IFRS 9 Expected Credit Loss (ECL) provision system has been implemented for the SACCOS Core System, replacing the traditional incurred loss model with a forward-looking approach.
+A complete IFRS 9 Expected Credit Loss (ECL) provision system has been implemented for the SACCOS Core System, fully replacing the traditional incurred loss model with a forward-looking approach. The new system is now the default provision management system.
 
 ## Key Features Implemented
 
@@ -64,9 +64,12 @@ A complete IFRS 9 Expected Credit Loss (ECL) provision system has been implement
 
 ### Location
 The provision system can be accessed through:
-- **Path**: Accounting Module → Provision Management
-- **Component**: `App\Http\Livewire\Accounting\ProvisionManagement`
-- **View**: `resources/views/livewire/accounting/provision-management.blade.php`
+- **Path**: Accounting Module → Provision
+- **Component**: `App\Http\Livewire\Accounting\Provision`
+- **View**: `resources/views/livewire/accounting/provision.blade.php`
+
+### Direct Access
+The IFRS 9 ECL provision system is now the default. The legacy system has been fully replaced.
 
 ### Tabs Available
 1. **Overview**: Summary statistics and ECL stage breakdown
@@ -108,12 +111,11 @@ The provision system can be accessed through:
 ## Services & Components
 
 ### Core Services
-- `LoanProvisionCalculationService` - Main calculation engine
-- `LoanLossProvisionService` - Legacy provision service (maintained)
+- `LoanProvisionCalculationService` - Main ECL calculation engine
+- `LoanLossProvisionService` - Service layer for provision operations
 
 ### Livewire Components
-- `ProvisionManagement` - New comprehensive system
-- `Provision` - Legacy component (redirects to new system)
+- `Provision` - Comprehensive IFRS 9 ECL provision management component
 
 ## Usage Instructions
 
@@ -186,6 +188,15 @@ The provision system can be accessed through:
 - Audit trail for all changes
 - Journal entry approval workflow
 - Reversal authorization required
+
+## Testing Checklist
+- [ ] Provision calculations are accurate
+- [ ] Stage classification is correct
+- [ ] GL posting creates proper journal entries
+- [ ] Reports generate successfully
+- [ ] Charts display correctly
+- [ ] Export functions work
+- [ ] Search and filter features operate properly
 
 ## Future Enhancements
 1. Machine learning for PD estimation

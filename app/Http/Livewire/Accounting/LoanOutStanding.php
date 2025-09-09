@@ -6,6 +6,7 @@ use App\Models\loans_schedules;
 use App\Models\LoansModel;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use App\Services\BalanceSheetItemIntegrationService;
 
 class LoanOutStanding extends Component
 {

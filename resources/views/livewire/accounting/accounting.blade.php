@@ -446,11 +446,11 @@
                     @elseif($this->tab_id == 17)
                         <livewire:accounting.loan-loss-reserve-manager />
                     @elseif($this->tab_id == 18)
-                        <livewire:accounting.accounts-receivable />
+                        <livewire:accounting.trade-and-other-receivables />
                     @elseif($this->tab_id == 20)
                         <livewire:accounting.ppe-management />
                     @elseif($this->tab_id == 21)
-                        <livewire:accounting.insurance />
+                        <livewire:accounting.other-income />
                     @elseif($this->tab_id == 19)
                         <livewire:accounting.insurance />
                     @elseif($this->tab_id == 37)
@@ -468,7 +468,7 @@
                     @elseif($this->tab_id == 29)
                         <livewire:accounting.investiments />
                     @elseif($this->tab_id == 30)
-                        <livewire:accounting.trade-payables />
+                        <livewire:accounting.trade-and-other-payables />
                     @elseif($this->tab_id == 31)
                         <livewire:accounting.provision />
                     @elseif($this->tab_id == 32)
@@ -491,6 +491,10 @@
                         <livewire:accounting.notes-to-accounts />
                     @elseif($this->tab_id == 42)
                         <livewire:accounting.statement-of-financial-position />
+                    @elseif($this->tab_id == 22)
+                        <livewire:accounting.financial-insurance />
+                    @elseif($this->tab_id == 24)
+                        <livewire:accounting.creditors />
                         @elseif($this->tab_id == 23)
                             <livewire:active-loan.write-offs />
                         @elseif($this->tab_id == 43)
