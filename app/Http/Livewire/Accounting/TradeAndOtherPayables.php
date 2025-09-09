@@ -162,7 +162,12 @@ class TradeAndOtherPayables extends Component
             ->get();
         
         // Load bank accounts for payments
-        $this->bankAccounts = AccountsModel::where('is_bank_account', true)
+        // Check for bank accounts in the accounts table with specific account types
+        $this->bankAccounts = AccountsModel::where(function($query) {
+                $query->where('account_name', 'LIKE', '%BANK%')
+                      ->orWhere('account_name', 'LIKE', '%CASH%')
+                      ->orWhere('major_category_code', '1000'); // Asset accounts that could be bank/cash
+            })
             ->where('status', 'ACTIVE')
             ->orderBy('account_name')
             ->get();

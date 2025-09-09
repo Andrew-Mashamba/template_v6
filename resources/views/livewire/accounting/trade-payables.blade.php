@@ -114,7 +114,11 @@
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select Cash/Bank Account</label>
                                 <select wire:model="bank_account_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
                                     <option value="">Select Account</option>
-                                    @foreach(DB::table('accounts')->where('is_bank_account', true)->where('status', 'ACTIVE')->get() as $account)
+                                    @foreach(DB::table('accounts')->where(function($query) {
+                                        $query->where('account_name', 'LIKE', '%BANK%')
+                                              ->orWhere('account_name', 'LIKE', '%CASH%')
+                                              ->orWhere('major_category_code', '1000');
+                                    })->where('status', 'ACTIVE')->get() as $account)
                                         <option value="{{ $account->id }}">{{ $account->account_name }}</option>
                                     @endforeach
                                 </select>
@@ -258,7 +262,11 @@
                                     <x-jet-label for="payment_account_id" value="{{ __('Payment Account') }}" />
                                     <select id="payment_account_id" wire:model.defer="payment_account_id" class="mt-1 block w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg">
                                         <option value="">Select Payment Account</option>
-                                        @foreach(DB::table('accounts')->where('is_bank_account', true)->where('status', 'ACTIVE')->get() as $account)
+                                        @foreach(DB::table('accounts')->where(function($query) {
+                                        $query->where('account_name', 'LIKE', '%BANK%')
+                                              ->orWhere('account_name', 'LIKE', '%CASH%')
+                                              ->orWhere('major_category_code', '1000');
+                                    })->where('status', 'ACTIVE')->get() as $account)
                                             <option value="{{ $account->id }}">{{ $account->account_name }}</option>
                                         @endforeach
                                     </select>
