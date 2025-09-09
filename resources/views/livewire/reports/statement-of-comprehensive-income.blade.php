@@ -93,7 +93,7 @@
                             to {{ \Carbon\Carbon::parse($statementData['period_end'])->format('F d, Y') }}
                         </p>
                         <p class="text-sm text-gray-500 mt-1">(All amounts in Tanzanian Shillings)</p>
-                        @if(DB::table('general_ledger')->count() > 0 && DB::table('general_ledger')->count() <= 20)
+                        {{-- @if(DB::table('general_ledger')->count() > 0 && DB::table('general_ledger')->count() <= 20)
                             <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                 <p class="text-sm text-blue-800">
                                     <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -102,7 +102,7 @@
                                     <strong>Demo Mode:</strong> This statement includes sample data for demonstration purposes. In a live system, this would show actual transaction data.
                                 </p>
                             </div>
-                        @endif
+                        @endif--}}
                     </div>
 
                     <!-- Statement Content -->

@@ -73,7 +73,9 @@ class EnhancedBudgetCheckingService extends BudgetCheckingService
             // Try to create allocation if it doesn't exist
             try {
                 $flexService = new BudgetFlexibilityService();
-                $flexService->createMonthlyAllocations($budgetItem->id, 'MONTHLY', []);
+                // Extract year from expense month (format: YYYY-MM)
+                $year = (int) substr($expenseMonth, 0, 4);
+                $flexService->createMonthlyAllocations($budgetItem->id, $year, []);
                 $allocation = $this->getMonthlyAllocation($budgetItem->id, $expenseMonth);
             } catch (\Exception $e) {
                 Log::channel('budget_management')->error('Failed to create allocation', [
