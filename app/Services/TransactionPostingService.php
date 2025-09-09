@@ -424,17 +424,8 @@ class TransactionPostingService
             // Log the start of the ledger entry creation
             Log::info('Attempting to create general ledger entry', $ledgerData);
 
-            // Check for duplicate reference_number before creating
-            $existingEntry = general_ledger::where('reference_number', $ledgerData['reference_number'])->first();
-            if ($existingEntry) {
-                Log::warning('Duplicate reference_number found, skipping creation', [
-                    'reference_number' => $ledgerData['reference_number'],
-                    'existing_id' => $existingEntry->id
-                ]);
-                $ledgerEntry = $existingEntry;
-            } else {
-                $ledgerEntry = general_ledger::create($ledgerData);
-            }
+            // Create the ledger entry (both debit and credit entries should have same reference_number)
+            $ledgerEntry = general_ledger::create($ledgerData);
 
             if (!$ledgerEntry) {
                 Log::error('Failed to create general ledger entry', $ledgerData);
