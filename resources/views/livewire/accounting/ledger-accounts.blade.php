@@ -512,13 +512,13 @@
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"></div>
         <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
-                <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-2xl sm:w-full">
+                <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-lg sm:w-full">
                     <div class="bg-white px-6 py-4">
                         <div class="flex items-center justify-between border-b pb-3">
                             <h3 class="text-lg font-medium text-gray-900">
                                 {{ isset($parentAccountNumber) && $parentAccountNumber ? 'Add Sub-Account' : 'Create New Account' }}
                             </h3>
-                            <button wire:click="$set('showCreateModal', false)" class="text-gray-400 hover:text-gray-500">
+                            <button wire:click="closeCreateModal" class="text-gray-400 hover:text-gray-500">
                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
@@ -527,99 +527,249 @@
 
                         <form wire:submit.prevent="createAccount" class="mt-4 space-y-4">
                             @if(isset($parentAccountNumber) && $parentAccountNumber && isset($parentAccountData) && $parentAccountData)
-                                <div class="bg-blue-50 rounded-lg p-3 mb-4">
-                                    <div class="text-sm">
-                                        <span class="font-medium text-gray-700">Parent Account:</span>
-                                        <span class="text-gray-900 ml-2">{{ $parentAccountData['account_name'] ?? '' }}</span>
-                                        <span class="text-gray-500 ml-1">({{ $parentAccountNumber }})</span>
+                                <!-- Parent Account Information -->
+                                <div class="bg-blue-50 rounded-lg p-4">
+                                    <h4 class="text-sm font-semibold text-gray-700 mb-2">Parent Account Details</h4>
+                                    <div class="space-y-1 text-sm">
+                                        <div>
+                                            <span class="font-medium text-gray-600">Name:</span>
+                                            <span class="text-gray-900 ml-2">{{ $parentAccountData['account_name'] ?? '' }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-gray-600">Number:</span>
+                                            <span class="text-gray-900 ml-2 font-mono">{{ $parentAccountNumber }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-gray-600">Type:</span>
+                                            <span class="text-gray-900 ml-2">{{ $parentAccountData['type'] ?? '' }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-gray-600">Level:</span>
+                                            <span class="text-gray-900 ml-2">{{ $parentAccountData['account_level'] ?? '' }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 p-2 bg-blue-100 rounded text-xs text-blue-800">
+                                        <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        The new sub-account will inherit all properties from the parent account
                                     </div>
                                 </div>
-                            @endif
 
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
-                                    <input type="text" wire:model.defer="newAccount.account_name" 
+                                <!-- Only Account Name Field for Sub-Accounts -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Sub-Account Name <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                        wire:model.defer="newAccount.account_name" 
                                         class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
-                                        required>
+                                        placeholder="Enter the sub-account name"
+                                        required
+                                        autofocus>
                                     @error('newAccount.account_name')
                                         <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
                                     @enderror
                                 </div>
-
-                                @if(!isset($parentAccountNumber) || !$parentAccountNumber)
+                            @else
+                                <!-- Full form for top-level accounts -->
+                                <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
-                                        <select wire:model.defer="newAccount.type" 
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Account Name <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text" wire:model.defer="newAccount.account_name" 
                                             class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                                             required>
-                                            <option value="">Select Type</option>
-                                            <option value="ASSET">Asset</option>
-                                            <option value="LIABILITY">Liability</option>
-                                            <option value="EQUITY">Equity</option>
-                                            <option value="INCOME">Income</option>
-                                            <option value="EXPENSE">Expense</option>
-                                        </select>
-                                        @error('newAccount.type')
+                                        @error('newAccount.account_name')
                                             <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
                                         @enderror
                                     </div>
 
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Account Level</label>
-                                        <select wire:model.defer="newAccount.account_level" 
-                                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
-                                            required>
-                                            <option value="">Select Level</option>
-                                            <option value="1">Level 1 - Major</option>
-                                            <option value="2">Level 2 - Category</option>
-                                            <option value="3">Level 3 - Sub Category</option>
-                                            <option value="4">Level 4 - Detail</option>
-                                        </select>
-                                        @error('newAccount.account_level')
-                                            <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
-                                        @enderror
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                Account Type <span class="text-red-500">*</span>
+                                            </label>
+                                            <select wire:model.defer="newAccount.type" 
+                                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                                required>
+                                                <option value="">Select Type</option>
+                                                <option value="ASSET">Asset</option>
+                                                <option value="LIABILITY">Liability</option>
+                                                <option value="EQUITY">Equity</option>
+                                                <option value="INCOME">Income</option>
+                                                <option value="EXPENSE">Expense</option>
+                                            </select>
+                                            @error('newAccount.type')
+                                                <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Product Number <span class="text-red-500">*</span></label>
+                                            <input type="text" wire:model.defer="newAccount.product_number" 
+                                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                                required>
+                                            @error('newAccount.product_number')
+                                                <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                            @enderror
+                                        </div>
                                     </div>
-                                @endif
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Account Use</label>
-                                    <select wire:model.defer="newAccount.account_use" 
-                                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
-                                        <option value="">Select Use</option>
-                                        <option value="general">General</option>
-                                        <option value="control">Control</option>
-                                        <option value="detail">Detail</option>
-                                        <option value="header">Header</option>
-                                    </select>
                                 </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Initial Balance</label>
-                                    <input type="number" wire:model.defer="newAccount.balance" 
-                                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
-                                        step="0.01" value="0">
-                                </div>
-
-                                <div class="col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                                    <textarea wire:model.defer="newAccount.notes" 
-                                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
-                                        rows="2"></textarea>
-                                </div>
-                            </div>
+                            @endif
 
                             <div class="flex justify-end space-x-3 pt-4 border-t">
-                                <button type="button" wire:click="$set('showCreateModal', false)"
+                                <button type="button" wire:click="closeCreateModal"
                                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
                                     Cancel
                                 </button>
                                 <button type="submit"
-                                    class="px-4 py-2 text-sm font-medium text-white bg-blue-900 rounded-lg hover:bg-blue-800">
-                                    Create Account
+                                    wire:loading.attr="disabled"
+                                    wire:loading.class="opacity-50 cursor-not-allowed"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-blue-900 rounded-lg hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <span wire:loading.remove>Create Account</span>
+                                    <span wire:loading>Creating...</span>
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Edit Account Modal -->
+    @if($showEditModal && $editingAccount)
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"></div>
+        <div class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-6 py-4">
+                        <div class="flex items-center justify-between border-b pb-3">
+                            <h3 class="text-lg font-medium text-gray-900">Edit Account</h3>
+                            <button wire:click="closeEditModal" class="text-gray-400 hover:text-gray-500">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <form wire:submit.prevent="updateAccount" class="mt-4 space-y-4">
+                            <!-- Account Information Display -->
+                            <div class="bg-gray-50 rounded-lg p-3 space-y-2 text-sm">
+                                <div>
+                                    <span class="font-medium text-gray-600">Account Number:</span>
+                                    <span class="text-gray-900 ml-2 font-mono">{{ $editingAccount['account_number'] ?? '' }}</span>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-600">Account Type:</span>
+                                    <span class="text-gray-900 ml-2">{{ $editingAccount['type'] ?? '' }}</span>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-600">Account Level:</span>
+                                    <span class="text-gray-900 ml-2">{{ $editingAccount['account_level'] ?? '' }}</span>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-600">Current Balance:</span>
+                                    <span class="text-gray-900 ml-2 font-mono">{{ number_format(floatval($editingAccount['balance'] ?? 0), 2) }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Editable Fields -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Account Name <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" 
+                                    wire:model.defer="editingAccount.account_name" 
+                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                    required>
+                                @error('editingAccount.account_name')
+                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                                <textarea 
+                                    wire:model.defer="editingAccount.notes" 
+                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                    rows="3"></textarea>
+                            </div>
+
+                            <div class="flex justify-end space-x-3 pt-4 border-t">
+                                <button type="button" wire:click="closeEditModal"
+                                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                                    Cancel
+                                </button>
+                                <button type="submit"
+                                    wire:loading.attr="disabled"
+                                    wire:loading.class="opacity-50 cursor-not-allowed"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-blue-900 rounded-lg hover:bg-blue-800">
+                                    <span wire:loading.remove>Update Account</span>
+                                    <span wire:loading>Updating...</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Block Account Confirmation Modal -->
+    @if($showBlockModal && $blockingAccount)
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"></div>
+        <div class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-6 py-4">
+                        <div class="flex items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 text-center">
+                            <h3 class="text-lg font-medium text-gray-900">Block Account</h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500">
+                                    Are you sure you want to block this account?
+                                </p>
+                                <div class="mt-3 bg-gray-50 rounded-lg p-3 text-left">
+                                    <div class="text-sm space-y-1">
+                                        <div>
+                                            <span class="font-medium text-gray-600">Account:</span>
+                                            <span class="text-gray-900 ml-2">{{ $blockingAccount['account_name'] ?? '' }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="font-medium text-gray-600">Number:</span>
+                                            <span class="text-gray-900 ml-2 font-mono">{{ $blockingAccount['account_number'] ?? '' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-red-600 mt-3">
+                                    This action will prevent any transactions on this account until it is unblocked.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 sm:mt-6 flex space-x-3">
+                            <button type="button" wire:click="closeBlockModal"
+                                class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button type="button" wire:click="blockAccount"
+                                wire:loading.attr="disabled"
+                                wire:loading.class="opacity-50 cursor-not-allowed"
+                                class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">
+                                <span wire:loading.remove>Block Account</span>
+                                <span wire:loading>Blocking...</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

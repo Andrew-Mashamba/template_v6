@@ -170,9 +170,9 @@
         </div>
     </td>
     <td class="px-6 py-3 whitespace-nowrap text-center">
-        <div class="flex items-center justify-center space-x-2">
+        <div class="flex items-center justify-center space-x-1">
             <button wire:click="viewLedger('{{ $account->account_number }}')" 
-                class="text-blue-900 hover:text-blue-700 transition-colors focus:outline-none" 
+                class="p-1 text-blue-900 hover:text-blue-700 hover:bg-blue-50 rounded transition-all focus:outline-none" 
                 title="View Ledger">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -180,19 +180,43 @@
                 </svg>
             </button>
             <button wire:click="viewAccountDetails('{{ $account->account_number }}')" 
-                class="text-gray-600 hover:text-gray-900 transition-colors focus:outline-none" 
+                class="p-1 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded transition-all focus:outline-none" 
                 title="Account Details">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
             </button>
             <button wire:click="openCreateModal('{{ $account->account_number }}')" 
-                class="text-blue-900 hover:text-blue-700 transition-colors focus:outline-none" 
+                class="p-1 text-blue-900 hover:text-blue-700 hover:bg-blue-50 rounded transition-all focus:outline-none" 
                 title="Add Sub-Account">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
             </button>
+            <button wire:click="openEditModal('{{ $account->account_number }}')" 
+                class="p-1 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded transition-all focus:outline-none" 
+                title="Edit Account">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+            </button>
+            @if($account->status == 'ACTIVE')
+                <button wire:click="confirmBlockAccount('{{ $account->account_number }}')" 
+                    class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-all focus:outline-none" 
+                    title="Block Account">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                    </svg>
+                </button>
+            @else
+                <button wire:click="unblockAccount('{{ $account->account_number }}')" 
+                    class="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-all focus:outline-none" 
+                    title="Unblock Account">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </button>
+            @endif
         </div>
     </td>
 </tr>

@@ -2,13 +2,22 @@
 
 namespace App\Http\Livewire\Accounting;
 
+use App\Services\AccountCreationService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class LedgerAccounts extends Component
 {
     use WithPagination;
+
+    protected $listeners = [
+        'accountCreated' => '$refresh',
+        'accountUpdated' => '$refresh',
+        'accountBlocked' => '$refresh',
+        'accountUnblocked' => '$refresh'
+    ];
 
     // Filter properties
     public $searchTerm = '';
@@ -21,27 +30,25 @@ class LedgerAccounts extends Component
     public $showLedgerModal = false;
     public $showDetailsModal = false;
     public $showCreateModal = false;
+    public $showEditModal = false;
+    public $showBlockModal = false;
     public $selectedAccount = null;
     public $selectedAccountData = null;
     public $ledgerEntries = [];
     
-    // Create account modal properties
+    // Create/Edit account modal properties
     public $parentAccountNumber = null;
     public $parentAccountData = null;
+    public $editingAccount = null;
+    public $blockingAccount = null;
     
     // New account properties
     public $newAccount = [
         'account_name' => '',
-        'account_number' => '',
-        'parent_account_number' => '',
-        'account_level' => '',
         'account_use' => 'internal',
-        'notes' => '',
+        'product_number' => '1001', // Default product number
         'type' => '',
-        'major_category_code' => '',
-        'category_code' => '',
-        'sub_category_code' => '',
-        'status' => 'ACTIVE'
+        'notes' => ''
     ];
     
     // Account types based on IAS standards
@@ -354,6 +361,7 @@ class LedgerAccounts extends Component
     public function openCreateModal($parentAccountNumber = null)
     {
         $this->resetNewAccount();
+        $this->parentAccountNumber = $parentAccountNumber;
         
         if ($parentAccountNumber) {
             // Get parent account data
@@ -364,24 +372,12 @@ class LedgerAccounts extends Component
             if ($parent) {
                 $this->parentAccountData = (array) $parent;
                 
-                // Inherit properties from parent
-                $this->newAccount['parent_account_number'] = $parentAccountNumber;
-                $this->newAccount['type'] = $parent->type;
-                $this->newAccount['major_category_code'] = $parent->major_category_code;
-                $this->newAccount['category_code'] = $parent->category_code;
-                $this->newAccount['sub_category_code'] = $parent->sub_category_code;
-                $this->newAccount['account_use'] = $parent->account_use;
-                
-                // Set account level (parent level + 1)
-                $parentLevel = intval($parent->account_level ?? 1);
-                $this->newAccount['account_level'] = (string)($parentLevel + 1);
-                
-                // Generate suggested account number (parent number + next sequence)
-                $this->newAccount['account_number'] = $this->generateAccountNumber($parentAccountNumber);
+                // For sub-accounts, inherit the product_number from parent
+                $this->newAccount['product_number'] = $parent->product_number ?? '1001';
+                $this->newAccount['account_use'] = $parent->account_use ?? 'internal';
             }
         } else {
             // Creating a top-level account
-            $this->newAccount['account_level'] = '1';
             $this->parentAccountData = null;
         }
         
@@ -399,96 +395,205 @@ class LedgerAccounts extends Component
     {
         $this->newAccount = [
             'account_name' => '',
-            'account_number' => '',
-            'parent_account_number' => '',
-            'account_level' => '',
             'account_use' => 'internal',
-            'notes' => '',
+            'product_number' => '1001', // Default product number
             'type' => '',
-            'major_category_code' => '',
-            'category_code' => '',
-            'sub_category_code' => '',
-            'status' => 'ACTIVE'
+            'notes' => ''
         ];
+        $this->parentAccountNumber = null;
     }
     
-    private function generateAccountNumber($parentNumber)
-    {
-        // Get the last child account number for this parent
-        $lastChild = DB::table('accounts')
-            ->where('parent_account_number', $parentNumber)
-            ->orderBy('account_number', 'desc')
-            ->first();
-        
-        if ($lastChild) {
-            // Increment the last number
-            $lastNum = $lastChild->account_number;
-            // Extract the numeric part and increment
-            if (preg_match('/(\d+)$/', $lastNum, $matches)) {
-                $num = intval($matches[1]) + 1;
-                $baseLength = strlen($parentNumber);
-                // Ensure the new number is longer than parent
-                return $parentNumber . str_pad($num, 4, '0', STR_PAD_LEFT);
-            }
-        }
-        
-        // Default: parent number + 0001
-        return $parentNumber . '0001';
-    }
     
     public function createAccount()
     {
-        // Validate
-        $this->validate([
-            'newAccount.account_name' => 'required|string|max:200',
-            'newAccount.account_number' => 'required|string|unique:accounts,account_number|max:50',
-            'newAccount.type' => 'required|string',
-            'newAccount.account_level' => 'required|string',
-            'newAccount.major_category_code' => 'required|string|max:20',
-            'newAccount.category_code' => 'required|string|max:20',
-            'newAccount.sub_category_code' => 'required|string|max:20'
-        ], [
-            'newAccount.account_name.required' => 'Account name is required',
-            'newAccount.account_number.required' => 'Account number is required',
-            'newAccount.account_number.unique' => 'This account number already exists',
-            'newAccount.type.required' => 'Account type is required'
-        ]);
+        // Validate based on whether it's a sub-account or top-level account
+        if ($this->parentAccountNumber) {
+            // For sub-accounts, only account_name is required
+            $this->validate([
+                'newAccount.account_name' => 'required|string|max:200'
+            ], [
+                'newAccount.account_name.required' => 'Account name is required'
+            ]);
+        } else {
+            // For top-level accounts, require additional fields
+            $this->validate([
+                'newAccount.account_name' => 'required|string|max:200',
+                'newAccount.type' => 'required|string',
+                'newAccount.product_number' => 'required|string'
+            ], [
+                'newAccount.account_name.required' => 'Account name is required',
+                'newAccount.type.required' => 'Account type is required',
+                'newAccount.product_number.required' => 'Product number is required'
+            ]);
+        }
         
         try {
-            // Create the account
-            DB::table('accounts')->insert([
+            // Use the AccountCreationService
+            $accountService = new AccountCreationService();
+            
+            // Prepare the data for the service
+            $accountData = [
                 'account_name' => $this->newAccount['account_name'],
-                'account_number' => $this->newAccount['account_number'],
-                'parent_account_number' => $this->newAccount['parent_account_number'] ?: null,
-                'account_level' => $this->newAccount['account_level'],
                 'account_use' => $this->newAccount['account_use'],
-                'notes' => $this->newAccount['notes'],
-                'type' => $this->newAccount['type'],
-                'major_category_code' => $this->newAccount['major_category_code'],
-                'category_code' => $this->newAccount['category_code'],
-                'sub_category_code' => $this->newAccount['sub_category_code'],
-                'status' => $this->newAccount['status'],
-                'balance' => '0',
-                'debit' => '0',
-                'credit' => '0',
-                'client_number' => '0000', // Default for GL accounts
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
+                'product_number' => $this->newAccount['product_number'] ?: '1001', // Default if empty
+                'notes' => $this->newAccount['notes'] ?? '',
+                'branch_number' => auth()->user()->branch ?? '01' // Get branch from logged-in user or default
+            ];
+            
+            // Add type only for top-level accounts
+            if (!$this->parentAccountNumber) {
+                $accountData['type'] = $this->newAccount['type'];
+            }
+            
+            // Create the account using the service
+            $account = $accountService->createAccount($accountData, $this->parentAccountNumber);
             
             // Close modal and refresh
             $this->closeCreateModal();
             
             // Expand parent account to show new account
-            if ($this->newAccount['parent_account_number'] && !in_array($this->newAccount['parent_account_number'], $this->expandedAccounts)) {
-                $this->expandedAccounts[] = $this->newAccount['parent_account_number'];
+            if ($this->parentAccountNumber && !in_array($this->parentAccountNumber, $this->expandedAccounts)) {
+                $this->expandedAccounts[] = $this->parentAccountNumber;
             }
             
-            session()->flash('message', 'Account created successfully!');
+            session()->flash('message', 'Account "' . $account->account_name . '" created successfully with number: ' . $account->account_number);
+            
+            // Trigger a refresh of the accounts list
+            $this->emit('accountCreated');
             
         } catch (\Exception $e) {
+            Log::error('Failed to create account: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'parent_account' => $this->parentAccountNumber,
+                'account_data' => $this->newAccount
+            ]);
             session()->flash('error', 'Failed to create account: ' . $e->getMessage());
         }
+    }
+
+    public function openEditModal($accountNumber)
+    {
+        $account = DB::table('accounts')
+            ->where('account_number', $accountNumber)
+            ->first();
+        
+        if ($account) {
+            $this->editingAccount = (array) $account;
+            $this->showEditModal = true;
+        }
+    }
+    
+    public function closeEditModal()
+    {
+        $this->showEditModal = false;
+        $this->editingAccount = null;
+    }
+    
+    public function updateAccount()
+    {
+        $this->validate([
+            'editingAccount.account_name' => 'required|string|max:200'
+        ], [
+            'editingAccount.account_name.required' => 'Account name is required'
+        ]);
+        
+        try {
+            DB::table('accounts')
+                ->where('account_number', $this->editingAccount['account_number'])
+                ->update([
+                    'account_name' => $this->editingAccount['account_name'],
+                    'notes' => $this->editingAccount['notes'] ?? '',
+                    'updated_at' => now()
+                ]);
+            
+            $this->closeEditModal();
+            session()->flash('message', 'Account updated successfully!');
+            $this->emit('accountUpdated');
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to update account: ' . $e->getMessage());
+            session()->flash('error', 'Failed to update account: ' . $e->getMessage());
+        }
+    }
+    
+    public function confirmBlockAccount($accountNumber)
+    {
+        $account = DB::table('accounts')
+            ->where('account_number', $accountNumber)
+            ->first();
+        
+        if ($account) {
+            // Check if account has children
+            $hasChildren = DB::table('accounts')
+                ->where('parent_account_number', $accountNumber)
+                ->where('status', 'ACTIVE')
+                ->exists();
+            
+            if ($hasChildren) {
+                session()->flash('error', 'Cannot block account with active sub-accounts. Please block all sub-accounts first.');
+                return;
+            }
+            
+            // Check if account has non-zero balance
+            if (floatval($account->balance) != 0) {
+                session()->flash('error', 'Cannot block account with non-zero balance. Please clear the balance first.');
+                return;
+            }
+            
+            $this->blockingAccount = (array) $account;
+            $this->showBlockModal = true;
+        }
+    }
+    
+    public function blockAccount()
+    {
+        if (!$this->blockingAccount) {
+            return;
+        }
+        
+        try {
+            DB::table('accounts')
+                ->where('account_number', $this->blockingAccount['account_number'])
+                ->update([
+                    'status' => 'BLOCKED',
+                    'updated_at' => now()
+                ]);
+            
+            $this->showBlockModal = false;
+            $this->blockingAccount = null;
+            
+            session()->flash('message', 'Account blocked successfully!');
+            $this->emit('accountBlocked');
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to block account: ' . $e->getMessage());
+            session()->flash('error', 'Failed to block account: ' . $e->getMessage());
+        }
+    }
+    
+    public function unblockAccount($accountNumber)
+    {
+        try {
+            DB::table('accounts')
+                ->where('account_number', $accountNumber)
+                ->update([
+                    'status' => 'ACTIVE',
+                    'updated_at' => now()
+                ]);
+            
+            session()->flash('message', 'Account unblocked successfully!');
+            $this->emit('accountUnblocked');
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to unblock account: ' . $e->getMessage());
+            session()->flash('error', 'Failed to unblock account: ' . $e->getMessage());
+        }
+    }
+    
+    public function closeBlockModal()
+    {
+        $this->showBlockModal = false;
+        $this->blockingAccount = null;
     }
 
     public function render()
@@ -499,7 +604,9 @@ class LedgerAccounts extends Component
             'trialBalance' => $this->getTrialBalance(),
             'selectedAccountData' => $this->selectedAccountData,
             'ledgerEntries' => $this->ledgerEntries,
-            'parentAccountData' => $this->parentAccountData
+            'parentAccountData' => $this->parentAccountData,
+            'editingAccount' => $this->editingAccount,
+            'blockingAccount' => $this->blockingAccount
         ]);
     }
 }

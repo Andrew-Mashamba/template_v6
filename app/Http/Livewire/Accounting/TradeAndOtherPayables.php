@@ -59,6 +59,7 @@ class TradeAndOtherPayables extends Component
     // Account selection for proper flow
     public $parent_account_number; // Parent account to create payable account under
     public $other_account_id; // The other account for double-entry (Expense/Inventory - debit side)
+    public $created_payable_account_number; // The created payable account number
     public $notes = '';
     public $priority = 'normal';
     public $approval_status = 'pending';
@@ -113,6 +114,8 @@ class TradeAndOtherPayables extends Component
         'payment_terms' => 'required|integer|min:0',
         'vat_amount' => 'nullable|numeric|min:0',
         'invoice_attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        'parent_account_number' => 'required|string',
+        'other_account_id' => 'required|integer',
     ];
     
     protected $listeners = [
@@ -156,13 +159,19 @@ class TradeAndOtherPayables extends Component
             ->get();
         
         // Load expense accounts
-        $this->expenseAccounts = AccountsModel::where('account_type', 'EXPENSE')
+        $this->expenseAccounts = AccountsModel::where('type', 'expense_accounts')
+            ->where('account_level', 3)
             ->where('status', 'ACTIVE')
             ->orderBy('account_name')
             ->get();
         
         // Load bank accounts for payments
-        $this->bankAccounts = AccountsModel::where('is_bank_account', true)
+        // Check for bank accounts in the accounts table with specific account types
+        $this->bankAccounts = AccountsModel::where(function($query) {
+                $query->where('account_name', 'LIKE', '%BANK%')
+                      ->orWhere('account_name', 'LIKE', '%CASH%')
+                      ->orWhere('major_category_code', '1000'); // Asset accounts that could be bank/cash
+            })
             ->where('status', 'ACTIVE')
             ->orderBy('account_name')
             ->get();
@@ -269,7 +278,7 @@ class TradeAndOtherPayables extends Component
     
     public function calculateTotal()
     {
-        $this->total_amount = $this->amount + $this->vat_amount;
+        $this->total_amount = (float)($this->amount ?? 0) + (float)($this->vat_amount ?? 0);
     }
     
     public function updatedPaymentTerms()
@@ -307,7 +316,8 @@ class TradeAndOtherPayables extends Component
                      'vendor_phone', 'vendor_address', 'vendor_tax_id', 
                      'invoice_number', 'bill_number', 'purchase_order_number',
                      'amount', 'vat_amount', 'total_amount', 'description', 'notes',
-                     'expense_account_id', 'payable_account_id', 'bank_account_id']);
+                     'expense_account_id', 'payable_account_id', 'bank_account_id',
+                     'parent_account_number', 'other_account_id', 'created_payable_account_number']);
         
         $this->editMode = false;
         $this->invoice_date = now()->format('Y-m-d');
@@ -363,6 +373,10 @@ class TradeAndOtherPayables extends Component
                 'payment_terms' => $this->payment_terms,
                 'description' => $this->description,
                 'account_number' => null,  // can be set if needed
+                'parent_account_number' => $this->parent_account_number,  // Store parent account reference
+                'other_account_id' => $this->other_account_id,  // Store expense account reference
+                'payable_account_id' => null,  // Will be updated after account creation
+                'created_payable_account_number' => null,  // Will be updated after account creation
                 'status' => 'pending',
                 'created_by' => auth()->id(),
                 'updated_by' => auth()->id(),
@@ -398,16 +412,29 @@ class TradeAndOtherPayables extends Component
                 
                 try {
                     $payable = (object) array_merge($data, ['id' => $payableId]);
-                    $integrationService->createTradePayableAccount(
+                    $createdAccount = $integrationService->createTradePayableAccount(
                         $payable,
                         $this->parent_account_number,  // Parent account to create payable account under
                         $this->other_account_id        // The other account for double-entry (Expense/Inventory - debit side)
                     );
                     
+                    // Update the trade_payables record with the created payable account ID and account number
+                    if ($createdAccount && isset($createdAccount->id)) {
+                        DB::table('trade_payables')
+                            ->where('id', $payableId)
+                            ->update([
+                                'payable_account_id' => $createdAccount->id,
+                                'created_payable_account_number' => $createdAccount->account_number
+                            ]);
+                    }
+                    
                     Log::info('Trade payable integrated with accounts table', [
                         'payable_id' => $payableId,
                         'vendor' => $this->vendor_name,
-                        'amount' => $this->total_amount
+                        'amount' => $this->total_amount,
+                        'payable_account_id' => $createdAccount->id ?? null,
+                        'created_account_number' => $createdAccount->account_number ?? null,
+                        'created_account_name' => 'Payable - ' . $this->vendor_name
                     ]);
                 } catch (\Exception $e) {
                     Log::error('Failed to integrate payable with accounts table: ' . $e->getMessage());
@@ -552,11 +579,11 @@ class TradeAndOtherPayables extends Component
             }
             
             // Calculate net payment
-            $netPayment = $this->payment_amount - $this->early_payment_discount - $this->withholding_tax + $this->bank_charges;
+            $netPayment = (float)$this->payment_amount - (float)$this->early_payment_discount - (float)$this->withholding_tax + (float)$this->bank_charges;
             
             // Calculate new balance
-            $newBalance = $payable->balance - $this->payment_amount - $this->early_payment_discount;
-            $totalPaid = $payable->paid_amount + $this->payment_amount + $this->early_payment_discount;
+            $newBalance = (float)$payable->balance - (float)$this->payment_amount - (float)$this->early_payment_discount;
+            $totalPaid = (float)$payable->paid_amount + (float)$this->payment_amount + (float)$this->early_payment_discount;
             
             // Update payable
             DB::table('trade_payables')
@@ -641,7 +668,7 @@ class TradeAndOtherPayables extends Component
             'transaction_type' => 'PAYMENT',
             'transaction_date' => $this->payment_date,
             'account_id' => $payableAccount->id,
-            'debit_amount' => $this->payment_amount + $this->early_payment_discount,
+            'debit_amount' => (float)$this->payment_amount + (float)$this->early_payment_discount,
             'credit_amount' => 0,
             'description' => $description,
             'created_by' => auth()->id(),
@@ -651,7 +678,7 @@ class TradeAndOtherPayables extends Component
         ]);
         
         // Credit Bank/Cash Account
-        $creditAmount = $this->payment_amount - $this->withholding_tax + $this->bank_charges;
+        $creditAmount = (float)$this->payment_amount - (float)$this->withholding_tax + (float)$this->bank_charges;
         general_ledger::create([
             'reference_number' => $reference,
             'transaction_type' => 'PAYMENT',
@@ -819,14 +846,20 @@ class TradeAndOtherPayables extends Component
             $this->purchase_order_number = $payable->purchase_order_number;
             $this->invoice_date = $payable->bill_date;
             $this->due_date = $payable->due_date;
-            $this->amount = $payable->amount;
+            $this->amount = (float)$payable->amount;
             $this->vat_amount = 0;  // Not in trade_payables
-            $this->total_amount = $payable->amount;
+            $this->total_amount = (float)$payable->amount;
             $this->currency = 'TZS';  // Default currency as not in trade_payables
             $this->payment_terms = $payable->payment_terms;
             $this->description = $payable->description;
-            $this->expense_account_id = null;  // Not in trade_payables
-            $this->payable_account_id = null;  // Not in trade_payables  
+            
+            // Load the saved account references
+            $this->parent_account_number = $payable->parent_account_number ?? null;
+            $this->other_account_id = $payable->other_account_id ?? null;
+            $this->payable_account_id = $payable->payable_account_id ?? null;
+            $this->created_payable_account_number = $payable->created_payable_account_number ?? null;
+            $this->expense_account_id = $payable->other_account_id ?? null;  // For backward compatibility
+            
             $this->notes = '';  // Not in trade_payables
             $this->priority = 'normal';  // Default as not in trade_payables
             
@@ -883,23 +916,15 @@ class TradeAndOtherPayables extends Component
         
         // Get accounts for GL posting
         $expenseAccounts = DB::table('accounts')
-            ->where('major_category_code', '5000') // Expense accounts
-            ->where(function($query) {
-                $query->where('account_name', 'LIKE', '%Expense%')
-                      ->orWhere('account_name', 'LIKE', '%Cost%')
-                      ->orWhere('account_name', 'LIKE', '%Purchase%');
-            })
+            ->where('type', 'expense_accounts') // Expense accounts
+            ->where('account_level', 3) // Level 3 expense accounts
+            ->where('status', 'ACTIVE')
             ->orderBy('account_name')
             ->get();
             
         $parentAccounts = DB::table('accounts')
-            ->where('major_category_code', '2000') // Liability accounts
-            ->where('account_level', '<=', 2) // Parent level accounts only
-            ->where(function($query) {
-                $query->where('account_name', 'LIKE', '%PAYABLE%')
-                      ->orWhere('account_name', 'LIKE', '%CREDITOR%')
-                      ->orWhere('account_name', 'LIKE', '%LIABILITY%');
-            })
+            ->where('type', 'liability_accounts') // Liability accounts
+            ->where('account_level', 3) // Level 3 liability accounts
             ->where('status', 'ACTIVE')
             ->orderBy('account_name')
             ->get();
@@ -908,7 +933,11 @@ class TradeAndOtherPayables extends Component
             $query = DB::table('trade_payables')
                 ->select([
                     'trade_payables.*',
-                    DB::raw("DATE_PART('day', trade_payables.due_date - CURRENT_DATE) as days_until_due")
+                    DB::raw("CASE 
+                        WHEN trade_payables.due_date IS NOT NULL 
+                        THEN (trade_payables.due_date::date - CURRENT_DATE)
+                        ELSE 0 
+                    END as days_until_due")
                 ]);
             
             // Apply filters
