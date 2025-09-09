@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Log;
+use App\Exports\StatementOfCashFlowExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class StatementOfCashFlow extends Component
 {
@@ -378,7 +381,7 @@ class StatementOfCashFlow extends Component
         return false;
     }
 
-    public function exportStatement($format = 'pdf')
+    public function exportPdf()
     {
         $this->isExporting = true;
         $this->errorMessage = '';
@@ -388,17 +391,65 @@ class StatementOfCashFlow extends Component
                 $this->statementData = $this->getStatementData();
             }
 
-            // Here you would implement the actual export logic
-            // For now, we'll just show a success message
-            $this->successMessage = "Statement of Cash Flow exported as {$format} successfully!";
+            // Get institution data
+            $institution = DB::table('institutions')->first();
             
-            Log::info('Statement of Cash Flow exported', [
-                'format' => $format,
+            // Generate PDF
+            $pdf = Pdf::loadView('pdf.statement-of-cash-flow', [
+                'statementData' => $this->statementData,
+                'institution' => $institution
+            ])->setPaper('a4', 'portrait');
+
+            $filename = 'Statement_of_Cash_Flow_' . $this->reportStartDate . '_to_' . $this->reportEndDate . '.pdf';
+            
+            Log::info('Statement of Cash Flow PDF exported', [
+                'filename' => $filename,
                 'user_id' => auth()->id()
             ]);
+
+            return response()->streamDownload(function () use ($pdf) {
+                echo $pdf->output();
+            }, $filename, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"'
+            ]);
+
         } catch (Exception $e) {
-            $this->errorMessage = 'Error exporting statement: ' . $e->getMessage();
-            Log::error('Statement of Cash Flow export failed', [
+            $this->errorMessage = 'Error exporting PDF: ' . $e->getMessage();
+            Log::error('Statement of Cash Flow PDF export failed', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+        } finally {
+            $this->isExporting = false;
+        }
+    }
+
+    public function exportExcel()
+    {
+        $this->isExporting = true;
+        $this->errorMessage = '';
+
+        try {
+            if (!$this->statementData) {
+                $this->statementData = $this->getStatementData();
+            }
+
+            // Get institution data
+            $institution = DB::table('institutions')->first();
+            
+            $filename = 'Statement_of_Cash_Flow_' . $this->reportStartDate . '_to_' . $this->reportEndDate . '.xlsx';
+            
+            Log::info('Statement of Cash Flow Excel exported', [
+                'filename' => $filename,
+                'user_id' => auth()->id()
+            ]);
+
+            return Excel::download(new StatementOfCashFlowExport($this->statementData, $institution), $filename);
+
+        } catch (Exception $e) {
+            $this->errorMessage = 'Error exporting Excel: ' . $e->getMessage();
+            Log::error('Statement of Cash Flow Excel export failed', [
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id()
             ]);

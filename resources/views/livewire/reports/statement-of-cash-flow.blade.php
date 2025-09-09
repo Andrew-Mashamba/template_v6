@@ -122,7 +122,7 @@
                             @foreach($statementData['operating_activities']['expense_details'] as $expense)
                                 <div class="flex justify-between items-center py-1">
                                     <span class="text-sm text-gray-700 ml-4">{{ $expense['account_name'] }}</span>
-                                    <span class="text-sm font-medium text-red-600">({{ number_format($expense['amount'], 2) }})</span>
+                                    <span class="text-sm font-medium text-red-600">{{ number_format($expense['amount'], 2) }}</span>
                                 </div>
                             @endforeach
                         </div>
@@ -163,7 +163,7 @@
                             @foreach($statementData['investing_activities']['purchase_details'] as $purchase)
                                 <div class="flex justify-between items-center py-1">
                                     <span class="text-sm text-gray-700 ml-4">Purchase of {{ $purchase['account_name'] }}</span>
-                                    <span class="text-sm font-medium text-red-600">({{ number_format($purchase['amount'], 2) }})</span>
+                                    <span class="text-sm font-medium text-red-600">{{ number_format($purchase['amount'], 2) }}</span>
                                 </div>
                             @endforeach
                         </div>
@@ -216,7 +216,7 @@
                             @foreach($statementData['financing_activities']['loan_repayment_details'] as $repayment)
                                 <div class="flex justify-between items-center py-1">
                                     <span class="text-sm text-gray-700 ml-4">{{ $repayment['account_name'] }} Repayment</span>
-                                    <span class="text-sm font-medium text-red-600">({{ number_format($repayment['amount'], 2) }})</span>
+                                    <span class="text-sm font-medium text-red-600">{{ number_format($repayment['amount'], 2) }}</span>
                                 </div>
                             @endforeach
                         </div>
@@ -228,7 +228,7 @@
                             @foreach($statementData['financing_activities']['capital_withdrawal_details'] as $withdrawal)
                                 <div class="flex justify-between items-center py-1">
                                     <span class="text-sm text-gray-700 ml-4">{{ $withdrawal['account_name'] }} Withdrawal</span>
-                                    <span class="text-sm font-medium text-red-600">({{ number_format($withdrawal['amount'], 2) }})</span>
+                                    <span class="text-sm font-medium text-red-600">{{ number_format($withdrawal['amount'], 2) }}</span>
                                 </div>
                             @endforeach
                         </div>
@@ -303,25 +303,25 @@
                         Generated on {{ now()->format('F d, Y \a\t g:i A') }}
                     </div>
                     <div class="flex space-x-3">
-                        <button wire:click="exportStatement('pdf')" 
+                        <button wire:click="exportPdf" 
                                 wire:loading.attr="disabled"
-                                wire:target="exportStatement"
-                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                wire:target="exportPdf"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
-                            <span wire:loading.remove wire:target="exportStatement">Export PDF</span>
-                            <span wire:loading wire:target="exportStatement">Exporting...</span>
+                            <span wire:loading.remove wire:target="exportPdf">Export PDF</span>
+                            <span wire:loading wire:target="exportPdf">Exporting PDF...</span>
                         </button>
-                        <button wire:click="exportStatement('excel')" 
+                        <button wire:click="exportExcel" 
                                 wire:loading.attr="disabled"
-                                wire:target="exportStatement"
-                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                wire:target="exportExcel"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
-                            <span wire:loading.remove wire:target="exportStatement">Export Excel</span>
-                            <span wire:loading wire:target="exportStatement">Exporting...</span>
+                            <span wire:loading.remove wire:target="exportExcel">Export Excel</span>
+                            <span wire:loading wire:target="exportExcel">Exporting Excel...</span>
                         </button>
                     </div>
                 </div>
