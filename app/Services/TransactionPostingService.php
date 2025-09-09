@@ -686,7 +686,8 @@ class TransactionPostingService
 
                 // Set retry attempts if configured
                 if (config('accounting.notifications.retry_failed', true)) {
-                    $job->tries = config('accounting.notifications.max_retries', 3);
+                    // Removed deprecated property assignment
+                    // Retry configuration should be handled in the job class itself
                 }
             }
 
@@ -712,7 +713,8 @@ class TransactionPostingService
 
                 // Set retry attempts if configured
                 if (config('accounting.notifications.retry_failed', true)) {
-                    $job->tries = config('accounting.notifications.max_retries', 3);
+                    // Removed deprecated property assignment
+                    // Retry configuration should be handled in the job class itself
                 }
             }
 

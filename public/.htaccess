@@ -14,9 +14,8 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
-    RewriteEngine On
-    RewriteCond %{REQUEST_URI} ^/microfinance/template/fastCredit/public/public/storage/(.*)
-    RewriteRule ^(.*)$ /microfinance/template/fastCredit/public/public/storage/%1 [L,R=301]
+    # Set the base URL for subdirectory deployment
+    RewriteBase /template
 
 
     # Send Requests To Front Controller...

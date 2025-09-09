@@ -131,7 +131,11 @@ class PayablePayments extends Component
             ->paginate(10);
 
         $bankAccounts = DB::table('accounts')
-            ->where('is_bank_account', true)
+            ->where(function($query) {
+                $query->where('account_name', 'LIKE', '%BANK%')
+                      ->orWhere('account_name', 'LIKE', '%CASH%')
+                      ->orWhere('major_category_code', '1000');
+            })
             ->where('status', 'ACTIVE')
             ->get();
 

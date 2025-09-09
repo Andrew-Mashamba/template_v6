@@ -365,7 +365,7 @@ class InternalFundTransferService
         $headers = [
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-            'X-Api-Key' => $this->apiKey,
+            'x-api-key' => $this->apiKey,  // lowercase as per NBC documentation
         ];
 
         // Add Basic Authentication

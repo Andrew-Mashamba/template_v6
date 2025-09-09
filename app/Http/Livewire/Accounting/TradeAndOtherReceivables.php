@@ -147,7 +147,11 @@ class TradeAndOtherReceivables extends Component
             ->get();
         
         // Load bank accounts for payments
-        $this->bankAccounts = AccountsModel::where('is_bank_account', true)
+        $this->bankAccounts = AccountsModel::where(function($query) {
+                $query->where('account_name', 'LIKE', '%BANK%')
+                      ->orWhere('account_name', 'LIKE', '%CASH%')
+                      ->orWhere('major_category_code', '1000');
+            })
             ->where('status', 'ACTIVE')
             ->orderBy('account_name')
             ->get();

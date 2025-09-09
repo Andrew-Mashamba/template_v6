@@ -3817,7 +3817,7 @@ class Shares extends Component
                 'reference_number' => $referenceNumber,
                 'bank_name' => 'Internal Transfer',
                 'processed_by' => auth()->id(),
-                'branch' => auth()->user()->branch ?? 'Main Branch',
+                'branch' => auth()->user()->branch_id ?? 1,
                 'transaction_type' => 'Share Purchase',
                 'status' => 'GENERATED',
                 'generated_at' => now(),
@@ -3845,7 +3845,7 @@ class Shares extends Component
                 'payment_method' => 'Account Transfer',
                 'reference_number' => $referenceNumber,
                 'processed_by' => auth()->user()->name,
-                'branch' => auth()->user()->branch ?? 'Main Branch',
+                'branch' => auth()->user()->branch_id ?? 1,
                 'currency' => 'TZS',
                 'transaction_type' => 'Share Purchase'
             ];
@@ -3886,7 +3886,7 @@ class Shares extends Component
                 'reference_number' => $referenceNumber,
                 'bank_name' => 'Internal Transfer',
                 'processed_by' => auth()->id(),
-                'branch' => auth()->user()->branch ?? 'Main Branch',
+                'branch' => auth()->user()->branch_id ?? 1,
                 'transaction_type' => 'Share Redemption',
                 'status' => 'GENERATED',
                 'generated_at' => now(),
@@ -3913,7 +3913,7 @@ class Shares extends Component
                 'payment_method' => 'Account Transfer',
                 'reference_number' => $referenceNumber,
                 'processed_by' => auth()->user()->name,
-                'branch' => auth()->user()->branch ?? 'Main Branch',
+                'branch' => auth()->user()->branch_id ?? 1,
                 'currency' => 'TZS',
                 'transaction_type' => 'Share Redemption',
                 'reason' => $withdrawal->reason

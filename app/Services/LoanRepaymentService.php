@@ -803,7 +803,7 @@ class LoanRepaymentService
             'reference_number' => $payment->reference_number,
             'outstanding_balance' => $outstandingBalance['total'],
             'processed_by' => auth()->user()->name ?? 'System',
-            'branch' => auth()->user()->branch ?? 'Main Branch',
+            'branch' => auth()->user()->branch_id ?? 1,
             'generated_at' => now()->format('Y-m-d H:i:s')
         ];
     }

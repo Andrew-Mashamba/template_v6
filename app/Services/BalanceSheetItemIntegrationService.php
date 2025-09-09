@@ -710,54 +710,6 @@ class BalanceSheetItemIntegrationService
     }
     
     /**
-     * Create or update account for Investments (Duplicate - renamed to avoid conflict)
-     */
-    public function createInvestmentAccountAlternative($investment, $parentAccountNumber = null, $otherAccountId = null)
-    {
-        try {
-            DB::beginTransaction();
-            
-            // Determine sub-category based on investment type (short-term vs long-term)
-            $subCategory = ($investment->investment_type == 1) ? 
-                self::SUB_CATEGORY_CODES['short_term_investments'] : 
-                self::SUB_CATEGORY_CODES['long_term_investments'];
-            
-            // Create investment account using ONLY AccountCreationService
-            $accountData = [
-                'account_use' => 'internal',
-                'account_name' => 'Investment - ' . $investment->investment_name,
-                'type' => 'asset_accounts',
-                'major_category_code' => '1000',
-                'category_code' => ($investment->investment_type == 1) ? '1100' : '1700',
-                'sub_category_code' => $subCategory,
-                'product_number' => $subCategory,
-                'branch_number' => auth()->user()->branch ?? '01',
-                'account_level' => 3,
-                'balance' => $investment->investment_amount,
-                'status' => 'ACTIVE'
-            ];
-            
-            // Create account under user-selected parent
-            $investmentAccount = $this->accountCreationService->createAccount($accountData, $parentAccountNumber);
-            
-            // Update investment record with account ID
-            DB::table('investments')->where('id', $investment->id)
-                ->update(['account_id' => $investmentAccount->id]);
-            
-            // Post to GL using newly created investment account and user-selected other account
-            $this->postInvestment($investmentAccount, $otherAccountId, $investment);
-            
-            DB::commit();
-            return $investmentAccount;
-            
-        } catch (Exception $e) {
-            DB::rollback();
-            Log::error('Failed to create investment account: ' . $e->getMessage());
-            throw $e;
-        }
-    }
-    
-    /**
      * Generate account number for PPE
      */
     private function generatePPEAccountNumber($ppeAsset)
@@ -783,7 +735,7 @@ class BalanceSheetItemIntegrationService
         // CORRECT FLOW: Newly created PPE account + User-selected other account
         // PPE Acquisition: Debit PPE Asset (newly created), Credit Cash/Bank/Payable (user-selected)
         
-        $otherAccount = $otherAccountId ? AccountsModel::where('account_number', $otherAccountId)->first() : $this->getCashAccount();
+        $otherAccount = $otherAccountId ? AccountsModel::find($otherAccountId) : $this->getCashAccount();
         
         $data = [
             'first_account' => $newlyCreatedAccount->account_number,  // Debit: Newly created PPE account
@@ -818,7 +770,7 @@ class BalanceSheetItemIntegrationService
         // CORRECT FLOW: Newly created receivable account + User-selected other account
         // Trade Receivable: Debit Trade Receivable (newly created), Credit Revenue (user-selected)
         
-        $otherAccount = $otherAccountId ? AccountsModel::where('account_number', $otherAccountId)->first() : $this->getRevenueAccount();
+        $otherAccount = $otherAccountId ? AccountsModel::find($otherAccountId) : $this->getRevenueAccount();
         
         $data = [
             'first_account' => $newlyCreatedAccount->account_number,  // Debit: Newly created receivable account
@@ -835,7 +787,7 @@ class BalanceSheetItemIntegrationService
     {
         // CORRECT FLOW: Newly created payable account + User-selected other account
         // Trade Payable Creation: Debit Expense/Inventory (user-selected), Credit Trade Payable (newly created)
-        $otherAccount = $otherAccountId ? AccountsModel::where('account_number', $otherAccountId)->first() : $this->getExpenseAccount();
+        $otherAccount = $otherAccountId ? AccountsModel::find($otherAccountId) : $this->getExpenseAccount();
         
         $data = [
             'first_account' => $otherAccount->account_number,        // Debit: User-selected expense/inventory account
@@ -887,7 +839,7 @@ class BalanceSheetItemIntegrationService
     {
         // CORRECT FLOW: Newly created interest payable account + User-selected other account
         // Interest Payable Accrual: Debit Interest Expense (user-selected), Credit Interest Payable (newly created)
-        $otherAccount = $otherAccountId ? AccountsModel::where('account_number', $otherAccountId)->first() : $this->getInterestExpenseAccount();
+        $otherAccount = $otherAccountId ? AccountsModel::find($otherAccountId) : $this->getInterestExpenseAccount();
         
         $data = [
             'first_account' => $otherAccount->account_number,        // Debit: User-selected expense account
@@ -904,7 +856,7 @@ class BalanceSheetItemIntegrationService
     {
         // Debit: User-selected other account (Cash/Bank)
         // Credit: Newly created or existing income account
-        $otherAccount = AccountsModel::where('account_number', $otherAccountId)->first();
+        $otherAccount = AccountsModel::find($otherAccountId);
         
         if (!$otherAccount) {
             throw new Exception('Other account not found for double-entry posting');
@@ -925,7 +877,7 @@ class BalanceSheetItemIntegrationService
     {
         // Debit: User-selected other account (Cash/Bank - receiving loan proceeds)
         // Credit: Newly created loan account (liability)
-        $otherAccount = AccountsModel::where('account_number', $otherAccountId)->first();
+        $otherAccount = AccountsModel::find($otherAccountId);
         
         if (!$otherAccount) {
             throw new Exception('Other account not found for double-entry posting');
@@ -946,7 +898,7 @@ class BalanceSheetItemIntegrationService
     {
         // Debit: User-selected other account (Cash/Bank - receiving payment)
         // Credit: Newly created unearned revenue account (liability)
-        $otherAccount = AccountsModel::where('account_number', $otherAccountId)->first();
+        $otherAccount = AccountsModel::find($otherAccountId);
         
         if (!$otherAccount) {
             throw new Exception('Other account not found for double-entry posting');
@@ -958,27 +910,6 @@ class BalanceSheetItemIntegrationService
             'amount' => $unearnedRevenue->amount ?? $unearnedRevenue->total_amount ?? 0,
             'narration' => 'Unearned Revenue - ' . $unearnedRevenue->description,
             'action' => 'unearned_revenue'
-        ];
-        
-        $this->transactionPostingService->postTransaction($data);
-    }
-    
-    private function postInvestmentAlternative($investmentAccount, $otherAccountId, $investment)
-    {
-        // Debit: Newly created investment account (asset)
-        // Credit: User-selected other account (Cash/Bank - paying for investment)
-        $otherAccount = AccountsModel::where('account_number', $otherAccountId)->first();
-        
-        if (!$otherAccount) {
-            throw new Exception('Other account not found for double-entry posting');
-        }
-        
-        $data = [
-            'first_account' => $investmentAccount->account_number,  // Debit - Investment Account (asset)
-            'second_account' => $otherAccount->account_number,      // Credit - Cash/Bank (payment)
-            'amount' => $investment->investment_amount,
-            'narration' => 'Investment Purchase - ' . $investment->investment_name,
-            'action' => 'investment_purchase'
         ];
         
         $this->transactionPostingService->postTransaction($data);
@@ -1005,7 +936,7 @@ class BalanceSheetItemIntegrationService
     {
         // CORRECT FLOW: Newly created creditor account + User-selected other account
         // Creditor Creation: Debit Cash/Expense (user-selected), Credit Creditor (newly created)
-        $otherAccount = $otherAccountId ? AccountsModel::where('account_number', $otherAccountId)->first() : $this->getCashAccount();
+        $otherAccount = $otherAccountId ? AccountsModel::find($otherAccountId) : $this->getCashAccount();
         
         $data = [
             'first_account' => $otherAccount->account_number,        // Debit: User-selected cash/expense account
@@ -1023,7 +954,7 @@ class BalanceSheetItemIntegrationService
         // CORRECT FLOW: User-selected other account + Newly created insurance liability account
         // Insurance: Debit Cash/Bank (user-selected), Credit Insurance Liability (newly created)
         
-        $otherAccount = $otherAccountId ? AccountsModel::where('account_number', $otherAccountId)->first() : $this->getCashAccount();
+        $otherAccount = $otherAccountId ? AccountsModel::find($otherAccountId) : $this->getCashAccount();
         
         $data = [
             'first_account' => $otherAccount->account_number,           // Debit: User-selected account (Cash/Bank)
@@ -1773,7 +1704,7 @@ class BalanceSheetItemIntegrationService
     {
         // CORRECT FLOW: Newly created insurance account + User-selected other account
         // Financial Insurance: Debit Prepaid Insurance (newly created), Credit Cash/Bank (user-selected)
-        $otherAccount = $otherAccountId ? AccountsModel::where('account_number', $otherAccountId)->first() : $this->getCashAccount();
+        $otherAccount = $otherAccountId ? AccountsModel::find($otherAccountId) : $this->getCashAccount();
         
         $data = [
             'first_account' => $newlyCreatedAccount->account_number, // Debit: Newly created insurance account
@@ -1832,7 +1763,7 @@ class BalanceSheetItemIntegrationService
     {
         // CORRECT FLOW: Newly created intangible asset account + User-selected other account
         // Intangible Asset Acquisition: Debit Intangible Asset (newly created), Credit Cash/Bank (user-selected)
-        $otherAccount = $otherAccountId ? AccountsModel::where('account_number', $otherAccountId)->first() : $this->getCashAccount();
+        $otherAccount = $otherAccountId ? AccountsModel::find($otherAccountId) : $this->getCashAccount();
         
         $data = [
             'first_account' => $newlyCreatedAccount->account_number, // Debit: Newly created intangible asset account
