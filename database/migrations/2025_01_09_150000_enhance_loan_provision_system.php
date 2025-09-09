@@ -181,10 +181,16 @@ return new class extends Migration
         Schema::dropIfExists('journal_entry_lines');
         Schema::dropIfExists('journal_entries');
         
-        // Remove stage threshold fields from loan_provision_settings
+        // Remove stage threshold fields and provision column from loan_provision_settings
         if (Schema::hasColumn('loan_provision_settings', 'stage1_days')) {
             Schema::table('loan_provision_settings', function (Blueprint $table) {
                 $table->dropColumn(['stage1_days', 'stage2_days', 'stage3_days']);
+            });
+        }
+        
+        if (Schema::hasColumn('loan_provision_settings', 'provision')) {
+            Schema::table('loan_provision_settings', function (Blueprint $table) {
+                $table->dropColumn(['provision', 'rate', 'created_at', 'updated_at']);
             });
         }
         

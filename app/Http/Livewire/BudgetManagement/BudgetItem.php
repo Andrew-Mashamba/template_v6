@@ -51,15 +51,6 @@ class BudgetItem extends Component
     public $sortDirection = 'desc';
     public $perPage = 10;
 
-    // Validation rules
-    protected $rules = [
-        'budget_name' => 'required|string|max:40',
-        'annual_budget' => 'required|numeric|min:0',
-        'start_date' => 'required|date',
-        'end_date' => 'required|date|after:start_date',
-        'notes' => 'nullable|string|max:1000',
-        'expense_account_id' => 'required|exists:accounts,id',
-    ];
 
     protected $messages = [
         'budget_name.required' => 'Budget name is required.',
@@ -68,8 +59,10 @@ class BudgetItem extends Component
         'annual_budget.numeric' => 'Annual budget must be a valid number.',
         'annual_budget.min' => 'Annual budget cannot be negative.',
         'start_date.required' => 'Budget start date is required.',
+        'start_date.first_day_of_month' => 'Start date must be the first day of the month.',
         'end_date.required' => 'Budget end date is required.',
         'end_date.after' => 'End date must be after start date.',
+        'end_date.last_day_of_month' => 'End date must be the last day of the month.',
         'expense_account_id.required' => 'Please select an expense account.',
         'expense_account_id.exists' => 'Please select a valid expense account.',
     ];
@@ -77,6 +70,31 @@ class BudgetItem extends Component
     public function mount()
     {
         $this->resetPage();
+    }
+
+    // Custom validation rules
+    protected function rules()
+    {
+        return [
+            'budget_name' => 'required|string|max:40',
+            'annual_budget' => 'required|numeric|min:0',
+            'start_date' => ['required', 'date', function ($attribute, $value, $fail) {
+                if ($value && \Carbon\Carbon::parse($value)->day !== 1) {
+                    $fail('Start date must be the first day of the month.');
+                }
+            }],
+            'end_date' => ['required', 'date', 'after:start_date', function ($attribute, $value, $fail) {
+                if ($value) {
+                    $endDate = \Carbon\Carbon::parse($value);
+                    $lastDayOfMonth = $endDate->copy()->endOfMonth();
+                    if (!$endDate->isSameDay($lastDayOfMonth)) {
+                        $fail('End date must be the last day of the month.');
+                    }
+                }
+            }],
+            'notes' => 'nullable|string|max:1000',
+            'expense_account_id' => 'required|exists:accounts,id',
+        ];
     }
 
     public function menuItemClick()
@@ -278,8 +296,9 @@ class BudgetItem extends Component
 
         $this->annual_budget = null;
         $this->monthly_allocation = null;
-        $this->start_date = null;
-        $this->end_date = null;
+        // Set default dates to current month's first and last day
+        $this->start_date = now()->startOfMonth()->format('Y-m-d');
+        $this->end_date = now()->endOfMonth()->format('Y-m-d');
         $this->notes = null;
         $this->budget_name = null;
         $this->expense_account_id = null;
@@ -466,8 +485,20 @@ class BudgetItem extends Component
         $this->validate([
             'edit_budget_name' => 'required|string|max:40',
             'edit_annual_budget' => 'required|numeric|min:0',
-            'edit_start_date' => 'required|date',
-            'edit_end_date' => 'required|date|after:edit_start_date',
+            'edit_start_date' => ['required', 'date', function ($attribute, $value, $fail) {
+                if ($value && \Carbon\Carbon::parse($value)->day !== 1) {
+                    $fail('Start date must be the first day of the month.');
+                }
+            }],
+            'edit_end_date' => ['required', 'date', 'after:edit_start_date', function ($attribute, $value, $fail) {
+                if ($value) {
+                    $endDate = \Carbon\Carbon::parse($value);
+                    $lastDayOfMonth = $endDate->copy()->endOfMonth();
+                    if (!$endDate->isSameDay($lastDayOfMonth)) {
+                        $fail('End date must be the last day of the month.');
+                    }
+                }
+            }],
             'edit_notes' => 'nullable|string|max:1000',
             'edit_expense_account_id' => 'required|exists:accounts,id',
             'edit_justification' => 'required|string|min:10|max:500'
@@ -566,8 +597,9 @@ class BudgetItem extends Component
         $this->edit_budget_name = null;
         $this->edit_annual_budget = null;
         $this->edit_monthly_allocation = null;
-        $this->edit_start_date = null;
-        $this->edit_end_date = null;
+        // Set default dates to current month's first and last day
+        $this->edit_start_date = now()->startOfMonth()->format('Y-m-d');
+        $this->edit_end_date = now()->endOfMonth()->format('Y-m-d');
         $this->edit_notes = null;
         $this->edit_expense_account_id = null;
         $this->edit_justification = null;

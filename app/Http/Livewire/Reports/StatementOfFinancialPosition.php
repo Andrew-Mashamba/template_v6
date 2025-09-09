@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Carbon\Carbon;
 use Exception;
+use PDF;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StatementOfFinancialPosition extends Component
 {
@@ -45,7 +47,7 @@ class StatementOfFinancialPosition extends Component
             $this->errorMessage = '';
             
             // Check if we need to add sample data for demonstration
-            $this->addSampleDataIfNeeded();
+            // $this->addSampleDataIfNeeded();
             
             // Get the statement data
             $statementData = $this->getStatementData();
@@ -313,26 +315,179 @@ class StatementOfFinancialPosition extends Component
             
             $filename = 'statement_of_financial_position_' . now()->format('Y-m-d_H-i-s') . '.' . $format;
             
-            // For now, we'll simulate the export process
-            // In a real implementation, you would use libraries like:
-            // - DomPDF for PDF generation
-            // - Laravel Excel for Excel/CSV export
-            
-            $this->successMessage = "Statement of Financial Position exported as {$format} successfully!";
-            
-            // Log the export
-            Log::info('Statement of Financial Position exported', [
-                'format' => $format,
-                'user_id' => auth()->id(),
-                'as_of_date' => $this->statementData['as_of_date']
-            ]);
+            if ($format === 'pdf') {
+                return $this->exportToPDF($filename);
+            } elseif ($format === 'excel') {
+                return $this->exportToExcel($filename);
+            } else {
+                throw new Exception('Unsupported export format: ' . $format);
+            }
             
         } catch (Exception $e) {
             Log::error('Error exporting Statement of Financial Position: ' . $e->getMessage());
             $this->errorMessage = 'Failed to export Statement of Financial Position. Please try again.';
-        } finally {
             $this->isExporting = false;
         }
+    }
+
+    public function exportPDF()
+    {
+        try {
+            $this->isExporting = true;
+            $this->errorMessage = '';
+            
+            if (!$this->statementData) {
+                $this->statementData = $this->getStatementData();
+            }
+            
+            $filename = 'statement_of_financial_position_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+            return $this->exportToPDF($filename);
+            
+        } catch (Exception $e) {
+            Log::error('Error exporting Statement of Financial Position as PDF: ' . $e->getMessage());
+            $this->errorMessage = 'Failed to export Statement of Financial Position as PDF. Please try again.';
+            $this->isExporting = false;
+        }
+    }
+
+    public function exportExcel()
+    {
+        try {
+            $this->isExporting = true;
+            $this->errorMessage = '';
+            
+            if (!$this->statementData) {
+                $this->statementData = $this->getStatementData();
+            }
+            
+            $filename = 'statement_of_financial_position_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+            return $this->exportToExcel($filename);
+            
+        } catch (Exception $e) {
+            Log::error('Error exporting Statement of Financial Position as Excel: ' . $e->getMessage());
+            $this->errorMessage = 'Failed to export Statement of Financial Position as Excel. Please try again.';
+            $this->isExporting = false;
+        }
+    }
+
+    private function exportToPDF($filename)
+    {
+        try {
+            // Prepare data for PDF template
+            $pdfData = [
+                'statementData' => $this->statementData,
+                'startDate' => $this->reportStartDate,
+                'endDate' => $this->reportEndDate,
+                'currency' => 'TZS',
+                'reportDate' => now()->format('Y-m-d H:i:s'),
+                'totalAssets' => $this->statementData['totals']['total_assets'],
+                'totalLiabilities' => $this->statementData['totals']['total_liabilities'],
+                'totalEquity' => $this->statementData['totals']['total_equity'],
+                'assets' => $this->prepareAssetsForPDF(),
+                'liabilities' => $this->prepareLiabilitiesForPDF(),
+                'equity' => $this->prepareEquityForPDF()
+            ];
+            
+            // Generate PDF using DomPDF
+            $pdf = \PDF::loadView('pdf.statement-of-financial-position', $pdfData);
+            
+            // Set PDF options
+            $pdf->setPaper('A4', 'portrait');
+            $pdf->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'Arial'
+            ]);
+            
+            // Log the export
+            Log::info('Statement of Financial Position exported as PDF', [
+                'format' => 'pdf',
+                'user_id' => auth()->id(),
+                'as_of_date' => $this->statementData['as_of_date']
+            ]);
+            
+            // Download the PDF
+            return response()->streamDownload(function () use ($pdf) {
+                echo $pdf->output();
+            }, $filename);
+            
+        } catch (Exception $e) {
+            Log::error('Error generating PDF: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function exportToExcel($filename)
+    {
+        try {
+            // Ensure filename has .xlsx extension
+            if (substr($filename, -5) !== '.xlsx') {
+                $filename = str_replace('.xlsx', '', $filename) . '.xlsx';
+            }
+            
+            // Log the export
+            Log::info('Statement of Financial Position exported as Excel', [
+                'format' => 'excel',
+                'user_id' => auth()->id(),
+                'as_of_date' => $this->statementData['as_of_date']
+            ]);
+            
+            // Download the Excel file with explicit writer type
+            return Excel::download(
+                new \App\Exports\StatementOfFinancialPositionExport($this->statementData, $this->reportEndDate),
+                $filename,
+                \Maatwebsite\Excel\Excel::XLSX
+            );
+            
+        } catch (Exception $e) {
+            Log::error('Error generating Excel: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function prepareAssetsForPDF()
+    {
+        $assets = [];
+        foreach ($this->statementData['assets']['categories'] as $category) {
+            foreach ($category['accounts'] as $account) {
+                // Ensure we maintain object structure for PDF template
+                $assets[] = (object) [
+                    'account_name' => is_object($account) ? $account->account_name : $account['account_name'],
+                    'current_balance' => is_object($account) ? $account->current_balance : $account['current_balance']
+                ];
+            }
+        }
+        return $assets;
+    }
+
+    private function prepareLiabilitiesForPDF()
+    {
+        $liabilities = [];
+        foreach ($this->statementData['liabilities']['categories'] as $category) {
+            foreach ($category['accounts'] as $account) {
+                // Ensure we maintain object structure for PDF template
+                $liabilities[] = (object) [
+                    'account_name' => is_object($account) ? $account->account_name : $account['account_name'],
+                    'current_balance' => is_object($account) ? $account->current_balance : $account['current_balance']
+                ];
+            }
+        }
+        return $liabilities;
+    }
+
+    private function prepareEquityForPDF()
+    {
+        $equity = [];
+        foreach ($this->statementData['equity']['categories'] as $category) {
+            foreach ($category['accounts'] as $account) {
+                // Ensure we maintain object structure for PDF template
+                $equity[] = (object) [
+                    'account_name' => is_object($account) ? $account->account_name : $account['account_name'],
+                    'current_balance' => is_object($account) ? $account->current_balance : $account['current_balance']
+                ];
+            }
+        }
+        return $equity;
     }
 
     public function render()

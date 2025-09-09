@@ -473,12 +473,14 @@
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
                                             <label for="start_date" class="block text-sm font-medium text-gray-700">Budget Start Date *</label>
-                                            <input type="date" wire:model="start_date" id="start_date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <input type="date" wire:model="start_date" id="start_date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" onchange="adjustToFirstDay(this)">
+                                            <p class="mt-1 text-sm text-gray-500">Must be the 1st day of the month</p>
                                             @error('start_date') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                         </div>
                                         <div>
                                             <label for="end_date" class="block text-sm font-medium text-gray-700">Budget End Date *</label>
-                                            <input type="date" wire:model="end_date" id="end_date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <input type="date" wire:model="end_date" id="end_date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" onchange="adjustToLastDay(this)">
+                                            <p class="mt-1 text-sm text-gray-500">Must be the last day of the month</p>
                                             @error('end_date') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                         </div>
                                     </div>
@@ -669,12 +671,14 @@
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
                                             <label for="edit_start_date" class="block text-sm font-medium text-gray-700">Start Date *</label>
-                                            <input type="date" wire:model="edit_start_date" id="edit_start_date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <input type="date" wire:model="edit_start_date" id="edit_start_date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" onchange="adjustToFirstDay(this)">
+                                            <p class="mt-1 text-sm text-gray-500">Must be the 1st day of the month</p>
                                             @error('edit_start_date') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                         </div>
                                         <div>
                                             <label for="edit_end_date" class="block text-sm font-medium text-gray-700">End Date *</label>
-                                            <input type="date" wire:model="edit_end_date" id="edit_end_date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <input type="date" wire:model="edit_end_date" id="edit_end_date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" onchange="adjustToLastDay(this)">
+                                            <p class="mt-1 text-sm text-gray-500">Must be the last day of the month</p>
                                             @error('edit_end_date') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                         </div>
                                     </div>
@@ -786,3 +790,36 @@
 
     {{-- Because she competes with no one, no one can compete with her. --}}
 </div>
+
+<script>
+function adjustToFirstDay(input) {
+    if (input.value) {
+        const date = new Date(input.value);
+        date.setDate(1); // Set to first day of the month
+        input.value = date.toISOString().split('T')[0];
+        
+        // Trigger Livewire update
+        if (input.id === 'start_date') {
+            @this.set('start_date', input.value);
+        } else if (input.id === 'edit_start_date') {
+            @this.set('edit_start_date', input.value);
+        }
+    }
+}
+
+function adjustToLastDay(input) {
+    if (input.value) {
+        const date = new Date(input.value);
+        // Move to next month, then back one day to get last day of current month
+        date.setMonth(date.getMonth() + 1, 0);
+        input.value = date.toISOString().split('T')[0];
+        
+        // Trigger Livewire update
+        if (input.id === 'end_date') {
+            @this.set('end_date', input.value);
+        } else if (input.id === 'edit_end_date') {
+            @this.set('edit_end_date', input.value);
+        }
+    }
+}
+</script>

@@ -1675,9 +1675,9 @@ class Approvals extends Component
         $approverRoles = is_string($config->approver_roles) ? json_decode($config->approver_roles, true) : $config->approver_roles;
 
         // Check if user is an admin
-        if ($user->isAdmin()) {
-            return true;
-        }
+        // if ($user->isAdmin()) {
+        //     return true;
+        // }
 
         // For approvers, check if all previous checkers have approved
         if ($this->isApproverLevel($config) && !$this->validatePreviousApprovals($approval, $config)) {
