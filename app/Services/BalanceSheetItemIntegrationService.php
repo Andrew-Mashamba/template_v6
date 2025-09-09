@@ -710,9 +710,9 @@ class BalanceSheetItemIntegrationService
     }
     
     /**
-     * Create or update account for Investments
+     * Create or update account for Investments (Duplicate - renamed to avoid conflict)
      */
-    public function createInvestmentAccount($investment, $parentAccountNumber = null, $otherAccountId = null)
+    public function createInvestmentAccountAlternative($investment, $parentAccountNumber = null, $otherAccountId = null)
     {
         try {
             DB::beginTransaction();
@@ -963,7 +963,7 @@ class BalanceSheetItemIntegrationService
         $this->transactionPostingService->postTransaction($data);
     }
     
-    private function postInvestment($investmentAccount, $otherAccountId, $investment)
+    private function postInvestmentAlternative($investmentAccount, $otherAccountId, $investment)
     {
         // Debit: Newly created investment account (asset)
         // Credit: User-selected other account (Cash/Bank - paying for investment)
