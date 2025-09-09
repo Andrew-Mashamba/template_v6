@@ -85,77 +85,14 @@
                             @error('due_date') <span class="text-red-500">{{ $message }}</span> @enderror
                         </div>
 
-
-
-
-
-                        <div class="mb-4">
-                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Payment Type</label>
-                            <select wire:model="payment_type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
-                                <option value="">Select Payment Type</option>
-                                <option value="cash">Cash</option>
-                                <option value="non-cash">Non-Cash</option>
-                            </select>
+                        {{-- Display created account info if in edit mode --}}
+                        @if($editMode && $created_payable_account_number)
+                        <div class="mb-4 bg-blue-50 rounded-lg border border-blue-200 p-3">
+                            <h4 class="text-sm font-medium text-blue-900 mb-2">Created Payable Account</h4>
+                            <p class="text-xs text-blue-700">Account Number: {{ $created_payable_account_number }}</p>
+                            <p class="text-xs text-blue-700">Account Name: Payable - {{ $vendor_name }}</p>
                         </div>
-
-                        <!-- Liability Account Selection -->
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select Liability Account</label>
-                        <select wire:model="payable_account_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
-                            <option value="">Select Account</option>
-                            @foreach(DB::table('accounts')->where('account_type', 'LIABILITY')->where('status', 'ACTIVE')->get() as $account)
-                                <option value="{{ $account->id }}">{{ $account->account_name }}</option>
-                            @endforeach
-                        </select>
-
-                        <!-- Conditional Account Selection Based on Payment Type -->
-                        <div class="mt-4">
-                            @if ($payment_type === 'cash')
-                                <!-- Cash/Bank Account Selection -->
-                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select Cash/Bank Account</label>
-                                <select wire:model="bank_account_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
-                                    <option value="">Select Account</option>
-                                    @foreach(DB::table('accounts')->where(function($query) {
-                                        $query->where('account_name', 'LIKE', '%BANK%')
-                                              ->orWhere('account_name', 'LIKE', '%CASH%')
-                                              ->orWhere('major_category_code', '1000');
-                                    })->where('status', 'ACTIVE')->get() as $account)
-                                        <option value="{{ $account->id }}">{{ $account->account_name }}</option>
-                                    @endforeach
-                                </select>
-                            @elseif ($payment_type === 'non-cash')
-                                <!-- Expense Account Selection -->
-                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select Expense Account</label>
-                                <select wire:model="expense_account_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
-                                    <option value="">Select Account</option>
-                                    @foreach(DB::table('accounts')->where('account_type', 'EXPENSE')->where('status', 'ACTIVE')->get() as $account)
-                                        <option value="{{ $account->id }}">{{ $account->account_name }}</option>
-                                    @endforeach
-                                </select>
-                            @endif
-                        </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                        <div class="mt-2" >  </div>
-
-
-
-
-
+                        @endif
 
                         {{-- Account Selection - Corrected Flow --}}
                         <div class="mb-4 bg-gray-50 rounded-lg border border-gray-200 p-4">
