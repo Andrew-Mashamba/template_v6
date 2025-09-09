@@ -86,22 +86,28 @@
             border-top: 3px solid #333;
             border-bottom: 3px solid #333;
         }
-        .profit-loss {
+        .net-income-section {
             margin-top: 20px;
             padding: 15px;
             background-color: #f8f9fa;
             border: 1px solid #ddd;
             border-radius: 5px;
         }
-        .profit-check {
+        .performance-summary {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
             text-align: center;
             font-weight: bold;
-            margin-top: 10px;
         }
-        .profit-check.profitable {
+        .performance-summary.profitable {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
             color: #155724;
         }
-        .profit-check.loss {
+        .performance-summary.loss {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
             color: #721c24;
         }
         .summary-grid {
@@ -152,7 +158,7 @@
 <body>
     <div class="header">
         <h1>STATEMENT OF COMPREHENSIVE INCOME</h1>
-        <h2>For the Period {{ \Carbon\Carbon::parse($startDate)->format('F d') }} - {{ \Carbon\Carbon::parse($endDate)->format('F d, Y') }}</h2>
+        <h2>For the period from {{ \Carbon\Carbon::parse($startDate)->format('F d, Y') }} to {{ \Carbon\Carbon::parse($endDate)->format('F d, Y') }}</h2>
         <div class="compliance">
             BOT Regulatory Requirements Compliant | Prepared in accordance with IFRS
         </div>
@@ -169,7 +175,7 @@
         <div class="summary-box">
             <h3>Income Statement Summary</h3>
             <div class="summary-row">
-                <span>Total Income:</span>
+                <span>Total Revenue:</span>
                 <span class="amount">{{ $currency }} {{ number_format($totalIncome, 2) }}</span>
             </div>
             <div class="summary-row">
@@ -183,7 +189,7 @@
         </div>
         
         <div class="summary-box">
-            <h3>Performance Ratios</h3>
+            <h3>Performance Metrics</h3>
             <div class="summary-row">
                 <span>Profit Margin:</span>
                 <span class="amount">{{ $totalIncome > 0 ? number_format(($netIncome / $totalIncome) * 100, 1) . '%' : 'N/A' }}</span>
@@ -193,8 +199,8 @@
                 <span class="amount">{{ $totalIncome > 0 ? number_format(($totalExpenses / $totalIncome) * 100, 1) . '%' : 'N/A' }}</span>
             </div>
             <div class="summary-row">
-                <span>Efficiency Ratio:</span>
-                <span class="amount">{{ $totalIncome > 0 ? number_format((($totalIncome - $totalExpenses) / $totalIncome) * 100, 1) . '%' : 'N/A' }}</span>
+                <span>Performance:</span>
+                <span class="amount">{{ $netIncome > 0 ? 'Profitable' : 'Loss' }}</span>
             </div>
         </div>
     </div>
@@ -208,23 +214,34 @@
             </tr>
         </thead>
         <tbody>
-            <!-- INCOME SECTION -->
+            <!-- REVENUE SECTION -->
             <tr class="section-header">
-                <td colspan="2">INCOME</td>
+                <td colspan="2">REVENUE</td>
             </tr>
-            @forelse($income as $incomeItem)
+            @forelse($income as $categoryCode => $category)
                 <tr class="account-row">
-                    <td class="account-name">{{ is_object($incomeItem) ? $incomeItem->account_name : $incomeItem['account_name'] }}</td>
-                    <td class="amount">{{ number_format(is_object($incomeItem) ? $incomeItem->balance : $incomeItem['balance'], 2) }}</td>
+                    <td class="account-name"><strong>{{ $category['name'] }}</strong></td>
+                    <td class="amount"></td>
                 </tr>
+                @foreach($category['accounts'] as $account)
+                    <tr class="account-row">
+                        <td class="account-name" style="padding-left: 30px;">{{ is_object($account) ? $account->account_name : $account['account_name'] }}</td>
+                        <td class="amount">{{ number_format(is_object($account) ? $account->current_balance : $account['current_balance'], 2) }}</td>
+                    </tr>
+                @endforeach
+                <tr class="account-row">
+                    <td class="account-name" style="padding-left: 15px;"><strong>Subtotal</strong></td>
+                    <td class="amount"><strong>{{ number_format($category['subtotal'], 2) }}</strong></td>
+                </tr>
+                <tr style="height: 5px;"><td colspan="2"></td></tr>
             @empty
                 <tr class="account-row">
-                    <td class="account-name">No income accounts found</td>
+                    <td class="account-name">No revenue accounts found</td>
                     <td class="amount">0.00</td>
                 </tr>
             @endforelse
             <tr class="total-row">
-                <td><strong>TOTAL INCOME</strong></td>
+                <td><strong>TOTAL REVENUE</strong></td>
                 <td class="amount"><strong>{{ number_format($totalIncome, 2) }}</strong></td>
             </tr>
 
@@ -233,11 +250,22 @@
             <tr class="section-header">
                 <td colspan="2">EXPENSES</td>
             </tr>
-            @forelse($expenses as $expense)
+            @forelse($expenses as $categoryCode => $category)
                 <tr class="account-row">
-                    <td class="account-name">{{ is_object($expense) ? $expense->account_name : $expense['account_name'] }}</td>
-                    <td class="amount">{{ number_format(is_object($expense) ? $expense->balance : $expense['balance'], 2) }}</td>
+                    <td class="account-name"><strong>{{ $category['name'] }}</strong></td>
+                    <td class="amount"></td>
                 </tr>
+                @foreach($category['accounts'] as $account)
+                    <tr class="account-row">
+                        <td class="account-name" style="padding-left: 30px;">{{ is_object($account) ? $account->account_name : $account['account_name'] }}</td>
+                        <td class="amount">{{ number_format(is_object($account) ? $account->current_balance : $account['current_balance'], 2) }}</td>
+                    </tr>
+                @endforeach
+                <tr class="account-row">
+                    <td class="account-name" style="padding-left: 15px;"><strong>Subtotal</strong></td>
+                    <td class="amount"><strong>{{ number_format($category['subtotal'], 2) }}</strong></td>
+                </tr>
+                <tr style="height: 5px;"><td colspan="2"></td></tr>
             @empty
                 <tr class="account-row">
                     <td class="account-name">No expense accounts found</td>
@@ -249,52 +277,24 @@
                 <td class="amount"><strong>{{ number_format($totalExpenses, 2) }}</strong></td>
             </tr>
 
-            <!-- NET INCOME -->
-            <tr style="height: 10px;"><td colspan="2"></td></tr>
+            <!-- NET INCOME SECTION -->
+            <tr style="height: 15px;"><td colspan="2"></td></tr>
             <tr class="grand-total-row">
-                <td><strong>NET COMPREHENSIVE INCOME</strong></td>
+                <td><strong>NET INCOME (LOSS)</strong></td>
                 <td class="amount"><strong>{{ number_format($netIncome, 2) }}</strong></td>
             </tr>
         </tbody>
     </table>
 
-    <!-- Profit/Loss Verification -->
-    <div class="profit-loss">
-        <h3 style="margin-top: 0; margin-bottom: 10px; font-size: 12px;">Performance Analysis</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div>
-                <div class="summary-row">
-                    <span>Total Income:</span>
-                    <span class="amount">{{ $currency }} {{ number_format($totalIncome, 2) }}</span>
-                </div>
-                <div class="summary-row">
-                    <span>Total Expenses:</span>
-                    <span class="amount">{{ $currency }} {{ number_format($totalExpenses, 2) }}</span>
-                </div>
-                <div class="summary-row">
-                    <span>Net Income:</span>
-                    <span class="amount">{{ $currency }} {{ number_format($netIncome, 2) }}</span>
-                </div>
-            </div>
-            <div>
-                @php
-                    $profitMargin = $totalIncome > 0 ? ($netIncome / $totalIncome) * 100 : 0;
-                    $expenseRatio = $totalIncome > 0 ? ($totalExpenses / $totalIncome) * 100 : 0;
-                    $isProfitable = $netIncome >= 0;
-                @endphp
-                <div class="summary-row">
-                    <span>Profit Margin:</span>
-                    <span class="amount">{{ number_format($profitMargin, 1) }}%</span>
-                </div>
-                <div class="summary-row">
-                    <span>Expense Ratio:</span>
-                    <span class="amount">{{ number_format($expenseRatio, 1) }}%</span>
-                </div>
-                <div class="profit-check {{ $isProfitable ? 'profitable' : 'loss' }}">
-                    {{ $isProfitable ? '✓ PROFITABLE OPERATION' : '⚠ OPERATING AT A LOSS' }}
-                </div>
-            </div>
-        </div>
+    <!-- Performance Summary -->
+    <div class="performance-summary {{ $netIncome > 0 ? 'profitable' : 'loss' }}">
+        @if($netIncome > 0)
+            <strong>✓ PROFITABLE PERIOD</strong><br>
+            Net Income of {{ $currency }} {{ number_format($netIncome, 2) }}
+        @else
+            <strong>⚠ LOSS PERIOD</strong><br>
+            Net Loss of {{ $currency }} {{ number_format(abs($netIncome), 2) }}
+        @endif
     </div>
 
     <div class="footer">
@@ -311,7 +311,7 @@
             </div>
             <div>
                 <strong>Generated:</strong> {{ $reportDate }}<br>
-                <strong>Period:</strong> {{ \Carbon\Carbon::parse($startDate)->format('M Y') }}<br>
+                <strong>Period:</strong> {{ \Carbon\Carbon::parse($startDate)->format('M Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('M Y') }}<br>
                 <strong>Status:</strong> Verified
             </div>
         </div>
@@ -320,4 +320,4 @@
         <p>Statement of Comprehensive Income prepared in accordance with International Financial Reporting Standards (IFRS) and Bank of Tanzania regulatory requirements.</p>
     </div>
 </body>
-</html> 
+</html>

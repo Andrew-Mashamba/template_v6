@@ -47,7 +47,7 @@ class StatementOfFinancialPosition extends Component
             $this->errorMessage = '';
             
             // Check if we need to add sample data for demonstration
-            $this->addSampleDataIfNeeded();
+            // $this->addSampleDataIfNeeded();
             
             // Get the statement data
             $statementData = $this->getStatementData();
