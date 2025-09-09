@@ -28,6 +28,45 @@
                     @error('category') <span class="text-red-500">{{ $message }}</span> @enderror
                 </div>
 
+                {{-- Account Selection - Corrected Flow --}}
+                <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 mb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Account Selection</h3>
+                    <p class="text-sm text-gray-600 mb-4">Select where to create the insurance account and the other account for double-entry posting</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="parent_account_number" class="block text-sm font-medium text-gray-700 mb-2">
+                                Parent Account (Create Insurance Under) *
+                            </label>
+                            <select wire:model="parent_account_number" id="parent_account_number" 
+                                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                                <option value="">-- Select Parent Account --</option>
+                                @foreach($creditAccounts as $account)
+                                    <option value="{{ $account->account_number }}">
+                                        {{ $account->account_number }} - {{ $account->account_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">New insurance account will be created under this parent</p>
+                        </div>
+                        
+                        <div>
+                            <label for="other_account_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                Other Account (Cash/Bank) *
+                            </label>
+                            <select wire:model="other_account_id" id="other_account_id" 
+                                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                                <option value="">-- Select Cash/Bank Account --</option>
+                                @foreach($otherAccounts as $account)
+                                    <option value="{{ $account->internal_mirror_account_number }}">
+                                        {{ $account->bank_name }} - {{ $account->account_number }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">Account to be debited (Cash/Bank payment)</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Show for Employees or Members -->
                 @if($category != 'loans')
                     <div class="mb-4">

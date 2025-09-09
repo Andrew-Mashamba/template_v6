@@ -4,13 +4,20 @@ namespace App\Http\Livewire\Accounting;
 
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Livewire\WithPagination;
+use App\Services\BalanceSheetItemIntegrationService;
 
 class Unearned extends Component
 {
+    use WithPagination;
     public $user_id;
     public $source_account_id;
     public $destination_account_id;
     public $status;
+    
+    // Account selection for proper flow
+    public $parent_account_number; // Parent account to create unearned revenue account under
+    public $other_account_id; // The other account for double-entry (Cash/Bank - debit side)
     public $is_recognized;
     public $is_delivery;
     public $description;
@@ -19,6 +26,11 @@ class Unearned extends Component
     public $phone;
     public $email;
     public $show_register_modal=false,$amount;
+    public $search = '';
+    public $sortField = 'created_at';
+    public $sortDirection = 'desc';
+    public $perPage = 10;
+    public $filterStatus = 'all'; // all, PENDING, recognized, delivered
 
     function registerModal(){
         $this->show_register_modal=!$this->show_register_modal;
@@ -44,7 +56,7 @@ class Unearned extends Component
         $this->validate();
 
          // Insert data into the database
-         DB::table('unearned_deferred_revenue')->insert([
+         $unearnedRevenueId = DB::table('unearned_deferred_revenue')->insertGetId([
             'user_id' => auth()->user()->id,
             'source_account_id' => $this->source_account_id,
             'destination_account_id' => $this->destination_account_id,
@@ -61,17 +73,132 @@ class Unearned extends Component
             'updated_at' => now(),
         ]);
 
+        // Use Balance Sheet Integration Service to create accounts and post to GL
+        $integrationService = new BalanceSheetItemIntegrationService();
+        
+        try {
+            $unearnedRevenueObj = (object)[
+                'id' => $unearnedRevenueId,
+                'amount' => $this->amount,
+                'customer_name' => $this->name,
+                'description' => $this->description,
+                'status' => 'PENDING'
+            ];
+            
+            $integrationService->createUnearnedRevenueAccount(
+                $unearnedRevenueObj,
+                $this->parent_account_number,  // Parent account to create unearned revenue account under
+                $this->other_account_id        // The other account for double-entry (Cash/Bank - debit side)
+            );
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to integrate unearned revenue with accounts table: ' . $e->getMessage());
+        }
+
         $this->reset();
 
-        session()->flash('message', 'Revenue successfully inserted.');
-
-
+        session()->flash('message', 'Unearned revenue successfully inserted and integrated.');
     }
 
 
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function sortBy($field)
+    {
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortDirection = 'asc';
+        }
+        $this->sortField = $field;
+    }
+
+    public function recognizeRevenue($id)
+    {
+        DB::table('unearned_deferred_revenue')
+            ->where('id', $id)
+            ->update([
+                'is_recognized' => true,
+                'status' => 'RECOGNIZED',
+                'updated_at' => now()
+            ]);
+        
+        session()->flash('message', 'Revenue recognized successfully.');
+    }
+
+    public function markDelivered($id)
+    {
+        DB::table('unearned_deferred_revenue')
+            ->where('id', $id)
+            ->update([
+                'is_delivery' => true,
+                'updated_at' => now()
+            ]);
+        
+        session()->flash('message', 'Marked as delivered successfully.');
+    }
+
     public function render()
     {
-        return view('livewire.accounting.unearned');
+        $unearnedRevenues = DB::table('unearned_deferred_revenue')
+            ->when($this->filterStatus !== 'all', function($query) {
+                if ($this->filterStatus === 'recognized') {
+                    $query->where('is_recognized', true);
+                } elseif ($this->filterStatus === 'delivered') {
+                    $query->where('is_delivery', true);
+                } else {
+                    $query->where('status', $this->filterStatus);
+                }
+            })
+            ->when($this->search, function($query) {
+                $query->where(function($q) {
+                    $q->where('name', 'like', '%' . $this->search . '%')
+                      ->orWhere('email', 'like', '%' . $this->search . '%')
+                      ->orWhere('phone', 'like', '%' . $this->search . '%')
+                      ->orWhere('description', 'like', '%' . $this->search . '%');
+                });
+            })
+            ->orderBy($this->sortField, $this->sortDirection)
+            ->paginate($this->perPage);
+
+        $accounts = DB::table('accounts')
+            ->whereIn('category_code', [2600, 2700])
+            ->get();
+
+        // Get accounts for account selection
+        $parentAccounts = DB::table('accounts')
+            ->where('major_category_code', '2000') // Liability accounts
+            ->where('account_level', '<=', 2) // Parent level accounts only
+            ->where(function($query) {
+                $query->where('account_name', 'LIKE', '%UNEARNED%')
+                      ->orWhere('account_name', 'LIKE', '%DEFERRED%')
+                      ->orWhere('account_name', 'LIKE', '%REVENUE%')
+                      ->orWhere('account_name', 'LIKE', '%LIABILITY%');
+            })
+            ->where('status', 'ACTIVE')
+            ->orderBy('account_name')
+            ->get();
+        
+        $otherAccounts = DB::table('bank_accounts')
+            
+            
+
+
+            
+            ->select('internal_mirror_account_number', 'bank_name', 'account_number')
+            ->where('status', 'ACTIVE')
+            ->orderBy('bank_name')
+            ->get();
+
+        return view('livewire.accounting.unearned', [
+            'unearnedRevenues' => $unearnedRevenues,
+            'accounts' => $accounts,
+            'parentAccounts' => $parentAccounts,
+            'otherAccounts' => $otherAccounts
+        ]);
     }
 
 

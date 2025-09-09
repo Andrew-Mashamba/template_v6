@@ -88,9 +88,9 @@ class Accounting extends Component
             ['id' => 8, 'label' => 'Cash Flow Statement'],
             ['id' => 5, 'label' => 'Trial Balance'],
             ['id' => 9, 'label' => 'Members'],
-            ['id' => 13, 'label' => 'Expenses'],
-            ['id' => 14, 'label' => 'Petty Cash'],
-            ['id' => 15, 'label' => 'Strong Room'],
+            // ['id' => 13, 'label' => 'Expenses'], // Removed as requested
+            // ['id' => 14, 'label' => 'Petty Cash'], // Removed as requested
+            // ['id' => 15, 'label' => 'Strong Room'], // Removed as requested
             ['id' => 16, 'label' => 'Assets Management'],
             ['id' => 17, 'label' => 'Loan Loss Reserves (LLR)'],
             ['id' => 18, 'label' => 'Trade And Other Receivable'],
@@ -111,8 +111,8 @@ class Accounting extends Component
             ['id' => 34, 'label' => 'Savings'],
             ['id' => 35, 'label' => 'Deposits'],
             ['id' => 36, 'label' => 'Loan Outstanding'],
-            ['id' => 38, 'label' => 'Loan Charges'],
-            ['id' => 39, 'label' => 'Insurance Charges'],
+            // ['id' => 38, 'label' => 'Loan Charges'], // Removed as requested
+            // ['id' => 39, 'label' => 'Insurance Charges'], // Removed as requested
         ];
 
         $this->menuCategories = [
@@ -120,7 +120,7 @@ class Accounting extends Component
             'Financial Statements' => [12, 40, 41, 42, 28, 8, 5],
             'Asset Management' => [16, 20, 32],
             'Risk Management' => [17, 23, 31],
-            'Operations' => [13, 14, 15, 18, 30, 19, 21, 22, 24, 25, 26, 27, 29, 36, 38, 39],
+            'Operations' => [18, 30, 19, 21, 22, 24, 25, 26, 27, 29, 36], // Removed 13, 14, 15, 38, 39
         ];
 
         return view('livewire.accounting.accounting', [

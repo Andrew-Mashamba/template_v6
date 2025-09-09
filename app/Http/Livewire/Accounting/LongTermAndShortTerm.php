@@ -5,15 +5,27 @@ namespace App\Http\Livewire\Accounting;
 use App\Models\LongTermAndShortTerm as ModelsLongTermAndShortTerm;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
+use Illuminate\Support\Facades\DB;
+use App\Services\BalanceSheetItemIntegrationService;
 
 class LongTermAndShortTerm extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, WithPagination;
 
     public $show_register_modal = false;
+    public $search = '';
+    public $sortField = 'created_at';
+    public $sortDirection = 'desc';
+    public $perPage = 10;
+    public $filterLoanType = 'all'; // all, Long, Short
     public $loan_type; // Long or Short
     public $source_account_id;
     public $amount;
+    
+    // Account selection for proper flow
+    public $parent_account_number; // Parent account to create loan account under
+    public $other_account_id; // The other account for double-entry (Cash/Bank - debit side)
     public $organization_name;
     public $address;
     public $phone;
@@ -53,7 +65,7 @@ class LongTermAndShortTerm extends Component
         }
 
         // Save the data into the loans table
-        ModelsLongTermAndShortTerm ::create([
+        $loan = ModelsLongTermAndShortTerm ::create([
             'loan_type' => $this->loan_type, // Store the loan type
             'source_account_id' => $this->source_account_id,
             'amount' => $this->amount,
@@ -67,6 +79,20 @@ class LongTermAndShortTerm extends Component
             'application_form' => $applicationFormPath,
             'contract_form' => $contractFormPath,
         ]);
+
+        // Use Balance Sheet Integration Service to create accounts and post to GL
+        $integrationService = new BalanceSheetItemIntegrationService();
+        
+        try {
+            $integrationService->createLoanAccount(
+                $loan,
+                $this->parent_account_number,  // Parent account to create loan account under
+                $this->other_account_id        // The other account for double-entry (Cash/Bank - debit side)
+            );
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to integrate loan with accounts table: ' . $e->getMessage());
+        }
 
         // Reset form fields
         $this->reset();
@@ -84,8 +110,80 @@ class LongTermAndShortTerm extends Component
 
 
 
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function sortBy($field)
+    {
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortDirection = 'asc';
+        }
+        $this->sortField = $field;
+    }
+
+    public function deleteAction($id)
+    {
+        $loan = ModelsLongTermAndShortTerm::find($id);
+        if ($loan) {
+            $loan->delete();
+            session()->flash('message', 'Loan deleted successfully.');
+        }
+    }
+
     public function render()
     {
-        return view('livewire.accounting.long-term-and-short-term');
+        $loans = ModelsLongTermAndShortTerm::query()
+            ->when($this->filterLoanType !== 'all', function($query) {
+                $query->where('loan_type', $this->filterLoanType);
+            })
+            ->when($this->search, function($query) {
+                $query->where(function($q) {
+                    $q->where('organization_name', 'like', '%' . $this->search . '%')
+                      ->orWhere('email', 'like', '%' . $this->search . '%')
+                      ->orWhere('phone', 'like', '%' . $this->search . '%')
+                      ->orWhere('description', 'like', '%' . $this->search . '%');
+                });
+            })
+            ->orderBy($this->sortField, $this->sortDirection)
+            ->paginate($this->perPage);
+
+        $accounts = DB::table('accounts')
+            ->whereIn('category_code', [2300, 2400])
+            ->get();
+
+        // Get accounts for account selection
+        $parentAccounts = DB::table('accounts')
+            ->where('major_category_code', '2000') // Liability accounts
+            ->where('account_level', '<=', 2) // Parent level accounts only
+            ->where(function($query) {
+                $query->where('account_name', 'LIKE', '%LOAN%')
+                      ->orWhere('account_name', 'LIKE', '%BORROWING%')
+                      ->orWhere('account_name', 'LIKE', '%LIABILITY%');
+            })
+            ->where('status', 'ACTIVE')
+            ->orderBy('account_name')
+            ->get();
+        
+        $otherAccounts = DB::table('bank_accounts')
+            
+            
+
+
+            
+            ->select('internal_mirror_account_number', 'bank_name', 'account_number')
+            ->where('status', 'ACTIVE')
+            ->orderBy('bank_name')
+            ->get();
+
+        return view('livewire.accounting.long-term-and-short-term', [
+            'loans' => $loans,
+            'accounts' => $accounts,
+            'parentAccounts' => $parentAccounts,
+            'otherAccounts' => $otherAccounts
+        ]);
     }
 }
