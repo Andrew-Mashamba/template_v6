@@ -336,6 +336,43 @@ class InternalFundsTransferService
 
         return true;
     }
+    
+    /**
+     * Query internal account from database
+     * 
+     * @param string $accountNumber
+     * @return array|null
+     */
+    private function queryInternalAccount(string $accountNumber): ?array
+    {
+        try {
+            // Query from accounts table or internal API
+            $account = \DB::table('accounts')
+                ->where('account_number', $accountNumber)
+                ->where('status', 'ACTIVE')
+                ->first();
+                
+            if ($account) {
+                return [
+                    'account_name' => $account->account_name ?? $account->name ?? 'NBC Account Holder',
+                    'branch_code' => $account->branch_code ?? substr($accountNumber, 0, 3),
+                    'branch_name' => $account->branch_name ?? 'NBC Branch',
+                    'status' => $account->status ?? 'ACTIVE',
+                    'account_type' => $account->account_type ?? 'SAVINGS'
+                ];
+            }
+            
+            // If not in database, could call internal NBC API here
+            // For now, return null if not found
+            return null;
+            
+        } catch (\Exception $e) {
+            $this->logError("Database query failed", [
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
 
     /**
      * Validate transfer data

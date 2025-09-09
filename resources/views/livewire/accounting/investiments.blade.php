@@ -139,22 +139,45 @@
                         <input wire:model="investmentDate" type="date" id="investmentDate" class="w-full p-2 border bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500" />
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Source of funds</label>
-                        <select wire:model="source" class="w-full p-2 border bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">Select Account</option>
-                            @php
-                                $cashAccount = \Illuminate\Support\Facades\DB::table('setup_accounts')->where('item', 'cash')->first();
-                                $cash_code = $cashAccount->sub_category_code;
-                                $table_name = $cashAccount->table_name;
-                            @endphp
-
-                            @foreach(\Illuminate\Support\Facades\DB::table($table_name)->get() as $accounts)
-                                <option value="{{ $accounts->sub_category_code }}">{{ $accounts->sub_category_name }}</option>
-                            @endforeach
-
-                        </select>
-                        @error('source') <span class="text-red-500">{{ $message }}</span> @enderror
+                    {{-- Account Selection - Corrected Flow --}}
+                    <div class="col-span-2 bg-gray-50 rounded-lg border border-gray-200 p-4 mb-4">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Account Selection</h3>
+                        <p class="text-sm text-gray-600 mb-4">Select where to create the investment account and the other account for double-entry posting</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="parent_account_number" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Parent Account (Create Investment Under) *
+                                </label>
+                                <select wire:model="parent_account_number" id="parent_account_number" 
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                                    <option value="">-- Select Parent Account --</option>
+                                    @foreach($parentAccounts as $account)
+                                        <option value="{{ $account->account_number }}">
+                                            {{ $account->account_number }} - {{ $account->account_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">New investment account will be created under this parent</p>
+                                @error('parent_account_number') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                            </div>
+                            
+                            <div>
+                                <label for="other_account_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Other Account (Cash/Bank) *
+                                </label>
+                                <select wire:model="other_account_id" id="other_account_id" 
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                                    <option value="">-- Select Cash/Bank Account --</option>
+                                    @foreach($otherAccounts as $account)
+                                        <option value="{{ $account->internal_mirror_account_number }}">
+                                            {{ $account->bank_name }} - {{ $account->account_number }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Account to be credited (Cash/Bank payment)</p>
+                                @error('other_account_id') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Shares Fields -->

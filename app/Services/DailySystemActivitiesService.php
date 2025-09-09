@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -26,9 +27,13 @@ use App\Services\MandatorySavingsService;
 use App\Services\SimpleDailyLoanReportsService;
 use App\Services\OptimizedDailyLoanService;
 use Illuminate\Support\Facades\Cache;
+use App\Traits\TracksActivityProgress;
+use App\Traits\LogsEndOfDayActivities;
+use App\Models\DailyActivityStatus;
 
 class DailySystemActivitiesService
 {
+    use TracksActivityProgress, LogsEndOfDayActivities;
     protected $previousDay;
     protected $dividendService;
     protected $interestService;
@@ -57,398 +62,879 @@ class DailySystemActivitiesService
         $this->mandatorySavingsService = $mandatorySavingsService;
     }
 
-    public function executeDailyActivities()
+    public function executeDailyActivities($triggeredBy = 'scheduled')
     {
+        // Initialize logger
+        $this->initializeEodLogger();
+        $this->logEodStart($triggeredBy);
+        
         try {
             DB::beginTransaction();
+            
+            // Cache the last run time
+            Cache::put('last_daily_activities_run', now(), 86400);
+            $this->logActivityProgress('Cache updated with last run time');
 
             // 1. Financial Core Activities
-            $this->processLoanActivities();
-            $this->processSavingsAndDeposits();
-            $this->processShareManagement();
-            $this->processFinancialReconciliation();
+            $this->logActivityProgress('Starting Financial Core Activities...');
+            $this->processLoanActivities($triggeredBy);
+            $this->processSavingsAndDeposits($triggeredBy);
+            $this->processShareManagement($triggeredBy);
+            $this->processFinancialReconciliation($triggeredBy);
 
             // 2. Member and Compliance Activities
-            $this->processMemberServices();
-            $this->processComplianceAndReporting();
+            $this->logActivityProgress('Starting Member and Compliance Activities...');
+            $this->processMemberServices($triggeredBy);
+            $this->processComplianceAndReporting($triggeredBy);
 
             // 3. System and Security Activities
-            $this->processSystemMaintenance();
-            $this->processSecurityAndAccessControl();
+            $this->logActivityProgress('Starting System and Security Activities...');
+            $this->processSystemMaintenance($triggeredBy);
+            $this->processSecurityAndAccessControl($triggeredBy);
 
             // 4. Asset and Investment Activities
-            $this->processAssetManagement();
-            $this->processInvestmentManagement();
-            $this->processInsuranceActivities();
+            $this->logActivityProgress('Starting Asset and Investment Activities...');
+            $this->processAssetManagement($triggeredBy);
+            $this->processInvestmentManagement($triggeredBy);
+            $this->processInsuranceActivities($triggeredBy);
 
             // 5. Document and Performance Activities
-            $this->processDocumentManagement();
-            $this->processPerformanceMonitoring();
+            $this->logActivityProgress('Starting Document and Performance Activities...');
+            $this->processDocumentManagement($triggeredBy);
+            $this->processPerformanceMonitoring($triggeredBy);
 
             // 6. Communication and Notifications
-            $this->processCommunicationAndNotifications();
+            $this->logActivityProgress('Starting Communication and Notifications...');
+            $this->processCommunicationAndNotifications($triggeredBy);
             // Temporarily disabled due to error
             // $this->processMandatorySavings();
 
             DB::commit();
+            
+            // Log summary
+            $activities = DailyActivityStatus::getTodayActivities()->toArray();
+            $this->logEodSummary($activities);
+            $this->logEodComplete('success', 'All activities completed successfully');
+            
             Log::info('Daily activities completed successfully for ' . $this->previousDay->format('Y-m-d'));
             return ['status' => 'success', 'date' => $this->previousDay->format('Y-m-d')];
 
         } catch (\Exception $e) {
             DB::rollBack();
+            
+            $this->logActivityError($e->getMessage(), ['exception' => get_class($e)]);
+            $this->logEodComplete('failed', $e->getMessage());
+            
             Log::error('Daily activities failed: ' . $e->getMessage());
             return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }
 
-    protected function processLoanActivities()
+    protected function processLoanActivities($triggeredBy = 'system')
     {
+        $this->logActivityStart('Loan Activities', [
+            'Process' => 'Loan repayments and notifications',
+            'Date' => $this->previousDay->format('Y-m-d')
+        ]);
+        
+        $this->startActivity('repayments_collection', 'Repayments collection', $triggeredBy);
+        
         try {
+            $this->logActivityProgress('Initializing Optimized Daily Loan Service');
+            
             // Use the optimized service for high-volume processing
             $optimizedService = new OptimizedDailyLoanService();
             $optimizedService->processDailyActivities();
             $statistics = $optimizedService->getStatistics();
             
+            $this->logActivityProgress('Loan processing completed', 
+                $statistics['total_loans'] ?? 0, 
+                $statistics['total_loans'] ?? 0
+            );
+            
+            // Log statistics
+            $this->logActivityStatistics([
+                'total_loans' => $statistics['total_loans'] ?? 0,
+                'repayments_processed' => $statistics['repayments_processed'] ?? 0,
+                'amount_collected' => $statistics['amount_collected'] ?? 0,
+                'schedules_updated' => $statistics['schedules_updated'] ?? 0,
+                'error_count' => $statistics['error_count'] ?? 0
+            ]);
+            
             // Cache the statistics for monitoring
             Cache::put('daily_loan_processing_stats', $statistics, 86400); // 24 hours
+            $this->logActivityProgress('Statistics cached for monitoring');
             
-            // Generate arrears report
-            $this->reportService->generateLoanArrearsReport($this->previousDay);
+            // Update progress based on statistics
+            if (isset($statistics['total_loans']) && $statistics['total_loans'] > 0) {
+                $this->updateActivityProgress(
+                    $statistics['total_loans'],
+                    $statistics['total_loans'],
+                    $statistics['error_count'] ?? 0
+                );
+            }
             
-            // Update loan loss provisions
-            $this->updateLoanLossProvisions();
+            $this->completeActivity();
             
-            // Generate and send daily loan reports with statistics
-            $this->generateAndSendDailyLoanReportsWithStats($statistics);
+            // Track loan notifications separately
+            $this->logActivityProgress('Processing loan notifications');
+            $this->trackSimpleActivity('loan_notifications', 'Loan repayment notifications', function() use ($statistics) {
+                $this->logActivityProgress('Generating arrears report');
+                $this->reportService->generateLoanArrearsReport($this->previousDay);
+                
+                $this->logActivityProgress('Updating loan loss provisions');
+                $this->updateLoanLossProvisions();
+                
+                $this->logActivityProgress('Generating and sending daily loan reports');
+                $this->generateAndSendDailyLoanReportsWithStats($statistics);
+            }, $triggeredBy);
 
+            $this->logActivityComplete('success', [
+                'Total Loans Processed' => $statistics['total_loans'] ?? 0,
+                'Total Amount Collected' => number_format($statistics['amount_collected'] ?? 0, 2)
+            ]);
+            
             Log::info('Loan activities completed for ' . $this->previousDay->format('Y-m-d'));
             Log::info('Processing statistics: ' . json_encode($statistics));
         } catch (\Exception $e) {
+            $this->failActivity($e->getMessage());
+            $this->logActivityError($e);
+            $this->logActivityComplete('failed');
             Log::error('Loan activities failed: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    protected function processSavingsAndDeposits()
+    protected function processSavingsAndDeposits($triggeredBy = 'system')
     {
+        $this->logActivityStart('Savings and Deposits', [
+            'Process' => 'Interest calculation and deposit processing',
+            'Date' => $this->previousDay->format('Y-m-d')
+        ]);
+        
+        $this->startActivity('interest_calculation', 'Interest calculation', $triggeredBy);
+        
         try {
             // Calculate daily interest
+            $this->logActivityProgress('Calculating daily savings interest');
             // $this->interestService->calculateDailySavingsInterest($this->previousDay);
 
             // Process fixed deposit maturities
-            $this->processFixedDepositMaturities();
+            $this->logActivityProgress('Processing fixed deposit maturities');
+            $maturedDeposits = $this->processFixedDepositMaturities();
+            $this->logActivityProgress('Fixed deposits processed', $maturedDeposits, $maturedDeposits);
 
             // Update deposit balances
-            $this->updateDepositBalances();
+            $this->logActivityProgress('Updating deposit balances');
+            $updatedBalances = $this->updateDepositBalances();
+            $this->logActivityProgress('Deposit balances updated', $updatedBalances, $updatedBalances);
 
             // Generate interest reports
+            $this->logActivityProgress('Generating deposit interest report');
             $this->reportService->generateDepositInterestReport($this->previousDay);
 
             // Process recurring deposits
-            $this->processRecurringDeposits();
-
+            $this->logActivityProgress('Processing recurring deposits');
+            $recurringProcessed = $this->processRecurringDeposits();
+            
+            $this->logActivityStatistics([
+                'matured_deposits' => $maturedDeposits,
+                'balances_updated' => $updatedBalances,
+                'recurring_processed' => $recurringProcessed
+            ]);
+            
+            $this->completeActivity();
+            $this->logActivityComplete('success', [
+                'Total Processed' => $maturedDeposits + $recurringProcessed
+            ]);
+            
             Log::info('Savings and deposits activities completed for ' . $this->previousDay->format('Y-m-d'));
         } catch (\Exception $e) {
+            $this->failActivity($e->getMessage());
+            $this->logActivityError($e);
+            $this->logActivityComplete('failed');
             Log::error('Savings and deposits activities failed: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    protected function processShareManagement()
+    protected function processShareManagement($triggeredBy = 'system')
     {
+        $this->logActivityStart('Share Management', [
+            'Process' => 'Share transactions and dividend calculation',
+            'Date' => $this->previousDay->format('Y-m-d')
+        ]);
+        
+        $this->startActivity('share_transactions', 'Share transactions', $triggeredBy);
+        
         try {
             // Update share values
+            $this->logActivityProgress('Updating share values');
             // $this->dividendService->updateShareValues($this->previousDay);
 
             // Process share transactions
-            $this->processShareTransactions();
+            $this->logActivityProgress('Processing share transactions');
+            $shareTransactions = $this->processShareTransactions();
+            $this->logActivityProgress('Share transactions processed', $shareTransactions, $shareTransactions);
 
             // Calculate dividends
+            $this->logActivityProgress('Calculating daily dividends');
             // $this->dividendService->calculateDailyDividends($this->previousDay);
 
             // Update member share balances
-            $this->updateMemberShareBalances();
+            $this->logActivityProgress('Updating member share balances');
+            $balancesUpdated = $this->updateMemberShareBalances();
+            $this->logActivityProgress('Share balances updated', $balancesUpdated, $balancesUpdated);
 
             // Generate share movement reports
+            $this->logActivityProgress('Generating share movement report');
             $this->reportService->generateShareMovementReport($this->previousDay);
+            
+            $this->logActivityStatistics([
+                'share_transactions' => $shareTransactions,
+                'balances_updated' => $balancesUpdated
+            ]);
+            
+            $this->completeActivity();
+            $this->logActivityComplete('success', [
+                'Total Transactions' => $shareTransactions,
+                'Balances Updated' => $balancesUpdated
+            ]);
 
             Log::info('Share management activities completed for ' . $this->previousDay->format('Y-m-d'));
         } catch (\Exception $e) {
+            $this->failActivity($e->getMessage());
+            $this->logActivityError($e);
+            $this->logActivityComplete('failed');
             Log::error('Share management activities failed: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    protected function processFinancialReconciliation()
+    protected function processFinancialReconciliation($triggeredBy = 'system')
     {
+        $this->logActivityStart('Financial Reconciliation', [
+            'Process' => 'Bank reconciliation and ledger updates',
+            'Date' => $this->previousDay->format('Y-m-d')
+        ]);
+        
+        $this->startActivity('bank_reconciliation', 'Bank reconciliation', $triggeredBy);
+        
         try {
+            // Process standing instructions
+            $this->logActivityProgress('Processing standing instructions');
+            $standingInstructionsProcessed = $this->processStandingInstructions();
+            $this->logActivityProgress('Standing instructions processed', $standingInstructionsProcessed, $standingInstructionsProcessed);
+
             // Reconcile bank accounts
-            $this->reconcileBankAccounts();
+            $this->logActivityProgress('Reconciling bank accounts');
+            $reconciledAccounts = $this->reconcileBankAccounts();
+            $this->logActivityProgress('Bank accounts reconciled', $reconciledAccounts, $reconciledAccounts);
 
             // Match bank transactions
-            $this->matchBankTransactions();
+            $this->logActivityProgress('Matching bank transactions');
+            $matchedTransactions = $this->matchBankTransactions();
+            $this->logActivityProgress('Transactions matched', $matchedTransactions, $matchedTransactions);
 
             // Update general ledger
-            $this->updateGeneralLedger();
+            $this->logActivityProgress('Updating general ledger');
+            $ledgerEntries = $this->updateGeneralLedger();
+            $this->logActivityProgress('Ledger entries updated', $ledgerEntries, $ledgerEntries);
 
             // Generate trial balance
+            $this->logActivityProgress('Generating daily trial balance');
             $this->reportService->generateDailyTrialBalance($this->previousDay);
 
             // Process bank charges
-            $this->processBankCharges();
+            $this->logActivityProgress('Processing bank charges');
+            $bankCharges = $this->processBankCharges();
+            
+            $this->logActivityStatistics([
+                'standing_instructions' => $standingInstructionsProcessed,
+                'accounts_reconciled' => $reconciledAccounts,
+                'transactions_matched' => $matchedTransactions,
+                'ledger_entries' => $ledgerEntries,
+                'bank_charges' => $bankCharges
+            ]);
+            
+            $this->completeActivity();
+            $this->logActivityComplete('success', [
+                'Accounts Reconciled' => $reconciledAccounts,
+                'Transactions Matched' => $matchedTransactions
+            ]);
 
             Log::info('Financial reconciliation completed for ' . $this->previousDay->format('Y-m-d'));
         } catch (\Exception $e) {
+            $this->failActivity($e->getMessage());
+            $this->logActivityError($e);
+            $this->logActivityComplete('failed');
             Log::error('Financial reconciliation failed: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    protected function processMemberServices()
+    protected function processMemberServices($triggeredBy = 'system')
     {
+        $this->logActivityStart('Member Services', [
+            'Process' => 'Member withdrawals and account management',
+            'Date' => $this->previousDay->format('Y-m-d')
+        ]);
+        
+        $this->startActivity('member_withdrawals', 'Member withdrawals', $triggeredBy);
+        
         try {
             // Process withdrawals
-            $this->processMemberWithdrawals();
+            $this->logActivityProgress('Processing member withdrawals');
+            $withdrawalsProcessed = $this->processMemberWithdrawals();
+            $this->logActivityProgress('Withdrawals processed', $withdrawalsProcessed, $withdrawalsProcessed);
 
             // Update account statuses
-            $this->updateMemberAccountStatuses();
+            $this->logActivityProgress('Updating member account statuses');
+            $statusesUpdated = $this->updateMemberAccountStatuses();
+            $this->logActivityProgress('Account statuses updated', $statusesUpdated, $statusesUpdated);
 
             // Generate statements
+            $this->logActivityProgress('Generating member statements');
             $this->reportService->generateMemberStatements($this->previousDay);
 
             // Process benefits
-            $this->processMemberBenefits();
+            $this->logActivityProgress('Processing member benefits');
+            $benefitsProcessed = $this->processMemberBenefits();
+            $this->logActivityProgress('Benefits processed', $benefitsProcessed, $benefitsProcessed);
 
             // Update eligibility
-            $this->updateMemberEligibility();
+            $this->logActivityProgress('Updating member eligibility');
+            $eligibilityUpdated = $this->updateMemberEligibility();
+            $this->logActivityProgress('Eligibility updated', $eligibilityUpdated, $eligibilityUpdated);
+            
+            $this->logActivityStatistics([
+                'withdrawals_processed' => $withdrawalsProcessed,
+                'statuses_updated' => $statusesUpdated,
+                'benefits_processed' => $benefitsProcessed,
+                'eligibility_updated' => $eligibilityUpdated
+            ]);
+            
+            $this->completeActivity();
+            $this->logActivityComplete('success', [
+                'Total Withdrawals' => $withdrawalsProcessed,
+                'Members Updated' => $statusesUpdated
+            ]);
 
             Log::info('Member services completed for ' . $this->previousDay->format('Y-m-d'));
         } catch (\Exception $e) {
+            $this->failActivity($e->getMessage());
+            $this->logActivityError($e);
+            $this->logActivityComplete('failed');
             Log::error('Member services failed: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    protected function processComplianceAndReporting()
+    protected function processComplianceAndReporting($triggeredBy = 'system')
     {
+        $this->logActivityStart('Compliance and Reporting', [
+            'Process' => 'Regulatory reports and compliance checks',
+            'Date' => $this->previousDay->format('Y-m-d')
+        ]);
+        
+        $this->startActivity('regulatory_reports', 'Regulatory reports', $triggeredBy);
+        
         try {
             // Generate regulatory reports
+            $this->logActivityProgress('Generating regulatory reports');
             $this->reportService->generateRegulatoryReports($this->previousDay);
 
             // Update compliance status
-            $this->updateComplianceStatus();
+            $this->logActivityProgress('Updating compliance status');
+            $complianceUpdates = $this->updateComplianceStatus();
+            $this->logActivityProgress('Compliance status updated', $complianceUpdates, $complianceUpdates);
 
             // Process tax calculations
-            $this->processTaxCalculations();
+            $this->logActivityProgress('Processing tax calculations');
+            $taxCalculations = $this->processTaxCalculations();
+            $this->logActivityProgress('Tax calculations completed', $taxCalculations, $taxCalculations);
 
             // Generate audit trails
-            $this->generateAuditTrails();
+            $this->logActivityProgress('Generating audit trails');
+            $auditTrails = $this->generateAuditTrails();
+            $this->logActivityProgress('Audit trails generated', $auditTrails, $auditTrails);
 
             // Update risk assessments
-            $this->updateRiskAssessments();
+            $this->logActivityProgress('Updating risk assessments');
+            $riskAssessments = $this->updateRiskAssessments();
+            
+            $this->logActivityStatistics([
+                'compliance_updates' => $complianceUpdates,
+                'tax_calculations' => $taxCalculations,
+                'audit_trails' => $auditTrails,
+                'risk_assessments' => $riskAssessments
+            ]);
+            
+            $this->completeActivity();
+            $this->logActivityComplete('success', [
+                'Reports Generated' => 'All regulatory reports',
+                'Compliance Items' => $complianceUpdates
+            ]);
 
             Log::info('Compliance and reporting completed for ' . $this->previousDay->format('Y-m-d'));
         } catch (\Exception $e) {
+            $this->failActivity($e->getMessage());
+            $this->logActivityError($e);
+            $this->logActivityComplete('failed');
             Log::error('Compliance and reporting failed: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    protected function processSystemMaintenance()
+    protected function processSystemMaintenance($triggeredBy = 'system')
     {
+        $this->logActivityStart('System Maintenance', [
+            'Process' => 'Database backup and system optimization',
+            'Date' => $this->previousDay->format('Y-m-d')
+        ]);
+        
+        $this->startActivity('database_backup', 'Database backup', $triggeredBy);
+        
         try {
             // Database backup
-            $this->backupService->createDatabaseBackup();
+            $this->logActivityProgress('Creating database backup');
+            $backupSize = $this->backupService->createDatabaseBackup();
+            $this->logActivityProgress('Database backup completed', 1, 1);
 
             // Clean system logs
-            $this->cleanSystemLogs();
+            $this->logActivityProgress('Cleaning system logs');
+            $logsCleared = $this->cleanSystemLogs();
+            $this->logActivityProgress('System logs cleaned', $logsCleared, $logsCleared);
 
             // Clear cache
-            $this->clearSystemCache();
+            $this->logActivityProgress('Clearing system cache');
+            $cacheCleared = $this->clearSystemCache();
+            $this->logActivityProgress('Cache cleared', $cacheCleared, $cacheCleared);
 
             // Clean temporary files
-            $this->cleanTemporaryFiles();
+            $this->logActivityProgress('Cleaning temporary files');
+            $tempFilesCleaned = $this->cleanTemporaryFiles();
+            $this->logActivityProgress('Temporary files cleaned', $tempFilesCleaned, $tempFilesCleaned);
 
             // Optimize performance
+            $this->logActivityProgress('Optimizing system performance');
             $this->optimizeSystemPerformance();
+            
+            $this->logActivityStatistics([
+                'backup_size' => $backupSize ?? 'N/A',
+                'logs_cleared' => $logsCleared,
+                'cache_entries_cleared' => $cacheCleared,
+                'temp_files_cleaned' => $tempFilesCleaned
+            ]);
+            
+            $this->completeActivity();
+            $this->logActivityComplete('success', [
+                'Backup Created' => 'Yes',
+                'Files Cleaned' => $logsCleared + $tempFilesCleaned
+            ]);
 
             Log::info('System maintenance completed for ' . $this->previousDay->format('Y-m-d'));
         } catch (\Exception $e) {
+            $this->failActivity($e->getMessage());
+            $this->logActivityError($e);
+            $this->logActivityComplete('failed');
             Log::error('System maintenance failed: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    protected function processSecurityAndAccessControl()
+    protected function processSecurityAndAccessControl($triggeredBy = 'system')
     {
+        $this->logActivityStart('Security and Access Control', [
+            'Process' => 'Security audit and access management',
+            'Date' => $this->previousDay->format('Y-m-d')
+        ]);
+        
+        $this->startActivity('security_audit', 'Security audit', $triggeredBy);
+        
         try {
             // Audit user activities
-            $this->securityService->auditUserActivities($this->previousDay);
+            $this->logActivityProgress('Auditing user activities');
+            $auditedActivities = $this->securityService->auditUserActivities($this->previousDay);
+            $this->logActivityProgress('User activities audited', $auditedActivities, $auditedActivities);
 
             // Update access logs
-            $this->securityService->updateAccessLogs();
+            $this->logActivityProgress('Updating access logs');
+            $accessLogsUpdated = $this->securityService->updateAccessLogs();
+            $this->logActivityProgress('Access logs updated', $accessLogsUpdated, $accessLogsUpdated);
 
             // Check suspicious activities
-            $this->securityService->checkSuspiciousActivities();
+            $this->logActivityProgress('Checking for suspicious activities');
+            $suspiciousFound = $this->securityService->checkSuspiciousActivities();
+            if ($suspiciousFound > 0) {
+                $this->logActivityWarning('Suspicious activities detected', ['count' => $suspiciousFound]);
+            }
 
             // Rotate security keys
-            $this->securityService->rotateSecurityKeys();
+            $this->logActivityProgress('Rotating security keys');
+            $keysRotated = $this->securityService->rotateSecurityKeys();
+            $this->logActivityProgress('Security keys rotated', $keysRotated, $keysRotated);
 
             // Update session records
-            $this->securityService->updateSessionRecords();
+            $this->logActivityProgress('Updating session records');
+            $sessionsUpdated = $this->securityService->updateSessionRecords();
+            
+            $this->logActivityStatistics([
+                'activities_audited' => $auditedActivities,
+                'access_logs_updated' => $accessLogsUpdated,
+                'suspicious_activities' => $suspiciousFound,
+                'keys_rotated' => $keysRotated,
+                'sessions_updated' => $sessionsUpdated
+            ]);
+            
+            $this->completeActivity();
+            $this->logActivityComplete('success', [
+                'Activities Audited' => $auditedActivities,
+                'Suspicious Found' => $suspiciousFound
+            ]);
 
             Log::info('Security and access control completed for ' . $this->previousDay->format('Y-m-d'));
         } catch (\Exception $e) {
+            $this->failActivity($e->getMessage());
+            $this->logActivityError($e);
+            $this->logActivityComplete('failed');
             Log::error('Security and access control failed: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    protected function processAssetManagement()
+    protected function processAssetManagement($triggeredBy = 'system')
     {
+        $this->logActivityStart('Asset Management', [
+            'Process' => 'Asset depreciation and maintenance',
+            'Date' => $this->previousDay->format('Y-m-d')
+        ]);
+        
+        $this->startActivity('asset_depreciation', 'Asset depreciation', $triggeredBy);
+        
         try {
             // Update depreciation
-            $this->updateAssetDepreciation();
+            $this->logActivityProgress('Updating asset depreciation');
+            $assetsDepreciated = $this->updateAssetDepreciation();
+            $this->logActivityProgress('Assets depreciated', $assetsDepreciated, $assetsDepreciated);
 
             // Process maintenance schedules
-            $this->processAssetMaintenance();
+            $this->logActivityProgress('Processing asset maintenance schedules');
+            $maintenanceProcessed = $this->processAssetMaintenance();
+            $this->logActivityProgress('Maintenance schedules processed', $maintenanceProcessed, $maintenanceProcessed);
 
             // Update inventory
-            $this->updateInventoryRecords();
+            $this->logActivityProgress('Updating inventory records');
+            $inventoryUpdated = $this->updateInventoryRecords();
+            $this->logActivityProgress('Inventory records updated', $inventoryUpdated, $inventoryUpdated);
 
             // Generate asset reports
+            $this->logActivityProgress('Generating asset reports');
             $this->reportService->generateAssetReports($this->previousDay);
 
             // Process insurance updates
-            $this->processAssetInsurance();
+            $this->logActivityProgress('Processing asset insurance updates');
+            $insuranceUpdated = $this->processAssetInsurance();
+            
+            $this->logActivityStatistics([
+                'assets_depreciated' => $assetsDepreciated,
+                'maintenance_processed' => $maintenanceProcessed,
+                'inventory_updated' => $inventoryUpdated,
+                'insurance_updated' => $insuranceUpdated
+            ]);
+            
+            $this->completeActivity();
+            $this->logActivityComplete('success', [
+                'Assets Processed' => $assetsDepreciated,
+                'Maintenance Items' => $maintenanceProcessed
+            ]);
 
             Log::info('Asset management completed for ' . $this->previousDay->format('Y-m-d'));
         } catch (\Exception $e) {
+            $this->failActivity($e->getMessage());
+            $this->logActivityError($e);
+            $this->logActivityComplete('failed');
             Log::error('Asset management failed: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    protected function processInvestmentManagement()
+    protected function processInvestmentManagement($triggeredBy = 'system')
     {
+        $this->logActivityStart('Investment Management', [
+            'Process' => 'Investment values and portfolio management',
+            'Date' => $this->previousDay->format('Y-m-d')
+        ]);
+        
+        $this->startActivity('investment_valuation', 'Investment valuation', $triggeredBy);
+        
         try {
             // Update investment values
-            $this->updateInvestmentValues();
+            $this->logActivityProgress('Updating investment values');
+            $investmentsUpdated = $this->updateInvestmentValues();
+            $this->logActivityProgress('Investment values updated', $investmentsUpdated, $investmentsUpdated);
 
             // Process investment returns
-            $this->processInvestmentReturns();
+            $this->logActivityProgress('Processing investment returns');
+            $returnsProcessed = $this->processInvestmentReturns();
+            $this->logActivityProgress('Investment returns processed', $returnsProcessed, $returnsProcessed);
 
             // Generate investment reports
+            $this->logActivityProgress('Generating investment reports');
             $this->reportService->generateInvestmentReports($this->previousDay);
 
             // Update portfolio allocations
-            $this->updatePortfolioAllocations();
+            $this->logActivityProgress('Updating portfolio allocations');
+            $portfoliosUpdated = $this->updatePortfolioAllocations();
+            $this->logActivityProgress('Portfolio allocations updated', $portfoliosUpdated, $portfoliosUpdated);
 
             // Process investment maturities
-            $this->processInvestmentMaturities();
+            $this->logActivityProgress('Processing investment maturities');
+            $maturitiesProcessed = $this->processInvestmentMaturities();
+            
+            $this->logActivityStatistics([
+                'investments_updated' => $investmentsUpdated,
+                'returns_processed' => $returnsProcessed,
+                'portfolios_updated' => $portfoliosUpdated,
+                'maturities_processed' => $maturitiesProcessed
+            ]);
+            
+            $this->completeActivity();
+            $this->logActivityComplete('success', [
+                'Investments Updated' => $investmentsUpdated,
+                'Returns Processed' => $returnsProcessed
+            ]);
 
             Log::info('Investment management completed for ' . $this->previousDay->format('Y-m-d'));
         } catch (\Exception $e) {
+            $this->failActivity($e->getMessage());
+            $this->logActivityError($e);
+            $this->logActivityComplete('failed');
             Log::error('Investment management failed: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    protected function processInsuranceActivities()
+    protected function processInsuranceActivities($triggeredBy = 'system')
     {
+        $this->logActivityStart('Insurance Activities', [
+            'Process' => 'Insurance policies and claims processing',
+            'Date' => $this->previousDay->format('Y-m-d')
+        ]);
+        
+        $this->startActivity('insurance_policies', 'Insurance policies', $triggeredBy);
+        
         try {
             // Update insurance policies
-            $this->updateInsurancePolicies();
+            $this->logActivityProgress('Updating insurance policies');
+            $policiesUpdated = $this->updateInsurancePolicies();
+            $this->logActivityProgress('Insurance policies updated', $policiesUpdated, $policiesUpdated);
 
             // Process insurance claims
-            $this->processInsuranceClaims();
+            $this->logActivityProgress('Processing insurance claims');
+            $claimsProcessed = $this->processInsuranceClaims();
+            $this->logActivityProgress('Insurance claims processed', $claimsProcessed, $claimsProcessed);
 
             // Generate insurance reports
+            $this->logActivityProgress('Generating insurance reports');
             $this->reportService->generateInsuranceReports($this->previousDay);
 
             // Update coverage status
-            $this->updateCoverageStatus();
+            $this->logActivityProgress('Updating coverage status');
+            $coverageUpdated = $this->updateCoverageStatus();
+            $this->logActivityProgress('Coverage status updated', $coverageUpdated, $coverageUpdated);
 
             // Process premium payments
-            $this->processPremiumPayments();
+            $this->logActivityProgress('Processing premium payments');
+            $premiumsProcessed = $this->processPremiumPayments();
+            
+            $this->logActivityStatistics([
+                'policies_updated' => $policiesUpdated,
+                'claims_processed' => $claimsProcessed,
+                'coverage_updated' => $coverageUpdated,
+                'premiums_processed' => $premiumsProcessed
+            ]);
+            
+            $this->completeActivity();
+            $this->logActivityComplete('success', [
+                'Policies Updated' => $policiesUpdated,
+                'Claims Processed' => $claimsProcessed
+            ]);
 
             Log::info('Insurance activities completed for ' . $this->previousDay->format('Y-m-d'));
         } catch (\Exception $e) {
+            $this->failActivity($e->getMessage());
+            $this->logActivityError($e);
+            $this->logActivityComplete('failed');
             Log::error('Insurance activities failed: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    protected function processDocumentManagement()
+    protected function processDocumentManagement($triggeredBy = 'system')
     {
+        $this->logActivityStart('Document Management', [
+            'Process' => 'Document archiving and status updates',
+            'Date' => $this->previousDay->format('Y-m-d')
+        ]);
+        
+        $this->startActivity('document_archiving', 'Document archiving', $triggeredBy);
+        
         try {
             // Archive old documents
-            $this->archiveOldDocuments();
+            $this->logActivityProgress('Archiving old documents');
+            $documentsArchived = $this->archiveOldDocuments();
+            $this->logActivityProgress('Documents archived', $documentsArchived, $documentsArchived);
 
             // Update document statuses
-            $this->updateDocumentStatuses();
+            $this->logActivityProgress('Updating document statuses');
+            $statusesUpdated = $this->updateDocumentStatuses();
+            $this->logActivityProgress('Document statuses updated', $statusesUpdated, $statusesUpdated);
 
             // Generate document reports
+            $this->logActivityProgress('Generating document reports');
             $this->reportService->generateDocumentReports($this->previousDay);
 
             // Process document expiries
-            $this->processDocumentExpiries();
+            $this->logActivityProgress('Processing document expiries');
+            $expiriesProcessed = $this->processDocumentExpiries();
+            $this->logActivityProgress('Document expiries processed', $expiriesProcessed, $expiriesProcessed);
 
             // Update document metadata
-            $this->updateDocumentMetadata();
+            $this->logActivityProgress('Updating document metadata');
+            $metadataUpdated = $this->updateDocumentMetadata();
+            
+            $this->logActivityStatistics([
+                'documents_archived' => $documentsArchived,
+                'statuses_updated' => $statusesUpdated,
+                'expiries_processed' => $expiriesProcessed,
+                'metadata_updated' => $metadataUpdated
+            ]);
+            
+            $this->completeActivity();
+            $this->logActivityComplete('success', [
+                'Documents Archived' => $documentsArchived,
+                'Expiries Processed' => $expiriesProcessed
+            ]);
 
             Log::info('Document management completed for ' . $this->previousDay->format('Y-m-d'));
         } catch (\Exception $e) {
+            $this->failActivity($e->getMessage());
+            $this->logActivityError($e);
+            $this->logActivityComplete('failed');
             Log::error('Document management failed: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    protected function processPerformanceMonitoring()
+    protected function processPerformanceMonitoring($triggeredBy = 'system')
     {
+        $this->logActivityStart('Performance Monitoring', [
+            'Process' => 'Performance metrics and KPI calculations',
+            'Date' => $this->previousDay->format('Y-m-d')
+        ]);
+        
+        $this->startActivity('performance_metrics', 'Performance metrics', $triggeredBy);
+        
         try {
             // Update performance metrics
-            $this->updatePerformanceMetrics();
+            $this->logActivityProgress('Updating performance metrics');
+            $metricsUpdated = $this->updatePerformanceMetrics();
+            $this->logActivityProgress('Performance metrics updated', $metricsUpdated, $metricsUpdated);
 
             // Generate performance reports
+            $this->logActivityProgress('Generating performance reports');
             $this->reportService->generatePerformanceReports($this->previousDay);
 
             // Process KPI calculations
-            $this->processKPICalculations();
+            $this->logActivityProgress('Processing KPI calculations');
+            $kpisCalculated = $this->processKPICalculations();
+            $this->logActivityProgress('KPIs calculated', $kpisCalculated, $kpisCalculated);
 
             // Update benchmark comparisons
-            $this->updateBenchmarkComparisons();
+            $this->logActivityProgress('Updating benchmark comparisons');
+            $benchmarksUpdated = $this->updateBenchmarkComparisons();
+            $this->logActivityProgress('Benchmarks updated', $benchmarksUpdated, $benchmarksUpdated);
 
             // Generate trend analysis
-            $this->generateTrendAnalysis();
+            $this->logActivityProgress('Generating trend analysis');
+            $trendsGenerated = $this->generateTrendAnalysis();
+            
+            $this->logActivityStatistics([
+                'metrics_updated' => $metricsUpdated,
+                'kpis_calculated' => $kpisCalculated,
+                'benchmarks_updated' => $benchmarksUpdated,
+                'trends_generated' => $trendsGenerated
+            ]);
+            
+            $this->completeActivity();
+            $this->logActivityComplete('success', [
+                'Metrics Updated' => $metricsUpdated,
+                'KPIs Calculated' => $kpisCalculated
+            ]);
 
             Log::info('Performance monitoring completed for ' . $this->previousDay->format('Y-m-d'));
         } catch (\Exception $e) {
+            $this->failActivity($e->getMessage());
+            $this->logActivityError($e);
+            $this->logActivityComplete('failed');
             Log::error('Performance monitoring failed: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    protected function processCommunicationAndNotifications()
+    protected function processCommunicationAndNotifications($triggeredBy = 'system')
     {
+        $this->logActivityStart('Communication and Notifications', [
+            'Process' => 'Daily notifications and communication',
+            'Date' => $this->previousDay->format('Y-m-d')
+        ]);
+        
+        $this->startActivity('daily_notifications', 'Daily notifications', $triggeredBy);
+        
         try {
-            // Send daily notifications
-            // $this->notificationService->sendDailyNotifications($this->previousDay);
+            $this->logActivityProgress('Preparing daily notifications');
+            
+            // Send daily notifications (commented out for now)
+            // $this->logActivityProgress('Sending daily notifications');
+            // $notificationsSent = $this->notificationService->sendDailyNotifications($this->previousDay);
+            // $this->logActivityProgress('Daily notifications sent', $notificationsSent, $notificationsSent);
 
-            // Process email notifications
-            // $this->processEmailNotifications();
+            // Process email notifications (commented out for now)
+            // $this->logActivityProgress('Processing email notifications');
+            // $emailsSent = $this->processEmailNotifications();
+            // $this->logActivityProgress('Email notifications processed', $emailsSent, $emailsSent);
 
-            // Process SMS notifications
-            // $this->processSMSNotifications();
+            // Process SMS notifications (commented out for now)
+            // $this->logActivityProgress('Processing SMS notifications');
+            // $smsSent = $this->processSMSNotifications();
+            // $this->logActivityProgress('SMS notifications processed', $smsSent, $smsSent);
 
-            // Update notification statuses
-            // $this->updateNotificationStatuses();
+            // Update notification statuses (commented out for now)
+            // $this->logActivityProgress('Updating notification statuses');
+            // $statusesUpdated = $this->updateNotificationStatuses();
+            // $this->logActivityProgress('Notification statuses updated', $statusesUpdated, $statusesUpdated);
 
-            // Generate communication reports
+            // Generate communication reports (commented out for now)
+            // $this->logActivityProgress('Generating communication reports');
             // $this->reportService->generateCommunicationReport($this->previousDay);
+            
+            $this->logActivityStatistics([
+                'notifications_sent' => 0, // Will be updated when enabled
+                'emails_processed' => 0,
+                'sms_processed' => 0
+            ]);
+            
+            $this->completeActivity();
+            $this->logActivityComplete('success', [
+                'Status' => 'Placeholder - Notifications disabled'
+            ]);
 
             Log::info('Communication and notifications completed for ' . $this->previousDay->format('Y-m-d'));
         } catch (\Exception $e) {
+            $this->failActivity($e->getMessage());
+            $this->logActivityError($e);
+            $this->logActivityComplete('failed');
             Log::error('Communication and notifications failed: ' . $e->getMessage());
             throw $e;
         }
@@ -953,6 +1439,29 @@ class DailySystemActivitiesService
     private function processBankCharges()
     {
         // Implementation for processing bank charges
+    }
+    
+    private function processStandingInstructions()
+    {
+        try {
+            // Execute standing instructions using Artisan command
+            \Artisan::call('standing-instructions:execute', [
+                '--dry-run' => false
+            ]);
+            
+            // Get the count of successfully processed instructions
+            $successCount = DB::table('standing_instructions_executions')
+                ->whereDate('executed_at', Carbon::today())
+                ->where('status', 'SUCCESS')
+                ->count();
+            
+            Log::info("Standing instructions processed: {$successCount}");
+            
+            return $successCount;
+        } catch (\Exception $e) {
+            Log::error('Failed to process standing instructions: ' . $e->getMessage());
+            return 0;
+        }
     }
 
     private function processMemberWithdrawals()

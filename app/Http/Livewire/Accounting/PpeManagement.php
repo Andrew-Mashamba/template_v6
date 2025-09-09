@@ -6,6 +6,7 @@ use App\Models\AccountsModel;
 use App\Models\general_ledger;
 use App\Models\PPE;
 use App\Services\TransactionPostingService;
+use App\Services\BalanceSheetItemIntegrationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Gate;
@@ -41,6 +42,10 @@ class PpeManagement extends Component
     public $payment_method = 'cash';
     public $payment_account_number;
     public $payable_account_number;
+    
+    // Account selection for proper flow
+    public $parent_account_number; // Parent account to create PPE account under
+    public $other_account_id; // The other account for double-entry (Cash/Bank/Payable - credit side)
     
     // Additional useful fields
     public $supplier_name, $invoice_number, $invoice_date, $additional_notes;
@@ -680,6 +685,49 @@ class PpeManagement extends Component
     {
         return PPE::limit(10)->get();
     }
+    
+    // Additional computed properties for dashboard
+    public function getTotalAssetCountProperty()
+    {
+        return PPE::count();
+    }
+    
+    public function getActiveAssetsCountProperty()
+    {
+        return PPE::where('status', 'active')->count();
+    }
+    
+    public function getPendingDisposalCountProperty()
+    {
+        return PPE::where('status', 'pending_disposal')->count();
+    }
+    
+    public function getPendingApprovalCountProperty()
+    {
+        return PPE::where('disposal_approval_status', 'pending')->count();
+    }
+    
+    public function getApprovedDisposalCountProperty()
+    {
+        return PPE::where('disposal_approval_status', 'approved')->count();
+    }
+    
+    public function getRejectedDisposalCountProperty()
+    {
+        return PPE::where('disposal_approval_status', 'rejected')->count();
+    }
+    
+    public function getCompletedDisposalCountProperty()
+    {
+        return PPE::where('status', 'disposed')->count();
+    }
+    
+    public function getAssetsForDisposalProperty()
+    {
+        return PPE::whereIn('status', ['pending_disposal', 'under_repair'])
+                  ->orderBy('created_at', 'desc')
+                  ->get();
+    }
 
     // Existing methods (updated versions)
     public function updated($field)
@@ -782,52 +830,31 @@ class PpeManagement extends Component
             'additional_notes' => $this->additional_notes,
         ]);
 
-
-        // account creation service
-        $accountService = new AccountCreationService();
-        $ppeAccount = $accountService->createAccount([
-            'account_use' => 'internal',
-            'account_name' => $category_name.': '.$this->name,
-            'type' => 'asset_account',
-            'product_number' => '0000',
-            'member_number' => '00000',
-            'branch_number' => auth()->user()->branch
-        ], $this->categoryx);
-
-
-
-        if (!empty($ppeAccount)) {
-            $totalAmount = $this->initial_value;
+        // Use Balance Sheet Integration Service to create accounts and post to GL
+        $integrationService = new BalanceSheetItemIntegrationService();
+        
+        try {
+            // Create PPE account and post to GL with custom accounts if provided
+            $integrationService->createPPEAccount(
+                (object)[
+                    'id' => $ppe->id,
+                    'asset_name' => $this->name,
+                    'cost' => $this->initial_value,
+                    'category' => $category_name
+                ],
+                $this->parent_account_number,  // Parent account to create PPE account under
+                $this->other_account_id        // The other account for double-entry (Cash/Bank/Payable)
+            );
             
-            // Post the transaction using TransactionPostingService
-            $transactionService = new TransactionPostingService();
-            $transactionData = [
-                'first_account' => $ppeAccount->account_number, // Debit account 
-                'second_account' => $this->categoryx, // Credit account 
-                'amount' => $totalAmount,
-                'narration' => 'PPE asset : ' . ucwords($this->name) . ' : ' . $this->categoryx,
-                'action' => 'ppe_asset'
-            ];
-
-            Log::info('Posting savings deposit transaction', [
-                'transaction_data' => $transactionData
+            Log::info('PPE asset created and integrated with accounts table', [
+                'ppe_id' => $ppe->id,
+                'asset_name' => $this->name,
+                'cost' => $this->initial_value
             ]);
-
-            $result = $transactionService->postTransaction($transactionData);
             
-            if ($result['status'] !== 'success') {
-                Log::error('Transaction posting failed', [
-                    'error' => $result['message'] ?? 'Unknown error',
-                    'transaction_data' => $transactionData
-                ]);
-                throw new \Exception('Failed to post transaction: ' . ($result['message'] ?? 'Unknown error'));
-            }
-
-            Log::info('Transaction posted successfully', [
-                'transaction_reference' => $result['reference'] ?? null,
-                'amount' => $totalAmount
-            ]);
-
+        } catch (\Exception $e) {
+            Log::error('Failed to integrate PPE with accounts table: ' . $e->getMessage());
+            // Don't fail the entire operation, but log the error
         }
 
 
@@ -1042,6 +1069,11 @@ class PpeManagement extends Component
         CalculatePpeDepreciation::dispatch();
         $this->emit('showNotification', 'Depreciation calculation job has been dispatched!', 'success');
     }
+    
+    public function runDepreciation()
+    {
+        $this->runDepreciationJob();
+    }
 
     // Helper methods
     public function createNewAccountNumber($major_category_code, $category_code, $sub_category_code, $parent_account)
@@ -1102,10 +1134,19 @@ class PpeManagement extends Component
         return $full_account_number;
     }
 
+
     public function render()
     {
+        // Get bank accounts for other account selection
+        $otherAccounts = DB::table('bank_accounts')
+            ->select('internal_mirror_account_number', 'bank_name', 'account_number')
+            ->where('status', 'ACTIVE')
+            ->orderBy('bank_name')
+            ->get();
+            
         return view('livewire.accounting.ppe-management', [
             'ppes' => $this->getPpes(),
+            'otherAccounts' => $otherAccounts,
         ]);
     }
 }

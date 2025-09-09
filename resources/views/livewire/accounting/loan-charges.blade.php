@@ -9,7 +9,7 @@
 
             <div class="w-full flex gap-4 p-4">
                 <div class="w-3/4 bg-white rounded-md p-2">
-                    <table class="w-full text-sm text-left text-blue-100 mb-4">
+                    <table class="w-full text-sm text-left text-gray-500 mb-4">
                         <thead class="text-xs text-black bg-blue-100 dark:text-white w-full">
                         <tr class="border md:border-none block md:table-row w-full">
                             <th class="p-2 border-r px-6 py-4  text-xs text-black ">Name</th>
@@ -89,15 +89,17 @@
                             <select wire:model="parent_account_code" class="w-full p-2 border bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full
                         p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                 <option value="">Select Account</option>
-                                @php
-                                    $cashAccount = \Illuminate\Support\Facades\DB::table('setup_accounts')->where('item', 'loan_charges')->first();
-
-                                    //$cash_code = $cashAccount->sub_category_code;
-                                    $table_name = $cashAccount->table_name;
-                                @endphp
-                                @foreach(\Illuminate\Support\Facades\DB::table($table_name)->get() as $accounts)
-
-                                <option value="{{$accounts->category_code}}">{{$accounts->category_name}}</option>
+                                {{-- Get loan charge/fee related accounts from accounts table --}}
+                                @foreach(\Illuminate\Support\Facades\DB::table('accounts')
+                                    ->where(function($query) {
+                                        $query->where('account_name', 'like', '%loan%charge%')
+                                              ->orWhere('account_name', 'like', '%loan%fee%')
+                                              ->orWhere('account_name', 'like', '%processing%fee%')
+                                              ->orWhereIn('category_code', [4200, 4300, 4400]); // Income from fees and charges
+                                    })
+                                    ->orderBy('account_name')
+                                    ->get() as $account)
+                                    <option value="{{$account->category_code}}">{{$account->account_name}}</option>
                                 @endforeach
                             </select>
 

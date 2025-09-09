@@ -599,7 +599,7 @@
                 <div class="flex items-center justify-between">
                     <h3 class="text-xl font-semibold text-white">Employee Onboarding</h3>
                     <button wire:click="closeOnboardingModal" 
-                            class="text-blue-100 hover:text-white focus:outline-none focus:ring-2 focus:ring-white">
+                            class="text-gray-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-white">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>

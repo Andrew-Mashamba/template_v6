@@ -48,10 +48,34 @@ class Employee extends Model
     }
     
     /**
+     * Get the attendance records for the employee.
+     */
+    public function attendances()
+    {
+        return $this->hasMany(EmployeeAttendance::class, 'employee_id');
+    }
+    
+    /**
      * Get the payroll records for the employee.
      */
     public function payrolls()
     {
         return $this->hasMany(PayRolls::class, 'employee_id');
+    }
+    
+    /**
+     * Get the branch that the employee belongs to.
+     */
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
+    }
+    
+    /**
+     * Get the loans supervised by this employee.
+     */
+    public function loans()
+    {
+        return $this->hasMany(LoansModel::class, 'supervisor_id', 'id');
     }
 }

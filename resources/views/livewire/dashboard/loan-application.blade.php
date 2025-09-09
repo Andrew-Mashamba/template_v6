@@ -122,7 +122,7 @@
             <div class="{{ $currentStep === 1 ? 'block' : 'hidden' }}">
                 <div class="bg-gradient-to-r from-blue-900 to-indigo-800 p-4">
                     <h2 class="text-lg font-bold text-white">{{ $loanType }} Loan Application</h2>
-                    <p class="text-blue-100 text-xs">Complete all required fields to proceed</p>
+                    <p class="text-gray-500 text-xs">Complete all required fields to proceed</p>
                 </div>
                 
                 <div class="p-4 space-y-3">

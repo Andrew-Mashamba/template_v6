@@ -11,7 +11,7 @@ use Carbon\Carbon;
 
 class Dashboard extends Component
 {
-    public $menuNumber = 0; // 0=dashboard, 1=employees, 2=payroll, 3=leave
+    public $menuNumber = 0; // 0=dashboard, 1=employees, 2=payroll, 3=leave, 4=attendance, 5=requests
     public $totalEmployees;
     public $totalDepartments;
     public $activeEmployees;

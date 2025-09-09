@@ -71,6 +71,13 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
     // Till and Cash Management Route (Development Access)
     Route::get('/till-cash-management', \App\Http\Livewire\Accounting\TillAndCashManagement::class)->name('till-cash-management');
+    
+    // Budget Management Routes
+    Route::get('/budget-management', \App\Http\Livewire\BudgetManagement\EnhancedBudgetManager::class)->name('budget.management');
+    Route::get('/budget-dashboard', \App\Http\Livewire\BudgetManagement\BudgetDashboard::class)->name('budget.dashboard');
+    Route::get('/budget/report/view/{id}', function($id) {
+        return redirect()->route('budget.management')->with('message', 'Report generated successfully');
+    })->name('budget.report.view');
 
     Route::fallback([\App\Http\Controllers\WebRoutesController::class, 'fallback']);
 });

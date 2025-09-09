@@ -5,8 +5,11 @@ namespace App\Http\Livewire\HR;
 use App\Models\Employee;
 use App\Models\Department;
 use App\Models\User;
+use App\Jobs\SendEmployeeCredentials;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 
 class EmployeeManagement extends Component
 {
@@ -76,27 +79,41 @@ class EmployeeManagement extends Component
             $this->employee_number = 'EMP' . str_pad(Employee::count() + 1, 5, '0', STR_PAD_LEFT);
         }
         
-        Employee::create([
-            'first_name' => $this->first_name,
-            'last_name' => $this->last_name,
-            'middle_name' => $this->middle_name,
-            'email' => $this->email,
-            'phone' => $this->phone,
-            'employee_number' => $this->employee_number,
-            'department_id' => $this->department_id,
-            'job_title' => $this->job_title,
-            'hire_date' => $this->hire_date,
-            'basic_salary' => $this->basic_salary,
-            'gross_salary' => $this->basic_salary, // Can be calculated with allowances
-            'gender' => $this->gender,
-            'date_of_birth' => $this->date_of_birth,
-            'address' => $this->address,
-            'employee_status' => $this->employee_status,
-            'employment_type' => $this->employment_type,
-        ]);
-        
-        session()->flash('success', 'Employee added successfully!');
-        $this->closeAddModal();
+        \DB::beginTransaction();
+        try {
+            // Create the employee
+            $employee = Employee::create([
+                'first_name' => $this->first_name,
+                'last_name' => $this->last_name,
+                'middle_name' => $this->middle_name,
+                'email' => $this->email,
+                'phone' => $this->phone,
+                'employee_number' => $this->employee_number,
+                'department_id' => $this->department_id,
+                'job_title' => $this->job_title,
+                'hire_date' => $this->hire_date,
+                'basic_salary' => $this->basic_salary,
+                'gross_salary' => $this->basic_salary, // Can be calculated with allowances
+                'gender' => $this->gender,
+                'date_of_birth' => $this->date_of_birth,
+                'address' => $this->address,
+                'employee_status' => $this->employee_status,
+                'employment_type' => $this->employment_type,
+            ]);
+            
+            // Create user account for the employee
+            $this->createUserAccountForEmployee($employee);
+            
+            \DB::commit();
+            
+            session()->flash('success', 'Employee added successfully! Login credentials are being sent in the background.');
+            $this->closeAddModal();
+            
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Error creating employee: ' . $e->getMessage());
+            session()->flash('error', 'Error creating employee: ' . $e->getMessage());
+        }
     }
 
     public function editEmployee($id)
@@ -161,6 +178,81 @@ class EmployeeManagement extends Component
         Employee::find($id)->delete();
         session()->flash('success', 'Employee deleted successfully!');
     }
+
+    protected function createUserAccountForEmployee($employee)
+    {
+        try {
+            // Generate a random password
+            $password = $this->generateSecurePassword();
+            
+            // Get department
+            $department = Department::find($employee->department_id);
+            
+            // Create user account
+            $user = User::create([
+                'name' => $employee->first_name . ' ' . $employee->last_name,
+                'email' => $employee->email,
+                'password' => Hash::make($password),
+                'phone_number' => $employee->phone,
+                'employeeId' => $employee->id,
+                'department_code' => $department ? $department->code : null,
+                'branch_id' => 1, // Default branch, can be modified as needed
+                'status' => 'active',
+                'verification_status' => 1,
+                'email_verified_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            
+            // Assign default role (Employee role - adjust as needed)
+            // You may want to assign role based on job title or department
+            \DB::table('user_roles')->insert([
+                'user_id' => $user->id,
+                'role_id' => 3, // Default employee role ID - adjust as needed
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            
+            // Dispatch job to send credentials in background
+            SendEmployeeCredentials::dispatch($employee, $password, $user);
+            
+            \Log::info('User account created for employee and credentials job dispatched', [
+                'employee_id' => $employee->id,
+                'user_id' => $user->id,
+                'email' => $employee->email
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error creating user account for employee', [
+                'employee_id' => $employee->id,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+    
+    protected function generateSecurePassword($length = 10)
+    {
+        // Generate a secure random password
+        $uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $lowercase = 'abcdefghijklmnopqrstuvwxyz';
+        $numbers = '0123456789';
+        $special = '!@#$%^&*';
+        
+        $password = '';
+        $password .= $uppercase[random_int(0, strlen($uppercase) - 1)];
+        $password .= $lowercase[random_int(0, strlen($lowercase) - 1)];
+        $password .= $numbers[random_int(0, strlen($numbers) - 1)];
+        $password .= $special[random_int(0, strlen($special) - 1)];
+        
+        $allChars = $uppercase . $lowercase . $numbers . $special;
+        for ($i = 4; $i < $length; $i++) {
+            $password .= $allChars[random_int(0, strlen($allChars) - 1)];
+        }
+        
+        return str_shuffle($password);
+    }
+    
 
     public function render()
     {

@@ -8,6 +8,7 @@ use App\Models\AccountsModel;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use App\Models\Insurances;
+use App\Services\BalanceSheetItemIntegrationService;
 
 class Insurance extends Component
 {
@@ -23,6 +24,10 @@ class Insurance extends Component
     public $next_code_no;
     public $category_code_of_account;
     public $account_number;
+    
+    // Account selection for proper flow
+    public $parent_account_number; // Parent account to create insurance account under
+    public $other_account_id; // The other account for double-entry (Cash/Bank - debit side)
 
     public $categories = ['employees', 'members', 'loans'];
 
@@ -115,7 +120,7 @@ class Insurance extends Component
 
         $this->createNewAccount($next_code);
 
-        Insurances::create([
+        $insurance = Insurances::create([
             'name' => $this->name,
             'account_number' => $this->account_number,
             'category' => $this->category,
@@ -124,7 +129,18 @@ class Insurance extends Component
             'monthly_rate' => $this->category == 'loans' ? $this->monthly_rate : null,
         ]);
 
-
+        // Use Balance Sheet Integration Service to create accounts and post to GL
+        $integrationService = new BalanceSheetItemIntegrationService();
+        
+        try {
+            $integrationService->createInsuranceLiabilityAccount(
+                $insurance,
+                $this->parent_account_number,  // Parent account to create insurance account under
+                $this->other_account_id        // The other account for double-entry (Cash/Bank - debit side)
+            );
+        } catch (\Exception $e) {
+            \Log::error('Failed to integrate insurance with accounts table: ' . $e->getMessage());
+        }
 
         $this->resetFields();
         session()->flash('message', 'Insurance created successfully.');
@@ -179,7 +195,27 @@ class Insurance extends Component
 
     public function render()
     {
-        return view('livewire.accounting.insurance');
+        // Get bank accounts for other account selection
+        $otherAccounts = DB::table('bank_accounts')
+            ->select('internal_mirror_account_number', 'bank_name', 'account_number')
+            ->where('status', 'ACTIVE')
+            ->orderBy('bank_name')
+            ->get();
+            
+        $creditAccounts = DB::table('accounts')
+            ->where('major_category_code', '2000') // Liability accounts
+            ->where(function($query) {
+                $query->where('account_name', 'LIKE', '%Insurance%')
+                      ->orWhere('account_name', 'LIKE', '%Liability%')
+                      ->orWhere('account_name', 'LIKE', '%Payable%');
+            })
+            ->orderBy('account_name')
+            ->get();
+
+        return view('livewire.accounting.insurance', [
+            'otherAccounts' => $otherAccounts,
+            'creditAccounts' => $creditAccounts
+        ]);
     }
 
 

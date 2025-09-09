@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class PayRolls extends Model
 {
     use HasFactory;
-    protected $table = 'payrolls';
+    protected $table = 'pay_rolls';
     protected $guarded = [];
     
     protected $casts = [

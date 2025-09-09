@@ -142,7 +142,7 @@
                     </div>
                     <div class="ml-3">
                         <h2 class="text-xl font-bold text-white">II. MANAGEMENT LEVEL</h2>
-                        <p class="text-blue-100 text-sm">Appointed by Board of Directors</p>
+                        <p class="text-gray-500 text-sm">Appointed by Board of Directors</p>
                     </div>
                 </div>
             </div>

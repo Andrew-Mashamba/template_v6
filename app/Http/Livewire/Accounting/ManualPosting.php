@@ -207,6 +207,9 @@ class ManualPosting extends Component
 
 
 
+    // Validation methods removed - now handled by TransactionPostingService
+    // The service centralizes all validation logic for consistency across the system
+
     public function validateParentAccount($account, $source)
 {
     // Check if the source is "accounts"
@@ -236,146 +239,103 @@ class ManualPosting extends Component
 
     public function post()
     {
-        $this->debit_account =  $this->selectedAccount['account_number'];
-        $this->credit_account=$this->selectedAccountTwo['account_number'];
-        $source_one=$this->source_one;
-        $source_two=$this->source_two;
+        // Set account numbers from selected accounts
+        $this->debit_account = $this->selectedAccount['account_number'] ?? null;
+        $this->credit_account = $this->selectedAccountTwo['account_number'] ?? null;
+        $source_one = $this->source_one;
+        $source_two = $this->source_two;
+        
+        // Validate form inputs
         $this->validate();
-        DB::beginTransaction();
-
+        
         try {
+            // Validate parent accounts if needed
+            $is_debit_valid = $this->validateParentAccount($this->debit_account, $source_one);
+            $is_credit_valid = $this->validateParentAccount($this->credit_account, $source_two);
 
-          $is_debit_valid=  $this->validateParentAccount( $this->debit_account,$source_one);
+            // Get account details from appropriate tables
+            $debited_account_details = DB::table($source_one)
+                ->where("account_number", $this->debit_account)
+                ->first();
+                
+            if (!$debited_account_details) {
+                throw new \Exception('Invalid debit account.');
+            }
 
-          $is_credit_valid=  $this->validateParentAccount($this->credit_account,$source_two);
-
-
-      //    if(!$is_credit_valid && !$is_debit_valid){
-
-
-
-            $debited_account_details = DB::table($source_one)->where("account_number", $this->debit_account)->first();
-//            if (!$debited_account_details || $debited_account_details->balance < $this->amount) {
-//                throw new \Exception('Insufficient funds or invalid debit account.');
-//            }
-
-            $credited_account_details = DB::table($source_two)->where("account_number", $this->credit_account)->first();
+            $credited_account_details = DB::table($source_two)
+                ->where("account_number", $this->credit_account)
+                ->first();
+                
             if (!$credited_account_details) {
                 throw new \Exception('Invalid credit account.');
             }
 
-
-
+            // Prepare data for TransactionPostingService
+            // The service expects account numbers, not account objects
             $data = [
-
-                'first_account' =>  $debited_account_details,
-                'second_account' => $credited_account_details,
-                'amount' => $this->amount,
-                'narration' =>  $this->narration,
-
+                'first_account' => $this->debit_account,  // Pass account number string
+                'second_account' => $this->credit_account, // Pass account number string
+                'amount' => floatval($this->amount),
+                'narration' => 'MANUAL POSTING: ' . $this->narration,
+                'action' => 'manual_posting'
             ];
 
-
-            $postTransaction= new  TransactionPostingService();
-
-             $out_put= $postTransaction->postTransaction( $data );
-            DB::commit();
-            session()->flash('message', 'Transaction posted successfully and awaiting approval.');
-
-
-    // else{
-
-    //     session()->flash('error', 'Invalid Transaction');
-
-
+            // Use TransactionPostingService to post the transaction
+            $postingService = new TransactionPostingService();
+            $result = $postingService->postTransaction($data);
+            
+            // Log audit trail
+            $this->logAudit('Manual Transaction Posted', $result['reference_number']);
+            
+            // Reset form fields
+            $this->resetInputFields();
+            
+            session()->flash('message', 'Transaction posted successfully. Reference: ' . $result['reference_number']);
 
         } catch (\Exception $e) {
-            DB::rollBack();
             session()->flash('error', 'Transaction failed: ' . $e->getMessage());
         }
     }
 
 
 
+    // These methods are no longer needed as TransactionPostingService handles all ledger entries
+    // Keeping them commented for reference if needed for custom implementations
+    
+    /*
     private function postTransaction($reference_number, $debited_account, $credited_account)
     {
-        // Use TransactionPostingService for double-entry
-        $transactionService = new TransactionPostingService();
-        $transactionService->postTransaction([
-            'first_account' => $debited_account->account_number,
-            'second_account' => $credited_account->account_number,
-            'amount' => $this->amount,
-            'narration' => $this->narration,
-        ]);
-        // Debit entry
-        $debited_new_balance = $debited_account->balance - $this->amount;
-        $this->debit($reference_number, $debited_account, $credited_account, $debited_new_balance);
-        // Credit entry
-        $credited_new_balance = $credited_account->balance + $this->amount;
-        $this->credit($reference_number, $debited_account, $credited_account, $credited_new_balance);
-        // Remove direct balance updates
-        // AccountsModel::where('account_number', $debited_account->account_number)->update(['balance' => $debited_new_balance]);
-        // AccountsModel::where('account_number', $credited_account->account_number)->update(['balance' => $credited_new_balance]);
+        // This functionality is now handled by TransactionPostingService in the post() method
     }
 
     private function debit($reference_number, $debited_account, $credited_account, $debited_new_balance)
     {
-        general_ledger::create([
-            'record_on_account_number' => $debited_account->account_number,
-            'record_on_account_number_balance' => $debited_new_balance,
-            'major_category_code' => $debited_account->major_category_code,
-            'category_code' => $debited_account->category_code,
-            'sub_category_code' => $debited_account->sub_category_code,
-            'sender_name' => $debited_account->account_name,
-            'beneficiary_name' => $credited_account->account_name,
-            'sender_account_number' => $debited_account->account_number,
-            'beneficiary_account_number' => $credited_account->account_number,
-            'narration' => 'MANUAL POSTING: ' . $this->narration,
-            'credit' => 0,
-            'debit' => $this->amount,
-            'reference_number' => $reference_number,
-            'trans_status' => 'Pending Approval', // Status updated once approved
-            'trans_status_description' => 'Awaiting Approval',
-            'payment_status' => 'Pending',
-            'recon_status' => 'Pending',
-        ]);
+        // This functionality is now handled by TransactionPostingService
     }
 
     private function credit($reference_number, $debited_account, $credited_account, $credited_new_balance)
     {
-        general_ledger::create([
-            'record_on_account_number' => $credited_account->account_number,
-            'record_on_account_number_balance' => $credited_new_balance,
-            'major_category_code' => $credited_account->major_category_code,
-            'category_code' => $credited_account->category_code,
-            'sub_category_code' => $credited_account->sub_category_code,
-            'sender_name' => $debited_account->account_name,
-            'beneficiary_name' => $credited_account->account_name,
-            'sender_account_number' => $debited_account->account_number,
-            'beneficiary_account_number' => $credited_account->account_number,
-            'narration' => 'MANUAL POSTING: ' . $this->narration,
-            'credit' => $this->amount,
-            'debit' => 0,
-            'reference_number' => $reference_number,
-            'trans_status' => 'Pending Approval',
-            'trans_status_description' => 'Awaiting Approval',
-            'payment_status' => 'Pending',
-            'recon_status' => 'Pending',
-        ]);
+        // This functionality is now handled by TransactionPostingService
     }
+    */
 
     private function logAudit($action, $reference_number)
     {
         DB::table('audit_logs')->insert([
-            'action' => $action,
-            'reference_number' => $reference_number,
             'user_id' => Auth::id(),
-            'ip_address' => request()->ip(),
+            'action' => $action,
+            'details' => json_encode([
+                'reference_number' => $reference_number,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+                'timestamp' => now()->toDateTimeString()
+            ]),
             'created_at' => now(),
+            'updated_at' => now(),
         ]);
     }
 
-    private function resetInputFields()
+    public function resetInputFields()
     {
         $this->debit_category = null;
         $this->debit_category_code = null;
@@ -385,6 +345,14 @@ class ManualPosting extends Component
         $this->credit_account = null;
         $this->amount = null;
         $this->narration = null;
+        $this->search = '';
+        $this->searchTwo = '';
+        $this->selectedAccount = [];
+        $this->selectedAccountTwo = [];
+        $this->results = [];
+        $this->resultsTwo = [];
+        $this->showDropdown = false;
+        $this->showDropdownTwo = false;
     }
 
 
@@ -392,26 +360,49 @@ class ManualPosting extends Component
     // Transaction reversal logic
     public function reverseTransaction($reference_number)
     {
-        $transaction = general_ledger::where('reference_number', $reference_number)->first();
+        // Get both entries for this transaction (debit and credit)
+        $transactions = general_ledger::where('reference_number', $reference_number)->get();
 
-        if (!$transaction) {
+        if ($transactions->isEmpty()) {
             session()->flash('error', 'Transaction not found.');
             return;
         }
 
-        DB::beginTransaction();
         try {
-            // Reverse the debit and credit amounts
-            $this->credit($reference_number, $transaction->beneficiary_account_number, $transaction->sender_account_number, -$transaction->credit);
-            $this->debit($reference_number, $transaction->beneficiary_account_number, $transaction->sender_account_number, -$transaction->debit);
+            // Find the debit and credit entries
+            $debitEntry = $transactions->where('debit', '>', 0)->first();
+            $creditEntry = $transactions->where('credit', '>', 0)->first();
 
-            // Update audit log for the reversal
-            $this->logAudit('Transaction Reversed', $reference_number);
+            if (!$debitEntry || !$creditEntry) {
+                throw new \Exception('Invalid transaction structure.');
+            }
 
-            DB::commit();
-            session()->flash('message', 'Transaction reversed successfully.');
+            // Create reversal transaction data
+            // Swap the accounts to reverse the transaction
+            $reversalData = [
+                'first_account' => $creditEntry->record_on_account_number,  // Was credited, now debit
+                'second_account' => $debitEntry->record_on_account_number,  // Was debited, now credit
+                'amount' => floatval($debitEntry->debit),
+                'narration' => 'REVERSAL of Ref#' . $reference_number . ': ' . $debitEntry->narration,
+                'action' => 'reversal'
+            ];
+
+            // Use TransactionPostingService to post the reversal
+            $postingService = new TransactionPostingService();
+            $result = $postingService->postTransaction($reversalData);
+
+            // Update original transaction status
+            general_ledger::where('reference_number', $reference_number)
+                ->update([
+                    'trans_status' => 'Reversed',
+                    'trans_status_description' => 'Reversed by Ref#' . $result['reference_number']
+                ]);
+
+            // Log audit trail
+            $this->logAudit('Transaction Reversed', $result['reference_number']);
+
+            session()->flash('message', 'Transaction reversed successfully. New Reference: ' . $result['reference_number']);
         } catch (\Exception $e) {
-            DB::rollBack();
             session()->flash('error', 'Failed to reverse transaction: ' . $e->getMessage());
         }
     }

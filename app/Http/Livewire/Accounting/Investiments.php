@@ -5,6 +5,7 @@ namespace App\Http\Livewire\Accounting;
 use App\Models\AccountsModel;
 use App\Models\general_ledger;
 use App\Models\Investment;
+use App\Services\BalanceSheetItemIntegrationService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -48,6 +49,10 @@ class Investiments extends Component
     public $annualPropertyTaxes;
     public $rentalIncome;
     public $maintenanceCosts;
+    
+    // Account selection for proper flow
+    public $parent_account_number; // Parent account to create investment account under
+    public $other_account_id; // The other account for double-entry (Cash/Bank - credit side)
 
     public $description;
     public $interestDividendRate;
@@ -450,20 +455,34 @@ class Investiments extends Component
         $investmentData['cash_account']=$source_account->account_number;
         $investmentData['investment_account']=$investment_account;
 
-        Investment::create($investmentData);
+        $investment = Investment::create($investmentData);
 
-        $data = [
-
-            'first_account' => $debited_account,
-            'second_account' =>  $source_account,
-            'amount' => $this->principalAmount,
-            'narration' =>  'New investment '. $this->investmentTypeOr,
-
-        ];
-        $transactionServicex = new TransactionPostingService();
-
-
-        $response = $transactionServicex->postTransaction($data);
+        // Use Balance Sheet Integration Service to create accounts and post to GL
+        $integrationService = new BalanceSheetItemIntegrationService();
+        
+        try {
+            $investmentObj = (object)[
+                'id' => $investment->id,
+                'purchase_amount' => $this->principalAmount,
+                'current_value' => $this->principalAmount,
+                'maturity_date' => $this->maturityDate,
+                'description' => 'Investment - ' . $this->investmentTypeOr
+            ];
+            
+            $integrationService->createInvestmentAccount(
+                $investmentObj,
+                $this->parent_account_number,  // Parent account to create investment account under
+                $this->other_account_id        // The other account for double-entry (Cash/Bank - credit side)
+            );
+            
+            Log::info('Investment integrated with accounts table', [
+                'investment_id' => $investment->id,
+                'type' => $this->investmentTypeOr,
+                'amount' => $this->principalAmount
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to integrate investment with accounts table: ' . $e->getMessage());
+        }
 
 
 
@@ -498,50 +517,10 @@ class Investiments extends Component
 
     public function createNewAccount()
     {
-        $GN_account_code = DB::table('GL_accounts')->where('account_name', $this->account_table_name)->value('account_code');
-        if (!$GN_account_code) {
-            // Handle the case where the account does not exist
-        }
-
-        $get_accounts = DB::table($this->category)->get();
-        $next_code = $get_accounts->isEmpty() ? $this->next_code_no : intval($get_accounts->first()->category_code) + 1;
-
-        // Ensure unique sub_category_code
-        while (DB::table('accounts')->where('sub_category_code', $next_code)->exists()) {
-            $next_code++;
-        }
-
-        // Format the account name
-        $formattedAccountName = strtolower(trim(preg_replace('/[^a-zA-Z0-9\s]/', '', $this->inv_narration)));
-        $formattedAccountName = str_replace(' ', '_', $formattedAccountName);
-$formattedAccountName = strtoupper($formattedAccountName);
-
-//        // Create a new account in the category
-//        DB::table($this->category)->insert([
-//            'category_code' => $this->category_code_of_account,
-//            'sub_category_code' => $next_code,
-//            'sub_category_name' => $formattedAccountName,
-//        ]);
-
-        // Generate account number
-        $account_number = $this->generate_account_number(auth()->user()->branch, $next_code);
-
-        // Create an entry in the AccountsModel
-        AccountsModel::create([
-            'account_use' => 'internal',
-            'institution_number' => auth()->user()->institution_id,
-            'branch_number' => auth()->user()->branch,
-            'major_category_code' => $GN_account_code,
-            'category_code' => $this->category_code,
-            'sub_category_code' => $this->sub_category_code,
-            'account_name' => $formattedAccountName,
-            'account_number' => $account_number,
-            'notes' => $formattedAccountName,
-            'account_level' => '3',
-        ]);
-
-
-        return $account_number;
+        // DEPRECATED - Account creation now handled by BalanceSheetItemIntegrationService
+        // which uses AccountCreationService as the ONLY authorized account creator
+        Log::warning('Deprecated createNewAccount method called in Investiments component');
+        return null;
     }
 
     function luhn_checksum($number) {
@@ -797,24 +776,30 @@ $formattedAccountName = strtoupper($formattedAccountName);
             // Calculate the total sale value
             $totalSaleValue = $investment->number_of_shares * $salePrice;
 
-            // Update the investment record (remove shares)
-            $investment->update([
-                'number_of_shares' => 0,
-                'status' => 'liquidated'
-            ]);
-
-            // Uncomment and implement cash account update if necessary
-            /*
-            $cashAccount = Account::where('account_type', 'cash')->first();
-            $cashAccount->balance += $totalSaleValue;
-            $cashAccount->save();
-            */
-
-            // Log the liquidation
-            Log::info("Shares liquidated", [
-                'investment_id' => $investment->id,
-                'total_sale_value' => $totalSaleValue
-            ]);
+            // Use Balance Sheet Integration Service to process liquidation
+            $integrationService = new BalanceSheetItemIntegrationService();
+            
+            try {
+                // Process the liquidation through integration service
+                $integrationService->processInvestmentMaturity($investment, $totalSaleValue, 'liquidation');
+                
+                // Update the investment record (remove shares)
+                $investment->update([
+                    'number_of_shares' => 0,
+                    'status' => 'liquidated'
+                ]);
+                
+                // Log the liquidation
+                Log::info("Shares liquidated and GL updated", [
+                    'investment_id' => $investment->id,
+                    'total_sale_value' => $totalSaleValue
+                ]);
+                
+                session()->flash('message', 'Shares liquidated successfully. GL entries posted.');
+            } catch (\Exception $e) {
+                Log::error('Failed to liquidate shares: ' . $e->getMessage());
+                session()->flash('error', 'Failed to liquidate shares: ' . $e->getMessage());
+            }
 
             // Refresh investment list
             $this->loadInvestments();
@@ -843,21 +828,29 @@ $formattedAccountName = strtoupper($formattedAccountName);
             // Calculate total proceeds
             $totalProceeds = $investment->principal + $accruedInterest - $penalty;
 
-            // Uncomment and implement cash account update if necessary
-            /*
-            $cashAccount = Account::where('account_type', 'cash')->first();
-            $cashAccount->balance += $totalProceeds;
-            $cashAccount->save();
-            */
-
-            // Mark the FDR as liquidated
-            $investment->update(['status' => 'liquidated']);
-
-            // Log the liquidation
-            Log::info("FDR liquidated", [
-                'investment_id' => $investment->id,
-                'total_proceeds' => $totalProceeds
-            ]);
+            // Use Balance Sheet Integration Service to process maturity/liquidation
+            $integrationService = new BalanceSheetItemIntegrationService();
+            
+            try {
+                // Process the FDR maturity through integration service
+                $integrationService->processInvestmentMaturity($investment, $totalProceeds, 'maturity');
+                
+                // Mark the FDR as liquidated
+                $investment->update(['status' => 'liquidated']);
+                
+                // Log the liquidation
+                Log::info("FDR liquidated and GL updated", [
+                    'investment_id' => $investment->id,
+                    'total_proceeds' => $totalProceeds,
+                    'interest_earned' => $accruedInterest,
+                    'penalty' => $penalty
+                ]);
+                
+                session()->flash('message', 'FDR matured successfully. GL entries posted.');
+            } catch (\Exception $e) {
+                Log::error('Failed to process FDR maturity: ' . $e->getMessage());
+                session()->flash('error', 'Failed to process FDR maturity: ' . $e->getMessage());
+            }
 
             // Refresh investment list
             $this->loadInvestments();
@@ -994,6 +987,32 @@ $formattedAccountName = strtoupper($formattedAccountName);
 
     public function render()
     {
-        return view('livewire.accounting.investiments');
+        // Get accounts for account selection
+        $parentAccounts = DB::table('accounts')
+            ->where('major_category_code', '1000') // Asset accounts
+            ->where('account_level', '<=', 2) // Parent level accounts only
+            ->where(function($query) {
+                $query->where('account_name', 'LIKE', '%INVESTMENT%')
+                      ->orWhere('account_name', 'LIKE', '%ASSET%');
+            })
+            ->where('status', 'ACTIVE')
+            ->orderBy('account_name')
+            ->get();
+        
+        $otherAccounts = DB::table('bank_accounts')
+            
+            
+
+
+            
+            ->select('internal_mirror_account_number', 'bank_name', 'account_number')
+            ->where('status', 'ACTIVE')
+            ->orderBy('bank_name')
+            ->get();
+
+        return view('livewire.accounting.investiments', [
+            'parentAccounts' => $parentAccounts,
+            'otherAccounts' => $otherAccounts
+        ]);
     }
 }

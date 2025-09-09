@@ -24,8 +24,8 @@
                                 </svg>
                             </div>
                             <div class="ml-3">
-                                <p class="text-sm font-medium text-gray-500">My Requests</p>
-                                <p class="text-lg font-semibold text-gray-900">{{ $myRequestsCount ?? 0 }}</p>
+                                <p class="text-sm font-medium text-gray-500">Leave Days</p>
+                                <p class="text-lg font-semibold text-gray-900">{{ $remainingLeaveDays }}</p>
                             </div>
                         </div>
                     </div>
@@ -38,7 +38,7 @@
                             </div>
                             <div class="ml-3">
                                 <p class="text-sm font-medium text-gray-500">Pending</p>
-                                <p class="text-lg font-semibold text-gray-900">{{ $pendingRequestsCount ?? 0 }}</p>
+                                <p class="text-lg font-semibold text-gray-900">{{ $pendingRequests }}</p>
                             </div>
                         </div>
                     </div>
@@ -158,54 +158,506 @@
                     <div class="p-8 min-h-[400px]">
                         @switch($selectedMenu)
                             @case('dashboard')
-                                {{-- Dashboard summary: show recent requests, status, etc. --}}
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
-                                        <h3 class="text-lg font-semibold text-blue-900 mb-2">Total Requests</h3>
-                                        <div class="text-3xl font-bold text-blue-900">{{ $myRequestsCount ?? 0 }}</div>
-                                    </div>
-                                    <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-6 border border-yellow-200">
-                                        <h3 class="text-lg font-semibold text-yellow-900 mb-2">Pending</h3>
-                                        <div class="text-3xl font-bold text-yellow-900">{{ $pendingRequestsCount ?? 0 }}</div>
-                                    </div>
-                                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
-                                        <h3 class="text-lg font-semibold text-green-900 mb-2">Approved</h3>
-                                        <div class="text-3xl font-bold text-green-900">{{ $approvedRequestsCount ?? 0 }}</div>
+                                {{-- Dashboard summary: show employee information and stats --}}
+                                @if($employee)
+                                <div class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                                    <h3 class="text-lg font-semibold text-blue-900 mb-2">Employee Information</h3>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-sm text-gray-600">Name:</p>
+                                            <p class="font-medium">{{ $employee->first_name }} {{ $employee->last_name }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-600">Employee Number:</p>
+                                            <p class="font-medium">{{ $employee->employee_number }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-600">Department:</p>
+                                            <p class="font-medium">{{ $employee->department->department_name ?? 'N/A' }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-600">Status:</p>
+                                            <p class="font-medium">{{ ucfirst($employee->employee_status ?? 'active') }}</p>
+                                        </div>
                                     </div>
                                 </div>
-                                {{-- Recent requests table (example) --}}
-                                <div class="bg-white rounded-xl p-6 border border-gray-200">
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Requests</h3>
+                                @endif
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+                                        <h3 class="text-lg font-semibold text-blue-900 mb-2">Leave Balance</h3>
+                                        <div class="text-3xl font-bold text-blue-900">{{ $remainingLeaveDays }} days</div>
+                                    </div>
+                                    <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-6 border border-yellow-200">
+                                        <h3 class="text-lg font-semibold text-yellow-900 mb-2">Pending Leaves</h3>
+                                        <div class="text-3xl font-bold text-yellow-900">{{ $pendingLeaves }}</div>
+                                    </div>
+                                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+                                        <h3 class="text-lg font-semibold text-green-900 mb-2">Approved Leaves</h3>
+                                        <div class="text-3xl font-bold text-green-900">{{ $approvedLeaves }}</div>
+                                    </div>
+                                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+                                        <h3 class="text-lg font-semibold text-purple-900 mb-2">Total Requests</h3>
+                                        <div class="text-3xl font-bold text-purple-900">{{ $pendingRequests }}</div>
+                                    </div>
+                                </div>
+                                {{-- Recent Leave Requests --}}
+                                <div class="bg-white rounded-xl p-6 border border-gray-200 mb-6">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Leave Requests</h3>
                                     <div class="overflow-x-auto">
                                         <table class="min-w-full divide-y divide-gray-200">
                                             <thead class="bg-gray-50">
                                                 <tr>
                                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="bg-white divide-y divide-gray-200">
+                                                @forelse($leaves as $leave)
+                                                    <tr>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $leave->created_at->format('Y-m-d') }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ ucfirst($leave->leave_type) }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {{ \Carbon\Carbon::parse($leave->start_date)->diffInDays(\Carbon\Carbon::parse($leave->end_date)) + 1 }}
+                                                        </td>
+                                                        <td class="px-6 py-4 whitespace-nowrap">
+                                                            <span class="px-2 py-1 text-xs font-medium rounded-full
+                                                                @if($leave->status == 'approved') bg-green-100 text-green-800
+                                                                @elseif($leave->status == 'pending') bg-yellow-100 text-yellow-800
+                                                                @else bg-red-100 text-red-800 @endif">
+                                                                {{ ucfirst($leave->status) }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="4" class="text-center text-gray-500 py-8">No leave requests found</td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                {{-- Recent Payrolls --}}
+                                @if($lastPayroll)
+                                <div class="bg-white rounded-xl p-6 border border-gray-200">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Last Payroll</h3>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-sm text-gray-600">Period:</p>
+                                            <p class="font-medium">{{ $lastPayroll->month }}/{{ $lastPayroll->year }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-600">Net Salary:</p>
+                                            <p class="font-medium">TZS {{ number_format($lastPayroll->net_salary, 2) }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-600">Status:</p>
+                                            <p class="font-medium">{{ ucfirst($lastPayroll->status) }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-600">Payment Date:</p>
+                                            <p class="font-medium">{{ $lastPayroll->payment_date ? $lastPayroll->payment_date->format('Y-m-d') : 'Pending' }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
+                                @break
+                            @case('leave')
+                                {{-- Leave Request Form --}}
+                                <div class="max-w-2xl">
+                                    @if($showLeaveModal)
+                                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                                        <p class="text-green-800">{{ session('success') }}</p>
+                                    </div>
+                                    @endif
+                                    
+                                    <form wire:submit.prevent="submitLeaveRequest">
+                                        <div class="space-y-6">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Leave Type</label>
+                                                <select wire:model="leaveType" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                                    <option value="">Select leave type</option>
+                                                    <option value="annual">Annual Leave</option>
+                                                    <option value="sick">Sick Leave</option>
+                                                    <option value="maternity">Maternity Leave</option>
+                                                    <option value="paternity">Paternity Leave</option>
+                                                    <option value="compassionate">Compassionate Leave</option>
+                                                    <option value="study">Study Leave</option>
+                                                    <option value="unpaid">Unpaid Leave</option>
+                                                </select>
+                                                @error('leaveType') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                                                    <input type="date" wire:model="leaveStartDate" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                                    @error('leaveStartDate') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                                                    <input type="date" wire:model="leaveEndDate" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                                    @error('leaveEndDate') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                                </div>
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Reason for Leave</label>
+                                                <textarea wire:model="leaveReason" rows="4" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Please provide details..."></textarea>
+                                                @error('leaveReason') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div class="bg-blue-50 rounded-lg p-4">
+                                                <p class="text-sm text-blue-800">Your current leave balance: <strong>{{ $remainingLeaveDays }} days</strong></p>
+                                            </div>
+                                            
+                                            <div class="flex justify-end space-x-3">
+                                                <button type="button" wire:click="resetLeaveForm" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                                    Clear
+                                                </button>
+                                                <button type="submit" class="px-6 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
+                                                    Submit Request
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    
+                                    {{-- My Leave History --}}
+                                    <div class="mt-8">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-4">My Leave History</h3>
+                                        <div class="overflow-x-auto">
+                                            <table class="min-w-full divide-y divide-gray-200">
+                                                <thead class="bg-gray-50">
+                                                    <tr>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="bg-white divide-y divide-gray-200">
+                                                    @forelse($leaves as $leave)
+                                                        <tr>
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $leave->start_date }}</td>
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ ucfirst($leave->leave_type) }}</td>
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {{ \Carbon\Carbon::parse($leave->start_date)->diffInDays(\Carbon\Carbon::parse($leave->end_date)) + 1 }}
+                                                        </td>
+                                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                                <span class="px-2 py-1 text-xs font-medium rounded-full
+                                                                    @if($leave->status == 'approved') bg-green-100 text-green-800
+                                                                    @elseif($leave->status == 'pending') bg-yellow-100 text-yellow-800
+                                                                    @else bg-red-100 text-red-800 @endif">
+                                                                    {{ ucfirst($leave->status) }}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    @empty
+                                                        <tr>
+                                                            <td colspan="4" class="text-center text-gray-500 py-8">No leave history found</td>
+                                                        </tr>
+                                                    @endforelse
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                @break
+                            @case('materials')
+                                {{-- Working Materials Request Form --}}
+                                <div class="max-w-2xl">
+                                    <form wire:submit.prevent="submitMaterialsRequest">
+                                        <div class="space-y-6">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Items Needed</label>
+                                                <textarea wire:model="materialItems" rows="3" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="List the materials or equipment you need..."></textarea>
+                                                @error('materialItems') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Purpose/Justification</label>
+                                                <textarea wire:model="materialPurpose" rows="4" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Explain why you need these materials..."></textarea>
+                                                @error('materialPurpose') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div class="flex justify-end space-x-3">
+                                                <button type="button" wire:click="resetRequestForm" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                                    Clear
+                                                </button>
+                                                <button type="submit" class="px-6 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
+                                                    Submit Request
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                @break
+                            @case('resignation')
+                                {{-- Resignation Request Form --}}
+                                <div class="max-w-2xl">
+                                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                                        <p class="text-red-800 text-sm">⚠️ This is a formal resignation request. Please ensure all information is accurate.</p>
+                                    </div>
+                                    
+                                    <form wire:submit.prevent="submitResignationRequest">
+                                        <div class="space-y-6">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Proposed Last Working Day</label>
+                                                <input type="date" wire:model="resignationDate" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                                @error('resignationDate') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Reason for Resignation</label>
+                                                <textarea wire:model="resignationReason" rows="6" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Please provide your reason for resignation..."></textarea>
+                                                @error('resignationReason') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div class="flex justify-end space-x-3">
+                                                <button type="button" wire:click="resetRequestForm" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                                    Cancel
+                                                </button>
+                                                <button type="submit" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                                                    Submit Resignation
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                @break
+                            @case('travel')
+                                {{-- Travel/Advance Request Form --}}
+                                <div class="max-w-2xl">
+                                    <div class="mb-6">
+                                        <div class="flex space-x-4">
+                                            <button wire:click="$set('requestType', 'travel')" class="px-4 py-2 rounded-lg {{ $requestType == 'travel' ? 'bg-blue-900 text-white' : 'bg-gray-200 text-gray-700' }}">
+                                                Travel Request
+                                            </button>
+                                            <button wire:click="$set('requestType', 'advance')" class="px-4 py-2 rounded-lg {{ $requestType == 'advance' ? 'bg-blue-900 text-white' : 'bg-gray-200 text-gray-700' }}">
+                                                Salary Advance
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    @if($requestType == 'travel')
+                                    <form wire:submit.prevent="submitTravelRequest">
+                                        <div class="space-y-6">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Destination</label>
+                                                <input type="text" wire:model="travelDestination" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="City, Country">
+                                                @error('travelDestination') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                                                    <input type="date" wire:model="travelStartDate" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                                    @error('travelStartDate') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                                                    <input type="date" wire:model="travelEndDate" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                                    @error('travelEndDate') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                                </div>
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Purpose of Travel</label>
+                                                <textarea wire:model="travelPurpose" rows="4" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Business meeting, conference, training..."></textarea>
+                                                @error('travelPurpose') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div class="flex justify-end space-x-3">
+                                                <button type="button" wire:click="resetRequestForm" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                                    Clear
+                                                </button>
+                                                <button type="submit" class="px-6 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
+                                                    Submit Request
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    @elseif($requestType == 'advance')
+                                    <form wire:submit.prevent="submitAdvanceRequest">
+                                        <div class="space-y-6">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Amount Requested (TZS)</label>
+                                                <input type="number" wire:model="advanceAmount" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Enter amount">
+                                                @error('advanceAmount') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Reason for Advance</label>
+                                                <textarea wire:model="advanceReason" rows="4" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Explain why you need the advance..."></textarea>
+                                                @error('advanceReason') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div class="bg-yellow-50 rounded-lg p-4">
+                                                <p class="text-sm text-yellow-800">Note: Salary advances are subject to company policy and approval. Repayment will be deducted from your next salary.</p>
+                                            </div>
+                                            
+                                            <div class="flex justify-end space-x-3">
+                                                <button type="button" wire:click="resetRequestForm" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                                    Clear
+                                                </button>
+                                                <button type="submit" class="px-6 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
+                                                    Submit Request
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    @else
+                                    <div class="text-center py-8">
+                                        <p class="text-gray-500">Select either Travel Request or Salary Advance</p>
+                                    </div>
+                                    @endif
+                                </div>
+                                @break
+                            @case('training')
+                                {{-- Training/Workshop Request Form --}}
+                                <div class="max-w-2xl">
+                                    <form wire:submit.prevent="submitTrainingRequest">
+                                        <div class="space-y-6">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Training/Workshop Title</label>
+                                                <input type="text" wire:model="trainingTitle" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Name of the training or workshop">
+                                                @error('trainingTitle') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                                                    <input type="date" wire:model="trainingStartDate" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                                    @error('trainingStartDate') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                                                    <input type="date" wire:model="trainingEndDate" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                                    @error('trainingEndDate') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                                </div>
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                                                <input type="text" wire:model="trainingLocation" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Venue or online">
+                                                @error('trainingLocation') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div class="flex justify-end space-x-3">
+                                                <button type="button" wire:click="resetRequestForm" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                                    Clear
+                                                </button>
+                                                <button type="submit" class="px-6 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
+                                                    Submit Request
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                @break
+                            @case('overtime')
+                                {{-- Overtime Request Form --}}
+                                <div class="max-w-2xl">
+                                    <form wire:submit.prevent="submitOvertimeRequest">
+                                        <div class="space-y-6">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Date of Overtime</label>
+                                                <input type="date" wire:model="overtimeDate" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                                @error('overtimeDate') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Number of Hours</label>
+                                                <input type="number" wire:model="overtimeHours" step="0.5" min="1" max="12" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Enter overtime hours">
+                                                @error('overtimeHours') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Reason/Justification</label>
+                                                <textarea wire:model="overtimeReason" rows="4" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Explain the work done during overtime..."></textarea>
+                                                @error('overtimeReason') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div class="bg-blue-50 rounded-lg p-4">
+                                                <p class="text-sm text-blue-800">Overtime rates are calculated based on company policy.</p>
+                                            </div>
+                                            
+                                            <div class="flex justify-end space-x-3">
+                                                <button type="button" wire:click="resetRequestForm" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                                    Clear
+                                                </button>
+                                                <button type="submit" class="px-6 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
+                                                    Submit Request
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                @break
+                            @case('payslip')
+                                {{-- Payslip/HR Docs --}}
+                                <div class="max-w-4xl">
+                                    <div class="mb-6">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Request Documents</h3>
+                                        <form wire:submit.prevent="submitPayslipRequest" class="mb-8">
+                                            <div class="flex space-x-4">
+                                                <select wire:model="documentType" class="flex-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                                    <option value="">Select document type</option>
+                                                    <option value="payslip">Payslip</option>
+                                                    <option value="employment_letter">Employment Letter</option>
+                                                    <option value="salary_certificate">Salary Certificate</option>
+                                                    <option value="experience_letter">Experience Letter</option>
+                                                </select>
+                                                <button type="submit" class="px-6 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
+                                                    Request Document
+                                                </button>
+                                            </div>
+                                            @error('documentType') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                        </form>
+                                    </div>
+                                    
+                                    <div>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-6">My Payroll History</h3>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Basic Salary</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gross Salary</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deductions</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Salary</th>
                                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="bg-white divide-y divide-gray-200">
-                                                @forelse($recentRequests ?? [] as $req)
+                                                @forelse($payrolls as $payroll)
                                                     <tr>
-                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $req['date'] }}</td>
-                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $req['type'] }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $payroll->month }}/{{ $payroll->year }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TZS {{ number_format($payroll->basic_salary, 2) }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TZS {{ number_format($payroll->gross_salary, 2) }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">TZS {{ number_format($payroll->total_deductions, 2) }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TZS {{ number_format($payroll->net_salary, 2) }}</td>
                                                         <td class="px-6 py-4 whitespace-nowrap">
                                                             <span class="px-2 py-1 text-xs font-medium rounded-full
-                                                                @if($req['status'] == 'APPROVED') bg-green-100 text-green-800
-                                                                @elseif($req['status'] == 'PENDING') bg-yellow-100 text-yellow-800
-                                                                @else bg-gray-100 text-gray-800 @endif">
-                                                                {{ $req['status'] }}
+                                                                @if($payroll->status == 'paid') bg-green-100 text-green-800
+                                                                @elseif($payroll->status == 'approved') bg-blue-100 text-blue-800
+                                                                @else bg-yellow-100 text-yellow-800 @endif">
+                                                                {{ ucfirst($payroll->status) }}
                                                             </span>
                                                         </td>
                                                         <td class="px-6 py-4 whitespace-nowrap">
-                                                            <button class="text-blue-600 hover:underline text-xs">View</button>
+                                                            <button wire:click="viewPayslip({{ $payroll->id }})" class="text-blue-600 hover:underline text-sm">View Payslip</button>
                                                         </td>
                                                     </tr>
                                                 @empty
                                                     <tr>
-                                                        <td colspan="4" class="text-center text-gray-500 py-8">No recent requests</td>
+                                                        <td colspan="7" class="text-center text-gray-500 py-8">No payroll records found</td>
                                                     </tr>
                                                 @endforelse
                                             </tbody>
@@ -213,37 +665,81 @@
                                     </div>
                                 </div>
                                 @break
-                            @case('leave')
-                                {{-- Leave Request Form --}}
-                                <livewire:self-services.leave-request />
-                                @break
-                            @case('materials')
-                                {{-- Working Materials Request Form --}}
-                                <livewire:self-services.materials-request />
-                                @break
-                            @case('resignation')
-                                {{-- Resignation Request Form --}}
-                                <livewire:self-services.resignation-request />
-                                @break
-                            @case('travel')
-                                {{-- Travel/Advance Request Form --}}
-                                <livewire:self-services.travel-request />
-                                @break
-                            @case('training')
-                                {{-- Training/Workshop Request Form --}}
-                                <livewire:self-services.training-request />
-                                @break
-                            @case('overtime')
-                                {{-- Overtime Request Form --}}
-                                <livewire:self-services.overtime-request />
-                                @break
-                            @case('payslip')
-                                {{-- Payslip/HR Docs Request Form --}}
-                                <livewire:self-services.payslip-request />
-                                @break
                             @case('general')
                                 {{-- General Request Form --}}
-                                <livewire:self-services.general-request />
+                                <div class="max-w-2xl">
+                                    <form wire:submit.prevent="submitGeneralRequest">
+                                        <div class="space-y-6">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Department (Optional)</label>
+                                                <select wire:model="requestDepartment" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                                    <option value="">Select department</option>
+                                                    <option value="hr">Human Resources</option>
+                                                    <option value="finance">Finance</option>
+                                                    <option value="it">IT Support</option>
+                                                    <option value="admin">Administration</option>
+                                                    <option value="operations">Operations</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                                                <input type="text" wire:model="requestSubject" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Brief description of your request">
+                                                @error('requestSubject') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Details</label>
+                                                <textarea wire:model="requestDetails" rows="6" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Provide full details of your request..."></textarea>
+                                                @error('requestDetails') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                            </div>
+                                            
+                                            <div class="flex justify-end space-x-3">
+                                                <button type="button" wire:click="resetRequestForm" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                                    Clear
+                                                </button>
+                                                <button type="submit" class="px-6 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
+                                                    Submit Request
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    
+                                    {{-- Recent Requests --}}
+                                    <div class="mt-8">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-4">My Recent Requests</h3>
+                                        <div class="overflow-x-auto">
+                                            <table class="min-w-full divide-y divide-gray-200">
+                                                <thead class="bg-gray-50">
+                                                    <tr>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="bg-white divide-y divide-gray-200">
+                                                    @forelse($requests as $request)
+                                                        <tr>
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $request->created_at->format('Y-m-d') }}</td>
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $request->type_label }}</td>
+                                                            <td class="px-6 py-4 text-sm text-gray-900">{{ Str::limit($request->subject, 30) }}</td>
+                                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-{{ $request->status_color }}-100 text-{{ $request->status_color }}-800">
+                                                                    {{ ucfirst($request->status) }}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    @empty
+                                                        <tr>
+                                                            <td colspan="4" class="text-center text-gray-500 py-8">No requests found</td>
+                                                        </tr>
+                                                    @endforelse
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
                                 @break
                             @default
                                 <div class="text-center py-12">

@@ -3,104 +3,185 @@
 namespace App\Http\Livewire\Reports;
 
 use Livewire\Component;
-use Mediconesystems\LivewireDatatables\Http\Livewire\LivewireDatatable;
-use Mediconesystems\LivewireDatatables\Column;
-use App\Models\LoansModel;
-use App\Models\ClientsModel;
-use App\Models\loans_schedules;
-use App\Models\BranchesModel;
-use App\Models\Employee;
-class LoanDisbursementReport extends LivewireDatatable
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Exception;
+use Illuminate\Support\Facades\Log;
+
+class LoanDisbursementReport extends Component
 {
-    public $exportable=true;
-    public function builder()
+    public $reportStartDate;
+    public $reportEndDate;
+    public $reportData = null;
+    public $isGenerating = false;
+    public $isExporting = false;
+    public $errorMessage = '';
+    public $successMessage = '';
+
+    public function mount()
     {
-
-    return LoansModel::query();
-
+        $this->reportStartDate = Carbon::now()->startOfMonth()->format('Y-m-d');
+        $this->reportEndDate = Carbon::now()->format('Y-m-d');
     }
 
+    public function generateReport()
+    {
+        $this->isGenerating = true;
+        $this->errorMessage = '';
+        $this->successMessage = '';
 
+        try {
+            $this->reportData = $this->getReportData();
+            $this->successMessage = 'Loan Disbursement Report generated successfully!';
+            
+            Log::info('Loan Disbursement Report generated', [
+                'start_date' => $this->reportStartDate,
+                'end_date' => $this->reportEndDate,
+                'user_id' => auth()->id()
+            ]);
+        } catch (Exception $e) {
+            $this->errorMessage = 'Error generating report: ' . $e->getMessage();
+            Log::error('Loan Disbursement Report generation failed', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+        } finally {
+            $this->isGenerating = false;
+        }
+    }
 
-    public function columns()
-{
-    return [
-        // Column for Member Name
-        Column::callback(['client_id'], function ($clientId) {
-            $client = ClientsModel::find($clientId);
-            if ($client) {
-                return trim("{$client->first_name} {$client->middle_name} {$client->last_name}");
+    public function getReportData()
+    {
+        $startDate = Carbon::parse($this->reportStartDate)->startOfDay();
+        $endDate = Carbon::parse($this->reportEndDate)->endOfDay();
+
+        // Get loan disbursements from loans table
+        $disbursements = DB::table('loans')
+            ->where('status', 'APPROVED')
+            ->where('disbursement_date', '>=', $startDate)
+            ->where('disbursement_date', '<=', $endDate)
+            ->orderBy('disbursement_date', 'desc')
+            ->get();
+
+        $totalDisbursed = $disbursements->sum('principle');
+        $numberOfDisbursements = $disbursements->count();
+        $averageDisbursement = $numberOfDisbursements > 0 ? $totalDisbursed / $numberOfDisbursements : 0;
+
+        // Group disbursements by loan type
+        $disbursementsByType = [];
+        $disbursementsByDate = [];
+
+        foreach ($disbursements as $disbursement) {
+            $loanType = $this->getLoanType($disbursement->loan_type_2);
+            
+            if (!isset($disbursementsByType[$loanType])) {
+                $disbursementsByType[$loanType] = [
+                    'count' => 0,
+                    'amount' => 0,
+                ];
             }
-            return 'N/A'; // Return a default value if client not found
-        })->label('Member name')->searchable(),
+            $disbursementsByType[$loanType]['count']++;
+            $disbursementsByType[$loanType]['amount'] += $disbursement->principle;
 
-        // // Column for Guarantor
-        Column::callback(['guarantor'], function ($guarantorId) {
-            $guarantor = ClientsModel::where('client_number', $guarantorId)->first();
-            if ($guarantor) {
-                return trim("{$guarantor->first_name} {$guarantor->middle_name} {$guarantor->last_name}");
+            // Group by date
+            $date = Carbon::parse($disbursement->disbursement_date)->format('Y-m-d');
+            if (!isset($disbursementsByDate[$date])) {
+                $disbursementsByDate[$date] = [
+                    'count' => 0,
+                    'amount' => 0,
+                ];
             }
-            return 'N/A'; // Return a default value if guarantor not found
-        })->label('Guarantor'),
+            $disbursementsByDate[$date]['count']++;
+            $disbursementsByDate[$date]['amount'] += $disbursement->principle;
+        }
 
-        // // Column for Branch Name
-        Column::callback(['branch_id'], function ($branchId) {
-            $branch = BranchesModel::find($branchId);
-            return $branch ? $branch->name : 'N/A'; // Return 'N/A' if branch not found
-        })->label('Branch')->searchable(),
+        // Get daily disbursement trend
+        $dailyTrend = [];
+        $currentDate = $startDate->copy();
+        while ($currentDate <= $endDate) {
+            $dateStr = $currentDate->format('Y-m-d');
+            $dailyTrend[] = [
+                'date' => $currentDate->format('M d'),
+                'amount' => $disbursementsByDate[$dateStr]['amount'] ?? 0,
+                'count' => $disbursementsByDate[$dateStr]['count'] ?? 0,
+            ];
+            $currentDate->addDay();
+        }
 
-        // // Column for Loan ID
-        Column::name('loan_id')->label('Loan ID'),
+        return [
+            'period' => [
+                'start_date' => $startDate->format('F d, Y'),
+                'end_date' => $endDate->format('F d, Y'),
+                'start_date_short' => $startDate->format('M d, Y'),
+                'end_date_short' => $endDate->format('M d, Y'),
+            ],
+            'disbursement_summary' => [
+                'total_disbursed' => $totalDisbursed,
+                'number_of_disbursements' => $numberOfDisbursements,
+                'average_disbursement' => $averageDisbursement,
+                'largest_disbursement' => $disbursements->max('principle') ?? 0,
+                'smallest_disbursement' => $disbursements->min('principle') ?? 0,
+            ],
+            'disbursements' => $disbursements,
+            'disbursements_by_type' => $disbursementsByType,
+            'daily_trend' => $dailyTrend,
+        ];
+    }
 
-        // // Column for Past Due Days
-        Column::callback(['days_in_arrears'], function ($daysInArrears) {
-            $class = $daysInArrears > 0 ? 'bg-red-500 p-2' : '';
-            return "<div class='{$class}'>" . max($daysInArrears, 0) . "</div>";
-        })->label('Past Due Days')->searchable(),
+    private function getLoanType($loanType)
+    {
+        if (!$loanType) {
+            return 'Other Loans';
+        }
+        
+        $name = strtolower($loanType);
+        
+        if (strpos($name, 'personal') !== false) {
+            return 'Personal Loans';
+        } elseif (strpos($name, 'business') !== false || strpos($name, 'commercial') !== false) {
+            return 'Business Loans';
+        } elseif (strpos($name, 'agriculture') !== false || strpos($name, 'agricultural') !== false) {
+            return 'Agricultural Loans';
+        } elseif (strpos($name, 'education') !== false || strpos($name, 'school') !== false) {
+            return 'Education Loans';
+        } elseif (strpos($name, 'short') !== false || strpos($name, 'working') !== false) {
+            return 'Short-term Loans';
+        } elseif (strpos($name, 'long') !== false || strpos($name, 'term') !== false) {
+            return 'Long-term Loans';
+        } else {
+            return 'Other Loans';
+        }
+    }
 
-        // // Column for Principle
-        Column::callback('principle', function ($principle) {
-            return number_format($principle, 2);
-        })->label('Principle (TZS)')->searchable(),
+    public function exportReport($format = 'pdf')
+    {
+        $this->isExporting = true;
+        $this->errorMessage = '';
 
-        // // Column for Interest
-        Column::callback('interest', function ($interest) {
-            return "{$interest}%";
-        })->label('Interest'),
+        try {
+            if (!$this->reportData) {
+                $this->reportData = $this->getReportData();
+            }
 
+            $this->successMessage = "Loan Disbursement Report exported as {$format} successfully!";
+            
+            Log::info('Loan Disbursement Report exported', [
+                'format' => $format,
+                'user_id' => auth()->id()
+            ]);
+        } catch (Exception $e) {
+            $this->errorMessage = 'Error exporting report: ' . $e->getMessage();
+            Log::error('Loan Disbursement Report export failed', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+        } finally {
+            $this->isExporting = false;
+        }
+    }
 
-        // // Column for Loan Officer
-        Column::callback('supervisor_id', function ($supervisorId) {
-            $employee = Employee::find($supervisorId);
-            return $employee ? trim("{$employee->first_name} {$employee->middle_name} {$employee->last_name}") : 'N/A';
-        })->label('Loan Officer'),
-
-        // Column for Officer Update
-        // Column::callback(['id', 'loan_id'], function ($id, $loanId) {
-        //     $today = now()->format('Y-m-d');
-        //     $loanSchedules = loans_schedules::where('loan_id', $loanId)
-        //         ->where('installment_date', '<=', $today)
-        //         ->where('completion_status', 'ACTIVE')
-        //         ->whereNotNull('promise_date')
-        //         ->get();
-
-        //     if ($loanSchedules->isNotEmpty()) {
-        //         $html = '<ul>';
-        //         foreach ($loanSchedules as $schedule) {
-        //             $html .= '<li>' . $schedule->comment . '<br><div class="text-xs text-red-500">' . $schedule->promise_date . '</div></li>';
-        //         }
-        //         $html .= '</ul><br>';
-        //         return $html;
-        //     }
-
-        //     return ' ';
-        // })->label('Officer Update'),
-
-
-       Column::name('loan_status')->label('Loan Status'),
-       Column::name('status')->label('Action Status'),
-
-    ];
-}
-
+    public function render()
+    {
+        return view('livewire.reports.loan-disbursement-report');
+    }
 }

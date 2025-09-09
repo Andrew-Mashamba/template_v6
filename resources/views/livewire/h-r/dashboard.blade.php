@@ -111,6 +111,14 @@
                             </svg>
                             Attendance
                         </button>
+
+                        <button wire:click="setMenuNumber(5)" 
+                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md {{ $menuNumber === 5 ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            </svg>
+                            Request Management
+                        </button>
                     </nav>
                 </div>
             </div>
@@ -126,6 +134,7 @@
                                 @case(2) Payroll Management @break
                                 @case(3) Leave Management @break
                                 @case(4) Attendance Tracking @break
+                                @case(5) Request Management @break
                                 @default Dashboard Overview
                             @endswitch
                         </h2>
@@ -197,6 +206,11 @@
                             @case(4)
                                 {{-- Attendance --}}
                                 <livewire:h-r.attendance />
+                                @break
+
+                            @case(5)
+                                {{-- Request Management --}}
+                                <livewire:h-r.request-management />
                                 @break
 
                             @default

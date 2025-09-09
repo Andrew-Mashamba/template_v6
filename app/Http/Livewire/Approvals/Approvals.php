@@ -1177,6 +1177,18 @@ class Approvals extends Component
                 'approval_status' => 'APPROVED',
                 'rejection_status' => 'REJECTED'
             ],
+            'BUDGET_CREATE' => [
+                'table' => 'budget_managements',
+                'custom_handler' => 'handleBudgetCreateApproval'
+            ],
+            'BUDGET_EDIT' => [
+                'table' => 'budget_managements',
+                'custom_handler' => 'handleBudgetEditApproval'
+            ],
+            'BUDGET_DELETE' => [
+                'table' => 'budget_managements',
+                'custom_handler' => 'handleBudgetDeleteApproval'
+            ],
          
             'LOAN_REST' => [
                 'table' => 'loans',
@@ -1243,10 +1255,24 @@ class Approvals extends Component
         if (isset($processUpdates[$approval->process_code])) {
             $update = $processUpdates[$approval->process_code];
             
+            // Check if this process has a custom handler
+            if (isset($update['custom_handler'])) {
+                $handlerMethod = $update['custom_handler'];
+                if (method_exists($this, $handlerMethod)) {
+                    $this->$handlerMethod($approval);
+                    return;
+                } else {
+                    Log::error('Custom handler method not found', [
+                        'method' => $handlerMethod,
+                        'process_code' => $approval->process_code
+                    ]);
+                }
+            }
+            
             Log::info('Updating related record', [
                 'approval_id' => $approval->id,
                 'process_code' => $approval->process_code,
-                'table' => $update['table'],
+                'table' => $update['table'] ?? 'N/A',
                 'record_id' => $approval->process_id,
                 'current_status' => $approval->process_status
             ]);
@@ -1649,9 +1675,9 @@ class Approvals extends Component
         $approverRoles = is_string($config->approver_roles) ? json_decode($config->approver_roles, true) : $config->approver_roles;
 
         // Check if user is an admin
-        if ($user->isAdmin()) {
-            return true;
-        }
+        // if ($user->isAdmin()) {
+        //     return true;
+        // }
 
         // For approvers, check if all previous checkers have approved
         if ($this->isApproverLevel($config) && !$this->validatePreviousApprovals($approval, $config)) {
@@ -3341,6 +3367,264 @@ class Approvals extends Component
             // Set empty arrays on error
             $this->assessmentData['policy_exceptions'] = [];
             $this->assessmentData['policy_checks'] = [];
+        }
+    }
+    
+    /**
+     * Handle budget create approval
+     */
+    private function handleBudgetCreateApproval($approval): void
+    {
+        try {
+            $budget = \App\Models\BudgetManagement::find($approval->process_id);
+            
+            if (!$budget) {
+                Log::error('Budget not found for create approval', ['process_id' => $approval->process_id]);
+                return;
+            }
+            
+            if ($approval->process_status === 'APPROVED') {
+                // Approve the budget
+                $budget->update([
+                    'approval_status' => 'APPROVED',
+                    'status' => 'ACTIVE',
+                    'approval_request_id' => null
+                ]);
+                
+                Log::info('Budget created and approved', [
+                    'budget_id' => $budget->id,
+                    'budget_name' => $budget->budget_name
+                ]);
+            } else {
+                // Reject the budget
+                $budget->update([
+                    'approval_status' => 'REJECTED',
+                    'status' => 'DRAFT',
+                    'approval_request_id' => null
+                ]);
+                
+                Log::info('Budget creation rejected', [
+                    'budget_id' => $budget->id,
+                    'budget_name' => $budget->budget_name
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error handling budget create approval', [
+                'approval_id' => $approval->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Handle budget edit approval
+     */
+    private function handleBudgetEditApproval($approval): void
+    {
+        try {
+            $budget = \App\Models\BudgetManagement::find($approval->process_id);
+            
+            if (!$budget) {
+                Log::error('Budget not found for edit approval', ['process_id' => $approval->process_id]);
+                return;
+            }
+            
+            if ($approval->process_status === 'APPROVED') {
+                // Capture old values for version history
+                $oldValues = [
+                    'budget_name' => $budget->budget_name,
+                    'revenue' => $budget->revenue,
+                    'capital_expenditure' => $budget->capital_expenditure,
+                    'allocated_amount' => $budget->allocated_amount,
+                    'spent_amount' => $budget->spent_amount,
+                    'committed_amount' => $budget->committed_amount
+                ];
+                
+                // Try to get changes from edit_package first (preferred source)
+                $editPackage = null;
+                $pendingChanges = null;
+                
+                if ($approval->edit_package) {
+                    // Check if edit_package is already an array or needs to be decoded
+                    if (is_array($approval->edit_package)) {
+                        $editPackage = $approval->edit_package;
+                    } else {
+                        $editPackage = json_decode($approval->edit_package, true);
+                    }
+                    
+                    if ($editPackage && isset($editPackage['new_values'])) {
+                        $pendingChanges = $editPackage['new_values'];
+                    }
+                }
+                
+                // Fall back to pending_changes from budget model if edit_package not available
+                if (!$pendingChanges) {
+                    $pendingChanges = $budget->pending_changes;
+                }
+                
+                Log::info('Processing budget edit approval', [
+                    'budget_id' => $budget->id,
+                    'has_edit_package' => !empty($editPackage),
+                    'has_pending_changes' => !empty($pendingChanges),
+                    'pending_changes' => $pendingChanges,
+                    'source' => $editPackage ? 'edit_package' : 'budget_model'
+                ]);
+                
+                if ($pendingChanges) {
+                    $updateData = [
+                        'budget_name' => $pendingChanges['budget_name'] ?? $budget->budget_name,
+                        'revenue' => $pendingChanges['revenue'] ?? $budget->revenue,
+                        'capital_expenditure' => $pendingChanges['capital_expenditure'] ?? $budget->capital_expenditure,
+                        'start_date' => $pendingChanges['start_date'] ?? $budget->start_date,
+                        'end_date' => $pendingChanges['end_date'] ?? $budget->end_date,
+                        'notes' => $pendingChanges['notes'] ?? $budget->notes,
+                        'expense_account_id' => $pendingChanges['expense_account_id'] ?? $budget->expense_account_id,
+                        'approval_status' => 'APPROVED',
+                        'status' => 'ACTIVE',
+                        'edit_approval_status' => 'APPROVED',
+                        'is_locked' => false,
+                        'locked_reason' => null,
+                        'locked_at' => null,
+                        'locked_by' => null,
+                        'pending_changes' => null,
+                        'approval_request_id' => null
+                    ];
+                    
+                    Log::info('Updating budget with changes', [
+                        'budget_id' => $budget->id,
+                        'update_data' => $updateData
+                    ]);
+                    
+                    $budget->update($updateData);
+                    
+                    // Create a version to track this approved edit
+                    try {
+                        \Log::info('Creating budget version for approved edit', [
+                            'budget_id' => $budget->id,
+                            'old_values' => $oldValues,
+                            'new_values' => $pendingChanges
+                        ]);
+                        
+                        $versionNumber = \App\Models\BudgetVersion::where('budget_id', $budget->id)->count() + 1;
+                        
+                        \App\Models\BudgetVersion::create([
+                            'budget_id' => $budget->id,
+                            'version_number' => $versionNumber,
+                            'version_name' => "Version {$versionNumber} - Approved Edit",
+                            'version_type' => 'REVISED',
+                            'allocated_amount' => $updateData['revenue'] ?? $budget->revenue,
+                            'budget_data' => json_encode([
+                                'old_values' => $oldValues,
+                                'new_values' => $pendingChanges,
+                                'spent_amount' => $budget->spent_amount,
+                                'committed_amount' => $budget->committed_amount,
+                                'approved_by' => auth()->user()->name ?? 'System',
+                                'approved_at' => now()->toDateTimeString()
+                            ]),
+                            'created_by' => auth()->id() ?? 1,
+                            'revision_reason' => 'Budget edit approved through approval workflow',
+                            'status' => 'ACTIVE',
+                            'approved_by' => auth()->id(),
+                            'approved_at' => now()
+                        ]);
+                        
+                        // Update previous versions to inactive status
+                        \App\Models\BudgetVersion::where('budget_id', $budget->id)
+                            ->where('version_number', '<', $versionNumber)
+                            ->update(['status' => 'INACTIVE']);
+                        
+                        Log::info('Budget version created for approved edit', [
+                            'budget_id' => $budget->id,
+                            'version_number' => $versionNumber
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Failed to create budget version for approved edit', [
+                            'budget_id' => $budget->id,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                    
+                    Log::info('Budget edit approved and changes applied', [
+                        'budget_id' => $budget->id,
+                        'budget_name' => $budget->budget_name,
+                        'new_revenue' => $budget->fresh()->revenue,
+                        'new_capital_expenditure' => $budget->fresh()->capital_expenditure
+                    ]);
+                } else {
+                    Log::warning('No pending changes found for budget edit approval', [
+                        'budget_id' => $budget->id,
+                        'budget_name' => $budget->budget_name,
+                        'approval_edit_package' => $approval->edit_package
+                    ]);
+                }
+            } else {
+                // Reject the edit request
+                $budget->update([
+                    'edit_approval_status' => 'REJECTED',
+                    'is_locked' => false,
+                    'locked_reason' => null,
+                    'locked_at' => null,
+                    'locked_by' => null,
+                    'pending_changes' => null,
+                    'approval_request_id' => null
+                ]);
+                
+                Log::info('Budget edit rejected', [
+                    'budget_id' => $budget->id,
+                    'budget_name' => $budget->budget_name
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error handling budget edit approval', [
+                'approval_id' => $approval->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Handle budget delete approval
+     */
+    private function handleBudgetDeleteApproval($approval): void
+    {
+        try {
+            $budget = \App\Models\BudgetManagement::find($approval->process_id);
+            
+            if (!$budget) {
+                Log::error('Budget not found for delete approval', ['process_id' => $approval->process_id]);
+                return;
+            }
+            
+            if ($approval->process_status === 'APPROVED') {
+                // Soft delete the budget
+                $budgetName = $budget->budget_name;
+                $budget->delete();
+                
+                Log::info('Budget deleted after approval', [
+                    'budget_id' => $approval->process_id,
+                    'budget_name' => $budgetName
+                ]);
+            } else {
+                // Reject the delete request
+                $budget->update([
+                    'edit_approval_status' => 'DELETE_REJECTED',
+                    'is_locked' => false,
+                    'locked_reason' => null,
+                    'locked_at' => null,
+                    'locked_by' => null,
+                    'approval_request_id' => null
+                ]);
+                
+                Log::info('Budget delete rejected', [
+                    'budget_id' => $budget->id,
+                    'budget_name' => $budget->budget_name
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error handling budget delete approval', [
+                'approval_id' => $approval->id,
+                'error' => $e->getMessage()
+            ]);
         }
     }
 }

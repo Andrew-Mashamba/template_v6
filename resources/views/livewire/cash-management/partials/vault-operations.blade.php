@@ -4,13 +4,13 @@
         <div class="flex items-center justify-between">
             <div>
                 <h3 class="text-3xl font-bold mb-2">Vault Operations Center</h3>
-                <p class="text-blue-100 text-lg">Monitor, manage, and control your vault operations with precision</p>
+                <p class="text-gray-500 text-lg">Monitor, manage, and control your vault operations with precision</p>
             </div>
             <div class="text-right">
                 <div class="bg-white bg-opacity-20 rounded-2xl p-6 backdrop-blur-sm">
                     <h4 class="text-lg font-semibold mb-2">Current Balance</h4>
                     <p class="text-4xl font-bold">TZS {{ number_format(($vaultBalance ?? 0) / 1000000, 1) }}M</p>
-                    <p class="text-blue-100 text-sm">{{ ($vaultLimit ?? 0) > 0 ? number_format((($vaultBalance ?? 0) / ($vaultLimit ?? 1)) * 100, 1) : 'N/A' }}% of capacity</p>
+                    <p class="text-gray-500 text-sm">{{ ($vaultLimit ?? 0) > 0 ? number_format((($vaultBalance ?? 0) / ($vaultLimit ?? 1)) * 100, 1) : 'N/A' }}% of capacity</p>
                 </div>
             </div>
         </div>

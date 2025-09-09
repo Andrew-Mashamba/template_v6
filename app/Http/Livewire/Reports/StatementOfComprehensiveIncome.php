@@ -2,524 +2,527 @@
 
 namespace App\Http\Livewire\Reports;
 
-use Livewire\Component;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Livewire\Component;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
-use App\Services\HistoricalBalanceService;
+use Exception;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class StatementOfComprehensiveIncome extends Component
 {
-    public $startDate;
-    public $endDate;
-    public $income = [];
-    public $expenses = [];
-    public $totalIncome = 0;
-    public $totalExpenses = 0;
-    public $netIncome = 0;
+    // Report Properties
+    public $reportStartDate;
+    public $reportEndDate;
+    public $reportFormat = 'pdf';
     
-    // Past year data
-    public $pastYearIncome = [];
-    public $pastYearExpenses = [];
-    public $pastYearTotalIncome = 0;
-    public $pastYearTotalExpenses = 0;
-    public $pastYearNetIncome = 0;
+    // Report Viewing Properties
+    public $showStatementView = false;
+    public $statementData = null;
     
-    // Previous period data for comparison
-    public $previousTotalIncome = 0;
-    public $previousTotalExpenses = 0;
-    public $previousNetIncome = 0;
+    // Loading States
+    public $isGenerating = false;
+    public $isExporting = false;
     
-    // Historical data properties
-    public $selectedPastYear;
-    public $availableYears = [];
-    protected $historicalBalanceService;
+    // Messages
+    public $successMessage = '';
+    public $errorMessage = '';
 
-    public $reportPeriod = 'monthly';
-    public $currency = 'TZS';
-    public $viewFormat = 'detailed';
-    
-    public $showCharts = false;
-    public $showIncomeDetails = true;
-    public $showExpenseDetails = true;
-    public $showComparison = false;
-    
-    public $previousPeriodData = [];
-    public $isLoading = false;
-    
-    // Scheduling properties
-    public $showScheduleModal = false;
-    public $scheduleFrequency = 'once';
-    public $scheduleDate = '';
-    public $scheduleTime = '09:00';
-    public $selectedUsers = [];
-    public $emailSubject = '';
-    public $emailMessage = '';
-    public $availableUsers = [];
-    public $userSearchTerm = '';
+    protected $rules = [
+        'reportStartDate' => 'required|date|before_or_equal:reportEndDate',
+        'reportEndDate' => 'required|date|after_or_equal:reportStartDate|before_or_equal:today',
+    ];
+
+    protected $messages = [
+        'reportStartDate.required' => 'Start date is required.',
+        'reportStartDate.date' => 'Start date must be a valid date.',
+        'reportStartDate.before_or_equal' => 'Start date must be before or equal to end date.',
+        'reportEndDate.required' => 'End date is required.',
+        'reportEndDate.date' => 'End date must be a valid date.',
+        'reportEndDate.after_or_equal' => 'End date must be after or equal to start date.',
+        'reportEndDate.before_or_equal' => 'End date cannot be in the future.',
+    ];
 
     public function mount()
     {
-        $this->endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
-        $this->startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
-        $this->scheduleDate = Carbon::now()->addDay()->format('Y-m-d');
-        $this->emailSubject = 'Statement of Comprehensive Income - ' . Carbon::now()->format('Y');
-        $this->emailMessage = 'Please find attached the Statement of Comprehensive Income report.';
-        
-        $this->historicalBalanceService = new HistoricalBalanceService();
-        $this->availableYears = $this->historicalBalanceService->getAvailableYears();
-        $this->selectedPastYear = $this->historicalBalanceService->getMostRecentYear() ?? (Carbon::now()->year - 1);
-        
-        $this->loadData();
+        $this->initializeDates();
     }
 
-    public function loadData()
+    public function updated($propertyName)
     {
-        $this->isLoading = true;
+        $this->validateOnly($propertyName);
         
-        try {
-            // Load Income (4000 series accounts) - Level 2 only
-            $this->income = DB::table('accounts')
-                ->where('major_category_code', '4000')
-                ->where('account_level', 2)
-                ->select('account_name', 'balance', 'account_number')
-                ->get();
-
-            // Load Expenses (5000 series accounts) - Level 2 only
-            $this->expenses = DB::table('accounts')
-                ->where('major_category_code', '5000')
-                ->where('account_level', 2)
-                ->select('account_name', 'balance', 'account_number')
-                ->get();
-
-            // Calculate totals
-            $this->totalIncome = $this->income->sum('balance');
-            $this->totalExpenses = $this->expenses->sum('balance');
-            $this->netIncome = $this->totalIncome - $this->totalExpenses;
-            
-            // Load historical data for past year
-            $this->pastYearIncome = $this->historicalBalanceService->getHistoricalBalances($this->selectedPastYear, '4000');
-            $this->pastYearExpenses = $this->historicalBalanceService->getHistoricalBalances($this->selectedPastYear, '5000');
-            
-            // Calculate past year totals
-            $this->pastYearTotalIncome = $this->pastYearIncome->sum('balance');
-            $this->pastYearTotalExpenses = $this->pastYearExpenses->sum('balance');
-            $this->pastYearNetIncome = $this->pastYearTotalIncome - $this->pastYearTotalExpenses;
-            
-            // Load previous period data for comparison
-            $this->loadPreviousPeriodData();
-            
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error loading financial data: ' . $e->getMessage());
-        } finally {
-            $this->isLoading = false;
+        // Clear any existing statement view when dates change
+        if (in_array($propertyName, ['reportStartDate', 'reportEndDate'])) {
+            $this->showStatementView = false;
+            $this->statementData = null;
+            $this->successMessage = '';
+            $this->errorMessage = '';
         }
     }
 
-    private function loadPreviousPeriodData()
+    private function initializeDates()
+    {
+        $this->reportStartDate = Carbon::now()->startOfMonth()->format('Y-m-d');
+        $this->reportEndDate = Carbon::now()->format('Y-m-d');
+    }
+
+    public function generateStatement()
     {
         try {
-            // Calculate previous period dates based on current period
-            $currentStartDate = Carbon::parse($this->startDate);
-            $currentEndDate = Carbon::parse($this->endDate);
-            $periodLength = $currentStartDate->diffInDays($currentEndDate);
+            $this->isGenerating = true;
+            $this->errorMessage = '';
+            $this->successMessage = '';
             
-            $previousEndDate = $currentStartDate->copy()->subDay();
-            $previousStartDate = $previousEndDate->copy()->subDays($periodLength);
+            // Validate the form data
+            $this->validate();
             
-            // Load previous period income
-            $previousIncome = DB::table('accounts')
-                ->where('major_category_code', '4000')
-                ->where('account_level', 2)
-                ->select('account_name', 'balance', 'account_number')
-                ->get();
+            // Check if we need to add sample data for demonstration
+            // $this->addSampleIncomeDataIfNeeded();
             
-            // Load previous period expenses
-            $previousExpenses = DB::table('accounts')
-                ->where('major_category_code', '5000')
-                ->where('account_level', 2)
-                ->select('account_name', 'balance', 'account_number')
-                ->get();
+            // Get the statement data
+            $statementData = $this->getStatementData();
             
-            $this->previousTotalIncome = $previousIncome->sum('balance');
-            $this->previousTotalExpenses = $previousExpenses->sum('balance');
-            $this->previousNetIncome = $this->previousTotalIncome - $this->previousTotalExpenses;
+            // Store the data for display
+            $this->statementData = $statementData;
+            $this->showStatementView = true;
             
-        } catch (\Exception $e) {
-            // If there's an error loading previous period data, set defaults
-            $this->previousTotalIncome = $this->totalIncome * 0.95;
-            $this->previousTotalExpenses = $this->totalExpenses * 0.92;
-            $this->previousNetIncome = $this->previousTotalIncome - $this->previousTotalExpenses;
-        }
-    }
-
-    public function updatedReportPeriod()
-    {
-        $this->setDateRangeByPeriod();
-        $this->loadData();
-    }
-
-    public function updatedStartDate()
-    {
-        $this->loadData();
-    }
-
-    public function updatedEndDate()
-    {
-        $this->loadData();
-    }
-
-    public function updatedCurrency()
-    {
-        $this->dispatch('currencyChanged', $this->currency);
-    }
-
-    public function updatedViewFormat()
-    {
-        $this->dispatch('viewFormatChanged', $this->viewFormat);
-    }
-
-    private function setDateRangeByPeriod()
-    {
-        $now = Carbon::now();
-        
-        switch ($this->reportPeriod) {
-            case 'monthly':
-                $this->startDate = $now->startOfMonth()->format('Y-m-d');
-                $this->endDate = $now->endOfMonth()->format('Y-m-d');
-                break;
-            case 'quarterly':
-                $this->startDate = $now->startOfQuarter()->format('Y-m-d');
-                $this->endDate = $now->endOfQuarter()->format('Y-m-d');
-                break;
-            case 'annually':
-                $this->startDate = $now->startOfYear()->format('Y-m-d');
-                $this->endDate = $now->endOfYear()->format('Y-m-d');
-                break;
-            case 'custom':
-                // Keep current dates for custom range
-                break;
-        }
-    }
-
-    public function generateReport()
-    {
-        $this->isLoading = true;
-        
-        try {
-            $this->loadData();
-            session()->flash('success', 'Statement of Comprehensive Income generated successfully!');
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error generating report: ' . $e->getMessage());
-        } finally {
-            $this->isLoading = false;
-        }
-    }
-
-    public function exportToPDF()
-    {
-        try {
-            $data = [
-                'income' => $this->income,
-                'expenses' => $this->expenses,
-                'totalIncome' => $this->totalIncome,
-                'totalExpenses' => $this->totalExpenses,
-                'netIncome' => $this->netIncome,
-                'startDate' => $this->startDate,
-                'endDate' => $this->endDate,
-                'currency' => $this->currency,
-                'reportDate' => now()->format('Y-m-d H:i:s')
-            ];
-
-            $pdf = PDF::loadView('pdf.statement-of-comprehensive-income', $data);
+            $this->successMessage = 'Statement of Comprehensive Income generated successfully!';
             
-            $filename = 'statement-of-comprehensive-income-' . now()->format('Y-m-d') . '.pdf';
-            
-            return response()->streamDownload(function () use ($pdf) {
-                echo $pdf->output();
-            }, $filename);
-            
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error exporting PDF: ' . $e->getMessage());
-        }
-    }
-
-    public function exportToExcel()
-    {
-        try {
-            // Create CSV content
-            $csvContent = $this->generateCSVContent();
-            
-            $filename = 'statement-of-comprehensive-income-' . now()->format('Y-m-d') . '.csv';
-            
-            return response()->streamDownload(function () use ($csvContent) {
-                echo $csvContent;
-            }, $filename, ['Content-Type' => 'text/csv']);
-            
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error exporting Excel: ' . $e->getMessage());
-        }
-    }
-
-    private function generateCSVContent()
-    {
-        $csv = "Statement of Comprehensive Income\n";
-        $csv .= "Period: {$this->startDate} to {$this->endDate}\n";
-        $csv .= "Currency: {$this->currency}\n\n";
-        
-        // Income section
-        $csv .= "INCOME\n";
-        $csv .= "Account Name,Balance\n";
-        foreach ($this->income as $incomeItem) {
-            $accountName = is_object($incomeItem) ? $incomeItem->account_name : $incomeItem['account_name'];
-            $balance = is_object($incomeItem) ? $incomeItem->balance : $incomeItem['balance'];
-            $csv .= "\"{$accountName}\",{$balance}\n";
-        }
-        $csv .= "TOTAL INCOME,{$this->totalIncome}\n\n";
-        
-        // Expenses section
-        $csv .= "EXPENSES\n";
-        $csv .= "Account Name,Balance\n";
-        foreach ($this->expenses as $expense) {
-            $accountName = is_object($expense) ? $expense->account_name : $expense['account_name'];
-            $balance = is_object($expense) ? $expense->balance : $expense['balance'];
-            $csv .= "\"{$accountName}\",{$balance}\n";
-        }
-        $csv .= "TOTAL EXPENSES,{$this->totalExpenses}\n\n";
-        
-        $csv .= "NET INCOME," . $this->netIncome . "\n";
-        
-        return $csv;
-    }
-
-    public function scheduleReport()
-    {
-        $this->loadAvailableUsers();
-        $this->showScheduleModal = true;
-    }
-
-    public function loadAvailableUsers()
-    {
-        $query = DB::table('users')
-            ->leftJoin('departments', 'users.department_code', '=', 'departments.department_code')
-            ->select(
-                'users.id', 
-                'users.name', 
-                'users.email', 
-                'users.department_code',
-                'departments.department_name as department'
-            )
-            ->where('users.email', '!=', '')
-            ->whereNotNull('users.email');
-
-        if (!empty($this->userSearchTerm)) {
-            $query->where(function($q) {
-                $q->where('users.name', 'like', '%' . $this->userSearchTerm . '%')
-                  ->orWhere('users.email', 'like', '%' . $this->userSearchTerm . '%')
-                  ->orWhere('departments.department_name', 'like', '%' . $this->userSearchTerm . '%')
-                  ->orWhere('users.department_code', 'like', '%' . $this->userSearchTerm . '%');
-            });
-        }
-
-        $this->availableUsers = $query->orderBy('users.name')->get()->map(function($user) {
-            return [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'department_code' => $user->department_code,
-                'department' => $user->department
-            ];
-        })->toArray();
-    }
-
-    public function updatedUserSearchTerm()
-    {
-        $this->loadAvailableUsers();
-    }
-
-    public function removeUser($userId)
-    {
-        $this->selectedUsers = array_values(array_diff($this->selectedUsers, [$userId]));
-    }
-
-    public function selectAllUsers()
-    {
-        $this->selectedUsers = collect($this->availableUsers)->pluck('id')->toArray();
-    }
-
-    public function clearAllUsers()
-    {
-        $this->selectedUsers = [];
-    }
-
-    public function confirmSchedule()
-    {
-        // Validate scheduling data
-        $this->validate([
-            'scheduleDate' => 'required|date|after:today',
-            'scheduleTime' => 'required',
-            'selectedUsers' => 'required|array|min:1',
-            'emailSubject' => 'required|string|max:255',
-            'scheduleFrequency' => 'required|in:once,daily,weekly,monthly,quarterly,annually'
-        ]);
-
-        try {
-            // Parse schedule datetime
-            $scheduledAt = Carbon::parse($this->scheduleDate . ' ' . $this->scheduleTime);
-            
-            // Calculate next run date based on frequency
-            $nextRunAt = $this->calculateNextRunDate($scheduledAt);
-
-            // Get selected user emails
-            $selectedUserEmails = DB::table('users')
-                ->whereIn('id', $this->selectedUsers)
-                ->pluck('email')
-                ->toArray();
-
-            // Create a scheduled report entry
-            DB::table('scheduled_reports')->insert([
-                'report_type' => 'Statement of Comprehensive Income',
-                'report_config' => json_encode([
-                    'reportPeriod' => $this->reportPeriod,
-                    'currency' => $this->currency,
-                    'viewFormat' => $this->viewFormat,
-                    'startDate' => $this->startDate,
-                    'endDate' => $this->endDate,
-                    'emailSubject' => $this->emailSubject,
-                    'emailMessage' => $this->emailMessage,
-                    'selectedUserIds' => $this->selectedUsers
-                ]),
+            // Log the report generation
+            Log::info('Statement of Comprehensive Income generated', [
                 'user_id' => auth()->id(),
-                'status' => 'scheduled',
-                'frequency' => $this->scheduleFrequency,
-                'scheduled_at' => $scheduledAt,
-                'next_run_at' => $nextRunAt,
-                'email_recipients' => implode(',', $selectedUserEmails),
-                'created_at' => now(),
-                'updated_at' => now()
+                'period_start' => $this->reportStartDate,
+                'period_end' => $this->reportEndDate
             ]);
             
-            $this->showScheduleModal = false;
-            $this->reset(['selectedUsers', 'emailSubject', 'emailMessage', 'userSearchTerm']);
-            
-            $recipientCount = count($selectedUserEmails);
-            session()->flash('success', "Report scheduled successfully! {$recipientCount} recipient(s) will receive it on " . $scheduledAt->format('M d, Y \a\t H:i'));
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error scheduling report: ' . $e->getMessage());
+        } catch (Exception $e) {
+            Log::error('Error generating Statement of Comprehensive Income: ' . $e->getMessage());
+            $this->errorMessage = 'Failed to generate Statement of Comprehensive Income. Please try again.';
+        } finally {
+            $this->isGenerating = false;
         }
     }
 
-    public function cancelSchedule()
-    {
-        $this->showScheduleModal = false;
-        $this->reset(['selectedUsers', 'emailSubject', 'emailMessage', 'userSearchTerm']);
-    }
 
-    private function calculateNextRunDate($scheduledAt)
+    public function getStatementData()
     {
-        switch ($this->scheduleFrequency) {
-            case 'daily':
-                return $scheduledAt->copy()->addDay();
-            case 'weekly':
-                return $scheduledAt->copy()->addWeek();
-            case 'monthly':
-                return $scheduledAt->copy()->addMonth();
-            case 'quarterly':
-                return $scheduledAt->copy()->addMonths(3);
-            case 'annually':
-                return $scheduledAt->copy()->addYear();
-            case 'once':
-            default:
-                return null;
-        }
-    }
-
-    public function toggleChartView()
-    {
-        $this->showCharts = !$this->showCharts;
-    }
-
-    public function toggleIncomeDetails()
-    {
-        $this->showIncomeDetails = !$this->showIncomeDetails;
-    }
-
-    public function toggleExpenseDetails()
-    {
-        $this->showExpenseDetails = !$this->showExpenseDetails;
-    }
-
-    public function toggleComparison()
-    {
-        $this->showComparison = !$this->showComparison;
+        $startDate = $this->reportStartDate ?: Carbon::now()->startOfMonth()->format('Y-m-d');
+        $endDate = $this->reportEndDate ?: Carbon::now()->format('Y-m-d');
         
-        if ($this->showComparison) {
-            $this->loadComparisonData();
-        }
+        // Get all active income and expense accounts with their balances filtered by date range
+        $accounts = DB::table('accounts')
+            ->select(
+                'accounts.account_number',
+                'accounts.account_name',
+                'accounts.type',
+                'accounts.major_category_code',
+                'accounts.category_code',
+                'accounts.sub_category_code',
+                'accounts.account_level',
+                DB::raw("COALESCE(SUM(CASE WHEN gl.created_at BETWEEN '{$startDate}' AND '{$endDate}' THEN gl.debit ELSE 0 END), 0) as debit_balance"),
+                DB::raw("COALESCE(SUM(CASE WHEN gl.created_at BETWEEN '{$startDate}' AND '{$endDate}' THEN gl.credit ELSE 0 END), 0) as credit_balance"),
+                DB::raw("COALESCE(SUM(CASE WHEN gl.created_at BETWEEN '{$startDate}' AND '{$endDate}' THEN (gl.debit - gl.credit) ELSE 0 END), 0) as current_balance")
+            )
+            ->leftJoin('general_ledger as gl', 'accounts.account_number', '=', 'gl.record_on_account_number')
+            ->where('accounts.status', 'ACTIVE')
+            ->whereIn('accounts.type', ['income_accounts', 'expense_accounts'])
+            ->whereNull('accounts.deleted_at')
+            ->groupBy('accounts.account_number', 'accounts.account_name', 'accounts.type', 'accounts.major_category_code', 'accounts.category_code', 'accounts.sub_category_code', 'accounts.account_level')
+            ->orderBy('accounts.type')
+            ->orderBy('accounts.major_category_code')
+            ->orderBy('accounts.category_code')
+            ->orderBy('accounts.sub_category_code')
+            ->orderBy('accounts.account_number')
+            ->get();
+
+        // Group accounts by type and calculate totals
+        $statementData = [
+            'period_start' => $startDate,
+            'period_end' => $endDate,
+            'income' => $this->groupAccountsByType($accounts, ['income_accounts']),
+            'expenses' => $this->groupAccountsByType($accounts, ['expense_accounts']),
+            'totals' => []
+        ];
+
+        // Calculate totals
+        $totalIncome = $statementData['income']['total'];
+        $totalExpenses = $statementData['expenses']['total'];
+        $netIncome = $totalIncome - $totalExpenses;
+
+        $statementData['totals'] = [
+            'total_income' => $totalIncome,
+            'total_expenses' => $totalExpenses,
+            'net_income' => $netIncome,
+            'is_profitable' => $netIncome > 0
+        ];
+
+        return $statementData;
     }
 
-    private function loadComparisonData()
+    private function groupAccountsByType($accounts, $types)
     {
-        try {
-            // Load previous period data for comparison
-            $previousStartDate = Carbon::parse($this->startDate)->subMonth()->startOfMonth();
-            $previousEndDate = Carbon::parse($this->endDate)->subMonth()->endOfMonth();
+        $grouped = [
+            'categories' => [],
+            'total' => 0
+        ];
+
+        foreach ($accounts as $account) {
+            // Ensure account is an object for consistent access
+            $accountObj = is_array($account) ? (object) $account : $account;
             
-            // This would need to be implemented based on your actual transaction/balance history
-            $this->previousPeriodData = [
-                'totalIncome' => $this->totalIncome * 0.95, // Mock data
-                'totalExpenses' => $this->totalExpenses * 0.92,
-                'netIncome' => ($this->totalIncome * 0.95) - ($this->totalExpenses * 0.92),
-                'period' => $previousStartDate->format('M Y')
+            if (in_array($accountObj->type, $types)) {
+                // Use the combination of major_category_code and category_code for grouping
+                $categoryCode = $accountObj->major_category_code . '-' . $accountObj->category_code;
+                $categoryName = $this->getCategoryName($accountObj->type, $categoryCode);
+                
+                // If no specific category name found, use the major category
+                if ($categoryName === "Category {$categoryCode}") {
+                    $categoryCode = $accountObj->major_category_code;
+                    $categoryName = $this->getCategoryName($accountObj->type, $categoryCode);
+                }
+                
+                if (!isset($grouped['categories'][$categoryCode])) {
+                    $grouped['categories'][$categoryCode] = [
+                        'name' => $categoryName,
+                        'accounts' => [],
+                        'subtotal' => 0
+                    ];
+                }
+
+                $grouped['categories'][$categoryCode]['accounts'][] = $accountObj;
+                $grouped['categories'][$categoryCode]['subtotal'] += $accountObj->current_balance;
+                $grouped['total'] += $accountObj->current_balance;
+            }
+        }
+
+        return $grouped;
+    }
+
+    private function getCategoryName($type, $categoryCode)
+    {
+        $categoryNames = [
+            'income_accounts' => [
+                '4000' => 'Revenue',
+                '4000-4000' => 'Interest Income',
+                '4000-4100' => 'Loan Fees and Charges',
+                '4000-4200' => 'Service Fees',
+                '4000-4300' => 'Investment Income',
+                '4000-4400' => 'Grants and Donations',
+                '4000-4500' => 'Other Income',
+                '4000-4600' => 'Investment Gains',
+                '4000-4700' => 'Gains on Disposal',
+                '4000-4800' => 'Exchange Gains'
+            ],
+            'expense_accounts' => [
+                '5000' => 'Expenses',
+                '5000-5000' => 'Financial Expenses',
+                '5000-5100' => 'Personnel Expenses',
+                '5000-5200' => 'Administrative Expenses',
+                '5000-5300' => 'Operational Expenses',
+                '5000-5600' => 'Office Expenses',
+                '5000-5700' => 'Facility Expenses',
+                '5000-5800' => 'Travel Expenses',
+                '5000-5900' => 'Information Technology',
+                '5000-6000' => 'Training and Development'
+            ]
+        ];
+
+        return $categoryNames[$type][$categoryCode] ?? "Category {$categoryCode}";
+    }
+
+    private function addSampleIncomeDataIfNeeded()
+    {
+        // Check if we need to add sample income/expense data
+        $incomeAccounts = DB::table('accounts')->where('type', 'income_accounts')->where('status', 'ACTIVE')->get();
+        $expenseAccounts = DB::table('accounts')->where('type', 'expense_accounts')->where('status', 'ACTIVE')->get();
+        
+        $hasIncomeData = $incomeAccounts->where('balance', '>', 0)->count() > 0;
+        $hasExpenseData = $expenseAccounts->where('balance', '>', 0)->count() > 0;
+        
+        if (!$hasIncomeData || !$hasExpenseData) {
+            // Add sample income and expense transactions
+            $sampleTransactions = [
+                // Interest Income
+                [
+                    'record_on_account_number' => '010140004000', // INTEREST INCOME
+                    'debit' => 0.00,
+                    'credit' => 150000.00,
+                    'record_on_account_number_balance' => 150000.00,
+                    'narration' => 'Interest income from loans',
+                    'reference_number' => 'INT001',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ],
+                [
+                    'record_on_account_number' => '010110001000', // CASH AND CASH EQUIVALENTS
+                    'debit' => 150000.00,
+                    'credit' => 0.00,
+                    'record_on_account_number_balance' => 850000.00,
+                    'narration' => 'Interest received in cash',
+                    'reference_number' => 'INT001',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ],
+                // Loan Fees
+                [
+                    'record_on_account_number' => '010140004100', // LOAN FEES AND CHARGES
+                    'debit' => 0.00,
+                    'credit' => 50000.00,
+                    'record_on_account_number_balance' => 50000.00,
+                    'narration' => 'Loan processing fees',
+                    'reference_number' => 'FEE001',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ],
+                [
+                    'record_on_account_number' => '010110001000', // CASH AND CASH EQUIVALENTS
+                    'debit' => 50000.00,
+                    'credit' => 0.00,
+                    'record_on_account_number_balance' => 900000.00,
+                    'narration' => 'Fees received in cash',
+                    'reference_number' => 'FEE001',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ],
+                // Personnel Expenses
+                [
+                    'record_on_account_number' => '010150005100', // PERSONNEL EXPENSES
+                    'debit' => 80000.00,
+                    'credit' => 0.00,
+                    'record_on_account_number_balance' => 80000.00,
+                    'narration' => 'Staff salaries and benefits',
+                    'reference_number' => 'SAL001',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ],
+                [
+                    'record_on_account_number' => '010110001000', // CASH AND CASH EQUIVALENTS
+                    'debit' => 0.00,
+                    'credit' => 80000.00,
+                    'record_on_account_number_balance' => 820000.00,
+                    'narration' => 'Salary payments',
+                    'reference_number' => 'SAL001',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ],
+                // Administrative Expenses
+                [
+                    'record_on_account_number' => '010150005200', // ADMINISTRATIVE EXPENSES
+                    'debit' => 30000.00,
+                    'credit' => 0.00,
+                    'record_on_account_number_balance' => 30000.00,
+                    'narration' => 'Office supplies and utilities',
+                    'reference_number' => 'ADM001',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ],
+                [
+                    'record_on_account_number' => '010110001000', // CASH AND CASH EQUIVALENTS
+                    'debit' => 0.00,
+                    'credit' => 30000.00,
+                    'record_on_account_number_balance' => 790000.00,
+                    'narration' => 'Administrative expenses paid',
+                    'reference_number' => 'ADM001',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]
             ];
             
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error loading comparison data: ' . $e->getMessage());
+            // Insert sample transactions
+            DB::table('general_ledger')->insert($sampleTransactions);
+            
+            // Update account balances
+            $this->updateAccountBalances();
         }
     }
 
-    public function getPeriodDisplayName()
+    private function updateAccountBalances()
     {
-        switch ($this->reportPeriod) {
-            case 'monthly': return 'Monthly Report';
-            case 'quarterly': return 'Quarterly Report';
-            case 'annually': return 'Annual Report';
-            case 'custom': return 'Custom Period Report';
-            default: return 'Financial Report';
+        // Update account balances based on general ledger entries
+        $accounts = DB::table('accounts')->where('status', 'ACTIVE')->get();
+        
+        foreach ($accounts as $account) {
+            $debitTotal = DB::table('general_ledger')
+                ->where('record_on_account_number', $account->account_number)
+                ->sum('debit');
+                
+            $creditTotal = DB::table('general_ledger')
+                ->where('record_on_account_number', $account->account_number)
+                ->sum('credit');
+                
+            $balance = $debitTotal - $creditTotal;
+            
+            DB::table('accounts')
+                ->where('account_number', $account->account_number)
+                ->update([
+                    'debit' => $debitTotal,
+                    'credit' => $creditTotal,
+                    'balance' => $balance,
+                    'updated_at' => now()
+                ]);
         }
     }
 
-    public function isProfitable()
-    {
-        return $this->netIncome >= 0;
-    }
-
-    public function captureHistoricalBalances()
+    public function exportStatement($format = 'pdf')
     {
         try {
-            $currentYear = Carbon::now()->year;
-            $result = $this->historicalBalanceService->captureYearEndBalances($currentYear, auth()->id());
+            $this->isExporting = true;
+            $this->errorMessage = '';
+            $this->successMessage = '';
             
-            if ($result['success']) {
-                session()->flash('success', $result['message']);
-                // Refresh available years
-                $this->availableYears = $this->historicalBalanceService->getAvailableYears();
-            } else {
-                session()->flash('error', $result['message']);
+            // Validate the form data
+            $this->validate();
+            
+            if (!$this->statementData) {
+                $this->statementData = $this->getStatementData();
             }
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error capturing historical balances: ' . $e->getMessage());
+            
+            $filename = 'statement_of_comprehensive_income_' . now()->format('Y-m-d_H-i-s') . '.' . $format;
+            
+            if ($format === 'pdf') {
+                return $this->exportToPDF($filename);
+            } elseif ($format === 'excel') {
+                return $this->exportToExcel($filename);
+            } else {
+                throw new Exception('Unsupported export format: ' . $format);
+            }
+            
+        } catch (Exception $e) {
+            Log::error('Error exporting Statement of Comprehensive Income: ' . $e->getMessage());
+            $this->errorMessage = 'Failed to export Statement of Comprehensive Income. Please try again.';
+            $this->isExporting = false;
         }
     }
 
-    public function updatedSelectedPastYear()
+    public function exportPDF()
     {
-        $this->loadData();
+        try {
+            $this->isExporting = true;
+            $this->errorMessage = '';
+            $this->successMessage = '';
+            
+            // Validate the form data
+            $this->validate();
+            
+            if (!$this->statementData) {
+                $this->statementData = $this->getStatementData();
+            }
+            
+            $filename = 'statement_of_comprehensive_income_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+            return $this->exportToPDF($filename);
+            
+        } catch (Exception $e) {
+            Log::error('Error exporting Statement of Comprehensive Income as PDF: ' . $e->getMessage());
+            $this->errorMessage = 'Failed to export Statement of Comprehensive Income as PDF. Please try again.';
+            $this->isExporting = false;
+        }
+    }
+
+    public function exportExcel()
+    {
+        try {
+            $this->isExporting = true;
+            $this->errorMessage = '';
+            $this->successMessage = '';
+            
+            // Validate the form data
+            $this->validate();
+            
+            if (!$this->statementData) {
+                $this->statementData = $this->getStatementData();
+            }
+            
+            $filename = 'statement_of_comprehensive_income_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+            return $this->exportToExcel($filename);
+            
+        } catch (Exception $e) {
+            Log::error('Error exporting Statement of Comprehensive Income as Excel: ' . $e->getMessage());
+            $this->errorMessage = 'Failed to export Statement of Comprehensive Income as Excel. Please try again.';
+            $this->isExporting = false;
+        }
+    }
+
+    private function exportToPDF($filename)
+    {
+        try {
+            // Prepare data for PDF template
+            $pdfData = [
+                'statementData' => $this->statementData,
+                'startDate' => $this->reportStartDate,
+                'endDate' => $this->reportEndDate,
+                'currency' => 'TZS',
+                'reportDate' => now()->format('Y-m-d H:i:s'),
+                'totalIncome' => $this->statementData['income']['total'],
+                'totalExpenses' => $this->statementData['expenses']['total'],
+                'netIncome' => $this->statementData['totals']['net_income'],
+                'income' => $this->prepareIncomeForPDF(),
+                'expenses' => $this->prepareExpensesForPDF()
+            ];
+            
+            // Generate PDF using DomPDF
+            $pdf = Pdf::loadView('pdf.statement-of-comprehensive-income', $pdfData);
+            
+            // Set PDF options
+            $pdf->setPaper('A4', 'portrait');
+            $pdf->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'Arial'
+            ]);
+            
+            // Log the export
+            Log::info('Statement of Comprehensive Income exported as PDF', [
+                'format' => 'pdf',
+                'user_id' => auth()->id(),
+                'period_start' => $this->statementData['period_start'],
+                'period_end' => $this->statementData['period_end']
+            ]);
+            
+            // Download the PDF
+            $pdfOutput = $pdf->output();
+            return response()->streamDownload(function () use ($pdfOutput) {
+                echo $pdfOutput;
+            }, $filename);
+            
+        } catch (Exception $e) {
+            Log::error('Error generating PDF: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function exportToExcel($filename)
+    {
+        try {
+            // Ensure filename has .xlsx extension
+            if (!str_ends_with($filename, '.xlsx')) {
+                $filename = str_replace('.excel', '.xlsx', $filename);
+            }
+            
+            // Download the Excel file
+            return \Maatwebsite\Excel\Facades\Excel::download(
+                new \App\Exports\StatementOfComprehensiveIncomeExport($this->statementData, $this->reportStartDate, $this->reportEndDate),
+                $filename
+            );
+            
+        } catch (Exception $e) {
+            Log::error('Error generating Excel: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function prepareIncomeForPDF()
+    {
+        return $this->statementData['income']['categories'];
+    }
+
+    private function prepareExpensesForPDF()
+    {
+        return $this->statementData['expenses']['categories'];
     }
 
     public function render()
     {
         return view('livewire.reports.statement-of-comprehensive-income');
     }
-} 
+}

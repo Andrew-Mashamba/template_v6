@@ -9,6 +9,7 @@ use App\Models\ARModel;
 use App\Models\general_ledger;
 use App\Models\IntangibleAsset;
 
+use App\Services\BalanceSheetItemIntegrationService;
 use App\Services\CreditAndDebitService;
 use App\Services\TransactionPostingService;
 use Illuminate\Support\Facades\DB;
@@ -34,8 +35,9 @@ class IntangibleAssets extends Component
     ];
     private CreditAndDebitService $creditAndDebitService;
     private int $newInitialAmount;
-    public $source;
-    public $cash_account;
+    // Account selection for proper flow
+    public $parent_account_number; // Parent account to create intangible asset account under
+    public $other_account_id; // The other account for double-entry (Cash/Bank - credit side)
 
     public function mount()
     {
@@ -52,60 +54,46 @@ class IntangibleAssets extends Component
      */
     public function store()
     {
+        $this->validate();
 
-        //$this->validate();
+        try {
+            // Create intangible asset record
+            $intangibleAsset = IntangibleAsset::create([
+                'name' => $this->name,
+                'type' => $this->type,
+                'value' => $this->value,
+                'acquisition_date' => $this->acquisition_date,
+            ]);
 
+            // Use Balance Sheet Integration Service to create accounts and post to GL
+            $integrationService = new BalanceSheetItemIntegrationService();
+            
+            try {
+                $assetObj = (object) [
+                    'id' => $intangibleAsset->id,
+                    'name' => $this->name,
+                    'asset_type' => $this->type,
+                    'cost' => $this->value,
+                    'acquisition_date' => $this->acquisition_date
+                ];
+                
+                $integrationService->createIntangibleAssetAccount(
+                    $assetObj,
+                    $this->parent_account_number,  // Parent account to create asset account under
+                    $this->other_account_id        // The other account for double-entry (Cash/Bank - credit side)
+                );
+                
+            } catch (\Exception $e) {
+                \Log::error('Failed to integrate intangible asset with accounts table: ' . $e->getMessage());
+            }
 
-
-
-        $asset_parent_account = AccountsModel::where("sub_category_code", $this->asset_sub_category_code)->first();
-
-        //assets
-        // $asset_parent_account= DB::table('accounts')->where('sub_category_code',$this->debit_category_code)->first();
-        $asset_account_number= $this->createNewAccountNumber($asset_parent_account->major_category_code,
-            $asset_parent_account->category_code,
-            $asset_parent_account->sub_category_code,
-            $asset_parent_account->account_number);
-
-        //create income account
-        $cash_account = AccountsModel::where("sub_category_code", $this->cash_account)->first();
-
-
-
-
-        $credited_account  = $cash_account;
-        $debited_account  = AccountsModel::where("account_number", $asset_account_number)->first();
-
-        $narration = 'Receivable : ' . $this->name;
-
-
-        $data = [
-
-            'first_account' => $debited_account,
-            'second_account' => $credited_account,
-            'amount' => $this->value,
-            'narration' =>  $narration,
-
-        ];
-
-        $transactionServicex = new TransactionPostingService();
-        $response = $transactionServicex->postTransaction($data);
-
-
-        IntangibleAsset::create([
-            'name' => $this->name,
-            'type' => $this->type,
-            'value' => $this->value,
-            'acquisition_date' => $this->acquisition_date,
-            'source' => $asset_account_number,
-        ]);
-
-        $this->resetInputFields();
-        $this->fetchAssets();
-        session()->flash('message', 'Accounts Receivable Registered Successfully.');
-
-
-
+            $this->resetInputFields();
+            $this->fetchAssets();
+            session()->flash('message', 'Intangible Asset created successfully.');
+            
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error creating intangible asset: ' . $e->getMessage());
+        }
     }
 
 
@@ -290,7 +278,30 @@ class IntangibleAssets extends Component
 
     public function render()
     {
-        return view('livewire.accounting.intangible-assets');
+        // Get accounts for account selection
+        $parentAccounts = DB::table('accounts')
+            ->where('major_category_code', '1000') // Asset accounts
+            ->where('account_level', '<=', 2) // Parent level accounts only
+            ->where(function($query) {
+                $query->where('account_name', 'LIKE', '%INTANGIBLE%')
+                      ->orWhere('account_name', 'LIKE', '%ASSET%')
+                      ->orWhere('account_name', 'LIKE', '%INTELLECTUAL%');
+            })
+            ->where('status', 'ACTIVE')
+            ->orderBy('account_name')
+            ->get();
+        
+        // Get bank accounts from bank_accounts table
+        $otherAccounts = DB::table('bank_accounts')
+            ->select('internal_mirror_account_number', 'bank_name', 'account_number')
+            ->where('status', 'ACTIVE')
+            ->orderBy('bank_name')
+            ->get();
+
+        return view('livewire.accounting.intangible-assets', [
+            'parentAccounts' => $parentAccounts,
+            'otherAccounts' => $otherAccounts
+        ]);
     }
 
 

@@ -125,7 +125,7 @@
                 <div class="bg-blue-900 text-white rounded-lg p-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h3 class="text-sm font-medium text-blue-100">NET INCOME</h3>
+                            <h3 class="text-sm font-medium text-gray-500">NET INCOME</h3>
                             <p class="text-xl font-bold mt-1">
                                 {{ number_format($accountSummary['metrics']['net_income'], 2) }}
                             </p>

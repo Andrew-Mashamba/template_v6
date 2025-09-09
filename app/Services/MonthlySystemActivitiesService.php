@@ -83,6 +83,9 @@ class MonthlySystemActivitiesService
 
             // 7. PPE Depreciation Calculation
             $this->processMonthlyPpeDepreciation();
+            
+            // 8. Budget Period Close and Versioning
+            $this->processMonthlyBudgetClose();
 
             DB::commit();
             Log::info('Monthly activities completed successfully for ' . $this->previousMonth->format('Y-m'));
@@ -582,6 +585,95 @@ class MonthlySystemActivitiesService
         } catch (\Exception $e) {
             Log::error('Monthly PPE depreciation calculation failed: ' . $e->getMessage());
             throw $e;
+        }
+    }
+    
+    /**
+     * Process monthly budget close and create version snapshots
+     */
+    protected function processMonthlyBudgetClose()
+    {
+        try {
+            Log::info('Starting monthly budget close and versioning for ' . $this->previousMonth->format('Y-m'));
+            
+            // Get all active budgets
+            $budgets = \App\Models\BudgetManagement::where('status', 'ACTIVE')->get();
+            
+            if ($budgets->isEmpty()) {
+                Log::info('No active budgets found for monthly close');
+                return;
+            }
+            
+            $period = $this->previousMonth->format('Y-m');
+            $successCount = 0;
+            $failCount = 0;
+            
+            foreach ($budgets as $budget) {
+                try {
+                    // Recalculate metrics before creating version
+                    $budget->calculateBudgetMetrics();
+                    
+                    // Create monthly close version
+                    $versionNumber = \App\Models\BudgetVersion::where('budget_id', $budget->id)->count() + 1;
+                    
+                    \App\Models\BudgetVersion::create([
+                        'budget_id' => $budget->id,
+                        'version_number' => $versionNumber,
+                        'version_name' => "Version {$versionNumber} - {$period} Monthly Close",
+                        'version_type' => 'MONTHLY_CLOSE',
+                        'allocated_amount' => $budget->allocated_amount,
+                        'spent_amount' => $budget->spent_amount,
+                        'committed_amount' => $budget->committed_amount,
+                        'effective_from' => $this->previousMonth->endOfMonth(),
+                        'created_by' => 1, // System generated
+                        'revision_reason' => "Automatic monthly close for {$period}",
+                        'change_summary' => json_encode([
+                            'period' => $period,
+                            'period_type' => 'monthly',
+                            'utilization_percentage' => $budget->utilization_percentage,
+                            'variance_amount' => $budget->variance_amount,
+                            'available_amount' => $budget->available_amount,
+                            'closed_at' => now()->toDateTimeString(),
+                            'closed_by' => 'Monthly System Activities'
+                        ]),
+                        'is_active' => false // Monthly close versions are snapshots
+                    ]);
+                    
+                    // Update last period close timestamp
+                    $budget->last_period_close = $this->previousMonth->endOfMonth();
+                    $budget->last_closed_period = $period;
+                    $budget->saveQuietly();
+                    
+                    $successCount++;
+                    
+                    Log::info('Monthly budget close version created', [
+                        'budget_id' => $budget->id,
+                        'budget_name' => $budget->budget_name,
+                        'period' => $period,
+                        'version_number' => $versionNumber
+                    ]);
+                    
+                } catch (\Exception $e) {
+                    $failCount++;
+                    Log::error('Failed to create monthly close version for budget', [
+                        'budget_id' => $budget->id,
+                        'budget_name' => $budget->budget_name,
+                        'period' => $period,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+            
+            Log::info('Monthly budget close completed', [
+                'period' => $period,
+                'total_budgets' => $budgets->count(),
+                'success' => $successCount,
+                'failed' => $failCount
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Monthly budget close and versioning failed: ' . $e->getMessage());
+            // Don't throw - allow other monthly activities to continue
         }
     }
 } 

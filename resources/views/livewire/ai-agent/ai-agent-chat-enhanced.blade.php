@@ -124,7 +124,7 @@ class="overflow-hidden chat-container" style="height: 90vh; min-height: 600px;">
                     </div>
                     <div>
                         <h1 class="text-xl font-bold text-white">Zona AIx</h1>
-                        <p class="text-xs text-blue-100">SACCOS Intelligence</p>
+                        <p class="text-xs text-gray-500">SACCOS Intelligence</p>
                     </div>
                 </div>
             </div>
@@ -346,7 +346,7 @@ class="overflow-hidden chat-container" style="height: 90vh; min-height: 600px;">
                                     @if($message['sender'] === 'user' && !empty($message['attachments']))
                                     <div class="flex flex-wrap gap-2 mb-2">
                                         @foreach($message['attachments'] as $attachment)
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-800 text-blue-100">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-800 text-gray-500">
                                             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8l4 4v10a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/>
                                             </svg>

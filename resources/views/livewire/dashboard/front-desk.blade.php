@@ -280,17 +280,6 @@
                 @elseif($item === 'loan-repayment')
                     <livewire:dashboard.loan-repayment />
 
-                {{-- Daily Operations Section --}}
-                @elseif($item === 'cash-summary')
-                    <livewire:dashboard.cash-summary />
-                @elseif($item === 'cashbook-ledger')
-                    <livewire:dashboard.cashbook-ledger />
-                @elseif($item === 'end-of-day')
-                    <livewire:dashboard.end-of-day />
-
-                {{-- Compliance & Security Section --}}
-                @elseif($item === 'safe-access-log')
-                    <livewire:dashboard.safe-access-log />
 
                 {{-- Support Section --}}
                 @elseif($item === 'support-tickets')
@@ -483,55 +472,7 @@
                 </div>
             </div>
             
-                         <!-- Daily Operations Section -->
-             <div class="mb-6">
-                 <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">Daily Operations</h3>
-                 
-                 <div class="space-y-1">
-                     <button wire:click="$set('item', 'cash-summary')" class="w-full flex items-center p-3 rounded-lg text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-all duration-200 group {{ $item === 'cash-summary' ? 'bg-yellow-50 text-yellow-600' : '' }}">
-                         <div class="p-2 bg-yellow-100 rounded-lg text-yellow-600 group-hover:bg-yellow-200 transition-colors">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                             </svg>
-                         </div>
-                         <span class="font-medium ml-3">Cash Summary</span>
-                     </button>
-                     
-                     <button wire:click="$set('item', 'cashbook-ledger')" class="w-full flex items-center p-3 rounded-lg text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-all duration-200 group {{ $item === 'cashbook-ledger' ? 'bg-teal-50 text-teal-600' : '' }}">
-                         <div class="p-2 bg-teal-100 rounded-lg text-teal-600 group-hover:bg-teal-200 transition-colors">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                             </svg>
-                         </div>
-                         <span class="font-medium ml-3">Cashbook Ledger</span>
-                     </button>
-                     
-                     <button wire:click="$set('item', 'end-of-day')" class="w-full flex items-center p-3 rounded-lg text-sm text-gray-700 hover:bg-cyan-50 hover:text-cyan-600 transition-all duration-200 group {{ $item === 'end-of-day' ? 'bg-cyan-50 text-cyan-600' : '' }}">
-                         <div class="p-2 bg-cyan-100 rounded-lg text-cyan-600 group-hover:bg-cyan-200 transition-colors">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                             </svg>
-                         </div>
-                         <span class="font-medium ml-3">End of Day</span>
-                     </button>
-                 </div>
-             </div>
              
-             <!-- Compliance & Security Section -->
-             <div class="mb-6">
-                 <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">Compliance & Security</h3>
-                 
-                 <div class="space-y-1">
-                     <button wire:click="$set('item', 'safe-access-log')" class="w-full flex items-center p-3 rounded-lg text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group {{ $item === 'safe-access-log' ? 'bg-red-50 text-red-600' : '' }}">
-                         <div class="p-2 bg-red-100 rounded-lg text-red-600 group-hover:bg-red-200 transition-colors">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                             </svg>
-                         </div>
-                         <span class="font-medium ml-3">Safe Access Log</span>
-                     </button>
-                 </div>
-             </div>
              
              <!-- Support Section -->
              <div class="mb-4">

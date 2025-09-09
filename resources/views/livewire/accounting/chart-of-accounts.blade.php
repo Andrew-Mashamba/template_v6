@@ -1265,7 +1265,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                                 <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
                                     <h4 class="text-sm font-medium text-blue-800 dark:text-blue-200">Current Balance</h4>
-                                    <p class="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                                    <p class="text-2xl font-bold text-blue-900 dark:text-gray-500">
                                         {{ number_format($statementBalance, 2) }}
                                     </p>
                                 </div>

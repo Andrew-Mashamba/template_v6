@@ -2,414 +2,335 @@
 
 namespace App\Jobs;
 
-use App\Models\Transaction;
-use App\Models\User;
+use App\Models\AccountsModel;
+use App\Models\ClientsModel;
+use App\Services\SmsService;
+use App\Services\EmailService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Cache;
-use Exception;
 
 class SendTransactionNotification implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 3;
-    public $timeout = 60;
-    public $maxExceptions = 3;
-
-    protected $transactionId;
-    protected $notificationType; // success, failure, suspect
-    protected $notificationData;
+    protected $accountNumber;
+    protected $transactionType;
+    protected $amount;
+    protected $balance;
+    protected $referenceNumber;
+    protected $narration;
+    protected $status;
+    protected $counterpartyName;
+    protected $errorMessage;
 
     /**
      * Create a new job instance.
+     *
+     * @param string $accountNumber
+     * @param string $transactionType (debit/credit)
+     * @param float $amount
+     * @param float $balance
+     * @param string $referenceNumber
+     * @param string $narration
+     * @param string $status (success/failed)
+     * @param string|null $counterpartyName
+     * @param string|null $errorMessage
      */
-    public function __construct($transactionId, $notificationType, $notificationData = [])
-    {
-        $this->transactionId = $transactionId;
-        $this->notificationType = $notificationType;
-        $this->notificationData = $notificationData;
-        
-        // Set queue name
-        $this->onQueue('notifications');
+    public function __construct(
+        $accountNumber,
+        $transactionType,
+        $amount,
+        $balance,
+        $referenceNumber,
+        $narration,
+        $status = 'success',
+        $counterpartyName = null,
+        $errorMessage = null
+    ) {
+        $this->accountNumber = $accountNumber;
+        $this->transactionType = $transactionType;
+        $this->amount = $amount;
+        $this->balance = $balance;
+        $this->referenceNumber = $referenceNumber;
+        $this->narration = $narration;
+        $this->status = $status;
+        $this->counterpartyName = $counterpartyName;
+        $this->errorMessage = $errorMessage;
     }
 
     /**
      * Execute the job.
+     *
+     * @return void
      */
     public function handle()
     {
-        Log::info('Processing transaction notification', [
-            'transactionId' => $this->transactionId,
-            'notificationType' => $this->notificationType,
-            'attempt' => $this->attempts()
-        ]);
-
         try {
-            $transaction = Transaction::findOrFail($this->transactionId);
-
-            switch ($this->notificationType) {
-                case 'success':
-                    $this->sendSuccessNotification($transaction);
-                    break;
-                case 'failure':
-                    $this->sendFailureNotification($transaction);
-                    break;
-                case 'suspect':
-                    $this->sendSuspectNotification($transaction);
-                    break;
-                default:
-                    throw new Exception("Unknown notification type: {$this->notificationType}");
+            // Get account details
+            $account = AccountsModel::where('account_number', $this->accountNumber)->first();
+            
+            if (!$account) {
+                Log::warning('Transaction notification: Account not found', ['account_number' => $this->accountNumber]);
+                return;
             }
 
-            // Update notification tracking
-            $this->updateNotificationTracking($transaction);
-
-        } catch (Exception $e) {
-            Log::error('Transaction notification failed', [
-                'transactionId' => $this->transactionId,
-                'notificationType' => $this->notificationType,
-                'error' => $e->getMessage(),
-                'attempt' => $this->attempts()
-            ]);
-
-            // If this is the last attempt, send admin alert
-            if ($this->attempts() >= $this->tries) {
-                $this->sendAdminAlert('Notification delivery failed', [
-                    'transactionId' => $this->transactionId,
-                    'notificationType' => $this->notificationType,
-                    'error' => $e->getMessage()
-                ]);
-            }
-
-            throw $e;
-        }
-    }
-
-    /**
-     * Send success notification
-     */
-    protected function sendSuccessNotification($transaction)
-    {
-        Log::info('Sending success notification', [
-            'transactionId' => $transaction->id,
-            'referenceNumber' => $transaction->reference
-        ]);
-
-        // Send SMS to member
-        $this->sendSmsNotification($transaction, 'success');
-
-        // Send email to member
-        $this->sendEmailNotification($transaction, 'success');
-
-        // Update transaction metadata
-        $transaction->update([
-            'metadata' => array_merge($transaction->metadata ?? [], [
-                'success_notification_sent_at' => now()->toIso8601String(),
-                'notification_attempts' => ($transaction->metadata['notification_attempts'] ?? 0) + 1
-            ])
-        ]);
-    }
-
-    /**
-     * Send failure notification
-     */
-    protected function sendFailureNotification($transaction)
-    {
-        Log::info('Sending failure notification', [
-            'transactionId' => $transaction->id,
-            'errorCode' => $transaction->error_code
-        ]);
-
-        // Send SMS to member
-        $this->sendSmsNotification($transaction, 'failure');
-
-        // Send email to member
-        $this->sendEmailNotification($transaction, 'failure');
-
-        // Send admin alert for critical failures
-        if ($this->isCriticalFailure($transaction)) {
-            $this->sendAdminAlert('Critical transaction failure', [
-                'transactionId' => $transaction->id,
-                'errorCode' => $transaction->error_code,
-                'errorMessage' => $transaction->error_message,
-                'amount' => $transaction->amount,
-                'serviceType' => $transaction->external_system
-            ]);
-        }
-
-        // Update transaction metadata
-        $transaction->update([
-            'metadata' => array_merge($transaction->metadata ?? [], [
-                'failure_notification_sent_at' => now()->toIso8601String(),
-                'notification_attempts' => ($transaction->metadata['notification_attempts'] ?? 0) + 1
-            ])
-        ]);
-    }
-
-    /**
-     * Send suspect notification
-     */
-    protected function sendSuspectNotification($transaction)
-    {
-        Log::info('Sending suspect notification', [
-            'transactionId' => $transaction->id,
-            'externalReference' => $transaction->external_reference
-        ]);
-
-        // Send SMS to member
-        $this->sendSmsNotification($transaction, 'suspect');
-
-        // Send email to member
-        $this->sendEmailNotification($transaction, 'suspect');
-
-        // Send admin alert for manual review
-        $this->sendAdminAlert('Suspect transaction requires review', [
-            'transactionId' => $transaction->id,
-            'externalReference' => $transaction->external_reference,
-            'amount' => $transaction->amount,
-            'serviceType' => $transaction->external_system,
-            'suspectReason' => $this->notificationData['suspect_reason'] ?? 'Unknown'
-        ]);
-
-        // Update transaction metadata
-        $transaction->update([
-            'metadata' => array_merge($transaction->metadata ?? [], [
-                'suspect_notification_sent_at' => now()->toIso8601String(),
-                'notification_attempts' => ($transaction->metadata['notification_attempts'] ?? 0) + 1
-            ])
-        ]);
-    }
-
-    /**
-     * Send SMS notification
-     */
-    protected function sendSmsNotification($transaction, $type)
-    {
-        try {
-            // Rate limiting for SMS
-            $rateLimitKey = "sms_rate_limit:{$transaction->metadata['member_id']}";
-            if (!$this->checkRateLimit($rateLimitKey, 5, 3600)) { // 5 SMS per hour
-                Log::warning('SMS rate limit exceeded', [
-                    'memberId' => $transaction->metadata['member_id'],
-                    'transactionId' => $transaction->id
+            // Check if this is a member account
+            if (!$this->isMemberAccount($account)) {
+                Log::info('Transaction notification: Not a member account, skipping notification', [
+                    'account_number' => $this->accountNumber,
+                    'client_number' => $account->client_number
                 ]);
                 return;
             }
 
-            $message = $this->buildSmsMessage($transaction, $type);
+            // Get member details
+            $member = ClientsModel::where('client_number', $account->client_number)->first();
             
-            // Use existing SMS service
-            $smsService = new \App\Services\SmsService();
-            $smsService->sendSms(
-                $transaction->metadata['member_phone'] ?? '',
-                $message
-            );
-
-            Log::info('SMS notification sent', [
-                'transactionId' => $transaction->id,
-                'type' => $type,
-                'phone' => $this->maskPhoneNumber($transaction->metadata['member_phone'] ?? '')
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('SMS notification failed', [
-                'transactionId' => $transaction->id,
-                'type' => $type,
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
-     * Send email notification
-     */
-    protected function sendEmailNotification($transaction, $type)
-    {
-        try {
-            $emailData = $this->buildEmailData($transaction, $type);
-            
-            // Use existing email service
-            Mail::to($transaction->metadata['member_email'] ?? '')
-                ->send(new \App\Mail\TransactionNotification($emailData));
-
-            Log::info('Email notification sent', [
-                'transactionId' => $transaction->id,
-                'type' => $type,
-                'email' => $this->maskEmail($transaction->metadata['member_email'] ?? '')
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Email notification failed', [
-                'transactionId' => $transaction->id,
-                'type' => $type,
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
-     * Send admin alert
-     */
-    protected function sendAdminAlert($subject, $data)
-    {
-        try {
-            // Get admin users
-            $adminUsers = User::where('role', 'admin')->orWhere('role', 'super_admin')->get();
-
-            foreach ($adminUsers as $admin) {
-                Mail::to($admin->email)->send(new \App\Mail\AdminAlert($subject, $data));
+            if (!$member) {
+                Log::warning('Transaction notification: Member not found', [
+                    'client_number' => $account->client_number
+                ]);
+                return;
             }
 
-            Log::info('Admin alert sent', [
-                'subject' => $subject,
-                'adminCount' => $adminUsers->count(),
-                'data' => $data
+            // Prepare notification message
+            $message = $this->prepareMessage($account, $member);
+
+            // Send SMS notification if phone number exists
+            if ($member->phone_number && $this->isValidPhoneNumber($member->phone_number)) {
+                $this->sendSmsNotification($member->phone_number, $message['sms']);
+            }
+
+            // Send Email notification if email exists
+            if ($member->email && filter_var($member->email, FILTER_VALIDATE_EMAIL)) {
+                $this->sendEmailNotification($member->email, $message['email'], $message['subject']);
+            }
+
+            Log::info('Transaction notification sent successfully', [
+                'account_number' => $this->accountNumber,
+                'client_number' => $account->client_number,
+                'reference_number' => $this->referenceNumber
             ]);
 
-        } catch (Exception $e) {
-            Log::error('Admin alert failed', [
-                'subject' => $subject,
+        } catch (\Exception $e) {
+            Log::error('Failed to send transaction notification', [
+                'account_number' => $this->accountNumber,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    }
+
+    /**
+     * Check if the account belongs to a member
+     *
+     * @param $account
+     * @return bool
+     */
+    private function isMemberAccount($account)
+    {
+        return !empty($account->client_number) && 
+               $account->client_number !== null && 
+               $account->client_number !== '0000' &&
+               $account->client_number !== '0';
+    }
+
+    /**
+     * Validate phone number format
+     *
+     * @param string $phoneNumber
+     * @return bool
+     */
+    private function isValidPhoneNumber($phoneNumber)
+    {
+        // Remove spaces and special characters
+        $phoneNumber = preg_replace('/[^0-9]/', '', $phoneNumber);
+        
+        // Check if it's a valid length (adjust based on your country)
+        return strlen($phoneNumber) >= 10 && strlen($phoneNumber) <= 15;
+    }
+
+    /**
+     * Prepare notification messages
+     *
+     * @param $account
+     * @param $member
+     * @return array
+     */
+    private function prepareMessage($account, $member)
+    {
+        $formattedAmount = number_format($this->amount, 2);
+        $formattedBalance = number_format($this->balance, 2);
+        $transactionTypeText = strtoupper($this->transactionType);
+        $memberName = $member->first_name ?? 'Member';
+
+        if ($this->status === 'success') {
+            // Success message
+            $smsMessage = "Dear {$memberName}, your A/C {$this->maskAccountNumber($this->accountNumber)} has been {$transactionTypeText}ED with {$formattedAmount}. ";
+            $smsMessage .= "Balance: {$formattedBalance}. Ref: {$this->referenceNumber}";
+            
+            if ($this->counterpartyName) {
+                $smsMessage .= " " . ($this->transactionType === 'credit' ? "From" : "To") . ": {$this->counterpartyName}";
+            }
+
+            $emailSubject = "Transaction Alert - {$transactionTypeText}";
+            
+            $emailMessage = "Dear {$memberName},<br><br>";
+            $emailMessage .= "This is to notify you that a transaction has been processed on your account.<br><br>";
+            $emailMessage .= "<strong>Transaction Details:</strong><br>";
+            $emailMessage .= "Account Number: {$this->maskAccountNumber($this->accountNumber)}<br>";
+            $emailMessage .= "Transaction Type: {$transactionTypeText}<br>";
+            $emailMessage .= "Amount: {$formattedAmount}<br>";
+            $emailMessage .= "New Balance: {$formattedBalance}<br>";
+            $emailMessage .= "Reference Number: {$this->referenceNumber}<br>";
+            $emailMessage .= "Description: {$this->narration}<br>";
+            
+            if ($this->counterpartyName) {
+                $emailMessage .= ($this->transactionType === 'credit' ? "From" : "To") . ": {$this->counterpartyName}<br>";
+            }
+            
+            $emailMessage .= "<br>Thank you for banking with us.<br><br>";
+            $emailMessage .= "This is an automated message. Please do not reply.";
+
+        } else {
+            // Failed transaction message
+            $smsMessage = "Dear {$memberName}, a {$transactionTypeText} of {$formattedAmount} on A/C {$this->maskAccountNumber($this->accountNumber)} failed. ";
+            $smsMessage .= "Reason: {$this->errorMessage}. Ref: {$this->referenceNumber}";
+
+            $emailSubject = "Transaction Failed - {$transactionTypeText}";
+            
+            $emailMessage = "Dear {$memberName},<br><br>";
+            $emailMessage .= "We regret to inform you that a transaction on your account could not be processed.<br><br>";
+            $emailMessage .= "<strong>Transaction Details:</strong><br>";
+            $emailMessage .= "Account Number: {$this->maskAccountNumber($this->accountNumber)}<br>";
+            $emailMessage .= "Transaction Type: {$transactionTypeText}<br>";
+            $emailMessage .= "Amount: {$formattedAmount}<br>";
+            $emailMessage .= "Reference Number: {$this->referenceNumber}<br>";
+            $emailMessage .= "Reason: {$this->errorMessage}<br>";
+            $emailMessage .= "<br>Please contact our support team if you need assistance.<br><br>";
+            $emailMessage .= "This is an automated message. Please do not reply.";
+        }
+
+        return [
+            'sms' => $smsMessage,
+            'email' => $emailMessage,
+            'subject' => $emailSubject
+        ];
+    }
+
+    /**
+     * Mask account number for security
+     *
+     * @param string $accountNumber
+     * @return string
+     */
+    private function maskAccountNumber($accountNumber)
+    {
+        $length = strlen($accountNumber);
+        if ($length <= 4) {
+            return $accountNumber;
+        }
+        
+        $visibleDigits = 4;
+        $maskedPart = str_repeat('*', $length - $visibleDigits);
+        $visiblePart = substr($accountNumber, -$visibleDigits);
+        
+        return $maskedPart . $visiblePart;
+    }
+
+    /**
+     * Send SMS notification
+     *
+     * @param string $phoneNumber
+     * @param string $message
+     */
+    private function sendSmsNotification($phoneNumber, $message)
+    {
+        try {
+            $smsService = new SmsService();
+            $result = $smsService->sendSms($phoneNumber, $message);
+            
+            Log::info('SMS notification sent', [
+                'phone_number' => $this->maskPhoneNumber($phoneNumber),
+                'reference_number' => $this->referenceNumber,
+                'result' => $result
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send SMS notification', [
+                'phone_number' => $this->maskPhoneNumber($phoneNumber),
                 'error' => $e->getMessage()
             ]);
         }
     }
 
     /**
-     * Check if failure is critical
+     * Send Email notification
+     *
+     * @param string $email
+     * @param string $message
+     * @param string $subject
      */
-    protected function isCriticalFailure($transaction)
+    private function sendEmailNotification($email, $message, $subject)
     {
-        $criticalErrorCodes = [
-            'EXTERNAL_SERVICE_DOWN',
-            'NETWORK_ERROR',
-            'TIMEOUT_ERROR',
-            'SERVER_ERROR_500',
-            'SERVER_ERROR_502',
-            'SERVER_ERROR_503',
-            'SERVER_ERROR_504'
-        ];
-
-        return in_array($transaction->error_code, $criticalErrorCodes);
-    }
-
-    /**
-     * Check rate limit
-     */
-    protected function checkRateLimit($key, $maxAttempts, $windowSeconds)
-    {
-        $attempts = Cache::get($key, 0);
-        
-        if ($attempts >= $maxAttempts) {
-            return false;
-        }
-
-        Cache::put($key, $attempts + 1, $windowSeconds);
-        return true;
-    }
-
-    /**
-     * Build SMS message
-     */
-    protected function buildSmsMessage($transaction, $type)
-    {
-        $amount = number_format($transaction->amount, 2);
-        $reference = $transaction->reference;
-
-        switch ($type) {
-            case 'success':
-                return "Your transaction of TZS {$amount} has been processed successfully. Ref: {$reference}";
-            case 'failure':
-                return "Your transaction of TZS {$amount} failed. Please contact support. Ref: {$reference}";
-            case 'suspect':
-                return "Your transaction of TZS {$amount} is being processed. We'll notify you shortly. Ref: {$reference}";
-            default:
-                return "Transaction update: TZS {$amount}. Ref: {$reference}";
-        }
-    }
-
-    /**
-     * Build email data
-     */
-    protected function buildEmailData($transaction, $type)
-    {
-        return [
-            'transaction' => $transaction,
-            'type' => $type,
-            'amount' => number_format($transaction->amount, 2),
-            'reference' => $transaction->reference,
-            'externalReference' => $transaction->external_reference,
-            'serviceType' => $transaction->external_system,
-            'timestamp' => $transaction->created_at,
-            'errorMessage' => $transaction->error_message ?? null
-        ];
-    }
-
-    /**
-     * Update notification tracking
-     */
-    protected function updateNotificationTracking($transaction)
-    {
-        // Track notification metrics
-        $metricsKey = "notification_metrics:{$this->notificationType}:" . date('Y-m-d');
-        $metrics = Cache::get($metricsKey, 0);
-        Cache::put($metricsKey, $metrics + 1, 86400); // 24 hours
-
-        // Check for high failure rates
-        if ($this->notificationType === 'failure') {
-            $this->checkFailureRate();
-        }
-    }
-
-    /**
-     * Check failure rate and alert if high
-     */
-    protected function checkFailureRate()
-    {
-        $today = date('Y-m-d');
-        $failureKey = "notification_metrics:failure:{$today}";
-        $successKey = "notification_metrics:success:{$today}";
-        
-        $failures = Cache::get($failureKey, 0);
-        $successes = Cache::get($successKey, 0);
-        
-        $total = $failures + $successes;
-        
-        if ($total > 10 && $failures / $total > 0.3) { // 30% failure rate
-            $this->sendAdminAlert('High transaction failure rate detected', [
-                'failureRate' => round(($failures / $total) * 100, 2) . '%',
-                'totalTransactions' => $total,
-                'failedTransactions' => $failures,
-                'date' => $today
+        try {
+            $emailService = new EmailService();
+            
+            // Prepare email data in the format EmailService expects
+            $emailData = [
+                'to' => $email,
+                'subject' => $subject,
+                'body' => $message,
+                'from_name' => config('app.name', 'SACCOS System'),
+                'immediate' => true, // Send immediately without undo
+            ];
+            
+            $result = $emailService->sendEmail($emailData, false); // false = disable undo
+            
+            Log::info('Email notification sent', [
+                'email' => $this->maskEmail($email),
+                'reference_number' => $this->referenceNumber,
+                'result' => $result
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send email notification', [
+                'email' => $this->maskEmail($email),
+                'error' => $e->getMessage()
             ]);
         }
     }
 
     /**
-     * Mask phone number for logging
+     * Mask phone number for logs
+     *
+     * @param string $phoneNumber
+     * @return string
      */
-    protected function maskPhoneNumber($phone)
+    private function maskPhoneNumber($phoneNumber)
     {
-        if (strlen($phone) <= 4) {
-            return str_repeat('*', strlen($phone));
+        $length = strlen($phoneNumber);
+        if ($length <= 4) {
+            return $phoneNumber;
         }
-        return substr($phone, 0, 2) . str_repeat('*', strlen($phone) - 4) . substr($phone, -2);
+        
+        $visibleDigits = 4;
+        $maskedPart = str_repeat('*', $length - $visibleDigits);
+        $visiblePart = substr($phoneNumber, -$visibleDigits);
+        
+        return $maskedPart . $visiblePart;
     }
 
     /**
-     * Mask email for logging
+     * Mask email for logs
+     *
+     * @param string $email
+     * @return string
      */
-    protected function maskEmail($email)
+    private function maskEmail($email)
     {
-        if (empty($email)) {
-            return '';
-        }
-        
         $parts = explode('@', $email);
         if (count($parts) !== 2) {
             return $email;
@@ -418,31 +339,8 @@ class SendTransactionNotification implements ShouldQueue
         $username = $parts[0];
         $domain = $parts[1];
         
-        if (strlen($username) <= 2) {
-            $maskedUsername = $username;
-        } else {
-            $maskedUsername = substr($username, 0, 1) . str_repeat('*', strlen($username) - 2) . substr($username, -1);
-        }
+        $maskedUsername = substr($username, 0, 2) . str_repeat('*', max(0, strlen($username) - 2));
         
         return $maskedUsername . '@' . $domain;
     }
-
-    /**
-     * Handle job failure
-     */
-    public function failed(Exception $exception)
-    {
-        Log::error('Transaction notification job failed permanently', [
-            'transactionId' => $this->transactionId,
-            'notificationType' => $this->notificationType,
-            'error' => $exception->getMessage()
-        ]);
-
-        // Send admin alert for permanent notification failure
-        $this->sendAdminAlert('Notification delivery permanently failed', [
-            'transactionId' => $this->transactionId,
-            'notificationType' => $this->notificationType,
-            'error' => $exception->getMessage()
-        ]);
-    }
-} 
+}

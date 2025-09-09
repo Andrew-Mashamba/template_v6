@@ -3,7 +3,7 @@
     <!-- Title Section -->
     <div class="text-center">
         <h2 class="text-lg font-bold uppercase">NBC SACCOS LTD</h2>
-        <h3 class="text-base font-semibold uppercase">TAARIFA YA MAPATO NA MATUMIZI KWA KIPINDI KINACHOISHIA
+        <h3 class="text-base font-semibold uppercase">TAARIFA YA MAPATO NA MATUMIZI KWA KIPINDI KINACHOISHIA y
             {{date('Y-m-d')}}</h3>
     </div>
 

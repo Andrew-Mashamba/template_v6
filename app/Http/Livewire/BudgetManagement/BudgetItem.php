@@ -24,6 +24,26 @@ class BudgetItem extends Component
     public $budget_name;
     public $expense_account_id;
 
+    // Modal properties
+    public $viewModal = false;
+    public $editRequestModal = false;
+    public $deleteRequestModal = false;
+    public $selectedItemId = null;
+    public $selectedItem = null;
+
+    // Edit request properties
+    public $edit_budget_name;
+    public $edit_annual_budget;
+    public $edit_monthly_allocation;
+    public $edit_start_date;
+    public $edit_end_date;
+    public $edit_notes;
+    public $edit_expense_account_id;
+    public $edit_justification;
+
+    // Delete request properties
+    public $delete_justification;
+
     // Table properties
     public $search = '';
     public $statusFilter = '';
@@ -31,15 +51,6 @@ class BudgetItem extends Component
     public $sortDirection = 'desc';
     public $perPage = 10;
 
-    // Validation rules
-    protected $rules = [
-        'budget_name' => 'required|string|max:40',
-        'annual_budget' => 'required|numeric|min:0',
-        'start_date' => 'required|date',
-        'end_date' => 'required|date|after:start_date',
-        'notes' => 'nullable|string|max:1000',
-        'expense_account_id' => 'required|exists:accounts,id',
-    ];
 
     protected $messages = [
         'budget_name.required' => 'Budget name is required.',
@@ -48,8 +59,10 @@ class BudgetItem extends Component
         'annual_budget.numeric' => 'Annual budget must be a valid number.',
         'annual_budget.min' => 'Annual budget cannot be negative.',
         'start_date.required' => 'Budget start date is required.',
+        'start_date.first_day_of_month' => 'Start date must be the first day of the month.',
         'end_date.required' => 'Budget end date is required.',
         'end_date.after' => 'End date must be after start date.',
+        'end_date.last_day_of_month' => 'End date must be the last day of the month.',
         'expense_account_id.required' => 'Please select an expense account.',
         'expense_account_id.exists' => 'Please select a valid expense account.',
     ];
@@ -57,6 +70,31 @@ class BudgetItem extends Component
     public function mount()
     {
         $this->resetPage();
+    }
+
+    // Custom validation rules
+    protected function rules()
+    {
+        return [
+            'budget_name' => 'required|string|max:40',
+            'annual_budget' => 'required|numeric|min:0',
+            'start_date' => ['required', 'date', function ($attribute, $value, $fail) {
+                if ($value && \Carbon\Carbon::parse($value)->day !== 1) {
+                    $fail('Start date must be the first day of the month.');
+                }
+            }],
+            'end_date' => ['required', 'date', 'after:start_date', function ($attribute, $value, $fail) {
+                if ($value) {
+                    $endDate = \Carbon\Carbon::parse($value);
+                    $lastDayOfMonth = $endDate->copy()->endOfMonth();
+                    if (!$endDate->isSameDay($lastDayOfMonth)) {
+                        $fail('End date must be the last day of the month.');
+                    }
+                }
+            }],
+            'notes' => 'nullable|string|max:1000',
+            'expense_account_id' => 'required|exists:accounts,id',
+        ];
     }
 
     public function menuItemClick()
@@ -110,7 +148,7 @@ class BudgetItem extends Component
                 'account_number' => $expenseAccount->account_number ?? 'Unknown'
             ]);
 
-            // Create the budget item
+            // Create the budget item with DRAFT status initially
             $budgetData = [
                 'revenue' => $this->annual_budget ?? 0,
                 'capital_expenditure' => $this->monthly_allocation ?? 0,
@@ -119,7 +157,7 @@ class BudgetItem extends Component
                 'end_date' => $this->end_date,
                 'approval_status' => "PENDING",
                 'notes' => $this->notes,
-                'status' => "PENDING",
+                'status' => "DRAFT", // Start as DRAFT until approved
                 'expense_account_id' => $this->expense_account_id,
             ];
 
@@ -143,12 +181,40 @@ class BudgetItem extends Component
             try {
                 $approval = new approvals();
                 $approvalMessage = auth()->user()->name . ' has created new budget: ' . $this->budget_name;
-                $approval->sendApproval($id, 'BUDGET_CREATE', $approvalMessage, 'has created new budget', '102', '');
+                
+                // Prepare edit package with budget details for approval review
+                $editPackage = json_encode([
+                    'budget_id' => $id,
+                    'budget_name' => $this->budget_name,
+                    'annual_budget' => $this->annual_budget,
+                    'monthly_allocation' => $this->monthly_allocation,
+                    'start_date' => $this->start_date,
+                    'end_date' => $this->end_date,
+                    'expense_account_id' => $this->expense_account_id,
+                    'expense_account_name' => $expenseAccount->account_name ?? '',
+                    'notes' => $this->notes
+                ]);
+                
+                $approval->sendApproval($id, 'BUDGET_CREATE', $approvalMessage, 'has created new budget', 'BUDGET_CREATE', $editPackage);
+                
+                // Get the approval request ID and link it to the budget item
+                $approvalRequest = approvals::where('process_id', $id)
+                    ->where('process_code', 'BUDGET_CREATE')
+                    ->latest()
+                    ->first();
+                
+                if ($approvalRequest) {
+                    $budgetItem->update([
+                        'approval_request_id' => $approvalRequest->id,
+                        'approval_status' => 'PENDING'
+                    ]);
+                }
                 
                 Log::channel('budget_management')->info('Approval request created successfully', [
                     'budget_id' => $id,
                     'approval_type' => 'BUDGET_CREATE',
                     'approval_message' => $approvalMessage,
+                    'approval_request_id' => $approvalRequest->id ?? null,
                     'user_id' => auth()->id()
                 ]);
             } catch (\Exception $approvalException) {
@@ -230,8 +296,9 @@ class BudgetItem extends Component
 
         $this->annual_budget = null;
         $this->monthly_allocation = null;
-        $this->start_date = null;
-        $this->end_date = null;
+        // Set default dates to current month's first and last day
+        $this->start_date = now()->startOfMonth()->format('Y-m-d');
+        $this->end_date = now()->endOfMonth()->format('Y-m-d');
         $this->notes = null;
         $this->budget_name = null;
         $this->expense_account_id = null;
@@ -337,162 +404,333 @@ class BudgetItem extends Component
         session()->flash('message', 'Export functionality will be implemented soon.');
     }
 
-    // CRUD methods
+    // View methods
     public function viewItem($id)
     {
-        $this->emit('viewBudgetItem', $id);
+        try {
+            $this->selectedItem = BudgetManagement::with('expenseAccount')->findOrFail($id);
+            $this->selectedItemId = $id;
+            $this->viewModal = true;
+            
+            Log::channel('budget_management')->info('Viewing budget item', [
+                'budget_id' => $id,
+                'budget_name' => $this->selectedItem->budget_name,
+                'user_id' => auth()->id()
+            ]);
+        } catch (\Exception $e) {
+            Log::channel('budget_management')->error('Failed to view budget item', [
+                'budget_id' => $id,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+            session()->flash('error', 'Failed to load budget item details.');
+        }
     }
 
-    public function editItem($id)
+    public function closeViewModal()
     {
-        $this->emit('editBudgetItem', $id);
+        $this->viewModal = false;
+        $this->selectedItem = null;
+        $this->selectedItemId = null;
     }
 
-    public function approveItem($id)
+    // Edit Request methods
+    public function requestEdit($id)
     {
-        Log::channel('budget_management')->info('Budget item approval started', [
-            'budget_id' => $id,
-            'user_id' => auth()->id(),
-            'user_name' => auth()->user()->name,
-            'timestamp' => now()
+        try {
+            $item = BudgetManagement::findOrFail($id);
+            
+            // Check if item is locked or has pending approval
+            if ($item->is_locked) {
+                session()->flash('error', 'This budget item is currently locked. Reason: ' . $item->locked_reason);
+                return;
+            }
+            
+            if ($item->edit_approval_status === 'PENDING') {
+                session()->flash('error', 'This budget item already has a pending edit request.');
+                return;
+            }
+            
+            // Populate edit form fields
+            $this->selectedItemId = $id;
+            $this->edit_budget_name = $item->budget_name;
+            $this->edit_annual_budget = $item->revenue;
+            $this->edit_monthly_allocation = $item->capital_expenditure;
+            $this->edit_start_date = $item->start_date;
+            $this->edit_end_date = $item->end_date;
+            $this->edit_notes = $item->notes;
+            $this->edit_expense_account_id = $item->expense_account_id;
+            $this->edit_justification = '';
+            
+            $this->editRequestModal = true;
+            
+            Log::channel('budget_management')->info('Opening edit request modal', [
+                'budget_id' => $id,
+                'budget_name' => $item->budget_name,
+                'user_id' => auth()->id()
+            ]);
+        } catch (\Exception $e) {
+            Log::channel('budget_management')->error('Failed to open edit request', [
+                'budget_id' => $id,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+            session()->flash('error', 'Failed to load budget item for editing.');
+        }
+    }
+
+    public function submitEditRequest()
+    {
+        // Validate edit form
+        $this->validate([
+            'edit_budget_name' => 'required|string|max:40',
+            'edit_annual_budget' => 'required|numeric|min:0',
+            'edit_start_date' => ['required', 'date', function ($attribute, $value, $fail) {
+                if ($value && \Carbon\Carbon::parse($value)->day !== 1) {
+                    $fail('Start date must be the first day of the month.');
+                }
+            }],
+            'edit_end_date' => ['required', 'date', 'after:edit_start_date', function ($attribute, $value, $fail) {
+                if ($value) {
+                    $endDate = \Carbon\Carbon::parse($value);
+                    $lastDayOfMonth = $endDate->copy()->endOfMonth();
+                    if (!$endDate->isSameDay($lastDayOfMonth)) {
+                        $fail('End date must be the last day of the month.');
+                    }
+                }
+            }],
+            'edit_notes' => 'nullable|string|max:1000',
+            'edit_expense_account_id' => 'required|exists:accounts,id',
+            'edit_justification' => 'required|string|min:10|max:500'
         ]);
 
         try {
-            $budget = BudgetManagement::findOrFail($id);
+            $budget = BudgetManagement::findOrFail($this->selectedItemId);
             
-            Log::channel('budget_management')->info('Budget item found for approval', [
-                'budget_id' => $id,
-                'budget_name' => $budget->budget_name,
-                'current_status' => $budget->status,
-                'current_approval_status' => $budget->approval_status,
-                'user_id' => auth()->id()
-            ]);
-
+            // Prepare the changes data
+            $pendingChanges = [
+                'budget_name' => $this->edit_budget_name,
+                'revenue' => $this->edit_annual_budget,
+                'capital_expenditure' => $this->edit_monthly_allocation,
+                'start_date' => $this->edit_start_date,
+                'end_date' => $this->edit_end_date,
+                'notes' => $this->edit_notes,
+                'expense_account_id' => $this->edit_expense_account_id,
+                'justification' => $this->edit_justification,
+                'requested_by' => auth()->id(),
+                'requested_at' => now()
+            ];
+            
+            // Store pending changes and lock the item
             $budget->update([
-                'approval_status' => 'APPROVED',
-                'status' => 'ACTIVE'
+                'pending_changes' => $pendingChanges,
+                'edit_approval_status' => 'PENDING',
+                'is_locked' => true,
+                'locked_reason' => 'Edit request pending approval',
+                'locked_at' => now(),
+                'locked_by' => auth()->id()
             ]);
             
-            Log::channel('budget_management')->info('Budget item approved successfully', [
-                'budget_id' => $id,
+            // Create approval request
+            $approval = new approvals();
+            $approvalMessage = auth()->user()->name . ' has requested to edit budget: ' . $budget->budget_name;
+            
+            // Prepare edit package with both old and new values for comparison
+            $editPackage = json_encode([
+                'budget_id' => $this->selectedItemId,
+                'operation' => 'EDIT',
+                'old_values' => [
+                    'budget_name' => $budget->budget_name,
+                    'revenue' => $budget->revenue,
+                    'capital_expenditure' => $budget->capital_expenditure,
+                    'start_date' => $budget->start_date,
+                    'end_date' => $budget->end_date,
+                    'notes' => $budget->notes,
+                    'expense_account_id' => $budget->expense_account_id
+                ],
+                'new_values' => $pendingChanges,
+                'justification' => $this->edit_justification
+            ]);
+            
+            $approval->sendApproval($this->selectedItemId, 'BUDGET_EDIT', $approvalMessage, 'has requested budget edit', 'BUDGET_EDIT', $editPackage);
+            
+            // Get the approval request ID and link it
+            $approvalRequest = approvals::where('process_id', $this->selectedItemId)
+                ->where('process_code', 'BUDGET_EDIT')
+                ->latest()
+                ->first();
+            
+            if ($approvalRequest) {
+                $budget->update(['approval_request_id' => $approvalRequest->id]);
+            }
+            
+            Log::channel('budget_management')->info('Budget edit request submitted', [
+                'budget_id' => $this->selectedItemId,
                 'budget_name' => $budget->budget_name,
-                'approved_by' => auth()->id(),
-                'approved_by_name' => auth()->user()->name,
-                'timestamp' => now()
+                'approval_request_id' => $approvalRequest->id ?? null,
+                'user_id' => auth()->id()
             ]);
             
-            session()->flash('message', 'Budget item approved successfully.');
+            session()->flash('message', 'Edit request submitted successfully and sent for approval.');
+            $this->closeEditRequestModal();
+            $this->resetPage();
+            
         } catch (\Exception $e) {
-            Log::channel('budget_management')->error('Budget item approval failed', [
-                'budget_id' => $id,
-                'user_id' => auth()->id(),
-                'error_message' => $e->getMessage(),
-                'error_code' => $e->getCode(),
-                'error_file' => $e->getFile(),
-                'error_line' => $e->getLine(),
-                'error_trace' => $e->getTraceAsString()
+            Log::channel('budget_management')->error('Failed to submit edit request', [
+                'budget_id' => $this->selectedItemId,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
             ]);
-            
-            session()->flash('error', 'Failed to approve budget item: ' . $e->getMessage());
+            session()->flash('error', 'Failed to submit edit request: ' . $e->getMessage());
         }
     }
 
-    public function rejectItem($id)
+    public function closeEditRequestModal()
     {
-        Log::channel('budget_management')->info('Budget item rejection started', [
-            'budget_id' => $id,
-            'user_id' => auth()->id(),
-            'user_name' => auth()->user()->name,
-            'timestamp' => now()
-        ]);
+        $this->editRequestModal = false;
+        $this->selectedItemId = null;
+        $this->resetEditForm();
+    }
 
+    public function resetEditForm()
+    {
+        $this->edit_budget_name = null;
+        $this->edit_annual_budget = null;
+        $this->edit_monthly_allocation = null;
+        // Set default dates to current month's first and last day
+        $this->edit_start_date = now()->startOfMonth()->format('Y-m-d');
+        $this->edit_end_date = now()->endOfMonth()->format('Y-m-d');
+        $this->edit_notes = null;
+        $this->edit_expense_account_id = null;
+        $this->edit_justification = null;
+    }
+
+    public function updatedEditAnnualBudget()
+    {
+        if ($this->edit_annual_budget && is_numeric($this->edit_annual_budget)) {
+            $this->edit_monthly_allocation = round($this->edit_annual_budget / 12, 2);
+        } else {
+            $this->edit_monthly_allocation = null;
+        }
+    }
+
+    // Delete Request methods
+    public function requestDelete($id)
+    {
         try {
-            $budget = BudgetManagement::findOrFail($id);
+            $item = BudgetManagement::findOrFail($id);
             
-            Log::channel('budget_management')->info('Budget item found for rejection', [
+            // Check if item is locked or has pending approval
+            if ($item->is_locked) {
+                session()->flash('error', 'This budget item is currently locked. Reason: ' . $item->locked_reason);
+                return;
+            }
+            
+            $this->selectedItem = $item;
+            $this->selectedItemId = $id;
+            $this->delete_justification = '';
+            $this->deleteRequestModal = true;
+            
+            Log::channel('budget_management')->info('Opening delete request modal', [
                 'budget_id' => $id,
-                'budget_name' => $budget->budget_name,
-                'current_status' => $budget->status,
-                'current_approval_status' => $budget->approval_status,
+                'budget_name' => $item->budget_name,
                 'user_id' => auth()->id()
             ]);
+        } catch (\Exception $e) {
+            Log::channel('budget_management')->error('Failed to open delete request', [
+                'budget_id' => $id,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+            session()->flash('error', 'Failed to load budget item for deletion.');
+        }
+    }
 
+    public function submitDeleteRequest()
+    {
+        $this->validate([
+            'delete_justification' => 'required|string|min:10|max:500'
+        ]);
+
+        if (!$this->selectedItemId) {
+            session()->flash('error', 'No budget item selected for deletion.');
+            return;
+        }
+
+        try {
+            $budget = BudgetManagement::findOrFail($this->selectedItemId);
+            $budgetName = $budget->budget_name;
+            
+            // Lock the item for deletion
             $budget->update([
-                'approval_status' => 'REJECTED',
-                'status' => 'INACTIVE'
+                'is_locked' => true,
+                'locked_reason' => 'Delete request pending approval',
+                'locked_at' => now(),
+                'locked_by' => auth()->id(),
+                'edit_approval_status' => 'PENDING_DELETE'
             ]);
             
-            Log::channel('budget_management')->info('Budget item rejected successfully', [
-                'budget_id' => $id,
-                'budget_name' => $budget->budget_name,
-                'rejected_by' => auth()->id(),
-                'rejected_by_name' => auth()->user()->name,
-                'timestamp' => now()
+            // Create approval request
+            $approval = new approvals();
+            $approvalMessage = auth()->user()->name . ' has requested to delete budget: ' . $budgetName;
+            
+            // Prepare edit package with delete details
+            $editPackage = json_encode([
+                'budget_id' => $this->selectedItemId,
+                'operation' => 'DELETE',
+                'budget_details' => [
+                    'budget_name' => $budget->budget_name,
+                    'revenue' => $budget->revenue,
+                    'capital_expenditure' => $budget->capital_expenditure,
+                    'start_date' => $budget->start_date,
+                    'end_date' => $budget->end_date,
+                    'expense_account_id' => $budget->expense_account_id
+                ],
+                'justification' => $this->delete_justification,
+                'requested_by' => auth()->id(),
+                'requested_at' => now()
             ]);
             
-            session()->flash('message', 'Budget item rejected successfully.');
+            $approval->sendApproval($this->selectedItemId, 'BUDGET_DELETE', $approvalMessage, 'has requested budget deletion', 'BUDGET_DELETE', $editPackage);
+            
+            // Get the approval request ID and link it
+            $approvalRequest = approvals::where('process_id', $this->selectedItemId)
+                ->where('process_code', 'BUDGET_DELETE')
+                ->latest()
+                ->first();
+            
+            if ($approvalRequest) {
+                $budget->update(['approval_request_id' => $approvalRequest->id]);
+            }
+            
+            Log::channel('budget_management')->info('Budget delete request submitted', [
+                'budget_id' => $this->selectedItemId,
+                'budget_name' => $budgetName,
+                'approval_request_id' => $approvalRequest->id ?? null,
+                'justification' => $this->delete_justification,
+                'user_id' => auth()->id()
+            ]);
+            
+            session()->flash('message', 'Delete request for "' . $budgetName . '" submitted successfully and sent for approval.');
+            $this->closeDeleteRequestModal();
+            $this->resetPage();
+            
         } catch (\Exception $e) {
-            Log::channel('budget_management')->error('Budget item rejection failed', [
-                'budget_id' => $id,
-                'user_id' => auth()->id(),
-                'error_message' => $e->getMessage(),
-                'error_code' => $e->getCode(),
-                'error_file' => $e->getFile(),
-                'error_line' => $e->getLine(),
-                'error_trace' => $e->getTraceAsString()
+            Log::channel('budget_management')->error('Failed to submit delete request', [
+                'budget_id' => $this->selectedItemId,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
             ]);
-            
-            session()->flash('error', 'Failed to reject budget item: ' . $e->getMessage());
+            session()->flash('error', 'Failed to submit delete request: ' . $e->getMessage());
         }
     }
 
-    public function deleteItem($id)
+    public function closeDeleteRequestModal()
     {
-        Log::channel('budget_management')->info('Budget item deletion started', [
-            'budget_id' => $id,
-            'user_id' => auth()->id(),
-            'user_name' => auth()->user()->name,
-            'timestamp' => now()
-        ]);
-
-        try {
-            $budget = BudgetManagement::findOrFail($id);
-            
-            Log::channel('budget_management')->info('Budget item found for deletion', [
-                'budget_id' => $id,
-                'budget_name' => $budget->budget_name,
-                'budget_status' => $budget->status,
-                'budget_approval_status' => $budget->approval_status,
-                'annual_budget' => $budget->revenue,
-                'monthly_allocation' => $budget->capital_expenditure,
-                'expense_account_id' => $budget->expense_account_id,
-                'user_id' => auth()->id()
-            ]);
-
-            $budget->delete();
-            
-            Log::channel('budget_management')->info('Budget item deleted successfully', [
-                'budget_id' => $id,
-                'budget_name' => $budget->budget_name,
-                'deleted_by' => auth()->id(),
-                'deleted_by_name' => auth()->user()->name,
-                'timestamp' => now()
-            ]);
-            
-            session()->flash('message', 'Budget item deleted successfully.');
-        } catch (\Exception $e) {
-            Log::channel('budget_management')->error('Budget item deletion failed', [
-                'budget_id' => $id,
-                'user_id' => auth()->id(),
-                'error_message' => $e->getMessage(),
-                'error_code' => $e->getCode(),
-                'error_file' => $e->getFile(),
-                'error_line' => $e->getLine(),
-                'error_trace' => $e->getTraceAsString()
-            ]);
-            
-            session()->flash('error', 'Failed to delete budget item: ' . $e->getMessage());
-        }
+        $this->deleteRequestModal = false;
+        $this->selectedItem = null;
+        $this->selectedItemId = null;
+        $this->delete_justification = '';
     }
 
     public function render()

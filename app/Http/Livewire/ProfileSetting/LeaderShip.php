@@ -32,6 +32,10 @@ class LeaderShip extends Component
     public $sidebarSearch = '';
     public $selectedCommitteeId = null;
     public $selectedMeetingId = null;
+    public $showNewCommitteeModal = false;
+    public $showNewLeaderModal = false;
+    public $showScheduleMeetingModal = false;
+    public $searchTerm = '';
 
 
 
@@ -57,9 +61,37 @@ class LeaderShip extends Component
     public function newLeaderModal(){
         if($this->register_new_saccos_leader==false){
             $this->register_new_saccos_leader=true;
-
-
         }
+    }
+
+    public function openNewLeaderModal(){
+        $this->showNewLeaderModal = true;
+        $this->register_new_saccos_leader = true;
+    }
+
+    public function openNewCommitteeModal(){
+        $this->showNewCommitteeModal = true;
+    }
+
+    public function openScheduleMeetingModal(){
+        $this->showScheduleMeetingModal = true;
+    }
+
+    public function closeModals(){
+        $this->showNewCommitteeModal = false;
+        $this->showNewLeaderModal = false;
+        $this->showScheduleMeetingModal = false;
+        $this->register_new_saccos_leader = false;
+    }
+
+    public function exportData(){
+        // Export functionality
+        session()->flash('message', 'Export functionality will be implemented soon.');
+    }
+
+    public function refreshData(){
+        $this->emit('refreshComponent');
+        session()->flash('message', 'Data refreshed successfully.');
     }
 
 
