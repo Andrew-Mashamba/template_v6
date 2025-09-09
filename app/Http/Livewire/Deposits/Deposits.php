@@ -1093,7 +1093,7 @@ class Deposits extends Component
             'reference_number' => $this->referenceNumber,
             'bank_name' => $this->selectedBankDetails->bank_name ?? 'Cash',
             'processed_by' => auth()->user()->name,
-            'branch' => auth()->user()->branch ?? 'Main Branch',
+            'branch' => auth()->user()->branch_id ?? 1,
             'currency' => 'TZS',
             'transaction_type' => 'Deposits Deposit',
             'balance_after' => number_format($memberAccount->balance + $this->amount, 2)
@@ -1118,7 +1118,7 @@ class Deposits extends Component
             'reference_number' => $this->referenceNumber,
             'bank_name' => $this->selectedBankDetails->bank_name ?? 'Cash',
             'processed_by' => auth()->id(),
-            'branch' => auth()->user()->branch ?? 'Main Branch',
+            'branch' => auth()->user()->branch_id ?? 1,
             'transaction_type' => 'Deposits Deposit',
             'status' => 'GENERATED',
             'generated_at' => now(),

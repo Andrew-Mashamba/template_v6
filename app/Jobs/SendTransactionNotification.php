@@ -252,7 +252,7 @@ class SendTransactionNotification implements ShouldQueue
     {
         try {
             $smsService = new SmsService();
-            $result = $smsService->sendSms($phoneNumber, $message);
+            $result = $smsService->send($phoneNumber, $message);
             
             Log::info('SMS notification sent', [
                 'phone_number' => $this->maskPhoneNumber($phoneNumber),

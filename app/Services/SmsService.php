@@ -308,7 +308,26 @@ class SmsService
 
     protected function isValidPhoneNumber($phoneNumber)
     {
-        return preg_match('/^\+?[1-9]\d{1,14}$/', $phoneNumber);
+        // Remove any non-digit characters except +
+        $cleaned = preg_replace('/[^0-9+]/', '', $phoneNumber);
+        
+        // Check if it's a valid Tanzanian number (local or international format)
+        // Local: 0XXXXXXXXX (10 digits starting with 0)
+        // International: 255XXXXXXXXX or +255XXXXXXXXX
+        if (preg_match('/^0[1-9]\d{8}$/', $cleaned)) {
+            return true; // Local format (e.g., 0628286302)
+        }
+        
+        if (preg_match('/^\+?255[1-9]\d{8}$/', $cleaned)) {
+            return true; // International format (e.g., 255628286302 or +255628286302)
+        }
+        
+        // Also accept other international formats
+        if (preg_match('/^\+?[1-9]\d{9,14}$/', $cleaned)) {
+            return true; // Other international numbers
+        }
+        
+        return false;
     }
 
     protected function formatPhoneNumber($phoneNumber)
@@ -316,10 +335,15 @@ class SmsService
         // Remove any non-digit characters
         $number = preg_replace('/[^0-9]/', '', $phoneNumber);
         
-        // Ensure number starts with country code 255
-        if (!str_starts_with($number, '255')) {
+        // Convert local Tanzanian numbers to international format
+        if (str_starts_with($number, '0')) {
+            // Local format (0XXXXXXXXX) - convert to international (255XXXXXXXXX)
+            $number = '255' . ltrim($number, '0');
+        } elseif (!str_starts_with($number, '255')) {
+            // If it doesn't start with 255, assume it needs the country code
             $number = '255' . ltrim($number, '0');
         }
+        // If already starts with 255, keep as is
         
         return $number; // Return without + for NBC API
     }
