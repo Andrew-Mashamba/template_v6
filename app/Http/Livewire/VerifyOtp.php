@@ -131,7 +131,7 @@ class VerifyOtp extends Component
 
                 $this->successMessage = $result['message'];
                 $this->errorMessage = '';
-                $this->redirect('/system');
+                $this->redirect(route('system'));
             } else {
                 $this->logger->warning('OTP validation failed', [
                     'user_id' => $user->id,
