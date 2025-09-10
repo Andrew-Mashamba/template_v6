@@ -217,8 +217,34 @@
     <div class="mt-6">
         <div class="bg-white shadow rounded-lg">
             <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Portfolio at Risk Details</h3>
-                <p class="text-sm text-gray-500">Detailed view of loans in the selected risk category</p>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Portfolio at Risk Details</h3>
+                        <p class="text-sm text-gray-500">Detailed view of loans in the selected risk category</p>
+                    </div>
+                    <div class="flex space-x-2">
+                    <button wire:click="exportToExcel" 
+                                wire:loading.attr="disabled"
+                                wire:target="exportToExcel"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span wire:loading.remove wire:target="exportToExcel">Export Excel</span>
+                            <span wire:loading wire:target="exportToExcel">Exporting Excel...</span>
+                        </button>
+                        <button wire:click="exportToPdf" 
+                                wire:loading.attr="disabled"
+                                wire:target="exportToPdf"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span wire:loading.remove wire:target="exportToPdf">Export PDF</span>
+                            <span wire:loading wire:target="exportToPdf">Exporting PDF...</span>
+                        </button>
+                    </div>
+                </div>
             </div>
             
             <div class="overflow-x-auto">
