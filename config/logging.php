@@ -83,6 +83,19 @@ return [
             ],
         ],
 
+        'reseller_api' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/reseller-api/reseller-api.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 0,
+            'replace_placeholders' => true,
+            'permission' => 0664,
+            'formatter' => env('LOG_STDERR_FORMATTER'),
+            'formatter_with' => [
+                'dateFormat' => 'Y-m-d H:i:s',
+            ],
+        ],
+
         'stack' => [
             'driver' => 'stack',
             'channels' => ['daily', 'luku'],
