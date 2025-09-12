@@ -7,10 +7,14 @@ use App\Models\LoansModel;
 use App\Models\ClientsModel;
 use App\Models\Employee;
 use App\Models\BranchesModel;
+use App\Exports\LoansToInsidersReportExport;
+use App\Exports\LoansToInsidersReportPdfExport;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Exception;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class LoansToInsidersReport extends Component
 {
@@ -24,6 +28,10 @@ class LoansToInsidersReport extends Component
     public $relatedPartyLoans = [];
     public $complianceStatus = '';
     public $maximumInsiderLoanLimit = 1000000; // 1M TZS limit example
+    
+    // Export loading states
+    public $isExportingPdf = false;
+    public $isExportingExcel = false;
 
     public function mount()
     {
@@ -146,7 +154,7 @@ class LoansToInsidersReport extends Component
                     ->orWhere('relationship_type', '!=', null);
             })->get();
 
-            if ($relatedPartyLoans->count() > 0) {
+            // if ($relatedPartyLoans->count() > 0) {
                 $this->relatedPartyLoans = $relatedPartyLoans->map(function($loan) {
                     $client = ClientsModel::where('client_number', $loan->client_number)->first();
                     
@@ -167,43 +175,43 @@ class LoansToInsidersReport extends Component
                         'guarantor_count' => $this->getGuarantorCount($loan->id)
                     ];
                 })->toArray();
-            } else {
-                // Sample data for demonstration
-                $this->relatedPartyLoans = [
-                    [
-                        'loan_id' => 'LOAN-003',
-                        'client_number' => 'REL001',
-                        'client_name' => 'Board Member Smith',
-                        'relationship_type' => 'Board Member',
-                        'loan_amount' => 750000,
-                        'outstanding_balance' => 700000,
-                        'interest_rate' => 8.5,
-                        'disbursement_date' => '2024-01-10',
-                        'maturity_date' => '2024-12-10',
-                        'loan_status' => 'ACTIVE',
-                        'days_in_arrears' => 0,
-                        'approval_status' => 'Approved',
-                        'collateral_value' => 800000,
-                        'guarantor_count' => 3
-                    ],
-                    [
-                        'loan_id' => 'LOAN-004',
-                        'client_number' => 'REL002',
-                        'client_name' => 'Family Member Johnson',
-                        'relationship_type' => 'Family Member',
-                        'loan_amount' => 200000,
-                        'outstanding_balance' => 150000,
-                        'interest_rate' => 9.0,
-                        'disbursement_date' => '2024-02-15',
-                        'maturity_date' => '2024-11-15',
-                        'loan_status' => 'ACTIVE',
-                        'days_in_arrears' => 10,
-                        'approval_status' => 'Approved',
-                        'collateral_value' => 250000,
-                        'guarantor_count' => 1
-                    ]
-                ];
-            }
+            // } else {
+            //     // Sample data for demonstration
+            //     $this->relatedPartyLoans = [
+            //         [
+            //             'loan_id' => 'LOAN-003',
+            //             'client_number' => 'REL001',
+            //             'client_name' => 'Board Member Smith',
+            //             'relationship_type' => 'Board Member',
+            //             'loan_amount' => 750000,
+            //             'outstanding_balance' => 700000,
+            //             'interest_rate' => 8.5,
+            //             'disbursement_date' => '2024-01-10',
+            //             'maturity_date' => '2024-12-10',
+            //             'loan_status' => 'ACTIVE',
+            //             'days_in_arrears' => 0,
+            //             'approval_status' => 'Approved',
+            //             'collateral_value' => 800000,
+            //             'guarantor_count' => 3
+            //         ],
+            //         [
+            //             'loan_id' => 'LOAN-004',
+            //             'client_number' => 'REL002',
+            //             'client_name' => 'Family Member Johnson',
+            //             'relationship_type' => 'Family Member',
+            //             'loan_amount' => 200000,
+            //             'outstanding_balance' => 150000,
+            //             'interest_rate' => 9.0,
+            //             'disbursement_date' => '2024-02-15',
+            //             'maturity_date' => '2024-11-15',
+            //             'loan_status' => 'ACTIVE',
+            //             'days_in_arrears' => 10,
+            //             'approval_status' => 'Approved',
+            //             'collateral_value' => 250000,
+            //             'guarantor_count' => 1
+            //         ]
+            //     ];
+            // }
         } catch (Exception $e) {
             Log::error('Error loading related party loans: ' . $e->getMessage());
             $this->relatedPartyLoans = [];
@@ -384,25 +392,108 @@ class LoansToInsidersReport extends Component
         return array_values($departmentLoans);
     }
 
-    public function exportReport($format = 'pdf')
+    public function exportToPdf()
     {
+        $this->isExportingPdf = true;
+        
         try {
-            session()->flash('success', "Loans to Insiders Report exported as {$format} successfully!");
+            // Validate user permissions for export
+            if (!auth()->check()) {
+                throw new Exception('User authentication required for export');
+            }
+
+            // Validate that we have data to export
+            if (empty($this->insiderLoans) && empty($this->relatedPartyLoans)) {
+                throw new Exception('No data available to export');
+            }
+
+            $filename = 'loans_to_insiders_report_' . now()->format('Y_m_d_H_i_s') . '.pdf';
             
-            Log::info('Loans to Insiders Report exported', [
-                'format' => $format,
+            Log::info('Loans to Insiders Report exported as PDF', [
+                'format' => 'pdf',
                 'report_date' => $this->reportDate,
                 'insider_loan_count' => $this->insiderLoanCount,
                 'total_insider_loan_amount' => $this->totalInsiderLoanAmount,
                 'compliance_status' => $this->complianceStatus,
                 'user_id' => auth()->id()
             ]);
+            
+            // Generate PDF using the export class
+            $pdfExport = new LoansToInsidersReportPdfExport(
+                $this->insiderLoans,
+                $this->relatedPartyLoans,
+                $this->insiderCategories,
+                $this->reportDate,
+                $this->totalInsiderLoanAmount,
+                $this->insiderLoanCount,
+                $this->averageInsiderLoanAmount,
+                $this->complianceStatus,
+                $this->maximumInsiderLoanLimit
+            );
+            
+            $pdf = $pdfExport->generate();
+            
+            return response()->streamDownload(function () use ($pdf) {
+                echo $pdf->output();
+            }, $filename, [
+                'Content-Type' => 'application/pdf',
+            ]);
+            
         } catch (Exception $e) {
-            session()->flash('error', 'Error exporting report: ' . $e->getMessage());
-            Log::error('Loans to Insiders Report export failed', [
+            session()->flash('error', 'Error exporting PDF: ' . $e->getMessage());
+            Log::error('Loans to Insiders Report PDF export failed', [
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id()
             ]);
+        } finally {
+            $this->isExportingPdf = false;
+        }
+    }
+
+    public function exportToExcel()
+    {
+        $this->isExportingExcel = true;
+        
+        try {
+            // Validate user permissions for export
+            if (!auth()->check()) {
+                throw new Exception('User authentication required for export');
+            }
+
+            // Validate that we have data to export
+            if (empty($this->insiderLoans) && empty($this->relatedPartyLoans)) {
+                throw new Exception('No data available to export');
+            }
+
+            $filename = 'loans_to_insiders_report_' . now()->format('Y_m_d_H_i_s') . '.xlsx';
+            
+            Log::info('Loans to Insiders Report exported as Excel', [
+                'format' => 'excel',
+                'report_date' => $this->reportDate,
+                'insider_loan_count' => $this->insiderLoanCount,
+                'total_insider_loan_amount' => $this->totalInsiderLoanAmount,
+                'compliance_status' => $this->complianceStatus,
+                'user_id' => auth()->id()
+            ]);
+            
+            return Excel::download(
+                new LoansToInsidersReportExport(
+                    $this->insiderLoans,
+                    $this->relatedPartyLoans,
+                    $this->insiderCategories,
+                    $this->reportDate
+                ),
+                $filename
+            );
+            
+        } catch (Exception $e) {
+            session()->flash('error', 'Error exporting Excel: ' . $e->getMessage());
+            Log::error('Loans to Insiders Report Excel export failed', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+        } finally {
+            $this->isExportingExcel = false;
         }
     }
 
