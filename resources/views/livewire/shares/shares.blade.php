@@ -258,6 +258,7 @@
                Dashboard
             </button>
 
+            @if($permissions['canCreate'] ?? false)
             <button wire:click="showAddSharesAccountModal" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium
              @if($this->sidebar_view == 'add_shares_account') text-white bg-blue-800 hover:bg-blue-50 @else text-gray-700 bg-gray-50 hover:bg-gray-100 hover:text-blue-900 @endif rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
@@ -265,7 +266,9 @@
                 </svg>
                 Add Account
             </button>
+            @endif
 
+            @if($permissions['canCreate'] ?? false)
             <button wire:click="showIssueSharesModal" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium
              @if($this->sidebar_view == 'issue_shares') text-white bg-blue-800 hover:bg-blue-50 @else text-gray-700 bg-gray-50 hover:bg-gray-100 hover:text-blue-900 @endif rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
@@ -273,7 +276,9 @@
                 </svg>
                 Issue Shares
             </button>
+            @endif
 
+            @if($permissions['canWithdraw'] ?? false)
             <button wire:click="showShareWithdrawalModal" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium
              @if($this->sidebar_view == 'share_withdrawal') text-white bg-blue-800 hover:bg-blue-50 @else text-gray-700 bg-gray-50 hover:bg-gray-100 hover:text-blue-900 @endif rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
@@ -281,7 +286,9 @@
                 </svg>
                 Share Withdrawal
             </button>
+            @endif
 
+            @if($permissions['canView'] ?? false)
             <button wire:click="showShareWithdrawalReport" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium
              @if($this->sidebar_view == 'share_withdrawal_report') text-white bg-blue-800 hover:bg-blue-50 @else text-gray-700 bg-gray-50 hover:bg-gray-100 hover:text-blue-900 @endif rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
@@ -289,7 +296,9 @@
                 </svg>
                 Share Withdrawal Report
             </button>
+            @endif
 
+            @if($permissions['canTransfer'] ?? false)
             <button wire:click="showShareTransferModal" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium
              @if($this->sidebar_view == 'share_transfer') text-white bg-blue-800 hover:bg-blue-50 @else text-gray-700 bg-gray-50 hover:bg-gray-100 hover:text-blue-900 @endif rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
@@ -297,7 +306,9 @@
                 </svg>
                 Transfer Shares
             </button>
+            @endif
 
+            @if($permissions['canView'] ?? false)
             <button wire:click="openShareTransfersReport" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium
              @if($this->sidebar_view == 'share_transfers_report') text-white bg-blue-800 hover:bg-blue-50 @else text-gray-700 bg-gray-50 hover:bg-gray-100 hover:text-blue-900 @endif rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
@@ -305,6 +316,7 @@
                 </svg>
                 Share Transfers Report
             </button>
+            @endif
 
             <button wire:click="showDividendOverview" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium
              @if($this->sidebar_view == 'dividend_overview') text-white bg-blue-800 hover:bg-blue-50 @else text-gray-700 bg-gray-50 hover:bg-gray-100 hover:text-blue-900 @endif rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">

@@ -6,9 +6,11 @@ use Livewire\Component;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use App\Models\AccountsModel;
+use App\Traits\Livewire\WithModulePermissions;
 
 class Accounting extends Component
 {
+    use WithModulePermissions;
     public $tab_id = '1';
     public $menuSearch = '';
     public $viewMemberDetails = false;
@@ -24,6 +26,22 @@ class Accounting extends Component
     protected $listeners = [
         'financeViewMember' => 'viewMembersData'
     ];
+    
+    public function mount()
+    {
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
+    }
+    
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'accounting';
+    }
 
     public function viewMembersData($id)
     {
@@ -37,6 +55,10 @@ class Accounting extends Component
 
     public function menuItemClicked($tabId)
     {
+        if (!$this->authorize('view', 'You do not have permission to view accounting sections')) {
+            return;
+        }
+        
         $this->tab_id = $tabId;
         if ($tabId == '1') {
             $this->title = 'Internal accounts';
@@ -122,12 +144,16 @@ class Accounting extends Component
             'Operations' => [18, 30, 21, 24, 25, 26, 27, 29, 36], // Removed 19, 22
         ];
 
-        return view('livewire.accounting.accounting', [
-            'totalInstitutionAccounts' => $this->totalInstitutionAccounts,
-            'totalMemberAccounts' => $this->totalMemberAccounts,
-            'pendingActivities' => $this->pendingActivities,
-            'menuItems' => $this->menuItems,
-            'menuCategories' => $this->menuCategories,
-        ]);
+        return view('livewire.accounting.accounting', array_merge(
+            $this->permissions,
+            [
+                'totalInstitutionAccounts' => $this->totalInstitutionAccounts,
+                'totalMemberAccounts' => $this->totalMemberAccounts,
+                'pendingActivities' => $this->pendingActivities,
+                'menuItems' => $this->menuItems,
+                'menuCategories' => $this->menuCategories,
+                'permissions' => $this->permissions
+            ]
+        ));
     }
 } 

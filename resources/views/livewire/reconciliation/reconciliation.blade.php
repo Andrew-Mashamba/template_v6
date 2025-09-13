@@ -146,6 +146,7 @@
                     </div>
 
                     <!-- Upload Button -->
+                    @if($permissions['canUpload'] ?? false)
                     <button
                         type="button"
                         wire:click="uploadFile()"
@@ -174,6 +175,11 @@
                             </div>
                         </div>
                     </button>
+                    @else
+                    <div class="w-full px-4 py-3 bg-gray-200 text-gray-500 font-medium rounded-lg text-center">
+                        No permission to upload
+                    </div>
+                    @endif
 
                     <!-- Processing Status -->
                     <div wire:loading wire:target="uploadFile">
@@ -220,8 +226,10 @@
                         <div class="space-y-3">
                             @foreach ($sessions as $session)
                                 <div
+                                    @if($permissions['canView'] ?? false)
                                     wire:click="setActiveSession({{ $session->id }})"
-                                    class="p-4 border rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md
+                                    @endif
+                                    class="p-4 border rounded-xl @if($permissions['canView'] ?? false) cursor-pointer @else cursor-not-allowed opacity-75 @endif transition-all duration-200 hover:shadow-md
                                         {{ $activeSessionId === $session->id ? 'bg-blue-50 border-blue-300 shadow-md' : 'hover:bg-gray-50 border-gray-200' }}"
                                 >
                                     <div class="flex justify-between items-start mb-2">
@@ -283,6 +291,7 @@
                             </div>
                             
                             @if($activeSession && $showData)
+                                @if($permissions['canReconcile'] ?? false)
                                 <button
                                     wire:click="runReconciliation()"
                                     wire:loading.attr="disabled"
@@ -302,6 +311,11 @@
                                         <span>Reconciling...</span>
                                     </span>
                                 </button>
+                                @else
+                                <div class="px-6 py-3 bg-gray-200 text-gray-500 font-medium rounded-lg text-center">
+                                    No permission to run reconciliation
+                                </div>
+                                @endif
                             @endif
                         </div>
                     </div>
@@ -450,14 +464,22 @@
                                                     </td>
                                                     <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                                         @if($transaction->reconciliation_status === 'unreconciled')
-                                                            <button
-                                                                wire:click="showManualReconciliation({{ $transaction->id }})"
-                                                                class="text-blue-600 hover:text-blue-900 transition-colors duration-150"
-                                                            >
-                                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                                </svg>
-                                                            </button>
+                                                            @if($permissions['canManualReconcile'] ?? false)
+                                                                <button
+                                                                    wire:click="showManualReconciliation({{ $transaction->id }})"
+                                                                    class="text-blue-600 hover:text-blue-900 transition-colors duration-150"
+                                                                >
+                                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                    </svg>
+                                                                </button>
+                                                            @else
+                                                                <span class="text-gray-400" title="No permission to manually reconcile">
+                                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                                                    </svg>
+                                                                </span>
+                                                            @endif
                                                         @elseif($transaction->matchedTransaction)
                                                             <span class="text-green-600 flex items-center justify-center">
                                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

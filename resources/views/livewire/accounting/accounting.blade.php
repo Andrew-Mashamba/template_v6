@@ -185,6 +185,42 @@
                                 
                                 <div class="space-y-1">
                                     @foreach($filteredItems as $menuItem)
+                                        @php
+                                            // Check permissions for each menu item
+                                            $showMenuItem = true;
+                                            
+                                            // Core accounting items - require view permission
+                                            if (in_array($menuItem['id'], [37, 47, 3, 4, 6])) {
+                                                $showMenuItem = $permissions['canView'] ?? false;
+                                            }
+                                            
+                                            // Financial statements - require reports permission
+                                            if (in_array($menuItem['id'], [12, 50, 5, 8, 28, 40, 41, 42])) {
+                                                $showMenuItem = ($permissions['canViewReports'] ?? false) || ($permissions['canView'] ?? false);
+                                            }
+                                            
+                                            // Asset management - require edit permission
+                                            if (in_array($menuItem['id'], [20, 32, 16])) {
+                                                $showMenuItem = ($permissions['canManageAssets'] ?? false) || ($permissions['canEdit'] ?? false);
+                                            }
+                                            
+                                            // Risk management - require special permission
+                                            if (in_array($menuItem['id'], [17, 23, 31])) {
+                                                $showMenuItem = ($permissions['canManageRisk'] ?? false) || ($permissions['canEdit'] ?? false);
+                                            }
+                                            
+                                            // Operations - require edit permission
+                                            if (in_array($menuItem['id'], [18, 30, 21, 24, 25, 26, 27, 29, 36, 19, 22])) {
+                                                $showMenuItem = $permissions['canEdit'] ?? false;
+                                            }
+                                            
+                                            // Members - require view permission
+                                            if ($menuItem['id'] == 9) {
+                                                $showMenuItem = $permissions['canView'] ?? false;
+                                            }
+                                        @endphp
+                                        
+                                        @if($showMenuItem)
                                         <button 
                                             wire:click="menuItemClicked({{ $menuItem['id'] }})"
                                             class="group w-full flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 relative overflow-hidden
@@ -231,6 +267,7 @@
                                             {{-- Hover effect overlay --}}
                                             <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                                         </button>
+                                        @endif
                                     @endforeach
                                 </div>
                             </div>

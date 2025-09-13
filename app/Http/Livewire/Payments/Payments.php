@@ -5,6 +5,7 @@ namespace App\Http\Livewire\Payments;
 use Livewire\Component;
 use App\Services\NbcBillsPaymentService;
 use Illuminate\Support\Facades\Log;
+use App\Traits\Livewire\WithModulePermissions;
 
 use App\Services\NbcPayments\NbcLookupService;
 
@@ -16,6 +17,7 @@ use App\Models\AccountsModel;
 
 class Payments extends Component
 {
+    use WithModulePermissions;
 
     public $billers = [];
     public $billersGrouped = [];
@@ -132,9 +134,22 @@ class Payments extends Component
 
         public function mount()
     {
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
+        
         $this->fetchFsp();
         $this->fetchBillers();
         //$this->accounts = AccountsModel::where('user_id', auth()->id())->get();
+    }
+    
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'payments';
     }
 
     public function fetchFsp()
@@ -531,6 +546,9 @@ class Payments extends Component
 
 public function verifyBeneficiary(NbcLookupService $lookupService)
 {
+    if (!$this->authorize('verify', 'You do not have permission to verify beneficiaries')) {
+        return;
+    }
     $this->validate();
     $this->resetMessages();
     $this->isProcessing = true;
@@ -582,6 +600,9 @@ public function verifyBeneficiary(NbcLookupService $lookupService)
 
 public function confirmTransfer(NbcPaymentService $paymentService)
 {
+    if (!$this->authorize('transfer', 'You do not have permission to process transfers')) {
+        return;
+    }
     $this->resetMessages();
     $this->isProcessing = true;
 
@@ -711,6 +732,9 @@ public function lookup()
 
 public function pay()
 {
+    if (!$this->authorize('create', 'You do not have permission to process payments')) {
+        return;
+    }
     try {
         Log::info('=== LUKU PAYMENT STARTED ===', [
             'timestamp' => now()->toDateTimeString(),
@@ -794,6 +818,9 @@ public function pay()
 
     public function verifyBill()
     {
+        if (!$this->authorize('verify', 'You do not have permission to verify bills')) {
+            return;
+        }
         $this->validate([
             'controlNumber' => 'required|string|min:5',
             //'accountNo' => 'required|string',
@@ -866,6 +893,9 @@ public function pay()
 
     public function processPayment()
     {
+        if (!$this->authorize('create', 'You do not have permission to process payments')) {
+            return;
+        }
         $this->isProcessing = true;
         $this->error = null;
 
@@ -898,8 +928,11 @@ public function pay()
 
     public function render()
     {
-
-
-        return view('livewire.payments.payments');
+        return view('livewire.payments.payments', array_merge(
+            $this->permissions,
+            [
+                'permissions' => $this->permissions
+            ]
+        ));
     }
 }

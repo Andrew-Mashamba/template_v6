@@ -21,9 +21,11 @@ use App\Exports\LoanSchedule;
 use App\Exports\ContractData;
 use Carbon\Carbon;
 use Exception;
+use App\Traits\Livewire\WithModulePermissions;
 
 class Reports extends Component
 {
+    use WithModulePermissions;
     // Core Properties
     public $endDate;
     public $startDate;
@@ -129,6 +131,8 @@ class Reports extends Component
 
     public function mount()
     {
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
         $this->initializeDates();
         $this->loadAnalytics();
         $this->loadReportHistory();
@@ -234,6 +238,17 @@ class Reports extends Component
 
     public function menuItemClicked($id)
     {
+        // Check permissions based on the report category being accessed
+        $reportTypes = $this->getReportTypes();
+        if (isset($reportTypes[$id])) {
+            $report = $reportTypes[$id];
+            $requiredPermission = $this->getRequiredPermissionForReport($report);
+            
+            if (!$this->authorize($requiredPermission, 'You do not have permission to access this report')) {
+                return;
+            }
+        }
+        
         $this->tab_id = $id;
         $this->loadReportDetails($id);
         $this->showReport($id);
@@ -241,6 +256,13 @@ class Reports extends Component
 
     public function showComponent($componentName)
     {
+        // Check permissions based on the component being accessed
+        $requiredPermission = $this->getRequiredPermissionForComponent($componentName);
+        
+        if (!$this->authorize($requiredPermission, 'You do not have permission to access this report component')) {
+            return;
+        }
+        
         $this->activeComponent = $componentName;
         $this->showReportView = true;
         
@@ -289,6 +311,11 @@ class Reports extends Component
 
     public function generateStatementOfFinancialPosition()
     {
+        // Check permission to generate financial statements
+        if (!$this->authorize('view', 'You do not have permission to generate financial statements')) {
+            return;
+        }
+        
         try {
             $this->isGenerating = true;
             $this->errorMessage = '';
@@ -577,6 +604,11 @@ class Reports extends Component
 
     public function exportStatementOfFinancialPosition($format = 'pdf')
     {
+        // Check permission to export reports
+        if (!$this->authorize('export', 'You do not have permission to export reports')) {
+            return;
+        }
+        
         try {
             $this->isExporting = true;
             $this->errorMessage = '';
@@ -611,6 +643,11 @@ class Reports extends Component
 
     public function generateStatementOfComprehensiveIncome()
     {
+        // Check permission to generate financial statements
+        if (!$this->authorize('view', 'You do not have permission to generate financial statements')) {
+            return;
+        }
+        
         try {
             $this->isGenerating = true;
             $this->errorMessage = '';
@@ -804,6 +841,11 @@ class Reports extends Component
 
     public function exportStatementOfComprehensiveIncome($format = 'pdf')
     {
+        // Check permission to export reports
+        if (!$this->authorize('export', 'You do not have permission to export reports')) {
+            return;
+        }
+        
         try {
             $this->isExporting = true;
             $this->errorMessage = '';
@@ -1356,6 +1398,11 @@ class Reports extends Component
 
     public function downloadExcelFile()
     {
+        // Check permission to export reports
+        if (!$this->authorize('export', 'You do not have permission to export reports')) {
+            return;
+        }
+        
         $this->validate([
             'reportEndDate' => 'required|date',
             'reportStartDate' => 'required|date|before_or_equal:reportEndDate'
@@ -1398,6 +1445,11 @@ class Reports extends Component
 
     public function generateReport()
     {
+        // Check permission to generate reports
+        if (!$this->authorize('view', 'You do not have permission to generate reports')) {
+            return;
+        }
+        
         try {
             $this->isGenerating = true;
             $this->validate([
@@ -1480,6 +1532,11 @@ class Reports extends Component
 
     public function scheduleReport()
     {
+        // Check permission to schedule reports
+        if (!$this->authorize('manage', 'You do not have permission to schedule reports')) {
+            return;
+        }
+        
         try {
             $this->isScheduling = true;
             $this->validate([
@@ -1553,8 +1610,62 @@ class Reports extends Component
         }
     }
 
+    /**
+     * Get the required permission for a specific report
+     */
+    private function getRequiredPermissionForReport($report)
+    {
+        $categoryPermissionMap = [
+            'regulatory' => 'view',      // Financial statements and regulatory reports
+            'loans' => 'view',           // Loan-related reports
+            'operational' => 'view',     // Operational reports
+            'committee' => 'view',       // Committee reports
+            'compliance' => 'view',      // Compliance reports
+            'tables' => 'view',          // Table reports
+            'enhanced' => 'view'         // Enhanced reports
+        ];
+        
+        return $categoryPermissionMap[$report['category']] ?? 'view';
+    }
+    
+    /**
+     * Get the required permission for a specific component
+     */
+    private function getRequiredPermissionForComponent($componentName)
+    {
+        $componentPermissionMap = [
+            'statement-of-financial-position' => 'view',
+            'statement-of-comprehensive-income' => 'view',
+            'statement-of-cash-flow' => 'view',
+            'loan-portfolio-report' => 'view',
+            'loan-delinquency-report' => 'view',
+            'loan-disbursement-report' => 'view',
+            'portfolio-at-risk' => 'view',
+            'active-loans-by-officer' => 'view',
+            'loan-application-report' => 'view',
+            'dashboard' => 'view'
+        ];
+        
+        return $componentPermissionMap[$componentName] ?? 'view';
+    }
+
     public function render()
     {
-        return view('livewire.reports.reports-simple');
+        return view('livewire.reports.reports-simple', array_merge(
+            $this->permissions,
+            [
+                'permissions' => $this->permissions
+            ]
+        ));
+    }
+
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'reports';
     }
 }

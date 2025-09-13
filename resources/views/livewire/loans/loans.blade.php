@@ -72,6 +72,25 @@
                     <nav class="space-y-2">
                         @foreach ($sub_sections as $sub_section)
                             @php
+                                // Check permissions for each section
+                                $showSection = true;
+                                if ($sub_section['id'] == 1) {
+                                    // Loan Status Summary - requires view permission
+                                    $showSection = $permissions['canView'] ?? false;
+                                }
+                                if ($sub_section['id'] == 2) {
+                                    // Loan Applications - requires create permission
+                                    $showSection = $permissions['canCreate'] ?? false;
+                                }
+                                if ($sub_section['id'] == 3) {
+                                    // Declined Loans - requires view permission
+                                    $showSection = $permissions['canView'] ?? false;
+                                }
+                                if ($sub_section['id'] == 4) {
+                                    // Liquidation - requires special liquidate permission or delete
+                                    $showSection = ($permissions['canLiquidate'] ?? false) || ($permissions['canDelete'] ?? false);
+                                }
+                                
                                 if ($sub_section['id'] == 3) {
                                     // For Declined Loans, count loans with REJECTED status
                                     $count = App\Models\LoansModel::where('status', 'REJECTED')->count();
@@ -86,6 +105,7 @@
                                 $isActive = $this->selectedMenuItem == $sub_section['id'];
                             @endphp
 
+                            @if($showSection)
                             <button
                                 wire:click="selectedMenu({{ $sub_section['id'] }})"
                                 class="relative w-full group transition-all duration-200"
@@ -129,6 +149,7 @@
                                     @endif
                                 </div>
                             </button>
+                            @endif
                         @endforeach
                     </nav>
                 </div>

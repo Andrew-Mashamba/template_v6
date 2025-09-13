@@ -6,6 +6,18 @@
         </div>
     @endif
 
+    @if(!($permissions['canView'] ?? false) && !($permissions['canManage'] ?? false) && !($permissions['canExport'] ?? false))
+    {{-- No Access Message for users with no permissions --}}
+    <div class="bg-white shadow rounded-lg p-8 text-center">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No Access</h3>
+        <p class="text-gray-500">You don't have permission to access the service subscriptions module.</p>
+    </div>
+    @else
     <!-- Header -->
     <div class="mb-8">
         <div class="flex items-center justify-between">
@@ -23,29 +35,37 @@
     </div>
 
     <!-- Navigation Tabs -->
+    @if(($permissions['canView'] ?? false) || ($permissions['canManage'] ?? false) || ($permissions['canExport'] ?? false))
     <div class="mb-6">
         <nav class="flex space-x-8 border-b border-gray-200">
+            @if($permissions['canView'] ?? false)
             <button wire:click="setActiveTab('overview')" 
                     class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200
                     {{ $activeTab === 'overview' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                 Services
             </button>
+            @endif
+            @if($permissions['canView'] ?? false)
             <button wire:click="setActiveTab('usage')" 
                     class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200
                     {{ $activeTab === 'usage' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                 Usage
             </button>
+            @endif
+            @if($permissions['canView'] ?? false)
             <button wire:click="setActiveTab('billing')" 
                     class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200
                     {{ $activeTab === 'billing' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                 Billing
             </button>
+            @endif
         </nav>
     </div>
+    @endif
 
     <!-- Content Area -->
     <div>
-        @if($activeTab === 'overview')
+        @if($activeTab === 'overview' && ($permissions['canView'] ?? false))
             <!-- Services Overview -->
             <div class="space-y-4">
                 @foreach($services as $service)
@@ -97,7 +117,7 @@
                             <p class="text-2xl font-bold text-gray-900">TSH {{ number_format($service['price']) }}</p>
                             <p class="text-sm text-gray-600">{{ $service['billing_cycle'] }}</p>
                             
-                            @if($service['type'] === 'optional')
+                            @if($service['type'] === 'optional' && ($permissions['canManage'] ?? false))
                                 <button wire:click="toggleService({{ $service['id'] }})" 
                                         class="mt-3 px-4 py-2 text-sm font-medium rounded-lg transition-colors
                                         {{ $service['status'] === 'active' 
@@ -105,6 +125,13 @@
                                             : 'bg-green-100 text-green-700 hover:bg-green-200' }}">
                                     {{ $service['status'] === 'active' ? 'Deactivate' : 'Activate' }}
                                 </button>
+                            @elseif($service['type'] === 'optional')
+                                <div class="mt-3">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        <span class="w-2 h-2 bg-gray-400 rounded-full mr-2"></span>
+                                        {{ $service['status'] === 'active' ? 'Active' : 'Inactive' }}
+                                    </span>
+                                </div>
                             @else
                                 <div class="mt-3">
                                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -118,7 +145,18 @@
                 </div>
                 @endforeach
             </div>
-        @elseif($activeTab === 'usage')
+        @elseif($activeTab === 'overview')
+            <!-- No Access Message for Services Overview -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No Access</h3>
+                <p class="text-gray-500">You don't have permission to view service subscriptions.</p>
+            </div>
+        @elseif($activeTab === 'usage' && ($permissions['canView'] ?? false))
             <!-- Usage Statistics -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-6">Today's Usage Statistics</h3>
@@ -181,7 +219,18 @@
                     </div>
                 </div>
             </div>
-        @elseif($activeTab === 'billing')
+        @elseif($activeTab === 'usage')
+            <!-- No Access Message for Usage Statistics -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No Access</h3>
+                <p class="text-gray-500">You don't have permission to view usage statistics.</p>
+            </div>
+        @elseif($activeTab === 'billing' && ($permissions['canView'] ?? false))
             <!-- Billing History -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-6">Billing History</h3>
@@ -225,10 +274,14 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">
+                                    @if($permissions['canExport'] ?? false)
                                     <button wire:click="downloadInvoice('{{ $bill['invoice'] }}')" 
                                             class="text-blue-600 hover:text-blue-900 text-sm font-medium">
                                         Download
                                     </button>
+                                    @else
+                                    <span class="text-gray-400 text-sm">No Access</span>
+                                    @endif
                                 </td>
                             </tr>
                             @endforeach
@@ -250,6 +303,28 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        @elseif($activeTab === 'billing')
+            <!-- No Access Message for Billing History -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No Access</h3>
+                <p class="text-gray-500">You don't have permission to view billing history.</p>
+            </div>
+        @else
+            <!-- No Access Message for any other tab -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No Access</h3>
+                <p class="text-gray-500">You don't have permission to access this subscriptions section.</p>
             </div>
         @endif
     </div>
@@ -297,5 +372,6 @@
             </div>
         </div>
     </div>
+    @endif
     @endif
 </div>

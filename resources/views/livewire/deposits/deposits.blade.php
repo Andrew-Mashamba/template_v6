@@ -33,6 +33,7 @@
                 <p class="text-gray-600 mt-1">Track and manage all deposits accounts</p>
             </div>
             <div class="flex gap-3 w-full sm:w-auto">
+                @if($permissions['canCreate'] ?? false)
                 <button 
                     wire:click="showIssueNewDepositsModal(1)" 
                     wire:loading.attr="disabled"
@@ -44,6 +45,7 @@
                     <span wire:loading.remove wire:target="showIssueNewDepositsModal">New Account</span>
                     <span wire:loading wire:target="showIssueNewDepositsModal">Processing...</span>
                 </button>
+                @endif
             </div>
         </div>
 
@@ -134,6 +136,7 @@
                 <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
                     <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
                     <nav class="space-y-2">
+                        @if($permissions['canCreate'] ?? false)
                         <button 
                             wire:click="showCreateNewDepositsAccount"
                             class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-indigo-50 hover:text-blue-900 rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -144,7 +147,9 @@
                             <span wire:loading.remove wire:target="showCreateNewDepositsAccount">New Account</span>
                             <span wire:loading wire:target="showCreateNewDepositsAccount">Processing...</span>
                         </button>
+                        @endif
 
+                        @if($permissions['canDeposit'] ?? false)
                         <button 
                             wire:click="showReceiveDepositsModal"
                             class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-green-50 hover:text-green-700 rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -155,7 +160,9 @@
                             <span wire:loading.remove wire:target="showReceiveDepositsModal">Receive Deposits</span>
                             <span wire:loading wire:target="showReceiveDepositsModal">Processing...</span>
                         </button>
+                        @endif
 
+                        @if($permissions['canWithdraw'] ?? false)
                         <button 
                             wire:click="showWithdrawDepositsModal"
                             class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-red-50 hover:text-red-700 rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -166,7 +173,9 @@
                             <span wire:loading.remove wire:target="showWithdrawDepositsModal">Withdraw Deposits</span>
                             <span wire:loading wire:target="showWithdrawDepositsModal">Processing...</span>
                         </button>
+                        @endif
 
+                        @if($permissions['canView'] ?? false)
                         <button 
                             wire:click="showDepositsFullReportPage"
                             class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-indigo-50 hover:text-blue-900 rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -177,7 +186,9 @@
                             <span wire:loading.remove wire:target="showDepositsFullReportPage">Deposits Full Report</span>
                             <span wire:loading wire:target="showDepositsFullReportPage">Processing...</span>
                         </button>
+                        @endif
 
+                        @if($permissions['canExport'] ?? false)
                         <button 
                             wire:click="showDepositsBulkUploadPage" 
                             wire:loading.attr="disabled"
@@ -189,6 +200,7 @@
                             <span wire:loading.remove wire:target="showDepositsBulkUploadPage">Deposits Bulk Upload</span>
                             <span wire:loading wire:target="showDepositsBulkUploadPage">Processing...</span>
                         </button>
+                        @endif
 
                         <button 
                             wire:click="showIssueNewDepositsModal(4)" 

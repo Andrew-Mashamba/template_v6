@@ -134,6 +134,7 @@
                 <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
                     <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
                     <nav class="space-y-2">
+                        @if($permissions['canCreate'] ?? false)
                         <button 
                             wire:click="showCreateNewSavingsAccount"
                             class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium
@@ -147,7 +148,9 @@
                             <span wire:loading.remove wire:target="showCreateNewSavingsAccount">New Account</span>
                             <span wire:loading wire:target="showCreateNewSavingsAccount">Processing...</span>
                         </button>
+                        @endif
 
+                        @if($permissions['canDeposit'] ?? false)
                         <button 
                             wire:click="showReceiveSavingsModal"
                             class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium
@@ -161,7 +164,9 @@
                             <span wire:loading.remove wire:target="showReceiveSavingsModal">Receive Savings</span>
                             <span wire:loading wire:target="showReceiveSavingsModal">Processing...</span>
                         </button>
+                        @endif
 
+                        @if($permissions['canWithdraw'] ?? false)
                         <button 
                             wire:click="showWithdrawSavingsModal"
                             class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium
@@ -175,7 +180,9 @@
                             <span wire:loading.remove wire:target="showWithdrawSavingsModal">Withdraw Savings</span>
                             <span wire:loading wire:target="showWithdrawSavingsModal">Processing...</span>
                         </button>
+                        @endif
 
+                        @if($permissions['canView'] ?? false)
                         <button 
                             wire:click="showSavingsFullReportPage"
                             class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium
@@ -189,7 +196,9 @@
                             <span wire:loading.remove wire:target="showSavingsFullReportPage">Savings Full Report</span>
                             <span wire:loading wire:target="showSavingsFullReportPage">Processing...</span>
                         </button>
+                        @endif
 
+                        @if($permissions['canExport'] ?? false)
                         <button 
                             wire:click="showSavingsBulkUploadPage" 
                             wire:loading.attr="disabled"
@@ -204,7 +213,9 @@
                             <span wire:loading.remove wire:target="showSavingsBulkUploadPage">Savings Bulk Upload</span>
                             <span wire:loading wire:target="showSavingsBulkUploadPage">Processing...</span>
                         </button>
+                        @endif
 
+                        @if($permissions['canView'] ?? false)
                         <button 
                             wire:click="showIssueNewSavingsModal(4)" 
                             wire:loading.attr="disabled"
@@ -219,6 +230,7 @@
                             <span wire:loading.remove wire:target="showIssueNewSavingsModal">Monthly Report</span>
                             <span wire:loading wire:target="showIssueNewSavingsModal">Processing...</span>
                         </button>
+                        @endif
                     </nav>
                 </div>
             </div>

@@ -13,6 +13,7 @@ use Exception;
 use Illuminate\Support\Facades\Mail;
 
 use Livewire\Component;
+use App\Traits\Livewire\WithModulePermissions;
 
 use App\Models\approvals;
 
@@ -40,6 +41,7 @@ class Clients extends Component
 {
     use WithPagination;
     use WithFileUploads;
+    use WithModulePermissions;
 
 
     public $membership_type = 'Individual';
@@ -376,6 +378,9 @@ class Clients extends Component
 
     public function mount()
     {
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
+        
         // Initialize with one empty document slot
         $this->additionalDocuments = [
             ['file' => null, 'description' => 'Application Letter']
@@ -383,6 +388,16 @@ class Clients extends Component
         
         // Fetch the categories when the component is mounted
         $this->memberCategories = DB::table('member_categories')->get();
+    }
+    
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'clients';
     }
 
 
@@ -415,6 +430,11 @@ class Clients extends Component
 
     public function viewNotPaidClients()
     {
+        if (!$this->can('view')) {
+            session()->flash('error', 'You do not have permission to view clients');
+            return;
+        }
+        
         Log::info('Viewing unpaid clients', [
             'user_id' => auth()->id()
         ]);
@@ -635,6 +655,10 @@ class Clients extends Component
 
     public function updateClient()
     {
+        if (!$this->authorize('edit', 'You do not have permission to edit clients')) {
+            return;
+        }
+        
         Log::info('Attempting to update client', [
             'user_id' => auth()->id(),
             'client_id' => $this->client
@@ -823,6 +847,10 @@ class Clients extends Component
 
     public function delete()
     {
+        if (!$this->authorize('delete', 'You do not have permission to delete clients')) {
+            return;
+        }
+        
         Log::info('Attempting to delete/change client status', [
             'user_id' => auth()->id(),
             'client_id' => $this->clientSelected,
@@ -1335,6 +1363,10 @@ class Clients extends Component
 
     public function save()
     {
+        if (!$this->authorize('create', 'You do not have permission to create clients')) {
+            return;
+        }
+        
         Log::info('Starting member registration process', [
             'user_id' => auth()->id(),
             'membership_type' => $this->membership_type,
@@ -2131,5 +2163,41 @@ class Clients extends Component
             ->count();
 
         return $member;
+    }
+    
+    public function render()
+    {
+        // Get clients based on tab selection
+        $clients = ClientsModel::query();
+        
+        // Apply filters based on tab
+        if ($this->tab_id == '1') {
+            // Active clients
+            $clients = $clients->where('status', 'ACTIVE');
+        } elseif ($this->tab_id == '2') {
+            // Inactive clients
+            $clients = $clients->where('status', '!=', 'ACTIVE');
+        }
+        
+        // Apply search if needed
+        if (!empty($this->search)) {
+            $clients = $clients->where(function($query) {
+                $query->where('first_name', 'like', '%' . $this->search . '%')
+                    ->orWhere('last_name', 'like', '%' . $this->search . '%')
+                    ->orWhere('membership_number', 'like', '%' . $this->search . '%')
+                    ->orWhere('phone_number', 'like', '%' . $this->search . '%');
+            });
+        }
+        
+        $clients = $clients->paginate(10);
+        
+        // Pass permissions to the view
+        return view('livewire.clients.clients', array_merge(
+            $this->permissions,
+            [
+                'clients' => $clients,
+                'permissions' => $this->permissions
+            ]
+        ));
     }
 }

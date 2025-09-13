@@ -183,6 +183,7 @@
                                     ];
                                 @endphp
 
+                                @if($permissions['canView'] ?? false)
                                 <button
                                     wire:click="setSection('{{ $section['id'] }}')"
                                     class="relative w-full group transition-all duration-200"
@@ -237,6 +238,58 @@
                                         @endif
                                     </div>
                                 </button>
+                                @else
+                                <div class="relative w-full group transition-all duration-200 opacity-50 cursor-not-allowed" title="No permission to access this section">
+                                    <div class="flex items-center p-3 rounded-xl transition-all duration-200 shadow-sm
+                                        @if ($isActive) 
+                                            {{ $colorClasses[$section['color']] }} shadow-lg scale-105
+                                        @else 
+                                            {{ $colorClasses[$section['color']] }} hover:shadow-md
+                                        @endif">
+                                        
+                                        <!-- Step Number -->
+                                        @if($section['step'])
+                                            <div class="mr-3 flex-shrink-0">
+                                                <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
+                                                    @if($isActive) 
+                                                        bg-white bg-opacity-20 text-white
+                                                    @else 
+                                                        bg-white {{ $iconColorClasses[$section['color']] }}
+                                                    @endif">
+                                                    {{ $section['step'] }}
+                                                </div>
+                                            </div>
+                                        @endif
+                                        
+                                        <!-- Icon -->
+                                        <div class="mr-3">
+                                            <svg class="w-5 h-5 {{ $iconColorClasses[$section['color']] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $section['icon'] }}"></path>
+                                            </svg>
+                                        </div>
+
+                                        <!-- Content -->
+                                        <div class="flex-1 text-left">
+                                            <div class="font-medium text-sm">{{ str_replace($section['step'] . '. ', '', $section['label']) }}</div>
+                                            <div class="text-xs opacity-75">{{ $section['description'] }}</div>
+                                        </div>
+
+                                        <!-- Count Badge -->
+                                        @if ($section['count'] !== null)
+                                            <div class="ml-2">
+                                                <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full min-w-[20px] h-5
+                                                    @if ($isActive)
+                                                        bg-white bg-opacity-20 text-white
+                                                    @else
+                                                        bg-white bg-opacity-80 {{ $iconColorClasses[$section['color']] }}
+                                                    @endif">
+                                                    {{ $section['count'] > 99 ? '99+' : $section['count'] }}
+                                                </span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                                @endif
                             @endforeach
                         </nav>
                     </div>
@@ -268,6 +321,7 @@
                                     ];
                                 @endphp
 
+                                @if($permissions['canView'] ?? false)
                                 <button
                                     wire:click="setSection('{{ $section['id'] }}')"
                                     class="relative w-full group transition-all duration-200"
@@ -294,6 +348,30 @@
                                         </div>
                                     </div>
                                 </button>
+                                @else
+                                <div class="relative w-full group transition-all duration-200 opacity-50 cursor-not-allowed" title="No permission to access this section">
+                                    <div class="flex items-center p-3 rounded-xl transition-all duration-200 shadow-sm
+                                        @if ($isActive) 
+                                            {{ $colorClasses[$section['color']] }} shadow-lg scale-105
+                                        @else 
+                                            {{ $colorClasses[$section['color']] }} hover:shadow-md
+                                        @endif">
+                                        
+                                        <!-- Icon -->
+                                        <div class="mr-3">
+                                            <svg class="w-5 h-5 {{ $iconColorClasses[$section['color']] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $section['icon'] }}"></path>
+                                            </svg>
+                                        </div>
+
+                                        <!-- Content -->
+                                        <div class="flex-1 text-left">
+                                            <div class="font-medium text-sm">{{ $section['label'] }}</div>
+                                            <div class="text-xs opacity-75">{{ $section['description'] }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
                             @endforeach
                         </nav>
                     </div>
@@ -321,16 +399,37 @@
 
             <!-- Main Content Area -->
             <div class="flex-1">
-                @if($this->section === 'users')
-                    <livewire:users.simple-users />
-                @elseif($this->section === 'roles')
-                    <livewire:users.hierarchical-roles />
-                @elseif($this->section === 'departments')
-                    <livewire:users.hierarchical-departments />
-                @elseif($this->section === 'permissions')
-                    <livewire:users.hierarchical-permissions />
-                @elseif($this->section === 'organizational-structure')
-                    <livewire:users.organizational-structure />
+                @if($permissions['canView'] ?? false)
+                    @if($this->section === 'users')
+                        @if($permissions['canManageUsers'] ?? $permissions['canView'] ?? false)
+                            <livewire:users.simple-users />
+                        @else
+                            <div class="text-center py-8 text-gray-500">You don't have permission to manage users.</div>
+                        @endif
+                    @elseif($this->section === 'roles')
+                        @if($permissions['canManageRoles'] ?? $permissions['canView'] ?? false)
+                            <livewire:users.hierarchical-roles />
+                        @else
+                            <div class="text-center py-8 text-gray-500">You don't have permission to manage roles.</div>
+                        @endif
+                    @elseif($this->section === 'departments')
+                        @if($permissions['canManageDepartments'] ?? $permissions['canView'] ?? false)
+                            <livewire:users.hierarchical-departments />
+                        @else
+                            <div class="text-center py-8 text-gray-500">You don't have permission to manage departments.</div>
+                        @endif
+                    @elseif($this->section === 'permissions')
+                        @if($permissions['canManagePermissions'] ?? $permissions['canView'] ?? false)
+                            <livewire:users.hierarchical-permissions />
+                        @else
+                            <div class="text-center py-8 text-gray-500">You don't have permission to manage permissions.</div>
+                        @endif
+                    @elseif($this->section === 'organizational-structure')
+                        @if($permissions['canView'] ?? false)
+                            <livewire:users.organizational-structure />
+                        @else
+                            <div class="text-center py-8 text-gray-500">You don't have permission to view organizational structure.</div>
+                        @endif
                 {{--@elseif($this->section === 'settings')
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <livewire:users.settings />
@@ -341,11 +440,19 @@
                 
                 @elseif($this->section === 'audit-logs')
                     <livewire:users.audit-logs />--}}
-                @elseif($this->section === 'user-groups')
-                    <livewire:users.user-groups />
-                @elseif($this->section === 'loan-committee')
-                    <livewire:users.loan-committee />
-                @else
+                    @elseif($this->section === 'user-groups')
+                        @if($permissions['canView'] ?? false)
+                            <livewire:users.user-groups />
+                        @else
+                            <div class="text-center py-8 text-gray-500">You don't have permission to view user groups.</div>
+                        @endif
+                    @elseif($this->section === 'loan-committee')
+                        @if($permissions['canView'] ?? false)
+                            <livewire:users.loan-committee />
+                        @else
+                            <div class="text-center py-8 text-gray-500">You don't have permission to view loan committee.</div>
+                        @endif
+                    @else
                     <!-- Dashboard Overview -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                         <!-- Users Card -->
@@ -449,6 +556,18 @@
                             <button wire:click="$set('section', 'departments')" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
                                 View Departments
                             </button>
+                        </div>
+                    </div>
+                    @endif
+                @else
+                    <div class="bg-white rounded-xl p-8 shadow-md">
+                        <div class="text-center">
+                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Access Restricted</h3>
+                            <p class="text-gray-600">You don't have permission to access the user management system.</p>
+                            <p class="text-sm text-gray-500 mt-2">Please contact your administrator if you need access.</p>
                         </div>
                     </div>
                 @endif

@@ -3,7 +3,7 @@
 namespace App\Http\Livewire\Branches;
 
 use App\Models\BranchesModel;
-use App\Traits\HasRoles;
+use App\Traits\Livewire\WithModulePermissions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -12,17 +12,12 @@ use Livewire\WithPagination;
 
 class BranchesTable extends Component
 {
-    use WithPagination, HasRoles;
+    use WithPagination, WithModulePermissions;
 
     public $search = '';
     public $sortField = 'created_at';
     public $sortDirection = 'desc';
     public $perPage = 10;
-
-    public $canView = false;
-    public $canEdit = false;
-    public $canDelete = false;
-    public $userPermissions = [];
     
     // Modal states
     public $showViewModal = false;
@@ -50,18 +45,22 @@ class BranchesTable extends Component
     public $editTillAccount;
     public $editPettyCashAccount;
 
-    private $actionPermissions = [
-        'view' => 'view',
-        'edit' => 'edit',
-        'delete' => 'delete'
-    ];
-
     protected $listeners = ['viewBranch', 'editBranch', 'blockBranch'];
 
     public function mount()
     {
-        $this->loadUserPermissions();
-        $this->setPermissions();
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
+    }
+    
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'branches';
     }
 
     public function updatingSearch()
@@ -80,51 +79,14 @@ class BranchesTable extends Component
         $this->sortField = $field;
     }
 
-    private function loadUserPermissions()
-    {
-        $user = Auth::user();
-        if (!$user) return;
-
-        $userRole = DB::table('user_roles')->where('user_id', $user->id)->first();
-        if (!$userRole) return;
-
-        $subRole = DB::table('sub_roles')->where('role_id', $userRole->role_id)->first();
-        if (!$subRole) return;
-
-        $rolePermissions = DB::table('role_menu_actions')
-            ->where('sub_role', $subRole->name)
-            ->get();
-
-        $this->userPermissions = $rolePermissions
-            ->pluck('allowed_actions')
-            ->map(fn($actions) => json_decode($actions, true))
-            ->flatten()
-            ->unique()
-            ->values()
-            ->toArray();
-    }
-
-    private function setPermissions()
-    {
-        // Grant all permissions to current user
-        $this->canView = true;
-        $this->canEdit = true;
-        $this->canDelete = true;
-        
-        // Original permission logic (commented out for reference)
-        // $this->canView = $this->hasPermission($this->actionPermissions['view']);
-        // $this->canEdit = $this->hasPermission($this->actionPermissions['edit']);
-        // $this->canDelete = $this->hasPermission($this->actionPermissions['delete']);
-    }
-
-    private function hasPermission($permission)
-    {
-        return in_array($permission, $this->userPermissions);
-    }
 
     // Branch action methods
     public function viewBranch($branchId)
     {
+        if (!$this->authorize('view', 'You do not have permission to view branch details')) {
+            return;
+        }
+        
         $this->selectedBranchId = $branchId;
         $this->selectedBranch = BranchesModel::find($branchId);
         $this->showViewModal = true;
@@ -132,6 +94,10 @@ class BranchesTable extends Component
 
     public function editBranch($branchId)
     {
+        if (!$this->authorize('edit', 'You do not have permission to edit branches')) {
+            return;
+        }
+        
         $this->selectedBranchId = $branchId;
         $this->selectedBranch = BranchesModel::find($branchId);
         
@@ -163,6 +129,10 @@ class BranchesTable extends Component
 
     public function blockBranch($branchId)
     {
+        if (!$this->authorize('delete', 'You do not have permission to block/delete branches')) {
+            return;
+        }
+        
         $this->selectedBranchId = $branchId;
         $this->selectedBranch = BranchesModel::find($branchId);
         $this->showDeleteModal = true;
@@ -265,8 +235,12 @@ class BranchesTable extends Component
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
 
-        return view('livewire.branches.branches-table', [
-            'branches' => $branches
-        ]);
+        return view('livewire.branches.branches-table', array_merge(
+            $this->permissions,
+            [
+                'branches' => $branches,
+                'permissions' => $this->permissions
+            ]
+        ));
     }
 }

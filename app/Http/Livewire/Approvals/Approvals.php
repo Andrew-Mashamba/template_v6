@@ -11,11 +11,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Models\ApprovalComment;
 use Livewire\WithPagination;
+use App\Traits\Livewire\WithModulePermissions;
 
 
 class Approvals extends Component
 {
-    use WithPagination;
+    use WithPagination, WithModulePermissions;
 
     public $searchTerm = '';
     public $filterStatus = 'all';
@@ -79,7 +80,19 @@ class Approvals extends Component
 
     public function mount()
     {
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
         $this->processCodes = ProcessCodeConfig::all();
+    }
+    
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'approvals';
     }
 
     public function getApprovalsProperty()
@@ -178,10 +191,14 @@ class Approvals extends Component
 
     public function render()
     {
-        return view('livewire.approvals.approvals', [
-            'approvals' => $this->approvals,
-            'processCodes' => $this->processCodes
-        ]);
+        return view('livewire.approvals.approvals', array_merge(
+            $this->permissions,
+            [
+                'approvals' => $this->approvals,
+                'processCodes' => $this->processCodes,
+                'permissions' => $this->permissions
+            ]
+        ));
     }
 
     // Override pagination methods to handle custom signatures
@@ -297,12 +314,20 @@ class Approvals extends Component
 
     public function showCommentModal($approvalId)
     {
+        if (!$this->authorize('comment', 'You do not have permission to add comments')) {
+            return;
+        }
+        
         $this->selectedApproval = Approval::find($approvalId);
         $this->showCommentModal = true;
     }
 
     public function showViewChangeDetailsModal($processCode, $processId)
     {
+        if (!$this->authorize('view', 'You do not have permission to view approval details')) {
+            return;
+        }
+        
         Log::info('showViewChangeDetailsModal called', [
             'process_code' => $processCode,
             'process_id' => $processId,
@@ -517,6 +542,10 @@ class Approvals extends Component
 
     public function approve()
     {
+        if (!$this->authorize('approve', 'You do not have permission to approve requests')) {
+            return;
+        }
+        
         try {
             DB::beginTransaction();
 
@@ -1572,6 +1601,10 @@ class Approvals extends Component
 
     public function reject()
     {
+        if (!$this->authorize('reject', 'You do not have permission to reject requests')) {
+            return;
+        }
+        
         try {
             DB::beginTransaction();
 
@@ -2299,6 +2332,10 @@ class Approvals extends Component
 
     public function approveLoanFromAssessment()
     {
+        if (!$this->authorize('approve', 'You do not have permission to approve loans')) {
+            return;
+        }
+        
         try {
             if (!$this->selectedApprovalId) {
                 session()->flash('notification', [
@@ -2347,6 +2384,10 @@ class Approvals extends Component
 
     public function rejectLoanFromAssessment()
     {
+        if (!$this->authorize('reject', 'You do not have permission to reject loans')) {
+            return;
+        }
+        
         try {
             if (!$this->selectedApprovalId) {
                 session()->flash('notification', [

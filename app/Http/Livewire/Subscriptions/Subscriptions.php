@@ -5,9 +5,11 @@ namespace App\Http\Livewire\Subscriptions;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Traits\Livewire\WithModulePermissions;
 
 class Subscriptions extends Component
 {
+    use WithModulePermissions;
     public $activeTab = 'overview';
     public $loading = false;
     public $services = [];
@@ -22,6 +24,8 @@ class Subscriptions extends Component
 
     public function mount()
     {
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
         $this->loadServices();
         $this->loadBillingHistory();
         $this->calculateTotalBill();
@@ -154,6 +158,12 @@ class Subscriptions extends Component
 
     public function toggleService($serviceId)
     {
+        // Check permission to manage subscriptions
+        if (!($this->permissions['canManage'] ?? false)) {
+            session()->flash('error', 'You do not have permission to manage service subscriptions');
+            return;
+        }
+        
         $service = collect($this->services)->firstWhere('id', $serviceId);
         
         if ($service && $service['type'] === 'optional') {
@@ -164,6 +174,12 @@ class Subscriptions extends Component
 
     public function confirmServiceToggle()
     {
+        // Check permission to manage subscriptions
+        if (!($this->permissions['canManage'] ?? false)) {
+            session()->flash('error', 'You do not have permission to manage service subscriptions');
+            return;
+        }
+        
         if ($this->selectedService) {
             // Update service status
             $this->services = collect($this->services)->map(function ($service) {
@@ -189,17 +205,61 @@ class Subscriptions extends Component
 
     public function downloadInvoice($invoiceNumber)
     {
+        // Check permission to download invoices
+        if (!($this->permissions['canExport'] ?? false)) {
+            session()->flash('error', 'You do not have permission to download invoices');
+            return;
+        }
+        
         // Logic to download invoice
         session()->flash('message', 'Invoice downloaded successfully!');
     }
 
     public function setActiveTab($tab)
     {
+        // Check permissions based on the tab being accessed
+        $requiredPermission = $this->getRequiredPermissionForTab($tab);
+        $permissionKey = 'can' . ucfirst($requiredPermission);
+        
+        if (!($this->permissions[$permissionKey] ?? false)) {
+            session()->flash('error', 'You do not have permission to access this subscriptions section');
+            return;
+        }
+        
         $this->activeTab = $tab;
     }
 
     public function render()
     {
-        return view('livewire.subscriptions.subscriptions');
+        return view('livewire.subscriptions.subscriptions', array_merge(
+            $this->permissions,
+            [
+                'permissions' => $this->permissions
+            ]
+        ));
+    }
+
+    /**
+     * Get the required permission for a specific subscriptions tab
+     */
+    private function getRequiredPermissionForTab($tab)
+    {
+        $tabPermissionMap = [
+            'overview' => 'view',    // Services Overview
+            'usage' => 'view',       // Usage Statistics
+            'billing' => 'view',     // Billing History
+        ];
+        
+        return $tabPermissionMap[$tab] ?? 'view';
+    }
+
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'subscriptions';
     }
 }

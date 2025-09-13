@@ -107,6 +107,23 @@
 
                         <nav class="space-y-2">
                             @foreach ($client_sections as $section)
+                                {{-- Check permissions for each section --}}
+                                @php
+                                    $showSection = true;
+                                    if ($section['id'] == 'new-member' && !($permissions['canCreate'] ?? false)) {
+                                        $showSection = false;
+                                    }
+                                    if ($section['id'] == 'special-edits' && !($permissions['canEdit'] ?? false)) {
+                                        $showSection = false;
+                                    }
+                                    if ($section['id'] == 'member-exit' && !($permissions['canDelete'] ?? false)) {
+                                        $showSection = false;
+                                    }
+                                    if (in_array($section['id'], ['members-list', 'pending-applications']) && !($permissions['canView'] ?? false)) {
+                                        $showSection = false;
+                                    }
+                                @endphp
+                                @if($showSection)
                                 @php
                                     $count = 0;
                                     if ($section['id'] == 'pending-applications') {
@@ -162,6 +179,7 @@
                                         @endif
                                     </div>
                                 </button>
+                                @endif
                             @endforeach
                         </nav>
                     </div>
@@ -1071,6 +1089,7 @@
                                                             </svg>
                                                         </button>
                                                     @else
+                                                        @if($permissions['canCreate'] ?? false)
                                                         <button type="button" wire:click="save"
                                                             class="inline-flex items-center rounded-lg border border-transparent bg-green-600 px-6 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                                                             <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1079,6 +1098,7 @@
                                                             </svg>
                                                             Complete Registration
                                                         </button>
+                                                        @endif
                                                     @endif
                                                 </div>
                                             </form>
@@ -1299,6 +1319,7 @@
                                             </div>
 
                                             <!-- Action Buttons -->
+                                            @if($permissions['canDelete'] ?? false)
                                             <div class="flex justify-end space-x-3">
                                                 <button wire:click="cancelMemberExit"
                                                     class="rounded-lg border border-gray-300 bg-white px-6 py-2 text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
@@ -1318,6 +1339,7 @@
                                                 </button>
                                                 @endif
                                             </div>
+                                            @endif
                                         </div>
                                         @endif
 

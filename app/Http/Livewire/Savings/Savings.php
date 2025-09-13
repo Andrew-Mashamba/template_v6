@@ -39,11 +39,13 @@ use Illuminate\Support\Facades\RateLimiter;
 use Exception;
 use App\Services\MembershipVerificationService;
 use App\Models\BankAccount;
+use App\Traits\Livewire\WithModulePermissions;
 
 class Savings extends Component
 {
     use WithPagination;
     use WithFileUploads;
+    use WithModulePermissions;
 
     public $tab_id = '10';
     public $title = 'Savings Management';
@@ -233,6 +235,14 @@ class Savings extends Component
         'editSavingsAccount' => 'editSavingsAccountModal'
     ];
 
+    public function mount()
+    {
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
+        $this->loadStatistics();
+        $this->loadAvailableProducts();
+    }
+
     public function boot()
     {
         //$this->authorize('view-savings');
@@ -243,6 +253,9 @@ class Savings extends Component
 
     public function showSavingsBulkUploadPage()
     {
+        if (!$this->authorize('export', 'You do not have permission to upload savings data')) {
+            return;
+        }
         $this->selected = 12;
     }
 
@@ -328,6 +341,9 @@ class Savings extends Component
 
     public function showSavingsFullReportPage()
     {
+        if (!$this->authorize('view', 'You do not have permission to view savings reports')) {
+            return;
+        }
         $this->selected = 11;
     }
 
@@ -843,10 +859,14 @@ class Savings extends Component
     public function render()
     {      
         $this->loadAvailableProducts();  
-        return view('livewire.savings.savings', [
-            'accounts' => $this->getFilteredAccounts(),
-            'products' => $this->availableProducts
-        ]);
+        return view('livewire.savings.savings', array_merge(
+            $this->permissions,
+            [
+                'accounts' => $this->getFilteredAccounts(),
+                'products' => $this->availableProducts,
+                'permissions' => $this->permissions
+            ]
+        ));
     }
 
     protected function getFilteredAccounts()
@@ -997,7 +1017,9 @@ class Savings extends Component
         }
     }
     public function createSavingsAccount(){ 
-
+        if (!$this->authorize('create', 'You do not have permission to create savings accounts')) {
+            return;
+        }
 
        $productAccount = sub_products::where('id',$this->productId)->first();
         try{
@@ -1088,6 +1110,9 @@ class Savings extends Component
 
     public function showCreateNewSavingsAccount()
     {
+        if (!$this->authorize('create', 'You do not have permission to create savings accounts')) {
+            return;
+        }
         $this->reset([
             'member',
             'productId',
@@ -1103,6 +1128,9 @@ class Savings extends Component
 
     public function showReceiveSavingsModal()
     {
+        if (!$this->authorize('deposit', 'You do not have permission to process savings deposits')) {
+            return;
+        }
         $this->reset([
             'membershipNumber',
             'selectedAccount',
@@ -1177,7 +1205,10 @@ class Savings extends Component
     }
 
     public function submitReceiveSavings()
-    {       
+    {
+        if (!$this->authorize('deposit', 'You do not have permission to process savings deposits')) {
+            return;
+        }
         DB::beginTransaction();
         try{
             $memberAccount = AccountsModel::where('account_number', $this->selectedAccount)->first();
@@ -1505,6 +1536,9 @@ class Savings extends Component
 
     public function showWithdrawSavingsModal()
     {
+        if (!$this->authorize('withdraw', 'You do not have permission to process savings withdrawals')) {
+            return;
+        }
         $this->reset([
             'withdrawMembershipNumber',
             'withdrawSelectedAccount',
@@ -1612,6 +1646,9 @@ class Savings extends Component
 
     public function submitWithdrawSavings()
     {
+        if (!$this->authorize('withdraw', 'You do not have permission to process savings withdrawals')) {
+            return;
+        }
         try {
             // Validate basic withdrawal requirements
             $this->validate([
@@ -2125,5 +2162,15 @@ class Savings extends Component
             'withdrawOtpVerified'
         ]);
         $this->resetErrorBag();
+    }
+
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'savings';
     }
 }

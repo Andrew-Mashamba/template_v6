@@ -97,6 +97,18 @@
                 </div>
             </div>
         </div>
+        @if(!($permissions['canView'] ?? false) && !($permissions['canCreate'] ?? false) && !($permissions['canManage'] ?? false) && !($permissions['canExport'] ?? false))
+        {{-- No Access Message for users with no permissions --}}
+        <div class="bg-white shadow rounded-lg p-8 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No Access</h3>
+            <p class="text-gray-500">You don't have permission to access the transactions management module.</p>
+        </div>
+        @else
         <!-- Sidebar and Main Content -->
         <div class="flex gap-6">
             <!-- Sidebar Navigation -->
@@ -123,72 +135,84 @@
                     <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 px-2">Navigation</h3>
                     @php
                         $sections = [
-                            ['id' => 1, 'label' => 'Dashboard Overview', 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', 'description' => 'Analytics and insights'],
-                            ['id' => 2, 'label' => 'New Transaction', 'icon' => 'M12 6v6m0 0v6m0-6h6m-6 0H6', 'description' => 'Create transaction entry'],
-                            ['id' => 3, 'label' => 'Transaction List', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'description' => 'View all transactions'],
-                            ['id' => 4, 'label' => 'Pending', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', 'description' => 'Awaiting processing'],
-                            ['id' => 5, 'label' => 'Reconciliation', 'icon' => 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z', 'description' => 'Reconcile transactions'],
-                            ['id' => 6, 'label' => 'Reports', 'icon' => 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'description' => 'Generate reports'],
+                            ['id' => 1, 'label' => 'Dashboard Overview', 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', 'description' => 'Analytics and insights', 'permission' => 'view'],
+                            ['id' => 2, 'label' => 'New Transaction', 'icon' => 'M12 6v6m0 0v6m0-6h6m-6 0H6', 'description' => 'Create transaction entry', 'permission' => 'create'],
+                            ['id' => 3, 'label' => 'Transaction List', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'description' => 'View all transactions', 'permission' => 'view'],
+                            ['id' => 4, 'label' => 'Pending', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', 'description' => 'Awaiting processing', 'permission' => 'view'],
+                            ['id' => 5, 'label' => 'Reconciliation', 'icon' => 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z', 'description' => 'Reconcile transactions', 'permission' => 'manage'],
+                            ['id' => 6, 'label' => 'Reports', 'icon' => 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'description' => 'Generate reports', 'permission' => 'view'],
                         ];
                     @endphp
                     <nav class="space-y-2">
                         @foreach ($sections as $section)
                             @php
-                                $isActive = $selectedMenuItem == $section['id'];
+                                $permissionKey = 'can' . ucfirst($section['permission']);
+                                $hasPermission = $permissions[$permissionKey] ?? false;
                             @endphp
-                            <button
-                                wire:click="selectedMenu({{ $section['id'] }})"
-                                class="relative w-full group transition-all duration-200"
-                                aria-label="{{ $section['label'] }}"
-                            >
-                                <div class="flex items-center p-3 rounded-xl transition-all duration-200
-                                    @if ($isActive) 
-                                        bg-blue-900 text-white shadow-lg 
-                                    @else 
-                                        bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900 
-                                    @endif">
-                                    <div wire:loading wire:target="selectedMenu({{ $section['id'] }})" class="mr-3">
-                                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
+                            @if($hasPermission)
+                                @php
+                                    $isActive = $selectedMenuItem == $section['id'];
+                                @endphp
+                                <button
+                                    wire:click="selectedMenu({{ $section['id'] }})"
+                                    class="relative w-full group transition-all duration-200"
+                                    aria-label="{{ $section['label'] }}"
+                                >
+                                    <div class="flex items-center p-3 rounded-xl transition-all duration-200
+                                        @if ($isActive) 
+                                            bg-blue-900 text-white shadow-lg 
+                                        @else 
+                                            bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900 
+                                        @endif">
+                                        <div wire:loading wire:target="selectedMenu({{ $section['id'] }})" class="mr-3">
+                                            <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        </div>
+                                        <div wire:loading.remove wire:target="selectedMenu({{ $section['id'] }})" class="mr-3">
+                                            <svg class="w-5 h-5 @if ($isActive) text-white @else text-gray-500 group-hover:text-gray-700 @endif" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $section['icon'] }}"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1 text-left">
+                                            <div class="font-medium text-sm">{{ $section['label'] }}</div>
+                                            <div class="text-xs opacity-75">{{ $section['description'] }}</div>
+                                        </div>
                                     </div>
-                                    <div wire:loading.remove wire:target="selectedMenu({{ $section['id'] }})" class="mr-3">
-                                        <svg class="w-5 h-5 @if ($isActive) text-white @else text-gray-500 group-hover:text-gray-700 @endif" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $section['icon'] }}"></path>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1 text-left">
-                                        <div class="font-medium text-sm">{{ $section['label'] }}</div>
-                                        <div class="text-xs opacity-75">{{ $section['description'] }}</div>
-                                    </div>
-                                </div>
-                            </button>
+                                </button>
+                            @endif
                         @endforeach
                     </nav>
                 </div>
                 <!-- Quick Actions -->
+                @if(($permissions['canCreate'] ?? false) || ($permissions['canView'] ?? false))
                 <div class="p-4 border-t border-gray-100 bg-gray-50">
                     <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">Quick Actions</h3>
                     <div class="space-y-2">
+                        @if($permissions['canCreate'] ?? false)
                         <button wire:click="selectedMenu(2)" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
                             New Transaction
                         </button>
+                        @endif
+                        @if($permissions['canView'] ?? false)
                         <button wire:click="selectedMenu(6)" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                             Reports
                         </button>
+                        @endif
                     </div>
                 </div>
+                @endif
             </div>
             <!-- Main Content Area -->
             <div class="flex-1">
-                @if($selectedMenuItem == 1)
+                @if($selectedMenuItem == 1 && ($permissions['canView'] ?? false))
                 <!-- Dashboard Overview -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                     <!-- Transaction Volume Card -->
@@ -293,8 +317,19 @@
                         </div>
                     </div>
                 </div>
+                @elseif($selectedMenuItem == 1)
+                    <!-- No Access Message for Dashboard -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Access</h3>
+                        <p class="text-gray-500">You don't have permission to access the dashboard overview.</p>
+                    </div>
                 @endif
-                @if($selectedMenuItem == 2)
+                @if($selectedMenuItem == 2 && ($permissions['canCreate'] ?? false))
                 <!-- New Transaction Form -->
                 <div class="bg-white rounded-xl p-6 border border-gray-200 mb-8">
                     <h3 class="text-lg font-semibold text-gray-900 mb-6">Create New Transaction</h3>
@@ -409,8 +444,19 @@
                         </div>
                     </form>
                 </div>
+                @elseif($selectedMenuItem == 2)
+                    <!-- No Access Message for New Transaction -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Access</h3>
+                        <p class="text-gray-500">You don't have permission to create new transactions.</p>
+                    </div>
                 @endif
-                @if($selectedMenuItem == 3)
+                @if($selectedMenuItem == 3 && ($permissions['canView'] ?? false))
                 <!-- Transaction List with Advanced Filters -->
                 <div class="bg-white rounded-xl p-6 border border-gray-200 mb-8">
                     <!-- Advanced Filters -->
@@ -529,12 +575,14 @@
                             </select>
                         </div>
                         <div class="flex items-center space-x-2">
+                            @if($permissions['canExport'] ?? false)
                             <button wire:click="exportTransactions" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                 </svg>
                                 Export
                             </button>
+                            @endif
                         </div>
                     </div>
                     <!-- Transactions Table -->
@@ -607,14 +655,16 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $transaction->created_at->format('Y-m-d H:i') }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             <div class="flex space-x-2">
+                                                @if($permissions['canView'] ?? false)
                                                 <button wire:click="viewTransaction({{ $transaction->id }})" class="text-indigo-600 hover:text-indigo-900">View</button>
-                                                @if($transaction->status === 'FAILED' && $transaction->canBeRetried())
+                                                @endif
+                                                @if(($permissions['canManage'] ?? false) && $transaction->status === 'FAILED' && $transaction->canBeRetried())
                                                     <button wire:click="retryTransaction({{ $transaction->id }})" class="text-yellow-600 hover:text-yellow-900">Retry</button>
                                                 @endif
-                                                @if($transaction->isReversible())
+                                                @if(($permissions['canManage'] ?? false) && $transaction->isReversible())
                                                     <button wire:click="reverseTransaction({{ $transaction->id }})" class="text-red-600 hover:text-red-900">Reverse</button>
                                                 @endif
-                                                @if($transaction->reconciliation_status === 'UNRECONCILED')
+                                                @if(($permissions['canManage'] ?? false) && $transaction->reconciliation_status === 'UNRECONCILED')
                                                     <button wire:click="reconcileTransaction({{ $transaction->id }})" class="text-green-600 hover:text-green-900">Reconcile</button>
                                                 @endif
                                             </div>
@@ -633,8 +683,19 @@
                         {{ $transactions->links() }}
                     </div>
                 </div>
+                @elseif($selectedMenuItem == 3)
+                    <!-- No Access Message for Transaction List -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Access</h3>
+                        <p class="text-gray-500">You don't have permission to view the transaction list.</p>
+                    </div>
                 @endif
-                @if($selectedMenuItem == 4)
+                @if($selectedMenuItem == 4 && ($permissions['canView'] ?? false))
                 <!-- Pending Transactions Section -->
                 <div class="bg-white rounded-xl p-6 border border-yellow-200 mb-8">
                     <h3 class="text-lg font-semibold text-yellow-900 mb-4">Pending Transactions</h3>
@@ -660,8 +721,10 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $transaction->created_at->format('Y-m-d H:i') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <div class="flex space-x-2">
+                                            @if($permissions['canView'] ?? false)
                                             <button wire:click="viewTransaction({{ $transaction->id }})" class="text-indigo-600 hover:text-indigo-900">View</button>
-                                            @if($transaction->canBeRetried())
+                                            @endif
+                                            @if(($permissions['canManage'] ?? false) && $transaction->canBeRetried())
                                                 <button wire:click="retryTransaction({{ $transaction->id }})" class="text-yellow-600 hover:text-yellow-900">Retry</button>
                                             @endif
                                         </div>
@@ -672,8 +735,19 @@
                         </table>
                     </div>
                 </div>
+                @elseif($selectedMenuItem == 4)
+                    <!-- No Access Message for Pending Transactions -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Access</h3>
+                        <p class="text-gray-500">You don't have permission to view pending transactions.</p>
+                    </div>
                 @endif
-                @if($selectedMenuItem == 5)
+                @if($selectedMenuItem == 5 && ($permissions['canManage'] ?? false))
                 <!-- Reconciliation Section -->
                 <div class="bg-white rounded-xl p-6 border border-gray-200 mb-8">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Unreconciled Transactions</h3>
@@ -703,8 +777,12 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $transaction->created_at->format('Y-m-d H:i') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <div class="flex space-x-2">
+                                            @if($permissions['canView'] ?? false)
                                             <button wire:click="viewTransaction({{ $transaction->id }})" class="text-indigo-600 hover:text-indigo-900">View</button>
+                                            @endif
+                                            @if($permissions['canManage'] ?? false)
                                             <button wire:click="reconcileTransaction({{ $transaction->id }})" class="text-green-600 hover:text-green-900">Reconcile</button>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -713,8 +791,19 @@
                         </table>
                     </div>
                 </div>
+                @elseif($selectedMenuItem == 5)
+                    <!-- No Access Message for Reconciliation -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Access</h3>
+                        <p class="text-gray-500">You don't have permission to access transaction reconciliation.</p>
+                    </div>
                 @endif
-                @if($selectedMenuItem == 6)
+                @if($selectedMenuItem == 6 && ($permissions['canView'] ?? false))
                 <!-- Reports Section -->
                 <div class="bg-white rounded-xl p-6 border border-gray-200 mb-8">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Transaction Reports & Analytics</h3>
@@ -727,9 +816,21 @@
                         </div>
                     </div>
                 </div>
+                @elseif($selectedMenuItem == 6)
+                    <!-- No Access Message for Reports -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Access</h3>
+                        <p class="text-gray-500">You don't have permission to access transaction reports.</p>
+                    </div>
                 @endif
             </div>
         </div>
+        @endif
     </div>
 </div>
 

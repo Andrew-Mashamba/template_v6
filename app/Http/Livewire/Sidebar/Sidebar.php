@@ -114,7 +114,16 @@ class Sidebar extends Component
                 $menuItems->push(0); // Dashboard menu ID is 0 based on menu_number
             }
 
-            $this->menuItems = $menuItems->unique()->values()->toArray();
+            // Get unique menu IDs
+            $uniqueMenuIds = $menuItems->unique()->values()->toArray();
+            
+            // Sort menu IDs based on menu_number from the database
+            $sortedMenus = Menu::whereIn('id', $uniqueMenuIds)
+                ->orderBy('menu_number', 'asc')
+                ->pluck('id')
+                ->toArray();
+            
+            $this->menuItems = $sortedMenus;
             
             Log::info('Menu items loaded for user', [
                 'user_id' => $this->currentUserId,

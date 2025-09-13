@@ -145,8 +145,22 @@
                                     $count = DB::table('expenses')->where('status', 'PENDING')->count();
                                 }
                                 $isActive = $this->selectedMenuItem == $section['id'];
+                                
+                                // Check permissions for each section
+                                $permissionMap = [
+                                    1 => 'view',         // Dashboard Overview
+                                    2 => 'create',       // New Expense
+                                    3 => 'view',         // Expense List
+                                    4 => 'approve',      // Pending Approval
+                                    5 => 'manage',       // Categories
+                                    6 => 'view'          // Reports
+                                ];
+                                $requiredPermission = $permissionMap[$section['id']] ?? 'view';
+                                $permissionKey = 'can' . ucfirst($requiredPermission);
+                                $hasPermission = $permissions[$permissionKey] ?? false;
                             @endphp
 
+                            @if($hasPermission)
                             <button
                                 wire:click="selectedMenu({{ $section['id'] }})"
                                 class="relative w-full group transition-all duration-200"
@@ -190,6 +204,7 @@
                                     @endif
                                 </div>
                             </button>
+                            @endif
                         @endforeach
                     </nav>
                 </div>
@@ -198,24 +213,30 @@
                 <div class="p-4 border-t border-gray-100 bg-gray-50">
                     <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">Quick Actions</h3>
                     <div class="space-y-2">
+                        @if($permissions['canCreate'] ?? false)
                         <button wire:click="selectedMenu(2)" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
                             New Expense
                         </button>
+                        @endif
+                        @if($permissions['canView'] ?? false)
                         <button wire:click="selectedMenu(6)" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                             Generate Report
                         </button>
+                        @endif
+                        @if($permissions['canExport'] ?? false)
                         <button class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
                             </svg>
                             Export Data
                         </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -291,6 +312,7 @@
                         <div wire:loading.remove wire:target="selectedMenu" class="min-h-[400px]">
                             @switch($this->selectedMenuItem)
                                 @case(1)
+                                    @if($permissions['canView'] ?? false)
                                     <!-- Dashboard Overview -->
                                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                                         <!-- Budget Overview Card -->
@@ -402,18 +424,24 @@
                                             <p class="text-gray-500">Chart visualization would go here</p>
                                         </div>
                                     </div>
+                                    @endif
                                     @break
                                     
                                 @case(2)
+                                    @if($permissions['canCreate'] ?? false)
                                     <livewire:expenses.new-expense />
+                                    @endif
                                     @break
                                     
                                 @case(3)
+                                    @if($permissions['canView'] ?? false)
                                     <livewire:expenses.expenses-table />
                                     <livewire:expenses.view-expense-details />
+                                    @endif
                                     @break
                                     
                                 @case(4)
+                                    @if($permissions['canApprove'] ?? false)
                                     <!-- Pending Approvals -->
                                     <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
                                         <h3 class="text-lg font-semibold text-yellow-900 mb-4">Pending Expense Approvals</h3>
@@ -450,9 +478,11 @@
                                             @endif
                                         </div>
                                     </div>
+                                    @endif
                                     @break
                                     
                                 @case(5)
+                                    @if($permissions['canManage'] ?? false)
                                     <!-- Categories Management -->
                                     <div class="bg-white rounded-xl p-6 border border-gray-200">
                                         <div class="flex items-center justify-between mb-6">
@@ -489,9 +519,11 @@
                                             @endforeach
                                         </div>
                                     </div>
+                                    @endif
                                     @break
                                     
                                 @case(6)
+                                    @if($permissions['canView'] ?? false)
                                     <!-- Reports Section -->
                                     <div class="space-y-6">
                                         <!-- Report Filters -->
@@ -587,6 +619,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @endif
                                     @break
                                     
                                 @default
@@ -599,6 +632,19 @@
                                         <p class="text-gray-600">Select a section from the sidebar to get started</p>
                                     </div>
                             @endswitch
+                            
+                            <!-- Show message if no permissions for current section -->
+                            @if(!($permissions['canView'] ?? false) && !($permissions['canCreate'] ?? false) && !($permissions['canApprove'] ?? false) && !($permissions['canManage'] ?? false))
+                                <div class="text-center py-12">
+                                    <div class="mx-auto h-12 w-12 text-gray-400">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                        </svg>
+                                    </div>
+                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No Access</h3>
+                                    <p class="mt-1 text-sm text-gray-500">You don't have permission to access any expense management features.</p>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

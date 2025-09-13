@@ -5,9 +5,11 @@ namespace App\Http\Livewire\Expenses;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use App\Traits\Livewire\WithModulePermissions;
 
 class Expense extends Component
 {
+    use WithModulePermissions;
     public $selected;
     public $unusedBudget;
     public $selectedMenuItem = 1; // Default to Dashboard Overview
@@ -17,11 +19,28 @@ class Expense extends Component
 
     public function mount()
     {
-        // Initialize component
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
     }
 
     public function selectedMenu($menuId)
     {
+        // Check permissions based on the menu being accessed
+        $permissionMap = [
+            1 => 'view',         // Dashboard Overview
+            2 => 'create',       // New Expense
+            3 => 'view',         // Expense List
+            4 => 'approve',      // Pending Approval
+            5 => 'manage',       // Categories
+            6 => 'view'          // Reports
+        ];
+        
+        $requiredPermission = $permissionMap[$menuId] ?? 'view';
+        
+        if (!$this->authorize($requiredPermission, 'You do not have permission to access this expense section')) {
+            return;
+        }
+        
         $this->selectedMenuItem = $menuId;
         $this->showDropdown = false;
         $this->results = [];
@@ -44,6 +63,21 @@ class Expense extends Component
 
     public function render()
     {
-        return view('livewire.expenses.expense');
+        return view('livewire.expenses.expense', array_merge(
+            $this->permissions,
+            [
+                'permissions' => $this->permissions
+            ]
+        ));
+    }
+
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'expenses';
     }
 }

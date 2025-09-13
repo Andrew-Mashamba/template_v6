@@ -14,9 +14,11 @@ use Carbon\Carbon;
 use Exception;
 use App\Models\AccountsModel;
 use App\Models\ClientsModel;
+use App\Traits\Livewire\WithModulePermissions;
 
 class SavingsOverview extends Component
 {
+    use WithModulePermissions;
     // Properties for data
     public $recentTransactions = [];
     public $topSavers = [];
@@ -33,7 +35,8 @@ class SavingsOverview extends Component
 
     public function mount()
     {
-        //$this->authorize('view-savings');
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
         $this->loadData();
     }
 
@@ -117,6 +120,16 @@ class SavingsOverview extends Component
 
     public function render()
     {
-        return view('livewire.savings.savings-overview');
+        return view('livewire.savings.savings-overview', $this->permissions);
+    }
+
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'savings';
     }
 }

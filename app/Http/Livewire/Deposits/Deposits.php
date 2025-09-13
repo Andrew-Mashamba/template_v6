@@ -40,11 +40,13 @@ use App\Models\BankAccount;
 use App\Services\NbcPayments\InternalFundTransferService;
 use App\Services\NbcPayments\NbcPaymentService;
 use App\Services\NbcPayments\NbcLookupService;
+use App\Traits\Livewire\WithModulePermissions;
 
 class Deposits extends Component
 {
     use WithPagination;
     use WithFileUploads;
+    use WithModulePermissions;
 
     public $tab_id = '10';
     public $title = 'Deposits Management';
@@ -227,7 +229,8 @@ class Deposits extends Component
 
     public function mount()
     {
-        //$this->authorize('view-deposits');
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
         $this->loadStatistics();
         $this->loadAvailableProducts();
     }
@@ -235,6 +238,9 @@ class Deposits extends Component
 
     public function showDepositsBulkUploadPage()
     {
+        if (!$this->authorize('export', 'You do not have permission to upload deposits data')) {
+            return;
+        }
         $this->selected = 12;
     }
 
@@ -274,6 +280,9 @@ class Deposits extends Component
 
     public function showDepositsFullReportPage()
     {
+        if (!$this->authorize('view', 'You do not have permission to view deposits reports')) {
+            return;
+        }
         $this->selected = 11;
     }
 
@@ -783,7 +792,12 @@ class Deposits extends Component
 
     public function render()
     {
-        return view('livewire.deposits.deposits');
+        return view('livewire.deposits.deposits', array_merge(
+            $this->permissions,
+            [
+                'permissions' => $this->permissions
+            ]
+        ));
     }
 
     protected function getFilteredAccounts()
@@ -825,6 +839,9 @@ class Deposits extends Component
 
     public function createDepositsAccount()
     {
+        if (!$this->authorize('create', 'You do not have permission to create deposits accounts')) {
+            return;
+        }
         $this->validate([
             'clientNumber' => 'required|exists:clients,client_number',
             'productId' => 'required|exists:sub_products,sub_product_id',
@@ -888,6 +905,9 @@ class Deposits extends Component
 
     public function showCreateNewDepositsAccount()
     {
+        if (!$this->authorize('create', 'You do not have permission to create deposits accounts')) {
+            return;
+        }
         $this->reset([
             'clientNumber',
             'productId',
@@ -901,6 +921,9 @@ class Deposits extends Component
 
     public function showReceiveDepositsModal()
     {
+        if (!$this->authorize('deposit', 'You do not have permission to process deposits')) {
+            return;
+        }
         $this->reset([
             'membershipNumber',
             'selectedAccount',
@@ -974,6 +997,9 @@ class Deposits extends Component
 
     public function submitReceiveDeposits()
     {
+        if (!$this->authorize('deposit', 'You do not have permission to process deposits')) {
+            return;
+        }
         DB::beginTransaction();
         try {
             $memberAccount = AccountsModel::where('account_number', $this->selectedAccount)->first();
@@ -1153,6 +1179,9 @@ class Deposits extends Component
 
     public function showWithdrawDepositsModal()
     {
+        if (!$this->authorize('withdraw', 'You do not have permission to process deposits withdrawals')) {
+            return;
+        }
         $this->reset([
             'withdrawMembershipNumber',
             'withdrawSelectedAccount',
@@ -1248,6 +1277,9 @@ class Deposits extends Component
 
     public function submitWithdrawDeposits()
     {
+        if (!$this->authorize('withdraw', 'You do not have permission to process deposits withdrawals')) {
+            return;
+        }
         try {
             // Validate basic withdrawal requirements
             $this->validate([
@@ -1609,5 +1641,15 @@ class Deposits extends Component
             'withdrawBankAccountHolderName'
         ]);
         $this->resetErrorBag();
+    }
+
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'deposits';
     }
 }

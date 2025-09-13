@@ -97,7 +97,36 @@
                         @foreach ($sections as $section)
                             @php
                                 $isActive = $selectedMenuItem == $section['id'];
+                                
+                                // Check permissions for each section
+                                $showSection = true;
+                                if ($section['id'] == 1) {
+                                    // Dashboard - requires view permission
+                                    $showSection = $permissions['canView'] ?? false;
+                                }
+                                if ($section['id'] == 2) {
+                                    // New Payment - requires create permission
+                                    $showSection = $permissions['canCreate'] ?? false;
+                                }
+                                if ($section['id'] == 3) {
+                                    // Payment List - requires view permission
+                                    $showSection = $permissions['canView'] ?? false;
+                                }
+                                if ($section['id'] == 4) {
+                                    // Pending - requires view permission
+                                    $showSection = $permissions['canView'] ?? false;
+                                }
+                                if ($section['id'] == 5) {
+                                    // Channels - requires view permission
+                                    $showSection = $permissions['canView'] ?? false;
+                                }
+                                if ($section['id'] == 6) {
+                                    // Reports - requires reports permission
+                                    $showSection = ($permissions['canViewReports'] ?? false) || ($permissions['canView'] ?? false);
+                                }
                             @endphp
+                            
+                            @if($showSection)
                             <button
                                 wire:click="selectedMenu({{ $section['id'] }})"
                                 class="relative w-full group transition-all duration-200"
@@ -126,6 +155,7 @@
                                     </div>
                                 </div>
                             </button>
+                            @endif
                         @endforeach
                     </nav>
                 </div>
