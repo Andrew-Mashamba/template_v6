@@ -17,6 +17,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\MainReport;
 use App\Exports\LoanSchedule;
 use App\Exports\ContractData;
+use App\Exports\ClientDetailsReportExport;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Exception;
 
@@ -137,6 +139,26 @@ class ClientsDetailsReport extends Component
                 ->where('product_number', '1000')
                 ->first();
             $this->selectedMember->savings_balance = $savingsAccount ? $savingsAccount->balance : 0;
+            
+            // Get loan information
+            $loans = LoansModel::where('client_number', $this->selectedMember->client_number)->get();
+            $this->selectedMember->loans = $loans;
+            $this->selectedMember->total_loans = $loans->count();
+            $this->selectedMember->active_loans = $loans->where('status', 'ACTIVE')->count();
+            $this->selectedMember->total_loan_amount = $loans->sum('loan_amount');
+            $this->selectedMember->outstanding_balance = $loans->where('status', 'ACTIVE')->sum('outstanding_balance');
+            
+            // Get recent transactions
+            $recentTransactions = Transactions::where('client_number', $this->selectedMember->client_number)
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get();
+            $this->selectedMember->recent_transactions = $recentTransactions;
+            
+            // Get all accounts
+            $allAccounts = AccountsModel::where('client_number', $this->selectedMember->client_number)->get();
+            $this->selectedMember->all_accounts = $allAccounts;
+            $this->selectedMember->total_accounts = $allAccounts->count();
         }
         $this->showMemberModal = true;
     }
@@ -150,46 +172,120 @@ class ClientsDetailsReport extends Component
     public function exportReport($format = 'pdf')
     {
         try {
-            // Here you would implement the actual export logic
-            // For now, we'll just show a success message
-            session()->flash('success', "Client Details Report exported as {$format} successfully!");
+            if ($format === 'pdf') {
+                return $this->exportToPDF();
+            } elseif ($format === 'excel') {
+                return $this->exportToExcel();
+            }
             
-            Log::info('Client Details Report exported', [
-                'format' => $format,
-                'client_type' => $this->client_type,
-                'branch_filter' => $this->branchFilter,
-                'status_filter' => $this->statusFilter,
-                'user_id' => auth()->id()
-            ]);
+            session()->flash('error', 'Invalid export format specified.');
         } catch (Exception $e) {
             session()->flash('error', 'Error exporting report: ' . $e->getMessage());
             Log::error('Client Details Report export failed', [
                 'error' => $e->getMessage(),
+                'format' => $format,
                 'user_id' => auth()->id()
             ]);
         }
     }
 
-    public function downloadExcelFile()
+    private function exportToPDF()
     {
-        if ($this->client_type == "MULTIPLE") {
-            $input = $this->custome_client_number;
-            $input = rtrim($input, ',');
-            $numbers = explode(',', $input);
-            $memberNumbers = [];
+        try {
+            // Prepare data for PDF
+            $reportData = [
+                'members' => $this->members,
+                'summary' => [
+                    'totalMembers' => $this->totalMembers,
+                    'activeMembers' => $this->activeMembers,
+                    'pendingMembers' => $this->pendingMembers,
+                    'inactiveMembers' => $this->inactiveMembers,
+                    'totalBranches' => $this->totalBranches,
+                    'totalSavings' => $this->totalSavings,
+                    'membersWithLoans' => $this->membersWithLoans,
+                ],
+                'filters' => [
+                    'client_type' => $this->client_type,
+                    'branch_filter' => $this->branchFilter,
+                    'status_filter' => $this->statusFilter,
+                    'custom_numbers' => $this->custome_client_number,
+                ],
+                'reportDate' => now()->format('Y-m-d H:i:s'),
+                'generatedBy' => auth()->user()->name ?? 'System',
+            ];
 
-            foreach ($numbers as $number) {
-                $number = trim($number);
-                $number = intval($number);
-                $number = str_pad($number, 4, 0, STR_PAD_LEFT);
-                $memberNumbers[] = $number;
-            }
+            $filename = 'client_details_report_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+            
+            // Generate PDF using DomPDF
+            $pdf = Pdf::loadView('pdf.client-details-report', $reportData);
+            
+            // Set PDF options
+            $pdf->setPaper('A4', 'landscape');
+            $pdf->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'Arial'
+            ]);
+            
+            Log::info('Client Details Report exported as PDF', [
+                'format' => 'pdf',
+                'client_type' => $this->client_type,
+                'branch_filter' => $this->branchFilter,
+                'status_filter' => $this->statusFilter,
+                'user_id' => auth()->id()
+            ]);
+            
+            // Download the PDF
+            return response()->streamDownload(function () use ($pdf) {
+                echo $pdf->output();
+            }, $filename);
+            
+        } catch (Exception $e) {
+            Log::error('Error generating PDF: ' . $e->getMessage());
+            throw $e;
+        }
+    }
 
-            $LoanId = LoansModel::whereIn('client_number', $memberNumbers)->pluck('id');
-            return Excel::download(new MainReport($LoanId), 'generalReport.xlsx');
-        } else {
-            $loanId = LoansModel::get()->pluck('id')->toArray();
-            return Excel::download(new MainReport($loanId), 'generalReport.xlsx');
+    private function exportToExcel()
+    {
+        try {
+            $filename = 'client_details_report_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+            
+            // Prepare data for Excel export
+            $summary = [
+                'totalMembers' => $this->totalMembers,
+                'activeMembers' => $this->activeMembers,
+                'pendingMembers' => $this->pendingMembers,
+                'inactiveMembers' => $this->inactiveMembers,
+                'totalBranches' => $this->totalBranches,
+                'totalSavings' => $this->totalSavings,
+                'membersWithLoans' => $this->membersWithLoans,
+            ];
+            
+            $filters = [
+                'client_type' => $this->client_type,
+                'branch_filter' => $this->branchFilter,
+                'status_filter' => $this->statusFilter,
+                'custom_numbers' => $this->custome_client_number,
+            ];
+            
+            Log::info('Client Details Report exported as Excel', [
+                'format' => 'excel',
+                'client_type' => $this->client_type,
+                'branch_filter' => $this->branchFilter,
+                'status_filter' => $this->statusFilter,
+                'user_id' => auth()->id()
+            ]);
+            
+            // Use the proper Excel export class
+            return Excel::download(
+                new \App\Exports\ClientDetailsReportExport($this->members, $summary, $filters),
+                $filename
+            );
+            
+        } catch (Exception $e) {
+            Log::error('Error generating Excel: ' . $e->getMessage());
+            throw $e;
         }
     }
 

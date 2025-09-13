@@ -363,11 +363,11 @@
             </div>
         </div>
 
-        <!-- Client Reports Section -->
+        <!-- Member Reports Section -->
         <div class="mb-8">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Client Reports</h2>
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Member Reports</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Client Details Report -->
+                <!-- Member Details Report -->
                 <div class="bg-white shadow rounded-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer"
                      wire:click="showComponent('clients-details-report')">
                     <div class="p-6">
@@ -381,7 +381,7 @@
                                     </div>
                                 </div>
                                 <div class="ml-4">
-                                    <h3 class="text-lg font-semibold text-gray-900">Client Details Report</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900">Member Details Report</h3>
                                     <p class="text-sm text-gray-500">Member Information</p>
                                 </div>
                             </div>
@@ -401,7 +401,7 @@
                     </div>
                 </div>
 
-                <!-- Client Loan Account -->
+                <!-- Member Loan Account -->
                 <div class="bg-white shadow rounded-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer"
                      wire:click="showComponent('client-loan-account')">
                     <div class="p-6">
@@ -415,7 +415,7 @@
                                     </div>
                                 </div>
                                 <div class="ml-4">
-                                    <h3 class="text-lg font-semibold text-gray-900">Client Loan Account</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900">Member Loan Account</h3>
                                     <p class="text-sm text-gray-500">Account Details</p>
                                 </div>
                             </div>
@@ -425,7 +425,7 @@
                                 </span>
                             </div>
                         </div>
-                        <p class="text-sm text-gray-600 mb-4">Individual client loan account statements and balances</p>
+                        <p class="text-sm text-gray-600 mb-4">Individual member loan account statements and balances</p>
                         <div class="flex items-center justify-between">
                             <span class="text-xs text-gray-500">Monthly Report</span>
                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -435,7 +435,7 @@
                     </div>
                 </div>
 
-                <!-- Client Repayment History -->
+                <!-- Member Repayment History -->
                 <div class="bg-white shadow rounded-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer"
                      wire:click="showComponent('client-repayment-history')">
                     <div class="p-6">
@@ -449,7 +449,7 @@
                                     </div>
                                 </div>
                                 <div class="ml-4">
-                                    <h3 class="text-lg font-semibold text-gray-900">Client Repayment History</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900">Member Repayment History</h3>
                                     <p class="text-sm text-gray-500">Payment Records</p>
                                 </div>
                             </div>
@@ -459,7 +459,7 @@
                                 </span>
                             </div>
                         </div>
-                        <p class="text-sm text-gray-600 mb-4">Complete repayment history and payment patterns</p>
+                        <p class="text-sm text-gray-600 mb-4">Complete repayment history and payment patterns for members</p>
                         <div class="flex items-center justify-between">
                             <span class="text-xs text-gray-500">Monthly Report</span>
                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1049,7 +1049,7 @@
         </div>
         @livewire('reports.loan-application-report')
     @elseif($activeComponent === 'clients-details-report')
-        <!-- Client Details Report Component -->
+        <!-- Member Details Report Component -->
         <div class="mb-6">
             <button wire:click="backToDashboard" 
                     class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -1061,7 +1061,7 @@
         </div>
         @livewire('reports.clients-details-report')
     @elseif($activeComponent === 'client-loan-account')
-        <!-- Client Loan Account Component -->
+        <!-- Member Loan Account Component -->
         <div class="mb-6">
             <button wire:click="backToDashboard" 
                     class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -1073,7 +1073,7 @@
         </div>
         @livewire('reports.client-loan-account')
     @elseif($activeComponent === 'client-repayment-history')
-        <!-- Client Repayment History Component -->
+        <!-- Member Repayment History Component Component -->
         <div class="mb-6">
             <button wire:click="backToDashboard" 
                     class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">

@@ -8,19 +8,44 @@
                     <p class="mt-1 text-sm text-gray-500">Summary of loan applications received and processed</p>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button wire:click="exportReport('pdf')" 
-                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        Export PDF
+                    {{-- PDF Export Button --}}
+                    <button wire:click="exportPdf" 
+                            wire:loading.attr="disabled"
+                            wire:target="exportPdf"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <div wire:loading.remove wire:target="exportPdf">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <div wire:loading wire:target="exportPdf">
+                            <svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                        <span wire:loading.remove wire:target="exportPdf">Export PDF</span>
+                        <span wire:loading wire:target="exportPdf">Generating PDF...</span>
                     </button>
-                    <button wire:click="exportReport('excel')" 
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        Export Excel
+
+                    {{-- Excel Export Button --}}
+                    <button wire:click="exportExcel" 
+                            wire:loading.attr="disabled"
+                            wire:target="exportExcel"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <div wire:loading.remove wire:target="exportExcel">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <div wire:loading wire:target="exportExcel">
+                            <svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                        <span wire:loading.remove wire:target="exportExcel">Export Excel</span>
+                        <span wire:loading wire:target="exportExcel">Generating Excel...</span>
                     </button>
                 </div>
             </div>
@@ -232,8 +257,8 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $application->client_number ?? 'N/A' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $application->loan_id ?? 'N/A' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $application->loan_product_name ?? 'N/A' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($application->principle, 2) }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $application->interest }}%</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format((float)$application->principle, 2) }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format((float)$application->interest, 2) }}%</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $application->tenure ?? 'N/A' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $application->branch_name ?? 'N/A' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -278,7 +303,7 @@
                         Showing {{ $applications->count() }} application(s) {{ $statusFilter ? 'with status: ' . $statusFilter : 'across all statuses' }}
                     </div>
                     <div class="text-sm text-gray-500">
-                        Total Amount: {{ number_format($applications->sum('principle'), 2) }} TZS
+                        Total Amount: {{ number_format($applications->sum(function($app) { return (float)$app->principle; }), 2) }} TZS
                     </div>
                 </div>
             </div>

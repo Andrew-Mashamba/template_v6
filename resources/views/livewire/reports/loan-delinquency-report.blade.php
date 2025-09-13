@@ -89,7 +89,7 @@
             <div class="px-6 py-4">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Delinquency Summary</h3>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                     <div class="bg-red-50 p-4 rounded-lg">
                         <div class="text-sm font-medium text-red-600">Total Delinquent Amount</div>
                         <div class="text-2xl font-bold text-red-900">{{ number_format($reportData['delinquency_summary']['total_delinquent_amount'], 2) }}</div>
@@ -105,6 +105,10 @@
                     <div class="bg-purple-50 p-4 rounded-lg">
                         <div class="text-sm font-medium text-purple-600">Delinquent Loans</div>
                         <div class="text-2xl font-bold text-purple-900">{{ number_format($reportData['delinquency_summary']['number_of_delinquent_loans']) }}</div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <div class="text-sm font-medium text-green-600">Current Loans</div>
+                        <div class="text-2xl font-bold text-green-900">{{ number_format($reportData['delinquency_summary']['current_loans']) }}</div>
                     </div>
                 </div>
 
@@ -155,27 +159,104 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loan ID</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client Number</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Business Name</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding Balance</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overdue Amount</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Due Date</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days Past Due</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loan Details</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client Information</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Financial Details</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delinquency Info</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Security & Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     @foreach($reportData['delinquent_loans'] as $loan)
-                                        <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $loan['loan_id'] }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $loan['client_number'] }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $loan['business_name'] }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($loan['outstanding_balance'], 2) }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($loan['overdue_amount'], 2) }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $loan['last_due_date'] }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $loan['days_past_due'] }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
+                                        <tr class="hover:bg-gray-50">
+                                            <!-- Loan Details Column -->
+                                            <td class="px-6 py-4 text-sm">
+                                                <div class="space-y-1">
+                                                    <div class="font-medium text-gray-900">{{ $loan['loan_id'] }}</div>
+                                                    <div class="text-gray-600">{{ $loan['product_name'] ?? 'N/A' }}</div>
+                                                    <div class="text-gray-500 text-xs">
+                                                        Original: {{ number_format($loan['original_loan_amount'], 2) }} TZS
+                                                    </div>
+                                                    <div class="text-gray-500 text-xs">
+                                                        Rate: {{ $loan['interest_rate'] ?? 'N/A' }}% | Term: {{ $loan['loan_term'] ?? 'N/A' }} months
+                                                    </div>
+                                                    <div class="text-gray-500 text-xs">
+                                                        Disbursed: {{ $loan['disbursement_date'] ? \Carbon\Carbon::parse($loan['disbursement_date'])->format('M d, Y') : 'N/A' }}
+                                                    </div>
+                                                    <div class="text-gray-500 text-xs">
+                                                        Officer: {{ $loan['loan_officer'] ?? 'N/A' }}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            
+                                            <!-- Client Information Column -->
+                                            <td class="px-6 py-4 text-sm">
+                                                <div class="space-y-1">
+                                                    <div class="font-medium text-gray-900">{{ $loan['client_name'] ?: $loan['business_name'] }}</div>
+                                                    <div class="text-gray-600">{{ $loan['client_number'] }}</div>
+                                                    @if($loan['client_phone'])
+                                                        <div class="text-gray-500 text-xs">
+                                                            <svg class="inline w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
+                                                            </svg>
+                                                            {{ $loan['client_phone'] }}
+                                                        </div>
+                                                    @endif
+                                                    @if($loan['client_email'])
+                                                        <div class="text-gray-500 text-xs">
+                                                            <svg class="inline w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                                                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                                                            </svg>
+                                                            {{ $loan['client_email'] }}
+                                                        </div>
+                                                    @endif
+                                                    @if($loan['client_address'])
+                                                        <div class="text-gray-500 text-xs">
+                                                            <svg class="inline w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                                                            </svg>
+                                                            {{ Str::limit($loan['client_address'], 30) }}
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            
+                                            <!-- Financial Details Column -->
+                                            <td class="px-6 py-4 text-sm">
+                                                <div class="space-y-1">
+                                                    <div class="text-gray-900">
+                                                        Outstanding: <span class="font-medium">{{ number_format($loan['outstanding_balance'], 2) }} TZS</span>
+                                                    </div>
+                                                    <div class="text-red-600">
+                                                        Overdue: <span class="font-medium">{{ number_format($loan['overdue_amount'], 2) }} TZS</span>
+                                                    </div>
+                                                    <div class="text-gray-500 text-xs">
+                                                        Installments: {{ $loan['overdue_installments'] }} overdue
+                                                    </div>
+                                                    @if($loan['last_payment_date'])
+                                                        <div class="text-gray-500 text-xs">
+                                                            Last Payment: {{ \Carbon\Carbon::parse($loan['last_payment_date'])->format('M d, Y') }}
+                                                        </div>
+                                                        <div class="text-gray-500 text-xs">
+                                                            Amount: {{ number_format($loan['last_payment_amount'], 2) }} TZS
+                                                        </div>
+                                                    @else
+                                                        <div class="text-red-500 text-xs">No payment history</div>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            
+                                            <!-- Delinquency Info Column -->
+                                            <td class="px-6 py-4 text-sm">
+                                                <div class="space-y-1">
+                                                    <div class="text-gray-900">
+                                                        Due Date: {{ \Carbon\Carbon::parse($loan['last_due_date'])->format('M d, Y') }}
+                                                    </div>
+                                                    <div class="text-gray-600">
+                                                        Days Past Due: <span class="font-medium">{{ $loan['days_past_due'] }}</span>
+                                                    </div>
+                                                    <div class="mb-2">
                                                 @if($loan['days_past_due'] <= 30)
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">{{ $loan['delinquency_status'] }}</span>
                                                 @elseif($loan['days_past_due'] <= 60)
@@ -183,6 +264,45 @@
                                                 @else
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">{{ $loan['delinquency_status'] }}</span>
                                                 @endif
+                                                    </div>
+                                                    <div class="text-gray-500 text-xs">
+                                                        <strong>Reason:</strong> {{ $loan['delinquency_reason'] }}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            
+                                            <!-- Security & Actions Column -->
+                                            <td class="px-6 py-4 text-sm">
+                                                <div class="space-y-1">
+                                                    @if($loan['guarantor_name'])
+                                                        <div class="text-gray-600">
+                                                            <strong>Guarantor:</strong> {{ $loan['guarantor_name'] }}
+                                                        </div>
+                                                        @if($loan['guarantor_phone'])
+                                                            <div class="text-gray-500 text-xs">{{ $loan['guarantor_phone'] }}</div>
+                                                        @endif
+                                                    @endif
+                                                    
+                                                    @if($loan['collateral_type'])
+                                                        <div class="text-gray-600">
+                                                            <strong>Collateral:</strong> {{ $loan['collateral_type'] }}
+                                                        </div>
+                                                        @if($loan['collateral_value'])
+                                                            <div class="text-gray-500 text-xs">{{ number_format($loan['collateral_value'], 2) }} TZS</div>
+                                                        @endif
+                                                    @endif
+                                                    
+                                                    @if(!empty($loan['collection_actions']))
+                                                        <div class="mt-2">
+                                                            <div class="text-gray-600 text-xs font-medium">Recent Actions:</div>
+                                                            @foreach(array_slice($loan['collection_actions'], 0, 2) as $action)
+                                                                <div class="text-gray-500 text-xs">
+                                                                    {{ $action['type'] }} - {{ \Carbon\Carbon::parse($action['date'])->format('M d') }}
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -205,28 +325,30 @@
             <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
                 <div class="flex items-center justify-between">
                     <div class="text-sm text-gray-500">
-                        Generated on {{ now()->format('F d, Y \a\t g:i A') }}
+                        <div>Generated on {{ $reportData['generated_at'] ? \Carbon\Carbon::parse($reportData['generated_at'])->format('F d, Y \a\t g:i A') : now()->format('F d, Y \a\t g:i A') }}</div>
+                        <div>Generated by: {{ $reportData['generated_by'] ?? auth()->user()->name ?? 'System' }}</div>
+                        <div>Report Period: {{ $reportData['period']['end_date'] }}</div>
                     </div>
                     <div class="flex space-x-3">
-                        <button wire:click="exportReport('pdf')" 
+                        <button wire:click="exportToPDF" 
                                 wire:loading.attr="disabled"
-                                wire:target="exportReport"
-                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                wire:target="exportToPDF"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
-                            <span wire:loading.remove wire:target="exportReport">Export PDF</span>
-                            <span wire:loading wire:target="exportReport">Exporting...</span>
+                            <span wire:loading.remove wire:target="exportToPDF">Export PDF</span>
+                            <span wire:loading wire:target="exportToPDF">Exporting PDF...</span>
                         </button>
-                        <button wire:click="exportReport('excel')" 
+                        <button wire:click="exportToExcel" 
                                 wire:loading.attr="disabled"
-                                wire:target="exportReport"
-                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                wire:target="exportToExcel"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
-                            <span wire:loading.remove wire:target="exportReport">Export Excel</span>
-                            <span wire:loading wire:target="exportReport">Exporting...</span>
+                            <span wire:loading.remove wire:target="exportToExcel">Export Excel</span>
+                            <span wire:loading wire:target="exportToExcel">Exporting Excel...</span>
                         </button>
                     </div>
                 </div>

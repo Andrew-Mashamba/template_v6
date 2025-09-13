@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Exception;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ClientRepaymentHistoryExport;
 
 class ClientRepaymentHistory extends Component
 {
@@ -30,11 +33,16 @@ class ClientRepaymentHistory extends Component
     public $paymentFrequency = [];
     public $latePayments = 0;
     public $onTimePayments = 0;
+    
+    // Export loading states
+    public $isExportingPdf = false;
+    public $isExportingExcel = false;
 
     public function mount()
     {
         $this->startDate = Carbon::now()->subMonths(6)->format('Y-m-d');
         $this->endDate = Carbon::now()->format('Y-m-d');
+        $this->repaymentHistory = collect([]);
         $this->loadClients();
     }
 
@@ -72,7 +80,7 @@ class ClientRepaymentHistory extends Component
     public function loadRepaymentHistory()
     {
         if (empty($this->clientNumber)) {
-            $this->repaymentHistory = [];
+            $this->repaymentHistory = collect([]);
             $this->calculatePaymentSummary();
             return;
         }
@@ -86,7 +94,7 @@ class ClientRepaymentHistory extends Component
             ->toArray();
 
         if (empty($loanAccountNumbers)) {
-            $this->repaymentHistory = [];
+            $this->repaymentHistory = collect([]);
             $this->calculatePaymentSummary();
             return;
         }
@@ -213,22 +221,132 @@ class ClientRepaymentHistory extends Component
 
     public function exportReport($format = 'pdf')
     {
+        if ($format === 'pdf') {
+            return $this->exportToPdf();
+        } elseif ($format === 'excel') {
+            return $this->exportToExcel();
+        }
+    }
+
+    public function exportToPdf()
+    {
+        $this->isExportingPdf = true;
+        
         try {
-            session()->flash('success', "Client Repayment History Report exported as {$format} successfully!");
+            // Validate user permissions for export
+            if (!auth()->check()) {
+                throw new Exception('User authentication required for export');
+            }
+
+            // Validate that we have data to export
+            if (empty($this->repaymentHistory) || $this->repaymentHistory->isEmpty()) {
+                throw new Exception('No repayment history data available for export. Please select a member and ensure there is data.');
+            }
+
+            // Prepare summary data
+            $summary = [
+                'totalPayments' => $this->totalPayments,
+                'totalPrincipalPaid' => $this->totalPrincipalPaid,
+                'averagePaymentAmount' => $this->averagePaymentAmount,
+                'onTimePayments' => $this->onTimePayments,
+                'latePayments' => $this->latePayments
+            ];
+
+            $filename = 'member_repayment_history_' . $this->clientNumber . '_' . now()->format('Y_m_d_H_i_s') . '.pdf';
             
-            Log::info('Client Repayment History Report exported', [
-                'format' => $format,
+            Log::info('Client Repayment History Report exported as PDF', [
+                'format' => 'pdf',
                 'client_number' => $this->clientNumber,
                 'start_date' => $this->startDate,
                 'end_date' => $this->endDate,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
+                'record_count' => $this->repaymentHistory->count()
             ]);
+            
+            // Generate PDF using DomPDF
+            $pdf = Pdf::loadView('pdf.client-repayment-history-report', [
+                'repaymentHistory' => $this->repaymentHistory,
+                'summary' => $summary,
+                'clientNumber' => $this->clientNumber,
+                'startDate' => $this->startDate,
+                'endDate' => $this->endDate
+            ]);
+            
+            // Set PDF options
+            $pdf->setPaper('A4', 'landscape');
+            $pdf->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'Arial'
+            ]);
+            
+            return response()->streamDownload(function () use ($pdf) {
+                echo $pdf->output();
+            }, $filename, [
+                'Content-Type' => 'application/pdf',
+            ]);
+            
         } catch (Exception $e) {
-            session()->flash('error', 'Error exporting report: ' . $e->getMessage());
-            Log::error('Client Repayment History Report export failed', [
+            session()->flash('error', 'Error exporting PDF: ' . $e->getMessage());
+            Log::error('Client Repayment History Report PDF export failed', [
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id()
             ]);
+        } finally {
+            $this->isExportingPdf = false;
+        }
+    }
+
+    public function exportToExcel()
+    {
+        $this->isExportingExcel = true;
+        
+        try {
+            // Validate user permissions for export
+            if (!auth()->check()) {
+                throw new Exception('User authentication required for export');
+            }
+
+            // Validate that we have data to export
+            if (empty($this->repaymentHistory) || $this->repaymentHistory->isEmpty()) {
+                throw new Exception('No repayment history data available for export. Please select a member and ensure there is data.');
+            }
+
+            // Prepare summary data
+            $summary = [
+                'totalPayments' => $this->totalPayments,
+                'totalPrincipalPaid' => $this->totalPrincipalPaid,
+                'averagePaymentAmount' => $this->averagePaymentAmount,
+                'onTimePayments' => $this->onTimePayments,
+                'latePayments' => $this->latePayments
+            ];
+
+            $filename = 'member_repayment_history_' . $this->clientNumber . '_' . now()->format('Y_m_d_H_i_s') . '.xlsx';
+            
+            Log::info('Client Repayment History Report exported as Excel', [
+                'format' => 'excel',
+                'client_number' => $this->clientNumber,
+                'start_date' => $this->startDate,
+                'end_date' => $this->endDate,
+                'user_id' => auth()->id(),
+                'record_count' => $this->repaymentHistory->count()
+            ]);
+            
+            // Use the Excel export class
+            return Excel::download(
+                new ClientRepaymentHistoryExport($this->repaymentHistory, $summary, $this->clientNumber, $this->startDate, $this->endDate),
+                $filename,
+                \Maatwebsite\Excel\Excel::XLSX
+            );
+            
+        } catch (Exception $e) {
+            session()->flash('error', 'Error exporting Excel: ' . $e->getMessage());
+            Log::error('Client Repayment History Report Excel export failed', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+        } finally {
+            $this->isExportingExcel = false;
         }
     }
 

@@ -95,6 +95,7 @@
                             ['id' => 14, 'label' => 'Institution Accounts'],
                             ['id' => 15, 'label' => 'Approvals Manager'],
                             ['id' => 16, 'label' => 'Data Migration'],
+                            ['id' => 17, 'label' => 'Domain Management'],
                         ];
                         @endphp
                         @foreach ($menuItems as $menuItem)
@@ -155,6 +156,7 @@
                                             14 => 'Institution Accounts',
                                             15 => 'Approvals Manager',
                                             16 => 'Data Migration',
+                                            17 => 'Domain Management',
                                         ];
                                     @endphp
                                     {{ $sectionTitles[$this->teller_tab] ?? 'Organization Settings' }}
@@ -211,6 +213,9 @@
                         @endif
                         @if($this->teller_tab==16)
                             <livewire:profile-setting.data-migration />
+                        @endif
+                        @if($this->teller_tab==17)
+                            <livewire:profile-setting.domain-management />
                         @endif
                     </div>
                 </div>

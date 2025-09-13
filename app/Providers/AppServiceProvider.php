@@ -13,6 +13,7 @@ use App\Services\Payments\InternalFundsTransferService;
 use App\Services\Payments\ExternalFundsTransferService;
 use App\Services\Payments\MobileWalletTransferService;
 use App\Services\Payments\BillPaymentService;
+use App\Services\ResellerApiService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +42,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ExternalFundsTransferService::class);
         $this->app->singleton(MobileWalletTransferService::class);
         $this->app->singleton(BillPaymentService::class);
+
+        // Register Reseller API Service
+        $this->app->singleton(ResellerApiService::class, function ($app) {
+            return new ResellerApiService();
+        });
     }
 
     /**

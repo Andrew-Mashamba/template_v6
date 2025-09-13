@@ -4,23 +4,29 @@
         <div class="px-6 py-4 border-b border-gray-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Client Details Report</h1>
+                    <h1 class="text-2xl font-bold text-gray-900">Member Details Report</h1>
                     <p class="mt-1 text-sm text-gray-500">Comprehensive member information and membership details</p>
                 </div>
                 <div class="flex items-center space-x-4">
                     <button wire:click="exportReport('pdf')" 
-                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            wire:loading.attr="disabled"
+                            wire:target="exportReport('pdf')"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg wire:loading.remove wire:target="exportReport('pdf')" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        Export PDF
+                        <span wire:loading.remove wire:target="exportReport('pdf')">Export PDF</span>
+                        <span wire:loading wire:target="exportReport('pdf')">Exporting PDF...</span>
                     </button>
                     <button wire:click="exportReport('excel')" 
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            wire:loading.attr="disabled"
+                            wire:target="exportReport('excel')"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg wire:loading.remove wire:target="exportReport('excel')" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        Export Excel
+                        <span wire:loading.remove wire:target="exportReport('excel')">Export Excel</span>
+                        <span wire:loading wire:target="exportReport('excel')">Exporting Excel...</span>
                     </button>
                 </div>
             </div>
@@ -280,7 +286,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($member->savings_balance ?? 0, 2) }} TZS</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <button wire:click="viewMemberDetails({{ $member->id }})" 
-                                        class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-blue-900 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-900">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -316,73 +322,224 @@
 
     {{-- Member Details Modal --}}
     @if($showMemberModal)
-        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-                <div class="mt-3">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Member Details</h3>
-                        <button wire:click="closeMemberModal" class="text-gray-400 hover:text-gray-600">
+        <div class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+            <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden">
+                {{-- Modal Header --}}
+                <div class="bg-blue-900 px-6 py-4 text-white">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold">Member Details</h3>
+                                <p class="text-indigo-100 text-sm">Comprehensive member information</p>
+                            </div>
+                        </div>
+                        <button wire:click="closeMemberModal" class="text-white hover:text-indigo-200 transition-colors duration-200 p-2 hover:bg-white hover:bg-opacity-10 rounded-full">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
                         </button>
                     </div>
+                    </div>
                     
+                {{-- Modal Content --}}
+                <div class="overflow-y-auto max-h-[calc(85vh-100px)]">
                     @if($selectedMember)
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-6">
+                            {{-- Member Overview Card --}}
+                            <div class="bg-blue-50 rounded-lg p-4 mb-6 border border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-6">
+                                        <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center">
+                                            <svg class="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                            </svg>
+                                        </div>
                             <div>
-                                <h4 class="font-semibold text-gray-900 mb-2">Personal Information</h4>
-                                <div class="space-y-2 text-sm">
-                                    <p><span class="font-medium">Name:</span> {{ $selectedMember->full_name }}</p>
-                                    <p><span class="font-medium">Member Number:</span> {{ $selectedMember->client_number }}</p>
-                                    <p><span class="font-medium">NIDA Number:</span> {{ $selectedMember->nida_number ?? 'N/A' }}</p>
-                                    <p><span class="font-medium">Gender:</span> {{ $selectedMember->gender ?? 'N/A' }}</p>
-                                    <p><span class="font-medium">Date of Birth:</span> {{ $selectedMember->date_of_birth ?? 'N/A' }}</p>
-                                    <p><span class="font-medium">Marital Status:</span> {{ $selectedMember->marital_status ?? 'N/A' }}</p>
+                                            <h2 class="text-2xl font-bold text-gray-900">{{ $selectedMember->full_name }}</h2>
+                                            <p class="text-lg text-gray-600">Member #{{ $selectedMember->client_number }}</p>
+                                            <div class="flex items-center space-x-4 mt-2">
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
+                                                    @if($selectedMember->status === 'ACTIVE') bg-green-100 text-green-800
+                                                    @elseif($selectedMember->status === 'PENDING') bg-yellow-100 text-yellow-800
+                                                    @elseif($selectedMember->status === 'INACTIVE') bg-red-100 text-red-800
+                                                    @else bg-gray-100 text-gray-800 @endif">
+                                                    {{ $selectedMember->status ?? 'N/A' }}
+                                                </span>
+                                                <span class="text-sm text-gray-500">{{ $selectedMember->branch_name ?? 'N/A' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm text-gray-500">Savings Balance</p>
+                                        <p class="text-2xl font-bold text-green-600">{{ number_format($selectedMember->savings_balance ?? 0, 2) }} TZS</p>
+                                    </div>
                                 </div>
                             </div>
                             
-                            <div>
-                                <h4 class="font-semibold text-gray-900 mb-2">Contact Information</h4>
-                                <div class="space-y-2 text-sm">
-                                    <p><span class="font-medium">Phone:</span> {{ $selectedMember->phone_number ?? 'N/A' }}</p>
-                                    <p><span class="font-medium">Mobile:</span> {{ $selectedMember->mobile_phone_number ?? 'N/A' }}</p>
-                                    <p><span class="font-medium">Email:</span> {{ $selectedMember->email ?? 'N/A' }}</p>
-                                    <p><span class="font-medium">Address:</span> {{ $selectedMember->address ?? 'N/A' }}</p>
-                                    <p><span class="font-medium">Region:</span> {{ $selectedMember->region ?? 'N/A' }}</p>
-                                    <p><span class="font-medium">District:</span> {{ $selectedMember->district ?? 'N/A' }}</p>
+                            {{-- Information Grid --}}
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {{-- Personal Information --}}
+                                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                    <div class="flex items-center mb-4">
+                                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                            </svg>
+                                        </div>
+                                        <h4 class="text-lg font-semibold text-gray-900">Personal Information</h4>
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <span class="font-medium text-gray-600">Full Name</span>
+                                            <span class="text-gray-900">{{ $selectedMember->full_name }}</span>
+                                        </div>
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <span class="font-medium text-gray-600">Member Number</span>
+                                            <span class="text-gray-900 font-mono">{{ $selectedMember->client_number }}</span>
+                                        </div>
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <span class="font-medium text-gray-600">NIDA Number</span>
+                                            <span class="text-gray-900">{{ $selectedMember->nida_number ?? 'N/A' }}</span>
+                                        </div>
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <span class="font-medium text-gray-600">Gender</span>
+                                            <span class="text-gray-900">{{ $selectedMember->gender ?? 'N/A' }}</span>
+                                        </div>
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <span class="font-medium text-gray-600">Date of Birth</span>
+                                            <span class="text-gray-900">{{ $selectedMember->date_of_birth ?? 'N/A' }}</span>
+                                        </div>
+                                        <div class="flex justify-between py-2">
+                                            <span class="font-medium text-gray-600">Marital Status</span>
+                                            <span class="text-gray-900">{{ $selectedMember->marital_status ?? 'N/A' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {{-- Contact Information --}}
+                                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                    <div class="flex items-center mb-4">
+                                        <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                            </svg>
+                                        </div>
+                                        <h4 class="text-lg font-semibold text-gray-900">Contact Information</h4>
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <span class="font-medium text-gray-600">Phone Number</span>
+                                            <span class="text-gray-900">{{ $selectedMember->phone_number ?? 'N/A' }}</span>
+                                        </div>
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <span class="font-medium text-gray-600">Mobile Number</span>
+                                            <span class="text-gray-900">{{ $selectedMember->mobile_phone_number ?? 'N/A' }}</span>
+                                        </div>
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <span class="font-medium text-gray-600">Email Address</span>
+                                            <span class="text-gray-900">{{ $selectedMember->email ?? 'N/A' }}</span>
+                                        </div>
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <span class="font-medium text-gray-600">Address</span>
+                                            <span class="text-gray-900 text-right max-w-xs">{{ $selectedMember->address ?? 'N/A' }}</span>
+                                        </div>
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <span class="font-medium text-gray-600">Region</span>
+                                            <span class="text-gray-900">{{ $selectedMember->region ?? 'N/A' }}</span>
+                                        </div>
+                                        <div class="flex justify-between py-2">
+                                            <span class="font-medium text-gray-600">District</span>
+                                            <span class="text-gray-900">{{ $selectedMember->district ?? 'N/A' }}</span>
+                                        </div>
                                 </div>
                             </div>
                             
-                            <div>
-                                <h4 class="font-semibold text-gray-900 mb-2">Employment Information</h4>
-                                <div class="space-y-2 text-sm">
-                                    <p><span class="font-medium">Employment:</span> {{ $selectedMember->employment ?? 'N/A' }}</p>
-                                    <p><span class="font-medium">Employer:</span> {{ $selectedMember->employer_name ?? 'N/A' }}</p>
-                                    <p><span class="font-medium">Occupation:</span> {{ $selectedMember->occupation ?? 'N/A' }}</p>
-                                    <p><span class="font-medium">Monthly Income:</span> {{ number_format($selectedMember->income_available ?? 0, 2) }} TZS</p>
+                                {{-- Employment Information --}}
+                                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                    <div class="flex items-center mb-4">
+                                        <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                                            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6"></path>
+                                            </svg>
+                                        </div>
+                                        <h4 class="text-lg font-semibold text-gray-900">Employment Information</h4>
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <span class="font-medium text-gray-600">Employment Status</span>
+                                            <span class="text-gray-900">{{ $selectedMember->employment ?? 'N/A' }}</span>
+                                        </div>
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <span class="font-medium text-gray-600">Employer Name</span>
+                                            <span class="text-gray-900 text-right max-w-xs">{{ $selectedMember->employer_name ?? 'N/A' }}</span>
+                                        </div>
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <span class="font-medium text-gray-600">Occupation</span>
+                                            <span class="text-gray-900">{{ $selectedMember->occupation ?? 'N/A' }}</span>
+                                        </div>
+                                        <div class="flex justify-between py-2">
+                                            <span class="font-medium text-gray-600">Monthly Income</span>
+                                            <span class="text-gray-900 font-semibold">{{ number_format($selectedMember->income_available ?? 0, 2) }} TZS</span>
+                                        </div>
+                                    </div>
                                 </div>
+                                
+                                {{-- Membership Information --}}
+                                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                    <div class="flex items-center mb-4">
+                                        <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+                                            <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                            </svg>
+                                        </div>
+                                        <h4 class="text-lg font-semibold text-gray-900">Membership Information</h4>
                             </div>
-                            
-                            <div>
-                                <h4 class="font-semibold text-gray-900 mb-2">Membership Information</h4>
-                                <div class="space-y-2 text-sm">
-                                    <p><span class="font-medium">Status:</span> 
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                    <div class="space-y-3">
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <span class="font-medium text-gray-600">Status</span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                                             @if($selectedMember->status === 'ACTIVE') bg-green-100 text-green-800
                                             @elseif($selectedMember->status === 'PENDING') bg-yellow-100 text-yellow-800
                                             @elseif($selectedMember->status === 'INACTIVE') bg-red-100 text-red-800
                                             @else bg-gray-100 text-gray-800 @endif">
                                             {{ $selectedMember->status ?? 'N/A' }}
                                         </span>
-                                    </p>
-                                    <p><span class="font-medium">Branch:</span> {{ $selectedMember->branch_name ?? 'N/A' }}</p>
-                                    <p><span class="font-medium">Registration Date:</span> {{ $selectedMember->registration_date ?? 'N/A' }}</p>
-                                    <p><span class="font-medium">Savings Balance:</span> {{ number_format($selectedMember->savings_balance ?? 0, 2) }} TZS</p>
+                                        </div>
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <span class="font-medium text-gray-600">Branch</span>
+                                            <span class="text-gray-900">{{ $selectedMember->branch_name ?? 'N/A' }}</span>
+                                        </div>
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <span class="font-medium text-gray-600">Registration Date</span>
+                                            <span class="text-gray-900">{{ $selectedMember->registration_date ?? 'N/A' }}</span>
+                                        </div>
+                                        <div class="flex justify-between py-2">
+                                            <span class="font-medium text-gray-600">Savings Balance</span>
+                                            <span class="text-gray-900 font-semibold text-green-600">{{ number_format($selectedMember->savings_balance ?? 0, 2) }} TZS</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     @endif
+                </div>
+                
+                {{-- Modal Footer --}}
+                <div class="bg-gray-50 px-6 py-3 border-t border-gray-200">
+                    <div class="flex justify-end">
+                        <button wire:click="closeMemberModal" 
+                                class="inline-flex items-center px-6 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Close
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -52,6 +52,16 @@
                 <div class="ml-3">
                     <p class="text-sm text-red-800">{{ $errorMessage }}</p>
                 </div>
+                <div class="ml-auto pl-3">
+                    <div class="-mx-1.5 -my-1.5">
+                        <button wire:click="$set('errorMessage', '')" class="inline-flex bg-red-50 rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600">
+                            <span class="sr-only">Dismiss</span>
+                            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     @endif
@@ -66,6 +76,16 @@
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-green-800">{{ $successMessage }}</p>
+                </div>
+                <div class="ml-auto pl-3">
+                    <div class="-mx-1.5 -my-1.5">
+                        <button wire:click="$set('successMessage', '')" class="inline-flex bg-green-50 rounded-md p-1.5 text-green-500 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-green-50 focus:ring-green-600">
+                            <span class="sr-only">Dismiss</span>
+                            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -105,6 +125,155 @@
                     <div class="bg-orange-50 p-4 rounded-lg">
                         <div class="text-sm font-medium text-orange-600">Largest Loan</div>
                         <div class="text-2xl font-bold text-orange-900">{{ number_format($reportData['portfolio_summary']['largest_loan'], 2) }}</div>
+                    </div>
+                </div>
+
+                <!-- Financial Metrics -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Financial Metrics</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-indigo-50 p-4 rounded-lg">
+                            <div class="text-sm font-medium text-indigo-600">Interest Income</div>
+                            <div class="text-2xl font-bold text-indigo-900">{{ number_format($reportData['financial_metrics']['total_interest_income'], 2) }}</div>
+                        </div>
+                        <div class="bg-teal-50 p-4 rounded-lg">
+                            <div class="text-sm font-medium text-teal-600">Portfolio Yield</div>
+                            <div class="text-2xl font-bold text-teal-900">{{ number_format($reportData['financial_metrics']['portfolio_yield'], 2) }}%</div>
+                        </div>
+                        <div class="bg-cyan-50 p-4 rounded-lg">
+                            <div class="text-sm font-medium text-cyan-600">Avg Interest Rate</div>
+                            <div class="text-2xl font-bold text-cyan-900">{{ number_format($reportData['financial_metrics']['average_interest_rate'], 2) }}%</div>
+                        </div>
+                        <div class="bg-amber-50 p-4 rounded-lg">
+                            <div class="text-sm font-medium text-amber-600">Provision for Losses</div>
+                            <div class="text-2xl font-bold text-amber-900">{{ number_format($reportData['financial_metrics']['provision_for_losses'], 2) }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Analysis -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Risk Analysis</h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Portfolio at Risk -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-6">
+                            <h4 class="text-md font-semibold text-gray-800 mb-4">Portfolio at Risk</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">Total Portfolio at Risk:</span>
+                                    <span class="font-semibold text-red-600">{{ number_format($reportData['risk_analysis']['portfolio_at_risk'], 2) }}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">PAR Ratio:</span>
+                                    <span class="font-semibold text-red-600">{{ number_format($reportData['risk_analysis']['portfolio_at_risk_ratio'], 2) }}%</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">NPL Ratio:</span>
+                                    <span class="font-semibold text-red-600">{{ number_format($reportData['risk_analysis']['non_performing_loan_ratio'], 2) }}%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Risk Distribution -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-6">
+                            <h4 class="text-md font-semibold text-gray-800 mb-4">Risk Distribution</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-green-600">Low Risk:</span>
+                                    <span class="font-semibold">{{ number_format($reportData['risk_analysis']['risk_distribution']['low_risk']['amount'], 2) }}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-yellow-600">Medium Risk:</span>
+                                    <span class="font-semibold">{{ number_format($reportData['risk_analysis']['risk_distribution']['medium_risk']['amount'], 2) }}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-orange-600">High Risk:</span>
+                                    <span class="font-semibold">{{ number_format($reportData['risk_analysis']['risk_distribution']['high_risk']['amount'], 2) }}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-red-600">Critical Risk:</span>
+                                    <span class="font-semibold">{{ number_format($reportData['risk_analysis']['risk_distribution']['critical_risk']['amount'], 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delinquency Analysis -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Delinquency Analysis</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Count</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach($reportData['risk_analysis']['delinquency_buckets'] as $category => $data)
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            @if($category === 'current')
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    Current
+                                                </span>
+                                            @elseif($category === '1-30_days')
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                    1-30 Days
+                                                </span>
+                                            @elseif($category === '31-60_days')
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                                    31-60 Days
+                                                </span>
+                                            @elseif($category === '61-90_days')
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                    61-90 Days
+                                                </span>
+                                            @elseif($category === '91-180_days')
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-200 text-red-900">
+                                                    91-180 Days
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-300 text-red-900">
+                                                    Over 180 Days
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($data['amount'], 2) }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($data['count']) }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $reportData['portfolio_summary']['total_portfolio'] > 0 ? number_format(($data['amount'] / $reportData['portfolio_summary']['total_portfolio']) * 100, 1) : 0 }}%
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Trend Analysis -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Trend Analysis</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <div class="text-sm font-medium text-blue-600">Month-over-Month Growth</div>
+                            <div class="text-2xl font-bold {{ $reportData['trend_analysis']['month_over_month_growth'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                {{ $reportData['trend_analysis']['month_over_month_growth'] >= 0 ? '+' : '' }}{{ number_format($reportData['trend_analysis']['month_over_month_growth'], 2) }}%
+                            </div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <div class="text-sm font-medium text-green-600">Year-over-Year Growth</div>
+                            <div class="text-2xl font-bold {{ $reportData['trend_analysis']['year_over_year_growth'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                {{ $reportData['trend_analysis']['year_over_year_growth'] >= 0 ? '+' : '' }}{{ number_format($reportData['trend_analysis']['year_over_year_growth'], 2) }}%
+                            </div>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <div class="text-sm font-medium text-purple-600">Current Portfolio</div>
+                            <div class="text-2xl font-bold text-purple-900">{{ number_format($reportData['trend_analysis']['current_portfolio'], 2) }}</div>
+                        </div>
                     </div>
                 </div>
 
@@ -150,6 +319,8 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Business Name</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding Balance</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days Past Due</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Risk Level</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interest Rate</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     </tr>
@@ -165,7 +336,41 @@
                                                     {{ $loan['category'] }}
                                                 </span>
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($loan['outstanding_balance'], 2) }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <div class="text-sm font-medium">{{ number_format($loan['outstanding_balance'], 2) }}</div>
+                                                <div class="text-xs text-gray-500">P: {{ number_format($loan['outstanding_principal'], 2) }}</div>
+                                                <div class="text-xs text-gray-500">I: {{ number_format($loan['outstanding_interest'], 2) }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                @if($loan['days_past_due'] > 0)
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                        {{ $loan['days_past_due'] }} days
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                        Current
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                @if($loan['risk_level'] === 'Low Risk')
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                        Low Risk
+                                                    </span>
+                                                @elseif($loan['risk_level'] === 'Medium Risk')
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                        Medium Risk
+                                                    </span>
+                                                @elseif($loan['risk_level'] === 'High Risk')
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                                        High Risk
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                        Critical Risk
+                                                    </span>
+                                                @endif
+                                            </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($loan['interest_rate'], 2) }}%</td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -188,25 +393,29 @@
                         Generated on {{ now()->format('F d, Y \a\t g:i A') }}
                     </div>
                     <div class="flex space-x-3">
-                        <button wire:click="exportReport('pdf')" 
+                        <button wire:click="exportToPDF" 
                                 wire:loading.attr="disabled"
-                                wire:target="exportReport"
-                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                wire:target="exportToPDF"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
-                            <span wire:loading.remove wire:target="exportReport">Export PDF</span>
-                            <span wire:loading wire:target="exportReport">Exporting...</span>
+                            <span wire:loading.remove wire:target="exportToPDF">Export PDF</span>
+                            <span wire:loading wire:target="exportToPDF">                                
+                                Exporting PDF...
+                            </span>
                         </button>
-                        <button wire:click="exportReport('excel')" 
+                        <button wire:click="exportToExcel" 
                                 wire:loading.attr="disabled"
-                                wire:target="exportReport"
-                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                wire:target="exportToExcel"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">        
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
-                            <span wire:loading.remove wire:target="exportReport">Export Excel</span>
-                            <span wire:loading wire:target="exportReport">Exporting...</span>
+                                <span wire:loading.remove wire:target="exportToExcel">Export Excel</span>
+                            <span wire:loading wire:target="exportToExcel">                                
+                                Exporting Excel...
+                            </span>
                         </button>
                     </div>
                 </div>

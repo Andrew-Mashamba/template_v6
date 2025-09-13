@@ -178,6 +178,19 @@ class LoansModel extends Model
     public function getDaysInArrearsAttribute()
     {
         if ($this->disbursement_date && $this->status === 'ACTIVE') {
+            // First, check if there are any overdue schedules
+            $overdueSchedule = $this->schedules()
+                ->where('installment_date', '<=', now())
+                ->where('completion_status', '!=', 'COMPLETED')
+                ->orderBy('installment_date', 'asc')
+                ->first();
+            
+            if ($overdueSchedule) {
+                // Return days since the first overdue payment
+                return Carbon::now()->diffInDays($overdueSchedule->installment_date);
+            }
+            
+            // If no overdue schedules, check last completed payment
             $lastPaymentDate = $this->schedules()
                 ->where('completion_status', 'COMPLETED')
                 ->max('installment_date');
