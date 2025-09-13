@@ -40,6 +40,10 @@ class TradeAndOtherPayables extends Component
     public $vendor_phone = '';
     public $vendor_address = '';
     public $vendor_tax_id = '';
+    public $vendor_bank_name = '';
+    public $vendor_bank_account_number = '';
+    public $vendor_bank_branch = '';
+    public $vendor_swift_code = '';
     public $invoice_number = '';
     public $invoice_date;
     public $bill_number = '';
@@ -313,7 +317,9 @@ class TradeAndOtherPayables extends Component
     public function openCreateModal()
     {
         $this->reset(['payableId', 'vendor_id', 'vendor_name', 'vendor_email', 
-                     'vendor_phone', 'vendor_address', 'vendor_tax_id', 
+                     'vendor_phone', 'vendor_address', 'vendor_tax_id',
+                     'vendor_bank_name', 'vendor_bank_account_number', 
+                     'vendor_bank_branch', 'vendor_swift_code',
                      'invoice_number', 'bill_number', 'purchase_order_number',
                      'amount', 'vat_amount', 'total_amount', 'description', 'notes',
                      'expense_account_id', 'payable_account_id', 'bank_account_id',
@@ -363,6 +369,10 @@ class TradeAndOtherPayables extends Component
             $data = [
                 'vendor_id' => $this->vendor_id,
                 'vendor_name' => $this->vendor_name,
+                'vendor_bank_name' => $this->vendor_bank_name,
+                'vendor_bank_account_number' => $this->vendor_bank_account_number,
+                'vendor_bank_branch' => $this->vendor_bank_branch,
+                'vendor_swift_code' => $this->vendor_swift_code,
                 'bill_number' => $this->bill_number ?: $this->invoice_number,
                 'purchase_order_number' => $this->purchase_order_number,
                 'bill_date' => $this->invoice_date,
@@ -578,6 +588,23 @@ class TradeAndOtherPayables extends Component
                 throw new \Exception('Payable not found');
             }
             
+            // Get payment source account details
+            $sourceAccount = AccountsModel::find($this->payment_account_id);
+            if (!$sourceAccount) {
+                throw new \Exception('Payment source account not found');
+            }
+            
+            // Check if payable has created account number for double-entry
+            if (!$payable->created_payable_account_number) {
+                throw new \Exception('Payable account not properly configured. Please edit and save the payable first.');
+            }
+            
+            // Get the payable account for double-entry
+            $payableAccount = AccountsModel::where('account_number', $payable->created_payable_account_number)->first();
+            if (!$payableAccount) {
+                throw new \Exception('Payable account not found: ' . $payable->created_payable_account_number);
+            }
+            
             // Calculate net payment
             $netPayment = (float)$this->payment_amount - (float)$this->early_payment_discount - (float)$this->withholding_tax + (float)$this->bank_charges;
             
@@ -585,7 +612,92 @@ class TradeAndOtherPayables extends Component
             $newBalance = (float)$payable->balance - (float)$this->payment_amount - (float)$this->early_payment_discount;
             $totalPaid = (float)$payable->paid_amount + (float)$this->payment_amount + (float)$this->early_payment_discount;
             
-            // Update payable
+            // Determine if it's internal or external transfer
+            // Internal: if vendor has an account in our system (check vendor_bank_account_number in accounts table)
+            // External: if vendor is external with bank details
+            
+            $isInternalTransfer = false;
+            $vendorAccount = null;
+            
+            // Check if vendor has an internal account
+            if ($payable->vendor_bank_account_number) {
+                $vendorAccount = AccountsModel::where('account_number', $payable->vendor_bank_account_number)
+                    ->where('status', 'ACTIVE')
+                    ->first();
+                    
+                if ($vendorAccount) {
+                    $isInternalTransfer = true;
+                }
+            }
+            
+            // Prepare transfer data
+            $transferData = [
+                'source_account' => $sourceAccount->account_number,  // Payment account (Cash/Bank)
+                'destination_account' => $payableAccount->account_number,  // Created payable account for double-entry
+                'amount' => $netPayment,
+                'description' => 'Payment for Bill: ' . $payable->bill_number . ' - ' . $payable->vendor_name,
+                'reference_number' => 'PAY-' . $payable->bill_number . '-' . date('YmdHis'),
+                'transaction_date' => $this->payment_date,
+            ];
+            
+            // Process the transfer using appropriate service
+            if ($isInternalTransfer && $vendorAccount) {
+                // Use Internal Funds Transfer Service
+                $internalTransferService = new \App\Services\Payments\InternalFundsTransferService();
+                
+                // Add vendor account as the final destination
+                $transferData['vendor_account'] = $vendorAccount->account_number;
+                $transferData['transfer_type'] = 'vendor_payment';
+                
+                $transferResult = $internalTransferService->processTransfer($transferData);
+                
+                if (!$transferResult['success']) {
+                    throw new \Exception('Internal transfer failed: ' . ($transferResult['message'] ?? 'Unknown error'));
+                }
+                
+                Log::info('Internal vendor payment processed', [
+                    'payable_id' => $this->payment_payable_id,
+                    'amount' => $netPayment,
+                    'vendor_account' => $vendorAccount->account_number
+                ]);
+                
+            } else {
+                // Use External Funds Transfer Service or standard posting
+                // For now, use TransactionPostingService for external payments
+                $postingService = new \App\Services\TransactionPostingService();
+                
+                // Post the payment transaction
+                // Debit: Payable Account (liability decreases)
+                // Credit: Payment Source Account (asset decreases)
+                $postingData = [
+                    'first_account' => $payableAccount->account_number,  // Debit - Payable Account
+                    'second_account' => $sourceAccount->account_number,   // Credit - Cash/Bank Account
+                    'amount' => $netPayment,
+                    'narration' => $transferData['description'],
+                    'reference_number' => $transferData['reference_number'],
+                    'transaction_date' => $this->payment_date,
+                    'action' => 'vendor_payment'
+                ];
+                
+                $postingResult = $postingService->postTransaction($postingData);
+                
+                if (!$postingResult) {
+                    throw new \Exception('Transaction posting failed');
+                }
+                
+                // Record external payment details if vendor has bank details
+                if ($payable->vendor_bank_name && $payable->vendor_bank_account_number) {
+                    Log::info('External vendor payment processed', [
+                        'payable_id' => $this->payment_payable_id,
+                        'amount' => $netPayment,
+                        'vendor_bank' => $payable->vendor_bank_name,
+                        'vendor_account' => $payable->vendor_bank_account_number,
+                        'vendor_branch' => $payable->vendor_bank_branch
+                    ]);
+                }
+            }
+            
+            // Update payable status
             DB::table('trade_payables')
                 ->where('id', $this->payment_payable_id)
                 ->update([
@@ -598,17 +710,18 @@ class TradeAndOtherPayables extends Component
                     'updated_at' => now(),
                 ]);
             
-            // Record payment
+            // Record payment in payable_payments table for audit trail
             $paymentId = DB::table('payable_payments')->insertGetId([
                 'payable_id' => $this->payment_payable_id,
                 'payment_date' => $this->payment_date,
                 'amount' => $this->payment_amount,
                 'payment_method' => $this->payment_method,
-                'reference_number' => $this->payment_reference,
+                'reference_number' => $transferData['reference_number'],
                 'bank_charges' => $this->bank_charges,
                 'early_payment_discount' => $this->early_payment_discount,
                 'withholding_tax' => $this->withholding_tax,
                 'notes' => $this->payment_notes,
+                'transfer_type' => $isInternalTransfer ? 'internal' : 'external',
                 'created_by' => auth()->id(),
                 'created_at' => now(),
             ]);
@@ -620,9 +733,6 @@ class TradeAndOtherPayables extends Component
                     ->where('id', $paymentId)
                     ->update(['payment_voucher' => $path]);
             }
-            
-            // Create GL entries for payment
-            $this->createPaymentGLEntries($payable, $paymentId);
             
             DB::commit();
             
@@ -840,6 +950,12 @@ class TradeAndOtherPayables extends Component
                 $this->vendor_address = '';
                 $this->vendor_tax_id = '';
             }
+            
+            // Load vendor bank details
+            $this->vendor_bank_name = $payable->vendor_bank_name ?? '';
+            $this->vendor_bank_account_number = $payable->vendor_bank_account_number ?? '';
+            $this->vendor_bank_branch = $payable->vendor_bank_branch ?? '';
+            $this->vendor_swift_code = $payable->vendor_swift_code ?? '';
             
             $this->invoice_number = $payable->bill_number;
             $this->bill_number = $payable->bill_number;

@@ -54,7 +54,7 @@ class LoansTable_m extends LivewireDatatable
 
         }else{
              if(session()->get('loanStageId')==2){
-            return LoansModel::query()->where('branch_id',auth()->user()->branch)->where('supervisor_id',auth()->user()->employeeId)->where('status','!=','NEW LOAN');
+            return LoansModel::query()->where('branch_id',auth()->user()->branch)->where('supervisor_id',auth()->user()->id)->where('status','!=','NEW LOAN');
              }else{
                  return LoansModel::query()->where('branch_id',12345);
              }

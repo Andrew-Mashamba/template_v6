@@ -1,4 +1,10 @@
-<div class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-2">
+<div>
+    {{-- View Mode Toggle --}}
+    @if($viewMode == 'excel')
+        {{-- Excel-Style Income Statement --}}
+        @include('livewire.accounting.income-statement-excel-simple')
+    @else
+    <div class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-2">
     {{-- Compact Header Section --}}
     <div class="bg-white rounded-lg shadow-md border border-gray-100 mb-3 overflow-hidden">
         {{-- Header Banner --}}
@@ -11,8 +17,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-base font-bold tracking-tight">Comparative Income & Expense Statement</h1>
-                        <p class="text-gray-500 text-xs">Two-Year Performance • IAS 1 Compliant</p>
+                        <h1 class="text-base font-bold tracking-tight">Income Statement</h1>
+                        <p class="text-gray-500 text-xs">For the Year Ended December 31, {{ $selectedYear }}</p>
                     </div>
                 </div>
                 
@@ -738,3 +744,6 @@
     background-color: rgba(239, 68, 68, 0.025);
 }
 </style>
+    </div>
+    @endif
+</div>

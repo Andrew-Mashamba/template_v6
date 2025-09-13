@@ -5,6 +5,9 @@ namespace App\Http\Livewire\Accounting;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Carbon\Carbon;
+use App\Exports\StatementOfFinancialPositionExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class StatementOfFinancialPosition extends Component
 {
@@ -22,16 +25,17 @@ class StatementOfFinancialPosition extends Component
     public $accountTransactions = [];
     public $viewLevel = 2; // Default to L2 view
     
+    // Note modal properties
+    public $showNoteModal = false;
+    public $noteNumber = '';
+    public $noteTitle = '';
+    public $noteContent = '';
+    
     // Financial data
     public $assetsData = [];
     public $liabilitiesData = [];
     public $equityData = [];
     public $summaryData = [];
-    
-    // Drill-down data
-    public $selectedCategory = null;
-    public $selectedSubcategory = null;
-    public $drillDownData = [];
     
     public function mount()
     {
@@ -118,30 +122,6 @@ class StatementOfFinancialPosition extends Component
         $this->showAccountDetail = false;
         $this->selectedAccountForDetail = null;
         $this->accountTransactions = [];
-    }
-    
-    public function drillDown($accountNumber, $accountName, $level)
-    {
-        $this->selectedCategory = [
-            'number' => $accountNumber,
-            'name' => $accountName,
-            'level' => $level
-        ];
-        
-        // Load drill-down data based on level
-        if ($level == 2) {
-            // Get L3 accounts under this L2
-            $this->drillDownData = $this->getChildAccounts($accountNumber, 3);
-        } elseif ($level == 3) {
-            // Get L4 accounts under this L3
-            $this->drillDownData = $this->getChildAccounts($accountNumber, 4);
-        }
-    }
-    
-    public function closeDrillDown()
-    {
-        $this->selectedCategory = null;
-        $this->drillDownData = [];
     }
     
     public function loadFinancialData()
@@ -262,44 +242,6 @@ class StatementOfFinancialPosition extends Component
         return $data;
     }
     
-    private function getChildAccounts($parentAccountNumber, $level)
-    {
-        $accounts = DB::table('accounts')
-            ->where('parent_account_number', $parentAccountNumber)
-            ->where('account_level', $level)
-            ->where('status', 'ACTIVE')
-            ->whereNull('deleted_at')
-            ->orderBy('account_number')
-            ->get();
-        
-        $data = [];
-        foreach ($accounts as $account) {
-            $accountData = [
-                'account_number' => $account->account_number,
-                'account_name' => $account->account_name,
-                'account_level' => $account->account_level,
-                'years' => []
-            ];
-            
-            foreach ($this->comparisonYears as $year) {
-                $accountData['years'][$year] = $this->getAccountBalance($account->account_number, $year);
-            }
-            
-            // Check if has children
-            $hasChildren = DB::table('accounts')
-                ->where('parent_account_number', $account->account_number)
-                ->where('status', 'ACTIVE')
-                ->whereNull('deleted_at')
-                ->exists();
-            
-            $accountData['has_children'] = $hasChildren;
-            
-            $data[] = $accountData;
-        }
-        
-        return $data;
-    }
-    
     private function isCurrentAccount($account)
     {
         $currentKeywords = ['current', 'cash', 'bank', 'receivable', 'inventory', 'prepaid', 'short-term'];
@@ -406,14 +348,288 @@ class StatementOfFinancialPosition extends Component
     
     public function exportToExcel()
     {
-        // Implementation for Excel export
-        session()->flash('message', 'Export functionality will be implemented');
+        try {
+            // Prepare the data for export
+            $exportData = $this->prepareExportData();
+            
+            $fileName = 'statement_of_financial_position_' . $this->selectedYear . '_' . date('Y_m_d_His') . '.xlsx';
+            
+            return Excel::download(
+                new StatementOfFinancialPositionExport($exportData, "{$this->selectedYear}-12-31"),
+                $fileName
+            );
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to export to Excel: ' . $e->getMessage());
+        }
     }
     
     public function exportToPDF()
     {
-        // Implementation for PDF export
-        session()->flash('message', 'Export functionality will be implemented');
+        try {
+            // Prepare the data for export
+            $data = [
+                'companyName' => $this->companyName,
+                'reportingDate' => $this->reportingDate,
+                'selectedYear' => $this->selectedYear,
+                'comparisonYears' => $this->comparisonYears,
+                'assetsData' => $this->assetsData,
+                'liabilitiesData' => $this->liabilitiesData,
+                'equityData' => $this->equityData,
+                'summaryData' => $this->summaryData,
+            ];
+            
+            $pdf = PDF::loadView('exports.statement-of-financial-position-pdf', $data);
+            $pdf->setPaper('A4', 'portrait');
+            
+            $fileName = 'statement_of_financial_position_' . $this->selectedYear . '_' . date('Y_m_d_His') . '.pdf';
+            
+            return $pdf->download($fileName);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to export to PDF: ' . $e->getMessage());
+        }
+    }
+    
+    private function prepareExportData()
+    {
+        $data = [
+            'assets' => [
+                'categories' => [],
+                'total' => $this->assetsData['total'][$this->selectedYear] ?? 0
+            ],
+            'liabilities' => [
+                'categories' => [],
+                'total' => $this->liabilitiesData['total'][$this->selectedYear] ?? 0
+            ],
+            'equity' => [
+                'categories' => [],
+                'total' => $this->equityData['total'][$this->selectedYear] ?? 0
+            ],
+            'totals' => [
+                'total_assets' => $this->assetsData['total'][$this->selectedYear] ?? 0,
+                'total_liabilities' => $this->liabilitiesData['total'][$this->selectedYear] ?? 0,
+                'total_equity' => $this->equityData['total'][$this->selectedYear] ?? 0,
+                'total_liabilities_and_equity' => ($this->liabilitiesData['total'][$this->selectedYear] ?? 0) + ($this->equityData['total'][$this->selectedYear] ?? 0),
+                'difference' => 0,
+                'is_balanced' => true
+            ]
+        ];
+        
+        // Process assets
+        foreach (['current', 'non_current'] as $section) {
+            foreach ($this->assetsData[$section] ?? [] as $asset) {
+                $categoryCode = $asset['account_number'];
+                if (!isset($data['assets']['categories'][$categoryCode])) {
+                    $data['assets']['categories'][$categoryCode] = [
+                        'name' => $asset['account_name'],
+                        'accounts' => [],
+                        'subtotal' => 0
+                    ];
+                }
+                
+                // Add main account
+                $data['assets']['categories'][$categoryCode]['accounts'][] = [
+                    'account_name' => $asset['account_name'],
+                    'current_balance' => $asset['years'][$this->selectedYear] ?? 0
+                ];
+                $data['assets']['categories'][$categoryCode]['subtotal'] += $asset['years'][$this->selectedYear] ?? 0;
+                
+                // Add child accounts if any
+                foreach ($asset['children'] ?? [] as $child) {
+                    $data['assets']['categories'][$categoryCode]['accounts'][] = [
+                        'account_name' => '  ' . $child['account_name'],
+                        'current_balance' => $child['years'][$this->selectedYear] ?? 0
+                    ];
+                }
+            }
+        }
+        
+        // Process liabilities
+        foreach (['current', 'non_current'] as $section) {
+            foreach ($this->liabilitiesData[$section] ?? [] as $liability) {
+                $categoryCode = $liability['account_number'];
+                if (!isset($data['liabilities']['categories'][$categoryCode])) {
+                    $data['liabilities']['categories'][$categoryCode] = [
+                        'name' => $liability['account_name'],
+                        'accounts' => [],
+                        'subtotal' => 0
+                    ];
+                }
+                
+                // Add main account
+                $data['liabilities']['categories'][$categoryCode]['accounts'][] = [
+                    'account_name' => $liability['account_name'],
+                    'current_balance' => $liability['years'][$this->selectedYear] ?? 0
+                ];
+                $data['liabilities']['categories'][$categoryCode]['subtotal'] += $liability['years'][$this->selectedYear] ?? 0;
+                
+                // Add child accounts if any
+                foreach ($liability['children'] ?? [] as $child) {
+                    $data['liabilities']['categories'][$categoryCode]['accounts'][] = [
+                        'account_name' => '  ' . $child['account_name'],
+                        'current_balance' => $child['years'][$this->selectedYear] ?? 0
+                    ];
+                }
+            }
+        }
+        
+        // Process equity
+        foreach (['current', 'non_current'] as $section) {
+            foreach ($this->equityData[$section] ?? [] as $equity) {
+                $categoryCode = $equity['account_number'];
+                if (!isset($data['equity']['categories'][$categoryCode])) {
+                    $data['equity']['categories'][$categoryCode] = [
+                        'name' => $equity['account_name'],
+                        'accounts' => [],
+                        'subtotal' => 0
+                    ];
+                }
+                
+                // Add main account
+                $data['equity']['categories'][$categoryCode]['accounts'][] = [
+                    'account_name' => $equity['account_name'],
+                    'current_balance' => $equity['years'][$this->selectedYear] ?? 0
+                ];
+                $data['equity']['categories'][$categoryCode]['subtotal'] += $equity['years'][$this->selectedYear] ?? 0;
+                
+                // Add child accounts if any
+                foreach ($equity['children'] ?? [] as $child) {
+                    $data['equity']['categories'][$categoryCode]['accounts'][] = [
+                        'account_name' => '  ' . $child['account_name'],
+                        'current_balance' => $child['years'][$this->selectedYear] ?? 0
+                    ];
+                }
+            }
+        }
+        
+        // Calculate balance check
+        $data['totals']['difference'] = $data['totals']['total_assets'] - $data['totals']['total_liabilities_and_equity'];
+        $data['totals']['is_balanced'] = abs($data['totals']['difference']) < 0.01;
+        
+        return $data;
+    }
+    
+    public function showNote($noteNumber, $noteTitle)
+    {
+        $this->noteNumber = $noteNumber;
+        $this->noteTitle = $noteTitle;
+        
+        // Load note content based on the title
+        $this->noteContent = $this->getNoteContent($noteTitle);
+        $this->showNoteModal = true;
+    }
+    
+    public function closeNote()
+    {
+        $this->showNoteModal = false;
+        $this->noteNumber = '';
+        $this->noteTitle = '';
+        $this->noteContent = '';
+    }
+    
+    private function getNoteContent($noteTitle)
+    {
+        // Get the relevant accounts and transactions for the note
+        $startDate = Carbon::createFromFormat('Y-m-d', "{$this->selectedYear}-01-01")->startOfYear();
+        $endDate = Carbon::createFromFormat('Y-m-d', "{$this->selectedYear}-12-31")->endOfYear();
+        
+        // First, find the L2 account that matches this note title
+        $l2Account = DB::table('accounts')
+            ->where('account_name', $noteTitle)
+            ->where('account_level', '2')
+            ->where('status', 'ACTIVE')
+            ->whereNull('deleted_at')
+            ->first();
+        
+        $content = [];
+        
+        if ($l2Account) {
+            // Get all child accounts (L3 and L4) under this L2 account
+            $childAccounts = DB::table('accounts')
+                ->where(function($query) use ($l2Account) {
+                    // Get direct children (L3)
+                    $query->where('parent_account_number', $l2Account->account_number)
+                          ->whereIn('account_level', ['3', '4']);
+                })
+                ->orWhere(function($query) use ($l2Account) {
+                    // Get L4 accounts whose parent L3 belongs to this L2
+                    $query->whereIn('parent_account_number', function($subquery) use ($l2Account) {
+                        $subquery->select('account_number')
+                                 ->from('accounts')
+                                 ->where('parent_account_number', $l2Account->account_number)
+                                 ->where('account_level', '3');
+                    })
+                    ->where('account_level', '4');
+                })
+                ->where('status', 'ACTIVE')
+                ->whereNull('deleted_at')
+                ->orderBy('account_number')
+                ->get();
+            
+            // Include the L2 account itself if it has direct transactions
+            $l2Balance = $this->getDirectAccountBalance($l2Account->account_number, $this->selectedYear);
+            if ($l2Balance != 0) {
+                $content[] = [
+                    'account_number' => $l2Account->account_number,
+                    'account_name' => $l2Account->account_name . ' (Direct)',
+                    'balance' => $l2Balance,
+                    'level' => 'L2'
+                ];
+            }
+            
+            // Add all child accounts with balances
+            foreach ($childAccounts as $account) {
+                $balance = $this->getDirectAccountBalance($account->account_number, $this->selectedYear);
+                if ($balance != 0) {
+                    $indent = $account->account_level == '3' ? '  ' : '    ';
+                    $content[] = [
+                        'account_number' => $account->account_number,
+                        'account_name' => $indent . $account->account_name,
+                        'balance' => $balance,
+                        'level' => 'L' . $account->account_level
+                    ];
+                }
+            }
+        }
+        
+        return $content;
+    }
+    
+    private function getDirectAccountBalance($accountNumber, $year)
+    {
+        $startDate = Carbon::createFromFormat('Y-m-d', "$year-01-01")->startOfYear();
+        $endDate = Carbon::createFromFormat('Y-m-d', "$year-12-31")->endOfYear();
+        
+        // Get balance only for this specific account (no children)
+        $result = DB::table('general_ledger')
+            ->where('record_on_account_number', $accountNumber)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('SUM(CAST(credit AS DECIMAL(20,2))) as total_credit'),
+                DB::raw('SUM(CAST(debit AS DECIMAL(20,2))) as total_debit')
+            )
+            ->first();
+        
+        // Get account info to determine type
+        $accountInfo = DB::table('accounts')
+            ->where('account_number', $accountNumber)
+            ->first();
+        
+        if (!$accountInfo) {
+            return 0;
+        }
+        
+        // Determine balance based on account type
+        $majorCode = $accountInfo->major_category_code;
+        
+        // Assets: Debit balance (debit - credit)
+        // Liabilities and Equity: Credit balance (credit - debit)
+        if ($majorCode == '1000' || $majorCode == '4000') {
+            // Assets and Expenses
+            return ($result->total_debit ?? 0) - ($result->total_credit ?? 0);
+        } else {
+            // Liabilities, Equity, and Income
+            return ($result->total_credit ?? 0) - ($result->total_debit ?? 0);
+        }
     }
     
     public function render()

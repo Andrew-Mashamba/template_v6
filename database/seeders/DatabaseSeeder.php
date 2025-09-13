@@ -321,6 +321,10 @@ class DatabaseSeeder extends Seeder
                 
                 // Verification seeder - runs last to ensure everything is set up correctly
                 VerifySetupSeeder::class,
+                
+                // Super Admin Permissions - ALWAYS RUN LAST
+                // Assigns all permissions to User ID 1 (IT Manager)
+                AssignSuperAdminPermissionsSeeder::class,
             ];
             
             $totalSeeders = count($seeders);

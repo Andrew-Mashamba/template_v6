@@ -72,33 +72,31 @@ class Accounting extends Component
 
         // Prepare menu items
         $this->menuItems = [
-            ['id' => 1, 'label' => 'Chart of accounts'],
-            ['id' => 37, 'label' => 'Ledger Accounts'],
-            ['id' => 47, 'label' => 'List of All Accounts'],
-            ['id' => 2, 'label' => 'Manual Posting'],
+            // Removed: ['id' => 1, 'label' => 'Chart of accounts'],
+            ['id' => 37, 'label' => 'Chart Of Accounts'],
+            ['id' => 47, 'label' => 'Ledger Accounts'],
+            // Removed: ['id' => 2, 'label' => 'Manual Posting'],
             ['id' => 3, 'label' => 'External Bank Accounts'],
             ['id' => 4, 'label' => 'Loan Disbursement'],
             ['id' => 6, 'label' => 'Standing Instructions'],
             ['id' => 12, 'label' => 'GL Statement'],
             ['id' => 10, 'label' => 'Expenditure Control'],
-            ['id' => 40, 'label' => 'Income Statement'],
-            ['id' => 41, 'label' => 'Jedwali La Mahesabu'],
-            ['id' => 42, 'label' => 'Financial Position'],
-            ['id' => 28, 'label' => 'Changes In Equity'],
-            ['id' => 8, 'label' => 'Cash Flow Statement'],
-            ['id' => 5, 'label' => 'Trial Balance'],
+            // Removed: ['id' => 40, 'label' => 'Income Statement'],
+            // Removed: ['id' => 41, 'label' => 'Jedwali La Mahesabu'],
+            // Removed: ['id' => 42, 'label' => 'Financial Position'],
+            ['id' => 50, 'label' => 'Financial Statements'],
+            // Removed: ['id' => 28, 'label' => 'Changes In Equity'],
+            // Removed: ['id' => 8, 'label' => 'Cash Flow Statement'],
+            // Removed: ['id' => 5, 'label' => 'Trial Balance'],
             ['id' => 9, 'label' => 'Members'],
-            // ['id' => 13, 'label' => 'Expenses'], // Removed as requested
-            // ['id' => 14, 'label' => 'Petty Cash'], // Removed as requested
-            // ['id' => 15, 'label' => 'Strong Room'], // Removed as requested
-            ['id' => 16, 'label' => 'Assets Management'],
+            // Removed: ['id' => 16, 'label' => 'Assets Management'],
             ['id' => 17, 'label' => 'Loan Loss Reserves (LLR)'],
             ['id' => 18, 'label' => 'Trade And Other Receivable'],
             ['id' => 30, 'label' => 'Trade And Other Payable'],
-            ['id' => 19, 'label' => 'Insurance'],
+            // Removed: ['id' => 19, 'label' => 'Insurance'],
             ['id' => 20, 'label' => 'PPE Management'],
             ['id' => 21, 'label' => 'Other Income'],
-            ['id' => 22, 'label' => 'Financial Insurance'],
+            // Removed: ['id' => 22, 'label' => 'Financial Insurance'],
             ['id' => 23, 'label' => 'Bad Loan Writeoffs'],
             ['id' => 24, 'label' => 'Creditors'],
             ['id' => 25, 'label' => 'Interest Payable'],
@@ -111,16 +109,17 @@ class Accounting extends Component
             ['id' => 34, 'label' => 'Savings'],
             ['id' => 35, 'label' => 'Deposits'],
             ['id' => 36, 'label' => 'Loan Outstanding'],
-            // ['id' => 38, 'label' => 'Loan Charges'], // Removed as requested
-            // ['id' => 39, 'label' => 'Insurance Charges'], // Removed as requested
+            // Also removing as requested from Quick Actions:
+            // ['id' => 43, 'label' => 'Approvers Manager'],
+            // ['id' => 7, 'label' => 'Balance Sheet'],
         ];
 
         $this->menuCategories = [
-            'Core Accounting' => [1, 37, 47, 2, 3, 4, 6],
-            'Financial Statements' => [12, 40, 41, 42, 28, 8, 5],
-            'Asset Management' => [16, 20, 32],
+            'Core Accounting' => [37, 47, 3, 4, 6], // Removed 1, 2
+            'Financial Statements' => [12, 50], // Removed 40, 41, 42, 28, 8, 5
+            'Asset Management' => [20, 32], // Removed 16
             'Risk Management' => [17, 23, 31],
-            'Operations' => [18, 30, 19, 21, 22, 24, 25, 26, 27, 29, 36], // Removed 13, 14, 15, 38, 39
+            'Operations' => [18, 30, 21, 24, 25, 26, 27, 29, 36], // Removed 19, 22
         ];
 
         return view('livewire.accounting.accounting', [

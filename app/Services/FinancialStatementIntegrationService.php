@@ -7,9 +7,47 @@ use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Log;
+use App\Services\InstitutionAccountService;
+use App\Services\FinancialStatementDataService;
 
 class FinancialStatementIntegrationService
 {
+    protected $institutionAccountService;
+    protected $dataService;
+    
+    public function __construct()
+    {
+        $this->institutionAccountService = new InstitutionAccountService();
+        $this->dataService = new FinancialStatementDataService();
+    }
+    /**
+     * Generate all integrated financial statements for a period
+     */
+    public function generateIntegratedStatements($year, $periodType = 'annual')
+    {
+        $endDate = Carbon::create($year, 12, 31)->format('Y-m-d');
+        $startDate = Carbon::create($year, 1, 1)->format('Y-m-d');
+        
+        try {
+            // Generate all statements
+            $statements = [
+                'balance_sheet' => $this->getStatementOfFinancialPosition($endDate),
+                'income_statement' => $this->getStatementOfComprehensiveIncome($startDate, $endDate),
+                'cash_flow' => $this->getCashFlowStatement($startDate, $endDate),
+                'period_start' => $startDate,
+                'period_end' => $endDate,
+                'year' => $year,
+                'period_type' => $periodType
+            ];
+            
+            return $statements;
+            
+        } catch (Exception $e) {
+            Log::error('Error generating integrated statements: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+    
     /**
      * Get complete Statement of Financial Position data with all accounting elements
      */
@@ -205,8 +243,11 @@ class FinancialStatementIntegrationService
         
         // 3. Deferred Tax Liabilities
         $deferredTax = $this->getDeferredTaxLiabilities($asOfDate);
-        $nonCurrentLiabilities['components']['deferred_tax'] = $deferredTax;
-        $nonCurrentLiabilities['total'] += $deferredTax['amount'];
+        $nonCurrentLiabilities['components']['deferred_tax'] = [
+            'description' => 'Deferred Tax Liabilities',
+            'amount' => $deferredTax
+        ];
+        $nonCurrentLiabilities['total'] += $deferredTax;
         
         return $nonCurrentLiabilities;
     }
@@ -367,20 +408,20 @@ class FinancialStatementIntegrationService
         
         if (Schema::hasTable('trade_receivables')) {
             $grossReceivables = DB::table('trade_receivables')
-                ->where('status', 'active')
+                ->where('status', '!=', 'PAID')
+                ->where('status', '!=', 'WRITTEN_OFF')
                 ->whereDate('invoice_date', '<=', $asOfDate)
-                ->sum(DB::raw('amount - COALESCE(amount_paid, 0)'));
+                ->sum(DB::raw('amount - COALESCE(paid_amount, 0)'));
             
             $badDebtProvision = DB::table('trade_receivables')
-                ->where('status', 'active')
+                ->where('status', '!=', 'PAID')
+                ->where('status', '!=', 'WRITTEN_OFF')
                 ->whereDate('invoice_date', '<=', $asOfDate)
-                ->sum('bad_debt_provision');
+                ->sum('provision_amount');
         }
         
-        // Also get from GL if available
-        $glBalance = DB::table('general_ledgers')
-            ->where('sub_category_code', 'TRADE_RECEIVABLES')
-            ->sum('balance');
+        // Also get from institution configured account
+        $glBalance = $this->institutionAccountService->getAccountBalance('trade_receivables_account', $asOfDate);
         
         $netAmount = max($grossReceivables - $badDebtProvision, $glBalance);
         
@@ -405,15 +446,16 @@ class FinancialStatementIntegrationService
         }
         
         $query = DB::table('trade_receivables')
-            ->where('status', 'active')
+            ->where('status', '!=', 'PAID')
+            ->where('status', '!=', 'WRITTEN_OFF')
             ->whereDate('invoice_date', '<=', $asOfDate)
-            ->whereRaw('DATEDIFF(?, invoice_date) >= ?', [$asOfDate, $fromDays]);
+            ->whereRaw("(?::date - invoice_date::date) >= ?", [$asOfDate, $fromDays]);
         
         if ($toDays !== null) {
-            $query->whereRaw('DATEDIFF(?, invoice_date) <= ?', [$asOfDate, $toDays]);
+            $query->whereRaw("(?::date - invoice_date::date) <= ?", [$asOfDate, $toDays]);
         }
         
-        return $query->sum(DB::raw('amount - COALESCE(amount_paid, 0)'));
+        return $query->sum(DB::raw('amount - COALESCE(paid_amount, 0)'));
     }
     
     private function getPropertyPlantEquipment($asOfDate)
@@ -424,22 +466,19 @@ class FinancialStatementIntegrationService
         if (Schema::hasTable('ppe_assets')) {
             $cost = DB::table('ppe_assets')
                 ->whereDate('acquisition_date', '<=', $asOfDate)
-                ->where('status', 'active')
+                ->where('status', 'ACTIVE')
                 ->sum('cost');
             
-            $accumulatedDepreciation = DB::table('ppe_depreciation')
-                ->whereDate('depreciation_date', '<=', $asOfDate)
-                ->sum('depreciation_amount');
+            // Get accumulated depreciation from ppe_assets table
+            $accumulatedDepreciation = DB::table('ppe_assets')
+                ->whereDate('created_at', '<=', $asOfDate)
+                ->sum('accumulated_depreciation');
         }
         
-        // Also check GL
-        $glCost = DB::table('general_ledgers')
-            ->where('sub_category_code', 'PPE_COST')
-            ->sum('balance');
+        // Also check institution configured accounts
+        $glCost = $this->institutionAccountService->getAccountBalance('property_and_equipment_account', $asOfDate);
         
-        $glDepreciation = DB::table('general_ledgers')
-            ->where('sub_category_code', 'ACCUMULATED_DEPRECIATION')
-            ->sum('balance');
+        $glDepreciation = $this->institutionAccountService->getAccountBalance('accumulated_depreciation_account', $asOfDate);
         
         $netBookValue = max($cost - $accumulatedDepreciation, $glCost - $glDepreciation);
         
@@ -457,23 +496,21 @@ class FinancialStatementIntegrationService
         
         if (Schema::hasTable('trade_payables')) {
             $totalPayables = DB::table('trade_payables')
-                ->where('status', 'active')
+                ->where('status', '!=', 'PAID')
                 ->whereDate('bill_date', '<=', $asOfDate)
-                ->sum(DB::raw('amount - COALESCE(amount_paid, 0)'));
+                ->sum(DB::raw('amount - COALESCE(paid_amount, 0)'));
         }
         
         // Include creditors
         if (Schema::hasTable('creditors')) {
             $creditorsBalance = DB::table('creditors')
-                ->where('status', 'active')
-                ->sum('current_balance');
+                ->where('status', 'ACTIVE')
+                ->sum('outstanding_amount');
             $totalPayables += $creditorsBalance;
         }
         
-        // Also check GL
-        $glBalance = DB::table('general_ledgers')
-            ->where('sub_category_code', 'TRADE_PAYABLES')
-            ->sum('balance');
+        // Also check institution configured account
+        $glBalance = $this->institutionAccountService->getAccountBalance('trade_payables_account', $asOfDate);
         
         return [
             'description' => 'Trade and Other Payables',
@@ -492,15 +529,12 @@ class FinancialStatementIntegrationService
         
         if (Schema::hasTable('interest_payables')) {
             $interestPayable = DB::table('interest_payables')
-                ->where('status', 'active')
                 ->whereDate('created_at', '<=', $asOfDate)
-                ->sum('outstanding_interest');
+                ->sum('interest_payable');
         }
         
-        // Check GL
-        $glBalance = DB::table('general_ledgers')
-            ->where('sub_category_code', 'INTEREST_PAYABLE')
-            ->sum('balance');
+        // Check institution configured account
+        $glBalance = $this->institutionAccountService->getAccountBalance('interest_payable_account', $asOfDate);
         
         return [
             'description' => 'Interest Payable',
@@ -515,14 +549,13 @@ class FinancialStatementIntegrationService
         if (Schema::hasTable('unearned_deferred_revenue')) {
             $unearnedRevenue = DB::table('unearned_deferred_revenue')
                 ->whereDate('created_at', '<=', $asOfDate)
-                ->where('status', 'active')
-                ->sum(DB::raw('total_amount - COALESCE(recognized_amount, 0)'));
+                ->where('status', 'ACTIVE')
+                ->where('is_recognized', false)
+                ->sum('amount');
         }
         
-        // Check GL
-        $glBalance = DB::table('general_ledgers')
-            ->where('sub_category_code', 'UNEARNED_REVENUE')
-            ->sum('balance');
+        // Check institution configured account
+        $glBalance = $this->institutionAccountService->getAccountBalance('unearned_revenue_account', $asOfDate);
         
         return [
             'description' => 'Unearned/Deferred Revenue',
@@ -539,7 +572,7 @@ class FinancialStatementIntegrationService
             $incomeData = DB::table('other_income_transactions')
                 ->select('category', DB::raw('SUM(amount) as total'))
                 ->whereBetween('transaction_date', [$startDate, $endDate])
-                ->where('status', 'received')
+                ->where('status', 'RECEIVED')
                 ->groupBy('category')
                 ->get();
             
@@ -549,11 +582,8 @@ class FinancialStatementIntegrationService
             }
         }
         
-        // Check GL
-        $glIncome = DB::table('general_ledgers')
-            ->where('sub_category_code', 'OTHER_INCOME')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum('credit');
+        // Check institution configured account
+        $glIncome = $this->institutionAccountService->getAccountBalance('other_income_account', $endDate);
         
         return [
             'description' => 'Other Income',
@@ -566,17 +596,16 @@ class FinancialStatementIntegrationService
     {
         $depreciation = 0;
         
-        if (Schema::hasTable('ppe_depreciation')) {
-            $depreciation = DB::table('ppe_depreciation')
-                ->whereBetween('depreciation_date', [$startDate, $endDate])
-                ->sum('depreciation_amount');
+        // Get depreciation from ppe_transactions or institution account
+        if (Schema::hasTable('ppe_transactions')) {
+            $depreciation = DB::table('ppe_transactions')
+                ->where('transaction_type', 'depreciation')
+                ->whereBetween('transaction_date', [$startDate, $endDate])
+                ->sum('amount');
         }
         
-        // Check GL
-        $glDepreciation = DB::table('general_ledgers')
-            ->where('sub_category_code', 'DEPRECIATION_EXPENSE')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum('debit');
+        // Check institution configured account
+        $glDepreciation = $this->institutionAccountService->getAccountBalance('depreciation_expense_account', $endDate);
         
         return [
             'description' => 'Depreciation and Amortization',
@@ -601,16 +630,19 @@ class FinancialStatementIntegrationService
         }
         
         // Interest received
+        // For loan repayments, we need to calculate interest portion
+        // This would normally come from a separate interest tracking table
         $interestReceived = DB::table('loan_repayments')
             ->whereBetween('payment_date', [$startDate, $endDate])
-            ->sum('interest_amount');
+            ->where('payment_type', 'INTEREST')
+            ->sum('amount');
         $operating['inflows']['interest_received'] = $interestReceived;
         
         // Other income received
         if (Schema::hasTable('other_income_transactions')) {
             $otherIncomeReceived = DB::table('other_income_transactions')
                 ->whereBetween('transaction_date', [$startDate, $endDate])
-                ->where('status', 'received')
+                ->where('status', 'RECEIVED')
                 ->sum('amount');
             $operating['inflows']['other_income'] = $otherIncomeReceived;
         }
@@ -619,7 +651,7 @@ class FinancialStatementIntegrationService
         if (Schema::hasTable('payable_payments')) {
             $supplierPayments = DB::table('payable_payments')
                 ->whereBetween('payment_date', [$startDate, $endDate])
-                ->sum('amount');
+                ->sum('amount_paid');
             $operating['outflows']['supplier_payments'] = $supplierPayments;
         }
         
@@ -634,7 +666,7 @@ class FinancialStatementIntegrationService
         // Operating expenses paid
         $operatingExpensesPaid = DB::table('expenses')
             ->whereBetween('payment_date', [$startDate, $endDate])
-            ->where('status', 'paid')
+            ->where('status', 'PAID')
             ->sum('amount');
         $operating['outflows']['operating_expenses'] = $operatingExpensesPaid;
         
@@ -654,16 +686,16 @@ class FinancialStatementIntegrationService
         ];
         
         // Loan disbursements (outflow)
-        $loansDisbursed = DB::table('loan_accounts')
+        $loansDisbursed = DB::table('loans')
             ->whereBetween('disbursement_date', [$startDate, $endDate])
-            ->where('status', 'disbursed')
-            ->sum('principle_amount');
+            ->where('status', 'DISBURSED')
+            ->sum('principle');
         $investing['outflows']['loans_disbursed'] = $loansDisbursed;
         
         // Loan principal repayments (inflow)
         $principalRepayments = DB::table('loan_repayments')
             ->whereBetween('payment_date', [$startDate, $endDate])
-            ->sum('principle_amount');
+            ->sum('amount');
         $investing['inflows']['loan_repayments'] = $principalRepayments;
         
         // Purchase of PPE (outflow)
@@ -703,29 +735,42 @@ class FinancialStatementIntegrationService
             'net' => 0
         ];
         
-        // Member deposits (inflow)
-        $memberDeposits = DB::table('member_deposits')
-            ->whereBetween('deposit_date', [$startDate, $endDate])
-            ->sum('amount');
+        // Member deposits (inflow) - from transactions table
+        $memberDeposits = 0;
+        if (Schema::hasTable('transactions')) {
+            $memberDeposits = DB::table('transactions')
+                ->whereIn('type', ['DEPOSIT', 'CREDIT'])
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->sum('amount');
+        }
         $financing['inflows']['member_deposits'] = $memberDeposits;
         
-        // Member withdrawals (outflow)
-        $memberWithdrawals = DB::table('member_withdrawals')
-            ->whereBetween('withdrawal_date', [$startDate, $endDate])
-            ->sum('amount');
+        // Member withdrawals (outflow) - from transactions table
+        $memberWithdrawals = 0;
+        if (Schema::hasTable('transactions')) {
+            $memberWithdrawals = DB::table('transactions')
+                ->whereIn('type', ['WITHDRAWAL', 'DEBIT'])
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->sum('amount');
+        }
         $financing['outflows']['member_withdrawals'] = $memberWithdrawals;
         
         // Share capital contributions (inflow)
-        $shareContributions = DB::table('share_transactions')
-            ->whereBetween('transaction_date', [$startDate, $endDate])
-            ->where('transaction_type', 'contribution')
-            ->sum('amount');
+        $shareContributions = 0;
+        if (Schema::hasTable('share_registers')) {
+            $shareContributions = DB::table('share_registers')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->sum('total_share_value');
+        }
         $financing['inflows']['share_contributions'] = $shareContributions;
         
         // Dividends paid (outflow)
-        $dividendsPaid = DB::table('dividend_payments')
-            ->whereBetween('payment_date', [$startDate, $endDate])
-            ->sum('amount');
+        $dividendsPaid = 0;
+        if (Schema::hasTable('dividends')) {
+            $dividendsPaid = DB::table('dividends')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->sum('amount');
+        }
         $financing['outflows']['dividends_paid'] = $dividendsPaid;
         
         // New borrowings (inflow)
@@ -753,15 +798,16 @@ class FinancialStatementIntegrationService
     
     private function getCashAndCashEquivalents($asOfDate)
     {
-        $cash = DB::table('institution_accounts')
-            ->where('account_type', 'CASH')
+        // Get cash from accounts table (petty cash, till accounts)
+        $cash = DB::table('accounts')
+            ->where('account_type', 'LIKE', '%CASH%')
             ->whereDate('created_at', '<=', $asOfDate)
-            ->sum('balance');
+            ->sum('balance') ?? 0;
         
-        $bankBalances = DB::table('institution_accounts')
-            ->where('account_type', 'BANK')
+        // Get bank balances from bank_accounts table
+        $bankBalances = DB::table('bank_accounts')
             ->whereDate('created_at', '<=', $asOfDate)
-            ->sum('balance');
+            ->sum('current_balance') ?? 0;
         
         return [
             'description' => 'Cash and Cash Equivalents',
@@ -775,10 +821,18 @@ class FinancialStatementIntegrationService
     
     private function getCashBalance($date)
     {
-        return DB::table('institution_accounts')
-            ->whereIn('account_type', ['CASH', 'BANK'])
+        // Get cash from accounts table
+        $cashAccounts = DB::table('accounts')
+            ->where('account_type', 'LIKE', '%CASH%')
             ->whereDate('created_at', '<=', $date)
-            ->sum('balance');
+            ->sum('balance') ?? 0;
+        
+        // Get bank balances
+        $bankBalances = DB::table('bank_accounts')
+            ->whereDate('created_at', '<=', $date)
+            ->sum('current_balance') ?? 0;
+        
+        return $cashAccounts + $bankBalances;
     }
     
     private function getShortTermInvestments($asOfDate)
@@ -788,7 +842,7 @@ class FinancialStatementIntegrationService
         if (Schema::hasTable('investments')) {
             $amount = DB::table('investments')
                 ->where('investment_type', 'short_term')
-                ->where('status', 'active')
+                ->where('status', 'ACTIVE')
                 ->whereDate('purchase_date', '<=', $asOfDate)
                 ->sum('current_value');
         }
@@ -806,7 +860,7 @@ class FinancialStatementIntegrationService
         if (Schema::hasTable('investments')) {
             $amount = DB::table('investments')
                 ->where('investment_type', 'long_term')
-                ->where('status', 'active')
+                ->where('status', 'ACTIVE')
                 ->whereDate('purchase_date', '<=', $asOfDate)
                 ->sum('current_value');
         }
@@ -820,11 +874,11 @@ class FinancialStatementIntegrationService
     private function getCurrentPortionOfLoans($asOfDate)
     {
         // Loans expected to be collected within 12 months
-        $currentLoans = DB::table('loan_accounts')
-            ->where('status', 'active')
+        $currentLoans = DB::table('loans')
+            ->whereIn('status', ['ACTIVE', 'DISBURSED'])
             ->whereDate('disbursement_date', '<=', $asOfDate)
-            ->whereRaw('DATEDIFF(maturity_date, ?) <= 365', [$asOfDate])
-            ->sum('principle_amount');
+            ->whereRaw("(tenure::integer * 30) <= 365")
+            ->sum('principle');
         
         return [
             'description' => 'Current Portion of Loan Portfolio',
@@ -835,11 +889,11 @@ class FinancialStatementIntegrationService
     private function getLongTermPortionOfLoans($asOfDate)
     {
         // Loans with maturity beyond 12 months
-        $longTermLoans = DB::table('loan_accounts')
-            ->where('status', 'active')
+        $longTermLoans = DB::table('loans')
+            ->whereIn('status', ['ACTIVE', 'DISBURSED'])
             ->whereDate('disbursement_date', '<=', $asOfDate)
-            ->whereRaw('DATEDIFF(maturity_date, ?) > 365', [$asOfDate])
-            ->sum('principle_amount');
+            ->whereRaw("(tenure::integer * 30) > 365")
+            ->sum('principle');
         
         return [
             'description' => 'Long-term Portion of Loan Portfolio',
@@ -849,10 +903,10 @@ class FinancialStatementIntegrationService
     
     private function getInterestReceivable($asOfDate)
     {
-        $interestReceivable = DB::table('loan_accounts')
-            ->where('status', 'active')
+        $interestReceivable = DB::table('loans')
+            ->whereIn('status', ['ACTIVE', 'DISBURSED'])
             ->whereDate('disbursement_date', '<=', $asOfDate)
-            ->sum('accrued_interest');
+            ->sum('interest');
         
         return [
             'description' => 'Interest Receivable',
@@ -862,10 +916,7 @@ class FinancialStatementIntegrationService
     
     private function getPrepaidExpenses($asOfDate)
     {
-        $prepaid = DB::table('general_ledgers')
-            ->where('sub_category_code', 'PREPAID_EXPENSES')
-            ->whereDate('created_at', '<=', $asOfDate)
-            ->sum('balance');
+        $prepaid = $this->institutionAccountService->getAccountBalance('prepaid_expenses_account', $asOfDate);
         
         return [
             'description' => 'Prepaid Expenses and Other Current Assets',
@@ -880,12 +931,12 @@ class FinancialStatementIntegrationService
         if (Schema::hasTable('intangible_assets')) {
             $cost = DB::table('intangible_assets')
                 ->whereDate('acquisition_date', '<=', $asOfDate)
-                ->where('status', 'active')
+                ->where('status', 'ACTIVE')
                 ->sum('cost');
             
             $amortization = DB::table('intangible_assets')
                 ->whereDate('acquisition_date', '<=', $asOfDate)
-                ->where('status', 'active')
+                ->where('status', 'ACTIVE')
                 ->sum('accumulated_amortization');
             
             $intangibles = $cost - $amortization;
@@ -903,9 +954,9 @@ class FinancialStatementIntegrationService
         
         if (Schema::hasTable('borrowings')) {
             $currentBorrowings = DB::table('borrowings')
-                ->where('status', 'active')
+                ->where('status', 'ACTIVE')
                 ->whereDate('borrowing_date', '<=', $asOfDate)
-                ->whereRaw('DATEDIFF(maturity_date, ?) <= 365', [$asOfDate])
+                ->whereRaw("(tenure::integer * 30) <= 365")
                 ->sum('outstanding_amount');
         }
         
@@ -921,9 +972,9 @@ class FinancialStatementIntegrationService
         
         if (Schema::hasTable('borrowings')) {
             $longTermBorrowings = DB::table('borrowings')
-                ->where('status', 'active')
+                ->where('status', 'ACTIVE')
                 ->whereDate('borrowing_date', '<=', $asOfDate)
-                ->whereRaw('DATEDIFF(maturity_date, ?) > 365', [$asOfDate])
+                ->whereRaw("(tenure::integer * 30) > 365")
                 ->sum('outstanding_amount');
         }
         
@@ -935,7 +986,7 @@ class FinancialStatementIntegrationService
     
     private function getMemberDeposits($asOfDate)
     {
-        $deposits = DB::table('member_accounts')
+        $deposits = DB::table('accounts')
             ->where('account_type', 'SAVINGS')
             ->whereDate('created_at', '<=', $asOfDate)
             ->sum('balance');
@@ -948,7 +999,7 @@ class FinancialStatementIntegrationService
     
     private function getLongTermDeposits($asOfDate)
     {
-        $deposits = DB::table('member_accounts')
+        $deposits = DB::table('accounts')
             ->where('account_type', 'FIXED_DEPOSIT')
             ->whereDate('created_at', '<=', $asOfDate)
             ->sum('balance');
@@ -967,7 +1018,7 @@ class FinancialStatementIntegrationService
             // Unearned premiums
             $unearnedPremiums = DB::table('insurance_premiums')
                 ->whereDate('created_at', '<=', $asOfDate)
-                ->where('status', 'active')
+                ->where('status', 'ACTIVE')
                 ->sum(DB::raw('premium_amount - earned_amount'));
             
             // Outstanding claims
@@ -995,9 +1046,9 @@ class FinancialStatementIntegrationService
         
         if (Schema::hasTable('creditors')) {
             $creditors = DB::table('creditors')
-                ->where('status', 'active')
+                ->where('status', 'ACTIVE')
                 ->whereDate('created_at', '<=', $asOfDate)
-                ->sum('current_balance');
+                ->sum('outstanding_amount');
         }
         
         return [
@@ -1008,7 +1059,7 @@ class FinancialStatementIntegrationService
     
     private function getShareCapital($asOfDate)
     {
-        $shareCapital = DB::table('member_accounts')
+        $shareCapital = DB::table('accounts')
             ->where('account_type', 'SHARES')
             ->whereDate('created_at', '<=', $asOfDate)
             ->sum('balance');
@@ -1022,10 +1073,7 @@ class FinancialStatementIntegrationService
     private function getRetainedEarnings($asOfDate)
     {
         // Get accumulated retained earnings
-        $retainedEarnings = DB::table('general_ledgers')
-            ->where('sub_category_code', 'RETAINED_EARNINGS')
-            ->whereDate('created_at', '<=', $asOfDate)
-            ->sum('balance');
+        $retainedEarnings = $this->institutionAccountService->getAccountBalance('retained_earnings_account', $asOfDate);
         
         // Add current year profit/loss
         $currentYearStart = Carbon::parse($asOfDate)->startOfYear()->format('Y-m-d');
@@ -1043,10 +1091,7 @@ class FinancialStatementIntegrationService
     
     private function getReserves($asOfDate)
     {
-        $reserves = DB::table('general_ledgers')
-            ->where('sub_category_code', 'RESERVES')
-            ->whereDate('created_at', '<=', $asOfDate)
-            ->sum('balance');
+        $reserves = $this->institutionAccountService->getAccountBalance('reserves_account', $asOfDate);
         
         return [
             'description' => 'Reserves',
@@ -1061,7 +1106,7 @@ class FinancialStatementIntegrationService
         
         if (Schema::hasTable('investments')) {
             $unrealizedGains = DB::table('investments')
-                ->where('status', 'active')
+                ->where('status', 'ACTIVE')
                 ->whereDate('purchase_date', '<=', $asOfDate)
                 ->sum(DB::raw('current_value - purchase_amount'));
             $oci += $unrealizedGains;
@@ -1075,24 +1120,24 @@ class FinancialStatementIntegrationService
     
     private function getNetIncome($startDate, $endDate)
     {
-        $revenue = DB::table('general_ledgers')
-            ->whereIn('major_category_code', ['4000']) // Revenue accounts
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum('credit');
+        // Get all revenue accounts from institution configuration
+        $revenueAccounts = $this->institutionAccountService->getRevenueAccounts($startDate, $endDate);
+        $revenue = array_sum(array_column($revenueAccounts, 'amount'));
         
-        $expenses = DB::table('general_ledgers')
-            ->whereIn('major_category_code', ['5000']) // Expense accounts
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum('debit');
+        // Get all expense accounts from institution configuration
+        $expenseAccounts = $this->institutionAccountService->getExpenseAccounts($startDate, $endDate);
+        $expenses = array_sum(array_column($expenseAccounts, 'amount'));
         
         return $revenue - $expenses;
     }
     
     private function getInterestIncome($startDate, $endDate)
     {
+        // Interest income from loan repayments
         $interestIncome = DB::table('loan_repayments')
             ->whereBetween('payment_date', [$startDate, $endDate])
-            ->sum('interest_amount');
+            ->where('payment_type', 'INTEREST')
+            ->sum('amount');
         
         return [
             'description' => 'Interest Income from Loans',
@@ -1102,10 +1147,7 @@ class FinancialStatementIntegrationService
     
     private function getFeeAndCommissionIncome($startDate, $endDate)
     {
-        $feeIncome = DB::table('general_ledgers')
-            ->where('sub_category_code', 'FEE_INCOME')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum('credit');
+        $feeIncome = $this->institutionAccountService->getAccountBalance('fee_income_account');
         
         return [
             'description' => 'Fee and Commission Income',
@@ -1150,10 +1192,7 @@ class FinancialStatementIntegrationService
         $interestExpense = 0;
         
         // Interest on member deposits
-        $depositInterest = DB::table('general_ledgers')
-            ->where('sub_category_code', 'DEPOSIT_INTEREST')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum('debit');
+        $depositInterest = $this->institutionAccountService->getAccountBalance('deposit_interest_account');
         
         // Interest on borrowings
         if (Schema::hasTable('interest_payments')) {
@@ -1174,8 +1213,8 @@ class FinancialStatementIntegrationService
     private function getOperatingExpenses($startDate, $endDate)
     {
         $operatingExpenses = DB::table('expenses')
-            ->whereBetween('expense_date', [$startDate, $endDate])
-            ->where('status', 'approved')
+            ->whereBetween('payment_date', [$startDate, $endDate])
+            ->where('status', 'APPROVED')
             ->sum('amount');
         
         return [
@@ -1186,10 +1225,7 @@ class FinancialStatementIntegrationService
     
     private function getLoanLossProvision($startDate, $endDate)
     {
-        $provision = DB::table('general_ledgers')
-            ->where('sub_category_code', 'LOAN_LOSS_PROVISION')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum('debit');
+        $provision = $this->institutionAccountService->getAccountBalance('loan_loss_provision_account');
         
         return [
             'description' => 'Provision for Loan Losses',
@@ -1203,8 +1239,8 @@ class FinancialStatementIntegrationService
         
         if (Schema::hasTable('insurance_claims')) {
             $claims = DB::table('insurance_claims')
-                ->whereBetween('payment_date', [$startDate, $endDate])
-                ->where('status', 'paid')
+                ->whereBetween('settlement_date', [$startDate, $endDate])
+                ->where('claim_status', 'PAID')
                 ->sum('claim_amount');
         }
         
@@ -1216,7 +1252,7 @@ class FinancialStatementIntegrationService
     
     private function calculateEPS($netIncome)
     {
-        $shares = DB::table('member_accounts')
+        $shares = DB::table('accounts')
             ->where('account_type', 'SHARES')
             ->sum('balance');
         
@@ -1252,35 +1288,26 @@ class FinancialStatementIntegrationService
     {
         if (Schema::hasTable('creditors')) {
             return DB::table('creditors')
-                ->where('status', 'active')
-                ->where('type', 'supplier')
+                ->where('status', 'ACTIVE')
+                ->where('creditor_type', 'supplier')
                 ->whereDate('created_at', '<=', $asOfDate)
-                ->sum('current_balance');
+                ->sum('outstanding_amount');
         }
         return 0;
     }
     
     private function getAccruedExpenses($asOfDate)
     {
-        return DB::table('general_ledgers')
-            ->where('sub_category_code', 'ACCRUED_EXPENSES')
-            ->whereDate('created_at', '<=', $asOfDate)
-            ->sum('balance');
+        return $this->institutionAccountService->getAccountBalance('accrued_expenses_account', $asOfDate);
     }
     
     private function getOtherPayables($asOfDate)
     {
-        return DB::table('general_ledgers')
-            ->where('sub_category_code', 'OTHER_PAYABLES')
-            ->whereDate('created_at', '<=', $asOfDate)
-            ->sum('balance');
+        return $this->institutionAccountService->getAccountBalance('other_payables_account', $asOfDate);
     }
     
     private function getDeferredTaxLiabilities($asOfDate)
     {
-        return DB::table('general_ledgers')
-            ->where('sub_category_code', 'DEFERRED_TAX')
-            ->whereDate('created_at', '<=', $asOfDate)
-            ->sum('balance');
+        return $this->institutionAccountService->getAccountBalance('deferred_tax_account', $asOfDate);
     }
 }

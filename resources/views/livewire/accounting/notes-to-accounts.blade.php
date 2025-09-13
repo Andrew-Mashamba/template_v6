@@ -3,7 +3,7 @@
     <div class="bg-gradient-to-r from-blue-900 to-blue-800 text-white px-4 py-3 rounded-t-lg">
         <div class="text-center">
             <h1 class="text-xl font-bold uppercase">{{ $companyName }}</h1>
-            <h2 class="text-lg font-semibold">NOTES TO THE FINANCIAL STATEMENTS</h2>
+            <h2 class="text-lg font-semibold">NOTES TO THE FINANCIAL STATEMENTS v</h2>
             <p class="text-sm">For the year ended 31 December {{ $selectedYear }}</p>
         </div>
     </div>
@@ -26,7 +26,7 @@
     </div>
     
     <!-- Notes Content -->
-    <div class="p-4 space-y-4">
+    <div class="p-4 space-y-6">
         
         <!-- Note 1: Corporate Information -->
         <div class="border border-gray-200 rounded-lg overflow-hidden">
@@ -158,10 +158,10 @@
             </button>
             
             @if(in_array('assets', $expandedNotes))
-            <div class="px-3 py-2 bg-white">
+            <div class="px-3 py-4 bg-white">
                 @foreach($financialData['assets'] as $asset)
-                <div class="mb-3">
-                    <div class="flex justify-between items-center mb-2">
+                <div class="mb-6 mt-4">
+                    <div class="flex justify-between items-center mb-3">
                         <h5 class="text-xs font-semibold text-gray-800">
                             {{ $asset['account_name'] }}
                             <span class="text-gray-500 font-normal">({{ $asset['account_number'] }})</span>
@@ -172,23 +172,23 @@
                         </button>
                     </div>
                     
-                    <table class="w-full text-xs border-collapse border border-gray-300">
+                    <table class="text-xs border-collapse border border-gray-300" style="width: calc(100% - 2rem); margin-left: 2rem;">
                         <thead>
                             <tr class="bg-gray-50 text-gray-700">
-                                <th class="border border-gray-300 px-2 py-1 text-left w-2/5">Description</th>
+                                <th class="border border-gray-300 px-2 py-1 text-left" style="width: 50%;">Description</th>
                                 @foreach($comparisonYears as $year)
-                                <th class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $year }}</th>
+                                <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $year }}</th>
                                 @endforeach
-                                <th class="border border-gray-300 px-2 py-1 text-right w-1/5">Change %</th>
+                                <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">Change %</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td class="border border-gray-300 px-2 py-1 font-medium w-2/5">Total</td>
+                            <tr class="font-semibold bg-blue-100">
+                                <td class="border border-gray-300 px-2 py-1" style="width: 50%;">Total</td>
                                 @foreach($comparisonYears as $year)
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $this->formatNumber($asset['years'][$year] ?? 0) }}</td>
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $this->formatNumber($asset['years'][$year] ?? 0) }}</td>
                                 @endforeach
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5 {{ $asset['movements']['change_percentage'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                <td class="border border-gray-300 px-2 py-1 text-right {{ $asset['movements']['change_percentage'] >= 0 ? 'text-green-600' : 'text-red-600' }}" style="width: 16.67%;">
                                     {{ number_format($asset['movements']['change_percentage'], 1) }}%
                                 </td>
                             </tr>
@@ -200,12 +200,12 @@
                                 </td>
                             </tr>
                             @foreach($asset['composition'] as $component)
-                            <tr class="text-gray-600">
-                                <td class="border border-gray-300 px-2 py-1 pl-4 w-2/5">{{ $component['account_name'] }}</td>
+                            <tr class="bg-gray-50 text-gray-600 hover:bg-gray-100">
+                                <td class="border border-gray-300 px-2 py-1 pl-4" style="width: 50%;">{{ $component['account_name'] }}</td>
                                 @foreach($comparisonYears as $year)
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $this->formatNumber($component['years'][$year] ?? 0) }}</td>
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $this->formatNumber($component['years'][$year] ?? 0) }}</td>
                                 @endforeach
-                                <td class="border border-gray-300 px-2 py-1 w-1/5"></td>
+                                <td class="border border-gray-300 px-2 py-1" style="width: 16.67%;"></td>
                             </tr>
                             @endforeach
                             @endif
@@ -229,10 +229,10 @@
             </button>
             
             @if(in_array('liabilities', $expandedNotes))
-            <div class="px-3 py-2 bg-white">
+            <div class="px-3 py-4 bg-white">
                 @foreach($financialData['liabilities'] as $liability)
-                <div class="mb-3">
-                    <div class="flex justify-between items-center mb-2">
+                <div class="mb-6 mt-4">
+                    <div class="flex justify-between items-center mb-3">
                         <h5 class="text-xs font-semibold text-gray-800">
                             {{ $liability['account_name'] }}
                             <span class="text-gray-500 font-normal">({{ $liability['account_number'] }})</span>
@@ -243,23 +243,23 @@
                         </button>
                     </div>
                     
-                    <table class="w-full text-xs border-collapse border border-gray-300">
+                    <table class="text-xs border-collapse border border-gray-300" style="width: calc(100% - 2rem); margin-left: 2rem;">
                         <thead>
                             <tr class="bg-gray-50 text-gray-700">
-                                <th class="border border-gray-300 px-2 py-1 text-left w-2/5">Description</th>
+                                <th class="border border-gray-300 px-2 py-1 text-left" style="width: 50%;">Description</th>
                                 @foreach($comparisonYears as $year)
-                                <th class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $year }}</th>
+                                <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $year }}</th>
                                 @endforeach
-                                <th class="border border-gray-300 px-2 py-1 text-right w-1/5">Change %</th>
+                                <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">Change %</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td class="border border-gray-300 px-2 py-1 font-medium w-2/5">Total</td>
+                            <tr class="font-semibold bg-blue-100">
+                                <td class="border border-gray-300 px-2 py-1" style="width: 50%;">Total</td>
                                 @foreach($comparisonYears as $year)
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $this->formatNumber($liability['years'][$year] ?? 0) }}</td>
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $this->formatNumber($liability['years'][$year] ?? 0) }}</td>
                                 @endforeach
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5 {{ $liability['movements']['change_percentage'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                <td class="border border-gray-300 px-2 py-1 text-right {{ $liability['movements']['change_percentage'] >= 0 ? 'text-green-600' : 'text-red-600' }}" style="width: 16.67%;">
                                     {{ number_format($liability['movements']['change_percentage'], 1) }}%
                                 </td>
                             </tr>
@@ -271,12 +271,12 @@
                                 </td>
                             </tr>
                             @foreach($liability['composition'] as $component)
-                            <tr class="text-gray-600">
-                                <td class="border border-gray-300 px-2 py-1 pl-4 w-2/5">{{ $component['account_name'] }}</td>
+                            <tr class="bg-gray-50 text-gray-600 hover:bg-gray-100">
+                                <td class="border border-gray-300 px-2 py-1 pl-4" style="width: 50%;">{{ $component['account_name'] }}</td>
                                 @foreach($comparisonYears as $year)
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $this->formatNumber($component['years'][$year] ?? 0) }}</td>
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $this->formatNumber($component['years'][$year] ?? 0) }}</td>
                                 @endforeach
-                                <td class="border border-gray-300 px-2 py-1 w-1/5"></td>
+                                <td class="border border-gray-300 px-2 py-1" style="width: 16.67%;"></td>
                             </tr>
                             @endforeach
                             @endif
@@ -300,10 +300,10 @@
             </button>
             
             @if(in_array('equity', $expandedNotes))
-            <div class="px-3 py-2 bg-white">
+            <div class="px-3 py-4 bg-white">
                 @foreach($financialData['equity'] as $equity)
-                <div class="mb-3">
-                    <div class="flex justify-between items-center mb-2">
+                <div class="mb-6 mt-4">
+                    <div class="flex justify-between items-center mb-3">
                         <h5 class="text-xs font-semibold text-gray-800">
                             {{ $equity['account_name'] }}
                             <span class="text-gray-500 font-normal">({{ $equity['account_number'] }})</span>
@@ -314,23 +314,23 @@
                         </button>
                     </div>
                     
-                    <table class="w-full text-xs border-collapse border border-gray-300">
+                    <table class="text-xs border-collapse border border-gray-300" style="width: calc(100% - 2rem); margin-left: 2rem;">
                         <thead>
                             <tr class="bg-gray-50 text-gray-700">
-                                <th class="border border-gray-300 px-2 py-1 text-left w-2/5">Description</th>
+                                <th class="border border-gray-300 px-2 py-1 text-left" style="width: 50%;">Description</th>
                                 @foreach($comparisonYears as $year)
-                                <th class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $year }}</th>
+                                <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $year }}</th>
                                 @endforeach
-                                <th class="border border-gray-300 px-2 py-1 text-right w-1/5">Change %</th>
+                                <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">Change %</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td class="border border-gray-300 px-2 py-1 font-medium w-2/5">Total</td>
+                            <tr class="font-semibold bg-blue-100">
+                                <td class="border border-gray-300 px-2 py-1" style="width: 50%;">Total</td>
                                 @foreach($comparisonYears as $year)
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $this->formatNumber($equity['years'][$year] ?? 0) }}</td>
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $this->formatNumber($equity['years'][$year] ?? 0) }}</td>
                                 @endforeach
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5 {{ $equity['movements']['change_percentage'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                <td class="border border-gray-300 px-2 py-1 text-right {{ $equity['movements']['change_percentage'] >= 0 ? 'text-green-600' : 'text-red-600' }}" style="width: 16.67%;">
                                     {{ number_format($equity['movements']['change_percentage'], 1) }}%
                                 </td>
                             </tr>
@@ -342,12 +342,12 @@
                                 </td>
                             </tr>
                             @foreach($equity['composition'] as $component)
-                            <tr class="text-gray-600">
-                                <td class="border border-gray-300 px-2 py-1 pl-4 w-2/5">{{ $component['account_name'] }}</td>
+                            <tr class="bg-gray-50 text-gray-600 hover:bg-gray-100">
+                                <td class="border border-gray-300 px-2 py-1 pl-4" style="width: 50%;">{{ $component['account_name'] }}</td>
                                 @foreach($comparisonYears as $year)
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $this->formatNumber($component['years'][$year] ?? 0) }}</td>
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $this->formatNumber($component['years'][$year] ?? 0) }}</td>
                                 @endforeach
-                                <td class="border border-gray-300 px-2 py-1 w-1/5"></td>
+                                <td class="border border-gray-300 px-2 py-1" style="width: 16.67%;"></td>
                             </tr>
                             @endforeach
                             @endif
@@ -371,10 +371,10 @@
             </button>
             
             @if(in_array('income', $expandedNotes))
-            <div class="px-3 py-2 bg-white">
+            <div class="px-3 py-4 bg-white">
                 @foreach($financialData['income'] as $income)
-                <div class="mb-3">
-                    <div class="flex justify-between items-center mb-2">
+                <div class="mb-6 mt-4">
+                    <div class="flex justify-between items-center mb-3">
                         <h5 class="text-xs font-semibold text-gray-800">
                             {{ $income['account_name'] }}
                             <span class="text-gray-500 font-normal">({{ $income['account_number'] }})</span>
@@ -385,23 +385,23 @@
                         </button>
                     </div>
                     
-                    <table class="w-full text-xs border-collapse border border-gray-300">
+                    <table class="text-xs border-collapse border border-gray-300" style="width: calc(100% - 2rem); margin-left: 2rem;">
                         <thead>
                             <tr class="bg-gray-50 text-gray-700">
-                                <th class="border border-gray-300 px-2 py-1 text-left w-2/5">Description</th>
+                                <th class="border border-gray-300 px-2 py-1 text-left" style="width: 50%;">Description</th>
                                 @foreach($comparisonYears as $year)
-                                <th class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $year }}</th>
+                                <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $year }}</th>
                                 @endforeach
-                                <th class="border border-gray-300 px-2 py-1 text-right w-1/5">Change %</th>
+                                <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">Change %</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td class="border border-gray-300 px-2 py-1 font-medium w-2/5">Total</td>
+                            <tr class="font-semibold bg-blue-100">
+                                <td class="border border-gray-300 px-2 py-1" style="width: 50%;">Total</td>
                                 @foreach($comparisonYears as $year)
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $this->formatNumber($income['years'][$year] ?? 0) }}</td>
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $this->formatNumber($income['years'][$year] ?? 0) }}</td>
                                 @endforeach
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5 {{ $income['movements']['change_percentage'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                <td class="border border-gray-300 px-2 py-1 text-right {{ $income['movements']['change_percentage'] >= 0 ? 'text-green-600' : 'text-red-600' }}" style="width: 16.67%;">
                                     {{ number_format($income['movements']['change_percentage'], 1) }}%
                                 </td>
                             </tr>
@@ -413,12 +413,12 @@
                                 </td>
                             </tr>
                             @foreach($income['composition'] as $component)
-                            <tr class="text-gray-600">
-                                <td class="border border-gray-300 px-2 py-1 pl-4 w-2/5">{{ $component['account_name'] }}</td>
+                            <tr class="bg-gray-50 text-gray-600 hover:bg-gray-100">
+                                <td class="border border-gray-300 px-2 py-1 pl-4" style="width: 50%;">{{ $component['account_name'] }}</td>
                                 @foreach($comparisonYears as $year)
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $this->formatNumber($component['years'][$year] ?? 0) }}</td>
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $this->formatNumber($component['years'][$year] ?? 0) }}</td>
                                 @endforeach
-                                <td class="border border-gray-300 px-2 py-1 w-1/5"></td>
+                                <td class="border border-gray-300 px-2 py-1" style="width: 16.67%;"></td>
                             </tr>
                             @endforeach
                             @endif
@@ -442,10 +442,10 @@
             </button>
             
             @if(in_array('expenses', $expandedNotes))
-            <div class="px-3 py-2 bg-white">
+            <div class="px-3 py-4 bg-white">
                 @foreach($financialData['expenses'] as $expense)
-                <div class="mb-3">
-                    <div class="flex justify-between items-center mb-2">
+                <div class="mb-6 mt-4">
+                    <div class="flex justify-between items-center mb-3">
                         <h5 class="text-xs font-semibold text-gray-800">
                             {{ $expense['account_name'] }}
                             <span class="text-gray-500 font-normal">({{ $expense['account_number'] }})</span>
@@ -456,21 +456,21 @@
                         </button>
                     </div>
                     
-                    <table class="w-full text-xs border-collapse border border-gray-300">
+                    <table class="text-xs border-collapse border border-gray-300" style="width: calc(100% - 2rem); margin-left: 2rem;">
                         <thead>
                             <tr class="bg-gray-50 text-gray-700">
-                                <th class="border border-gray-300 px-2 py-1 text-left w-2/5">Description</th>
+                                <th class="border border-gray-300 px-2 py-1 text-left" style="width: 50%;">Description</th>
                                 @foreach($comparisonYears as $year)
-                                <th class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $year }}</th>
+                                <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $year }}</th>
                                 @endforeach
-                                <th class="border border-gray-300 px-2 py-1 text-right w-1/5">Change %</th>
+                                <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">Change %</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td class="border border-gray-300 px-2 py-1 font-medium w-2/5">Total</td>
+                            <tr class="font-semibold bg-orange-100">
+                                <td class="border border-gray-300 px-2 py-1" style="width: 50%;">Total</td>
                                 @foreach($comparisonYears as $year)
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5">
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">
                                     @if(($expense['years'][$year] ?? 0) < 0)
                                         ({{ number_format(abs($expense['years'][$year] ?? 0), 2) }})
                                     @else
@@ -478,7 +478,7 @@
                                     @endif
                                 </td>
                                 @endforeach
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5 {{ $expense['movements']['change_percentage'] <= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                <td class="border border-gray-300 px-2 py-1 text-right {{ $expense['movements']['change_percentage'] <= 0 ? 'text-green-600' : 'text-red-600' }}" style="width: 16.67%;">
                                     {{ number_format($expense['movements']['change_percentage'], 1) }}%
                                 </td>
                             </tr>
@@ -490,10 +490,10 @@
                                 </td>
                             </tr>
                             @foreach($expense['composition'] as $component)
-                            <tr class="text-gray-600">
-                                <td class="border border-gray-300 px-2 py-1 pl-4 w-2/5">{{ $component['account_name'] }}</td>
+                            <tr class="bg-gray-50 text-gray-600 hover:bg-gray-100">
+                                <td class="border border-gray-300 px-2 py-1 pl-4" style="width: 50%;">{{ $component['account_name'] }}</td>
                                 @foreach($comparisonYears as $year)
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5">
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">
                                     @if(($component['years'][$year] ?? 0) < 0)
                                         ({{ number_format(abs($component['years'][$year] ?? 0), 2) }})
                                     @else
@@ -501,7 +501,7 @@
                                     @endif
                                 </td>
                                 @endforeach
-                                <td class="border border-gray-300 px-2 py-1 w-1/5"></td>
+                                <td class="border border-gray-300 px-2 py-1" style="width: 16.67%;"></td>
                             </tr>
                             @endforeach
                             @endif

@@ -1,24 +1,24 @@
 <div class="bg-gray-50 p-6">
     {{-- Header Section --}}
-    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-t-xl p-6 text-whitex">
+    <div class="rounded-t-xl p-6 ">
         <div class="flex justify-between items-center">
             <div>
                 <h1 class="text-2xl font-bold">Property, Plant & Equipment (PPE) Management</h1>
-                <p class=" mt-1">Track, manage, and depreciate fixed assets</p>
+                <p class="text-gray-500 mt-1">Track, manage, and depreciate fixed assets</p>
             </div>
             <div class="flex space-x-4">
                 {{-- Summary Statistics --}}
                 <div class="bg-white/20 rounded-lg px-4 py-2">
                     <p class="text-xs text-gray-500">Total PPE Value</p>
-                    <p class="text-lg font-bold">{{ number_format($this->totalPpeValue, 2) }} TZS</p>
+                    <p class="text-lg font-bold">{{ number_format($this->totalPpeValue, 2) }} {{ config('app.currency', 'TZS') }}</p>
                 </div>
                 <div class="bg-white/20 rounded-lg px-4 py-2">
                     <p class="text-xs text-gray-500">Accumulated Depreciation</p>
-                    <p class="text-lg font-bold">{{ number_format($this->totalAccumulatedDepreciation, 2) }} TZS</p>
+                    <p class="text-lg font-bold">{{ number_format($this->totalAccumulatedDepreciation, 2) }} {{ config('app.currency', 'TZS') }}</p>
                 </div>
                 <div class="bg-white/20 rounded-lg px-4 py-2">
                     <p class="text-xs text-gray-500">Net Book Value</p>
-                    <p class="text-lg font-bold">{{ number_format($this->netBookValue, 2) }} TZS</p>
+                    <p class="text-lg font-bold">{{ number_format($this->netBookValue, 2) }} {{ config('app.currency', 'TZS') }}</p>
                 </div>
             </div>
         </div>
@@ -51,6 +51,22 @@
                 <button wire:click="selectMenu(6)" 
                     class="px-6 py-3 text-sm font-medium {{ $selectedMenuItem == 6 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }} transition-colors">
                     Reports
+                </button>
+                <button wire:click="selectMenu(7)" 
+                    class="px-6 py-3 text-sm font-medium {{ $selectedMenuItem == 7 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }} transition-colors">
+                    Maintenance
+                </button>
+                <button wire:click="selectMenu(8)" 
+                    class="px-6 py-3 text-sm font-medium {{ $selectedMenuItem == 8 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }} transition-colors">
+                    Transfers
+                </button>
+                <button wire:click="selectMenu(9)" 
+                    class="px-6 py-3 text-sm font-medium {{ $selectedMenuItem == 9 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }} transition-colors">
+                    Insurance
+                </button>
+                <button wire:click="selectMenu(10)" 
+                    class="px-6 py-3 text-sm font-medium {{ $selectedMenuItem == 10 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }} transition-colors">
+                    Revaluation
                 </button>
             </nav>
         </div>
@@ -176,11 +192,33 @@
                 @case(2)
                     {{-- Add/Edit PPE Form --}}
                     <div class="max-w-4xl mx-auto">
-                        <h2 class="text-xl font-semibold text-gray-900 mb-6">
-                            {{ $isEditMode ? 'Edit PPE Asset' : 'Add New PPE Asset' }}
-                        </h2>
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-xl font-semibold text-gray-900">
+                                @if($importMode)
+                                    Import Pre-existing PPE Asset
+                                @elseif($isEditMode)
+                                    Edit PPE Asset
+                                @else
+                                    Add New PPE Asset
+                                @endif
+                            </h2>
+                            @if(!$isEditMode && !$importMode)
+                                <button type="button" wire:click="importPreExistingAsset" 
+                                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+                                    Import Pre-existing Asset
+                                </button>
+                            @endif
+                        </div>
 
-                        <form wire:submit.prevent="{{ $isEditMode ? 'update' : 'store' }}" class="space-y-6">
+                        @if($importMode)
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                                <p class="text-sm text-blue-800">
+                                    <strong>Import Mode:</strong> You're adding a pre-existing asset. The system will calculate accumulated depreciation based on the purchase date and current condition.
+                                </p>
+                            </div>
+                        @endif
+
+                        <form wire:submit.prevent="{{ $importMode ? 'processImport' : ($isEditMode ? 'update' : 'store') }}" class="space-y-6">
                             {{-- Basic Information --}}
                             <div class="bg-white rounded-lg border border-gray-200 p-6">
                                 <h3 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
@@ -195,7 +233,7 @@
 
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">PPE Category *</label>
-                                        <select wire:model="categoryx" 
+                                        <select wire:model="category" 
                                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
                                             <option value="">Select Category</option>
                                             @php
@@ -221,7 +259,7 @@
                                                 <option value="{{ $category->account_number }}">{{ $category->account_name }}</option>
                                             @endforeach
                                         </select>
-                                        @error('categoryx') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                                        @error('category') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                                     </div>
 
                                     <div>
@@ -285,6 +323,190 @@
                                 </div>
                             </div>
 
+                            {{-- Asset Details & Tracking --}}
+                            <div class="bg-white rounded-lg border border-gray-200 p-6">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Asset Details & Tracking</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Asset Code</label>
+                                        <input wire:model="asset_code" type="text" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                            placeholder="Auto-generated if empty">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Serial Number</label>
+                                        <input wire:model="serial_number" type="text" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                            placeholder="Enter serial number">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Barcode</label>
+                                        <input wire:model="barcode" type="text" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                            placeholder="Enter barcode">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Manufacturer</label>
+                                        <input wire:model="manufacturer" type="text" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                            placeholder="Enter manufacturer">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Model</label>
+                                        <input wire:model="model" type="text" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                            placeholder="Enter model">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Condition *</label>
+                                        <select wire:model="condition" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
+                                            <option value="excellent">Excellent</option>
+                                            <option value="good">Good</option>
+                                            <option value="fair">Fair</option>
+                                            <option value="poor">Poor</option>
+                                            <option value="needs_repair">Needs Repair</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Depreciation Settings --}}
+                            <div class="bg-white rounded-lg border border-gray-200 p-6">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Depreciation Settings</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Depreciation Method *</label>
+                                        <select wire:model="depreciation_method" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
+                                            <option value="straight_line">Straight Line</option>
+                                            <option value="declining_balance">Declining Balance</option>
+                                            <option value="sum_of_years">Sum of Years' Digits</option>
+                                            <option value="units_of_production">Units of Production</option>
+                                        </select>
+                                    </div>
+                                    
+                                    @if($importMode)
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Current Accumulated Depreciation</label>
+                                        <input wire:model="accumulated_depreciation" type="number" step="0.01" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                            placeholder="Enter if known, or leave for auto-calculation">
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- Warranty Information --}}
+                            <div class="bg-white rounded-lg border border-gray-200 p-6">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Warranty Information</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Warranty Start Date</label>
+                                        <input wire:model="warranty_start_date" type="date" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Warranty End Date</label>
+                                        <input wire:model="warranty_end_date" type="date" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Warranty Provider</label>
+                                        <input wire:model="warranty_provider" type="text" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                            placeholder="Enter warranty provider">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Warranty Terms</label>
+                                        <input wire:model="warranty_terms" type="text" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                            placeholder="Enter warranty terms">
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Assignment & Deployment --}}
+                            <div class="bg-white rounded-lg border border-gray-200 p-6">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Assignment & Deployment</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                                        <select wire:model="department_id" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                            <option value="">Select Department</option>
+                                            @foreach($departments ?? [] as $dept)
+                                                <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Custodian</label>
+                                        <select wire:model="custodian_id" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                            <option value="">Select Custodian</option>
+                                            @foreach($users ?? [] as $user)
+                                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Assigned To</label>
+                                        <select wire:model="assigned_to" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                            <option value="">Select User</option>
+                                            @foreach($users ?? [] as $user)
+                                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Insurance (Optional at Creation) --}}
+                            <div class="bg-white rounded-lg border border-gray-200 p-6">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Insurance Information (Optional)</h3>
+                                <p class="text-sm text-gray-600 mb-4">You can add insurance now or later from the Insurance tab</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Policy Number</label>
+                                        <input wire:model="policy_number" type="text" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                            placeholder="Enter policy number">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Insurance Company</label>
+                                        <input wire:model="insurance_company" type="text" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                            placeholder="Enter insurance company">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Premium Amount</label>
+                                        <input wire:model="premium_amount" type="number" step="0.01" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                            placeholder="0.00">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Coverage End Date</label>
+                                        <input wire:model="insurance_end_date" type="date" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                    </div>
+                                </div>
+                            </div>
+
                             {{-- Additional Costs Section --}}
                             <div class="bg-white rounded-lg border border-gray-200 p-6">
                                 <h3 class="text-lg font-medium text-gray-900 mb-4">Cost Capitalization</h3>
@@ -344,7 +566,7 @@
                                                 (float)($renovation_costs ?? 0) + 
                                                 (float)($transportation_costs ?? 0) + 
                                                 (float)($installation_costs ?? 0) + 
-                                                (float)($other_costs ?? 0), 2) }} TZS
+                                                (float)($other_costs ?? 0), 2) }} {{ config('app.currency', 'TZS') }}
                                         </span>
                                     </div>
                                 </div>
@@ -479,89 +701,274 @@
                     @break
 
                 @case(3)
-                    {{-- PPE Register --}}
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <h2 class="text-xl font-semibold text-gray-900">PPE Register</h2>
-                            <div class="flex space-x-2">
-                                <input type="text" wire:model.debounce.300ms="search" 
-                                    placeholder="Search PPE..." 
-                                    class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
-                                <select wire:model="statusFilter" 
-                                    class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                    {{-- Enhanced PPE Register with Comprehensive Information --}}
+                    <div class="space-y-6">
+                        {{-- Header with Statistics --}}
+                        <div class="bg-white rounded-lg border border-gray-200 p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h2 class="text-xl font-semibold text-gray-900">PPE Register</h2>
+                                    <p class="text-sm text-gray-600 mt-1">Comprehensive view of all property, plant and equipment</p>
+                                </div>
+                                <div class="flex gap-3">
+                                    <button wire:click="exportExcel" 
+                                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        Export
+                                    </button>
+                                    <button wire:click="runDepreciation" 
+                                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                                        Run Depreciation
+                                    </button>
+                                    <button wire:click="selectMenu(2)" 
+                                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                        Add New PPE
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            {{-- Quick Statistics --}}
+                            <div class="grid grid-cols-5 gap-4">
+                                <div class="text-center">
+                                    <p class="text-2xl font-bold text-gray-900">{{ $this->totalAssetCount ?? 0 }}</p>
+                                    <p class="text-xs text-gray-600">Total Assets</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-2xl font-bold text-green-600">{{ $this->activeAssetsCount ?? 0 }}</p>
+                                    <p class="text-xs text-gray-600">Active</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-2xl font-bold text-yellow-600">{{ \App\Models\PPE::needsMaintenance()->count() ?? 0 }}</p>
+                                    <p class="text-xs text-gray-600">Need Maintenance</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-2xl font-bold text-blue-600">{{ number_format($this->totalPpeValue ?? 0, 0) }}</p>
+                                    <p class="text-xs text-gray-600">Total Value</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-2xl font-bold text-red-600">{{ number_format($this->totalAccumulatedDepreciation ?? 0, 0) }}</p>
+                                    <p class="text-xs text-gray-600">Total Depreciation</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Filters --}}
+                        <div class="bg-white rounded-lg border border-gray-200 p-4">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <input wire:model.debounce.300ms="search" type="text" 
+                                    class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                                    placeholder="Search by name, code, serial...">
+                                <select wire:model="statusFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
                                     <option value="">All Status</option>
                                     <option value="active">Active</option>
                                     <option value="under_repair">Under Repair</option>
                                     <option value="pending_disposal">Pending Disposal</option>
                                     <option value="disposed">Disposed</option>
                                 </select>
+                                <select wire:model="categoryFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <option value="">All Categories</option>
+                                    @foreach(\App\Models\PPE::distinct('category')->whereNotNull('category')->pluck('category') as $cat)
+                                        <option value="{{ $cat }}">{{ $cat }}</option>
+                                    @endforeach
+                                </select>
+                                <select wire:model="conditionFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <option value="">All Conditions</option>
+                                    <option value="excellent">Excellent</option>
+                                    <option value="good">Good</option>
+                                    <option value="fair">Fair</option>
+                                    <option value="poor">Poor</option>
+                                    <option value="needs_repair">Needs Repair</option>
+                                </select>
                             </div>
                         </div>
 
+                        {{-- Enhanced Table --}}
                         <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
                             <div class="overflow-x-auto">
-                                <table class="w-full text-sm">
-                                    <thead class="bg-gray-50 border-b border-gray-200">
+                                <table class="w-full text-xs">
+                                    <thead class="bg-gray-50">
                                         <tr>
-                                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Asset Name</th>
-                                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Category</th>
-                                            <th class="px-4 py-3 text-right font-semibold text-gray-700">Initial Value</th>
-                                            <th class="px-4 py-3 text-right font-semibold text-gray-700">Accumulated Depreciation</th>
-                                            <th class="px-4 py-3 text-right font-semibold text-gray-700">Net Book Value</th>
-                                            <th class="px-4 py-3 text-center font-semibold text-gray-700">Status</th>
-                                            <th class="px-4 py-3 text-center font-semibold text-gray-700">Actions</th>
+                                            <th class="px-3 py-3 text-left font-medium text-gray-700">Asset Details</th>
+                                            <th class="px-3 py-3 text-left font-medium text-gray-700">Location</th>
+                                            <th class="px-3 py-3 text-center font-medium text-gray-700">Status</th>
+                                            <th class="px-3 py-3 text-right font-medium text-gray-700">Financial</th>
+                                            <th class="px-3 py-3 text-center font-medium text-gray-700">Depreciation</th>
+                                            <th class="px-3 py-3 text-center font-medium text-gray-700">Maintenance</th>
+                                            <th class="px-3 py-3 text-center font-medium text-gray-700">Insurance</th>
+                                            <th class="px-3 py-3 text-center font-medium text-gray-700">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-200">
                                         @forelse($ppes as $ppe)
-                                            <tr class="hover:bg-gray-50 transition-colors">
-                                                <td class="px-4 py-3">
+                                            <tr class="hover:bg-gray-50 @if($ppe->condition == 'needs_repair' || ($ppe->next_maintenance_date && $ppe->next_maintenance_date < now())) bg-red-50 @endif">
+                                                {{-- Asset Details --}}
+                                                <td class="px-3 py-3">
                                                     <div>
-                                                        <div class="font-medium text-gray-900">{{ $ppe->name }}</div>
-                                                        <div class="text-xs text-gray-500">{{ $ppe->location ?? 'No location' }}</div>
+                                                        <p class="font-medium text-gray-900">{{ $ppe->name }}</p>
+                                                        <p class="text-gray-600">Code: {{ $ppe->asset_code ?? 'N/A' }}</p>
+                                                        <p class="text-gray-500">{{ $ppe->category }}</p>
+                                                        @if($ppe->serial_number)
+                                                            <p class="text-gray-500">SN: {{ $ppe->serial_number }}</p>
+                                                        @endif
                                                     </div>
                                                 </td>
-                                                <td class="px-4 py-3 text-gray-700">{{ $ppe->category }}</td>
-                                                <td class="px-4 py-3 text-right text-gray-900">{{ number_format($ppe->initial_value, 2) }}</td>
-                                                <td class="px-4 py-3 text-right text-red-600">{{ number_format($ppe->accumulated_depreciation, 2) }}</td>
-                                                <td class="px-4 py-3 text-right font-medium text-green-600">{{ number_format($ppe->closing_value, 2) }}</td>
-                                                <td class="px-4 py-3 text-center">
-                                                    <span class="px-2 py-1 text-xs font-medium rounded-full 
-                                                        @if($ppe->status == 'active') bg-green-100 text-green-800
-                                                        @elseif($ppe->status == 'disposed') bg-red-100 text-red-800
-                                                        @elseif($ppe->status == 'under_repair') bg-yellow-100 text-yellow-800
-                                                        @else bg-gray-100 text-gray-800 @endif">
-                                                        {{ ucfirst($ppe->status ?? 'active') }}
-                                                    </span>
+                                                
+                                                {{-- Location --}}
+                                                <td class="px-3 py-3">
+                                                    <div>
+                                                        <p class="font-medium">{{ $ppe->location ?? 'N/A' }}</p>
+                                                        @if($ppe->department_id)
+                                                            <p class="text-gray-600">Dept: {{ $departments->where('id', $ppe->department_id)->first()->name ?? 'N/A' }}</p>
+                                                        @endif
+                                                        @if($ppe->custodian_id)
+                                                            <p class="text-gray-600">{{ $users->where('id', $ppe->custodian_id)->first()->name ?? 'N/A' }}</p>
+                                                        @endif
+                                                    </div>
                                                 </td>
-                                                <td class="px-4 py-3">
-                                                    <div class="flex justify-center space-x-2">
+                                                
+                                                {{-- Status --}}
+                                                <td class="px-3 py-3 text-center">
+                                                    <div class="space-y-1">
+                                                        <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full 
+                                                            @if($ppe->condition == 'excellent') bg-green-100 text-green-800
+                                                            @elseif($ppe->condition == 'good') bg-blue-100 text-blue-800
+                                                            @elseif($ppe->condition == 'fair') bg-yellow-100 text-yellow-800
+                                                            @elseif($ppe->condition == 'poor') bg-orange-100 text-orange-800
+                                                            @else bg-red-100 text-red-800 @endif">
+                                                            {{ ucfirst($ppe->condition ?? 'Unknown') }}
+                                                        </span>
+                                                        <br>
+                                                        <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full 
+                                                            @if($ppe->status == 'active') bg-green-100 text-green-800
+                                                            @elseif($ppe->status == 'disposed') bg-gray-100 text-gray-800
+                                                            @else bg-yellow-100 text-yellow-800 @endif">
+                                                            {{ ucfirst($ppe->status) }}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                
+                                                {{-- Financial --}}
+                                                <td class="px-3 py-3 text-right">
+                                                    <div>
+                                                        <p class="font-medium">{{ number_format($ppe->purchase_price, 0) }}</p>
+                                                        <p class="text-green-600">NBV: {{ number_format($ppe->closing_value, 0) }}</p>
+                                                        <p class="text-gray-500 text-xs">{{ \Carbon\Carbon::parse($ppe->purchase_date)->format('d/m/Y') }}</p>
+                                                        <p class="text-gray-500 text-xs">Age: {{ \Carbon\Carbon::parse($ppe->purchase_date)->diffInYears(now()) }} yrs</p>
+                                                    </div>
+                                                </td>
+                                                
+                                                {{-- Depreciation --}}
+                                                <td class="px-3 py-3 text-center">
+                                                    <div>
+                                                        <p class="font-medium">{{ ucfirst(str_replace('_', ' ', $ppe->depreciation_method ?? 'straight_line')) }}</p>
+                                                        <p class="text-red-600">{{ number_format($ppe->accumulated_depreciation, 0) }}</p>
+                                                        <p class="text-gray-500 text-xs">Monthly: {{ number_format($ppe->depreciation_for_month ?? 0, 0) }}</p>
+                                                    </div>
+                                                </td>
+                                                
+                                                {{-- Maintenance --}}
+                                                <td class="px-3 py-3 text-center">
+                                                    @if($ppe->next_maintenance_date)
+                                                        @if($ppe->next_maintenance_date < now())
+                                                            <span class="inline-flex px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+                                                                Overdue
+                                                            </span>
+                                                        @else
+                                                            <p class="text-xs">{{ \Carbon\Carbon::parse($ppe->next_maintenance_date)->format('d/m/Y') }}</p>
+                                                        @endif
+                                                    @else
+                                                        <span class="text-gray-400 text-xs">Not scheduled</span>
+                                                    @endif
+                                                    @if($ppe->maintenance_cost_to_date > 0)
+                                                        <p class="text-gray-600 text-xs">Cost: {{ number_format($ppe->maintenance_cost_to_date, 0) }}</p>
+                                                    @endif
+                                                </td>
+                                                
+                                                {{-- Insurance --}}
+                                                <td class="px-3 py-3 text-center">
+                                                    <div class="space-y-1">
+                                                        @if($ppe->warranty_end_date && $ppe->warranty_end_date >= now())
+                                                            <span class="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                                                                Warranty
+                                                            </span>
+                                                        @endif
+                                                        
+                                                        @php
+                                                            $hasInsurance = false;
+                                                            // Check if asset has active insurance (simplified check)
+                                                            if(method_exists($ppe, 'isInsured')) {
+                                                                $hasInsurance = $ppe->isInsured();
+                                                            }
+                                                        @endphp
+                                                        
+                                                        @if($hasInsurance)
+                                                            <span class="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                                                Insured
+                                                            </span>
+                                                        @else
+                                                            <span class="inline-flex px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
+                                                                Not Insured
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                                
+                                                {{-- Actions --}}
+                                                <td class="px-3 py-3">
+                                                    <div class="flex flex-col gap-1">
                                                         <button wire:click="viewAsset({{ $ppe->id }})" 
                                                             class="text-blue-600 hover:text-blue-800 text-xs font-medium">View</button>
+                                                        
+                                                        @if($ppe->status == 'active')
+                                                            <button wire:click="scheduleMaintenance({{ $ppe->id }})" 
+                                                                class="text-green-600 hover:text-green-800 text-xs font-medium">Maintenance</button>
+                                                            <button wire:click="initiateTransfer({{ $ppe->id }})" 
+                                                                class="text-purple-600 hover:text-purple-800 text-xs font-medium">Transfer</button>
+                                                        @endif
+                                                        
                                                         <button wire:click="editAsset({{ $ppe->id }})" 
-                                                            class="text-green-600 hover:text-green-800 text-xs font-medium">Edit</button>
-                                                        <button wire:click="deleteAsset({{ $ppe->id }})" 
-                                                            onclick="return confirm('Are you sure?')"
-                                                            class="text-red-600 hover:text-red-800 text-xs font-medium">Delete</button>
+                                                            class="text-gray-600 hover:text-gray-800 text-xs font-medium">Edit</button>
                                                     </div>
                                                 </td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
-                                                    No PPE assets found. <button wire:click="selectMenu(2)" class="text-blue-600 hover:text-blue-800">Add your first asset</button>
+                                                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                                                    No PPE assets found. <button wire:click="selectMenu(2)" class="text-blue-600 hover:underline">Add your first asset</button>
                                                 </td>
                                             </tr>
                                         @endforelse
                                     </tbody>
                                 </table>
                             </div>
-
+                            
+                            {{-- Pagination --}}
                             @if($ppes && method_exists($ppes, 'hasPages') && $ppes->hasPages())
                                 <div class="px-6 py-3 border-t border-gray-200">
                                     {{ $ppes->links() }}
                                 </div>
                             @endif
+                        </div>
+                        
+                        {{-- Legend --}}
+                        <div class="bg-white rounded-lg border border-gray-200 p-4">
+                            <h3 class="text-sm font-medium text-gray-700 mb-2">Legend:</h3>
+                            <div class="flex flex-wrap gap-4 text-xs">
+                                <div class="flex items-center gap-1">
+                                    <span class="inline-block w-3 h-3 bg-red-50 rounded"></span>
+                                    <span>Needs Attention</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="inline-flex px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Active</span>
+                                    <span>Operational</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="inline-flex px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Warning</span>
+                                    <span>Attention Required</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     @break
@@ -792,6 +1199,336 @@
                     </div>
                     @break
 
+                @case(7)
+                    {{-- Maintenance Management --}}
+                    <div class="space-y-6">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-xl font-semibold text-gray-900">Maintenance Management</h2>
+                            <button wire:click="showMaintenanceForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                Schedule Maintenance
+                            </button>
+                        </div>
+
+                        {{-- Maintenance Overview Cards --}}
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="bg-white rounded-lg border border-gray-200 p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-600">Due This Month</p>
+                                        <p class="text-2xl font-bold text-gray-900">{{ $this->maintenanceDueCount ?? 0 }}</p>
+                                    </div>
+                                    <div class="p-3 bg-yellow-100 rounded-lg">
+                                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-lg border border-gray-200 p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-600">Overdue</p>
+                                        <p class="text-2xl font-bold text-red-600">{{ $this->maintenanceOverdueCount ?? 0 }}</p>
+                                    </div>
+                                    <div class="p-3 bg-red-100 rounded-lg">
+                                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-lg border border-gray-200 p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-600">Completed MTD</p>
+                                        <p class="text-2xl font-bold text-green-600">{{ $this->maintenanceCompletedCount ?? 0 }}</p>
+                                    </div>
+                                    <div class="p-3 bg-green-100 rounded-lg">
+                                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-lg border border-gray-200 p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-600">Total Cost MTD</p>
+                                        <p class="text-xl font-bold text-gray-900">{{ number_format($this->maintenanceCostMTD ?? 0, 2) }}</p>
+                                    </div>
+                                    <div class="p-3 bg-blue-100 rounded-lg">
+                                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Maintenance Schedule Table --}}
+                        <div class="bg-white rounded-lg border border-gray-200">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <h3 class="text-lg font-medium text-gray-900">Maintenance Schedule</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Asset</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Type</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Due Date</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Status</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Assigned To</th>
+                                            <th class="px-4 py-2 text-center font-medium text-gray-700">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        @forelse($this->maintenanceSchedule ?? [] as $maintenance)
+                                            <tr>
+                                                <td class="px-4 py-2">{{ $maintenance->ppe->name }}</td>
+                                                <td class="px-4 py-2">{{ ucfirst($maintenance->maintenance_type) }}</td>
+                                                <td class="px-4 py-2">{{ \Carbon\Carbon::parse($maintenance->maintenance_date)->format('d/m/Y') }}</td>
+                                                <td class="px-4 py-2">
+                                                    <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                                        @if($maintenance->status == 'completed') bg-green-100 text-green-800
+                                                        @elseif($maintenance->isOverdue()) bg-red-100 text-red-800
+                                                        @else bg-yellow-100 text-yellow-800 @endif">
+                                                        {{ $maintenance->isOverdue() ? 'Overdue' : ucfirst($maintenance->status) }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-2">{{ $maintenance->performed_by }}</td>
+                                                <td class="px-4 py-2 text-center">
+                                                    @if($maintenance->status !== 'completed')
+                                                        <button wire:click="completeMaintenance({{ $maintenance->id }})" 
+                                                            class="text-blue-600 hover:text-blue-800 text-xs font-medium">Complete</button>
+                                                    @else
+                                                        <button wire:click="viewMaintenance({{ $maintenance->id }})" 
+                                                            class="text-gray-600 hover:text-gray-800 text-xs font-medium">View</button>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="6" class="px-4 py-8 text-center text-gray-500">No maintenance records found</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    @break
+
+                @case(8)
+                    {{-- Asset Transfers --}}
+                    <div class="space-y-6">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-xl font-semibold text-gray-900">Asset Transfer Management</h2>
+                            <button wire:click="showTransferForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                Initiate Transfer
+                            </button>
+                        </div>
+
+                        {{-- Recent Transfers --}}
+                        <div class="bg-white rounded-lg border border-gray-200">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <h3 class="text-lg font-medium text-gray-900">Transfer History</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Asset</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">From</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">To</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Date</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Status</th>
+                                            <th class="px-4 py-2 text-center font-medium text-gray-700">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        @forelse($this->transfers ?? [] as $transfer)
+                                            <tr>
+                                                <td class="px-4 py-2">{{ $transfer->ppe->name }}</td>
+                                                <td class="px-4 py-2">{{ $transfer->from_location }}</td>
+                                                <td class="px-4 py-2">{{ $transfer->to_location }}</td>
+                                                <td class="px-4 py-2">{{ \Carbon\Carbon::parse($transfer->transfer_date)->format('d/m/Y') }}</td>
+                                                <td class="px-4 py-2">
+                                                    <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                                        @if($transfer->status == 'completed') bg-green-100 text-green-800
+                                                        @elseif($transfer->status == 'approved') bg-blue-100 text-blue-800
+                                                        @elseif($transfer->status == 'rejected') bg-red-100 text-red-800
+                                                        @else bg-yellow-100 text-yellow-800 @endif">
+                                                        {{ ucfirst($transfer->status) }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-2 text-center">
+                                                    @if($transfer->status === 'pending')
+                                                        <button wire:click="approveTransfer({{ $transfer->id }})" 
+                                                            class="text-green-600 hover:text-green-800 text-xs font-medium mr-2">Approve</button>
+                                                        <button wire:click="rejectTransfer({{ $transfer->id }})" 
+                                                            class="text-red-600 hover:text-red-800 text-xs font-medium">Reject</button>
+                                                    @else
+                                                        <button wire:click="viewTransfer({{ $transfer->id }})" 
+                                                            class="text-blue-600 hover:text-blue-800 text-xs font-medium">View</button>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="6" class="px-4 py-8 text-center text-gray-500">No transfer records found</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    @break
+
+                @case(9)
+                    {{-- Insurance Management --}}
+                    <div class="space-y-6">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-xl font-semibold text-gray-900">Insurance Management</h2>
+                            <button wire:click="showInsuranceForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                Add Insurance Policy
+                            </button>
+                        </div>
+
+                        {{-- Insurance Overview --}}
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-white rounded-lg border border-gray-200 p-4">
+                                <h4 class="text-sm font-medium text-gray-600 mb-2">Active Policies</h4>
+                                <p class="text-2xl font-bold text-green-600">{{ $this->activePoliciesCount ?? 0 }}</p>
+                            </div>
+                            <div class="bg-white rounded-lg border border-gray-200 p-4">
+                                <h4 class="text-sm font-medium text-gray-600 mb-2">Expiring Soon</h4>
+                                <p class="text-2xl font-bold text-yellow-600">{{ $this->expiringPoliciesCount ?? 0 }}</p>
+                            </div>
+                            <div class="bg-white rounded-lg border border-gray-200 p-4">
+                                <h4 class="text-sm font-medium text-gray-600 mb-2">Total Premium/Year</h4>
+                                <p class="text-2xl font-bold text-blue-600">{{ number_format($this->totalAnnualPremium ?? 0, 2) }}</p>
+                            </div>
+                        </div>
+
+                        {{-- Insurance Policies Table --}}
+                        <div class="bg-white rounded-lg border border-gray-200">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <h3 class="text-lg font-medium text-gray-900">Insurance Policies</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Asset</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Policy Number</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Insurance Company</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Coverage</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Expiry Date</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Status</th>
+                                            <th class="px-4 py-2 text-center font-medium text-gray-700">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        @forelse($this->insurancePolicies ?? [] as $policy)
+                                            <tr>
+                                                <td class="px-4 py-2">{{ $policy->ppe->name }}</td>
+                                                <td class="px-4 py-2">{{ $policy->policy_number }}</td>
+                                                <td class="px-4 py-2">{{ $policy->insurance_company }}</td>
+                                                <td class="px-4 py-2">{{ ucfirst($policy->coverage_type) }}</td>
+                                                <td class="px-4 py-2">{{ \Carbon\Carbon::parse($policy->end_date)->format('d/m/Y') }}</td>
+                                                <td class="px-4 py-2">
+                                                    @if($policy->isActive())
+                                                        <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Active</span>
+                                                    @elseif($policy->isExpiring())
+                                                        <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">Expiring Soon</span>
+                                                    @else
+                                                        <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">Expired</span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-4 py-2 text-center">
+                                                    <button wire:click="renewInsurance({{ $policy->id }})" 
+                                                        class="text-blue-600 hover:text-blue-800 text-xs font-medium">Renew</button>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">No insurance policies found</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    @break
+
+                @case(10)
+                    {{-- Revaluation Management --}}
+                    <div class="space-y-6">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-xl font-semibold text-gray-900">Asset Revaluation</h2>
+                            <button wire:click="showRevaluationForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                New Revaluation
+                            </button>
+                        </div>
+
+                        {{-- Revaluation History --}}
+                        <div class="bg-white rounded-lg border border-gray-200">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <h3 class="text-lg font-medium text-gray-900">Revaluation History</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Asset</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Date</th>
+                                            <th class="px-4 py-2 text-right font-medium text-gray-700">Old Value</th>
+                                            <th class="px-4 py-2 text-right font-medium text-gray-700">New Value</th>
+                                            <th class="px-4 py-2 text-right font-medium text-gray-700">Change</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Type</th>
+                                            <th class="px-4 py-2 text-left font-medium text-gray-700">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        @forelse($this->revaluations ?? [] as $revaluation)
+                                            <tr>
+                                                <td class="px-4 py-2">{{ $revaluation->ppe->name }}</td>
+                                                <td class="px-4 py-2">{{ \Carbon\Carbon::parse($revaluation->revaluation_date)->format('d/m/Y') }}</td>
+                                                <td class="px-4 py-2 text-right">{{ number_format($revaluation->old_value, 2) }}</td>
+                                                <td class="px-4 py-2 text-right">{{ number_format($revaluation->new_value, 2) }}</td>
+                                                <td class="px-4 py-2 text-right">
+                                                    <span class="{{ $revaluation->revaluation_amount > 0 ? 'text-green-600' : 'text-red-600' }}">
+                                                        {{ $revaluation->revaluation_amount > 0 ? '+' : '' }}{{ number_format($revaluation->revaluation_amount, 2) }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-2">{{ ucfirst($revaluation->revaluation_type) }}</td>
+                                                <td class="px-4 py-2">
+                                                    <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                                        @if($revaluation->status == 'posted') bg-green-100 text-green-800
+                                                        @elseif($revaluation->status == 'approved') bg-blue-100 text-blue-800
+                                                        @else bg-yellow-100 text-yellow-800 @endif">
+                                                        {{ ucfirst($revaluation->status) }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">No revaluation records found</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    @break
+
                 @default
                     <div class="text-center py-12">
                         <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -871,4 +1608,47 @@
         </div>
     </div>
     @endif
+
+    {{-- Delete Confirmation Modal --}}
+    @if($showDeleteConfirmation ?? false)
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mt-2">Delete PPE Asset</h3>
+                <div class="mt-2 px-7 py-3">
+                    <p class="text-sm text-gray-500">
+                        Are you sure you want to delete this asset? This action cannot be undone.
+                    </p>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button wire:click="cancelDelete" 
+                        class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        Cancel
+                    </button>
+                    <button wire:click="deleteAsset" 
+                        class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-24 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Loading Overlay --}}
+    <div wire:loading.flex wire:target="store, update, deleteAsset, runDepreciation, generateReport, exportExcel, exportPdf" 
+        class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 items-center justify-center">
+        <div class="bg-white rounded-lg p-6 flex items-center space-x-4">
+            <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-gray-700 font-medium">Processing...</span>
+        </div>
+    </div>
 </div>

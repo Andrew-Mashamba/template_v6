@@ -5,8 +5,13 @@ use App\Jobs\CalculatePpeDepreciation;
 use App\Models\AccountsModel;
 use App\Models\general_ledger;
 use App\Models\PPE;
+use App\Models\PpeMaintenanceRecord;
+use App\Models\PpeTransfer;
+use App\Models\PpeRevaluation;
+use App\Models\PpeInsurance;
 use App\Services\TransactionPostingService;
 use App\Services\BalanceSheetItemIntegrationService;
+use App\Services\PpeLifecycleService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Gate;
@@ -67,6 +72,8 @@ class PpeManagement extends Component
     public $sortBy = 'name';
     public $sortDirection = 'asc';
     public $statusFilter = '';
+    public $categoryFilter = '';
+    public $conditionFilter = '';
 
     // Category management
     public $showCategoryForm = false;
@@ -89,6 +96,44 @@ class PpeManagement extends Component
     public $category_code_of_account = 1700;
     public $cash_account_sub_code;
     public $narration;
+
+    // Enhanced PPE fields
+    public $asset_code, $barcode, $serial_number, $manufacturer, $model;
+    public $depreciation_method = 'straight_line';
+    public $condition = 'excellent';
+    public $warranty_start_date, $warranty_end_date, $warranty_provider, $warranty_terms;
+    public $department_id, $custodian_id, $assigned_to;
+    
+    // Maintenance properties
+    public $showMaintenanceForm = false;
+    public $maintenanceId;
+    public $maintenance_type = 'preventive';
+    public $maintenance_date, $maintenance_description, $maintenance_vendor;
+    public $maintenance_cost = 0, $maintenance_parts_replaced;
+    public $next_maintenance_date;
+    
+    // Transfer properties
+    public $showTransferForm = false;
+    public $transferId;
+    public $transfer_to_location, $transfer_to_department, $transfer_to_custodian;
+    public $transfer_date, $transfer_reason, $transfer_notes;
+    
+    // Insurance properties
+    public $showInsuranceForm = false;
+    public $insuranceId;
+    public $policy_number, $insurance_company, $coverage_type = 'comprehensive';
+    public $insured_value, $premium_amount, $insurance_start_date, $insurance_end_date;
+    public $deductible, $coverage_details, $agent_name, $agent_contact;
+    
+    // Revaluation properties
+    public $showRevaluationForm = false;
+    public $revaluationId;
+    public $revaluation_date, $new_value, $revaluation_reason;
+    public $valuation_method, $supporting_documents;
+    
+    // Import for pre-existing assets
+    public $importMode = false;
+    public $importData = [];
 
     protected $rules = [
         'name' => 'required|string|max:255',
@@ -192,13 +237,26 @@ class PpeManagement extends Component
                 $q->where('name', 'like', '%' . $this->search . '%')
                   ->orWhere('category', 'like', '%' . $this->search . '%')
                   ->orWhere('location', 'like', '%' . $this->search . '%')
-                  ->orWhere('notes', 'like', '%' . $this->search . '%');
+                  ->orWhere('notes', 'like', '%' . $this->search . '%')
+                  ->orWhere('asset_code', 'like', '%' . $this->search . '%')
+                  ->orWhere('serial_number', 'like', '%' . $this->search . '%')
+                  ->orWhere('barcode', 'like', '%' . $this->search . '%');
             });
         }
 
         // Apply status filter
         if ($this->statusFilter) {
             $query->where('status', $this->statusFilter);
+        }
+
+        // Apply category filter
+        if ($this->categoryFilter) {
+            $query->where('category', $this->categoryFilter);
+        }
+
+        // Apply condition filter
+        if ($this->conditionFilter) {
+            $query->where('condition', $this->conditionFilter);
         }
 
         // Apply sorting
@@ -784,18 +842,21 @@ class PpeManagement extends Component
 
     public function store()
     {
-        //dd($this->purchase_price);
         $this->validate();
 
         // Calculate values before storing
         $this->calculateValues();
 
+        // Use PpeLifecycleService for comprehensive asset creation
+        $lifecycleService = new PpeLifecycleService();
+        
         // Get the account name for the selected category
         $account = AccountsModel::where('account_number', $this->categoryx)->first();
         $category_name = $account ? $account->account_name : $this->categoryx;
 
-        $ppe = PPE::create([
-            'name' => ucwords($this->name),   //to uppercase 
+        // Prepare comprehensive asset data
+        $assetData = [
+            'name' => ucwords($this->name),
             'category' => $category_name,
             'purchase_price' => $this->purchase_price,
             'purchase_date' => $this->purchase_date,
@@ -810,25 +871,59 @@ class PpeManagement extends Component
             'closing_value' => $this->closing_value,
             'status' => $this->status,
             'location' => $this->location,
-            'account_number' => $this->categoryx, // Use the selected account number
+            'account_number' => $this->categoryx,
             'notes' => $this->notes,
-            // Additional costs
+            // Additional costs for capitalization
             'legal_fees' => $this->legal_fees,
             'registration_fees' => $this->registration_fees,
             'renovation_costs' => $this->renovation_costs,
             'transportation_costs' => $this->transportation_costs,
             'installation_costs' => $this->installation_costs,
             'other_costs' => $this->other_costs,
-            // Payment method and accounts
+            // Payment and supplier details
             'payment_method' => $this->payment_method,
             'payment_account_number' => $this->payment_account_number,
             'payable_account_number' => $this->payable_account_number,
-            // Additional fields
             'supplier_name' => $this->supplier_name,
             'invoice_number' => $this->invoice_number,
             'invoice_date' => $this->invoice_date,
             'additional_notes' => $this->additional_notes,
-        ]);
+            // Enhanced lifecycle fields
+            'asset_code' => $this->asset_code ?? PPE::generateAssetCode($category_name),
+            'barcode' => $this->barcode,
+            'serial_number' => $this->serial_number,
+            'manufacturer' => $this->manufacturer,
+            'model' => $this->model,
+            'depreciation_method' => $this->depreciation_method,
+            'condition' => $this->condition,
+            'warranty_start_date' => $this->warranty_start_date,
+            'warranty_end_date' => $this->warranty_end_date,
+            'warranty_provider' => $this->warranty_provider,
+            'warranty_terms' => $this->warranty_terms,
+            'department_id' => $this->department_id,
+            'custodian_id' => $this->custodian_id,
+            'assigned_to' => $this->assigned_to,
+        ];
+
+        // Add insurance data if provided
+        if ($this->policy_number && $this->insurance_company) {
+            $assetData['insurance'] = [
+                'policy_number' => $this->policy_number,
+                'insurance_company' => $this->insurance_company,
+                'coverage_type' => $this->coverage_type,
+                'insured_value' => $this->insured_value ?? $this->initial_value,
+                'premium_amount' => $this->premium_amount,
+                'start_date' => $this->insurance_start_date ?? now(),
+                'end_date' => $this->insurance_end_date,
+                'deductible' => $this->deductible,
+                'coverage_details' => $this->coverage_details,
+                'agent_name' => $this->agent_name,
+                'agent_contact' => $this->agent_contact,
+            ];
+        }
+
+        // Create asset using lifecycle service
+        $ppe = $lifecycleService->createAsset($assetData);
 
         // Use Balance Sheet Integration Service to create accounts and post to GL
         $integrationService = new BalanceSheetItemIntegrationService();
@@ -1135,6 +1230,327 @@ class PpeManagement extends Component
     }
 
 
+    // Maintenance Management Methods
+    public function scheduleMaintenance($ppeId)
+    {
+        $this->showMaintenanceForm = true;
+        $this->ppeId = $ppeId;
+        $this->maintenance_date = now()->addMonth()->format('Y-m-d');
+        $this->maintenance_type = 'preventive';
+    }
+
+    public function saveMaintenance()
+    {
+        $this->validate([
+            'maintenance_type' => 'required',
+            'maintenance_date' => 'required|date',
+            'maintenance_description' => 'required|string',
+        ]);
+
+        $lifecycleService = new PpeLifecycleService();
+        $ppe = PPE::find($this->ppeId);
+        
+        $lifecycleService->scheduleMaintenance($ppe, [
+            'maintenance_type' => $this->maintenance_type,
+            'maintenance_date' => $this->maintenance_date,
+            'description' => $this->maintenance_description,
+            'performed_by' => $this->maintenance_vendor ?? 'TBD',
+            'next_maintenance_date' => $this->next_maintenance_date,
+        ]);
+
+        $this->resetMaintenanceForm();
+        $this->emit('showNotification', 'Maintenance scheduled successfully', 'success');
+    }
+
+    public function completeMaintenance($maintenanceId)
+    {
+        $maintenance = PpeMaintenanceRecord::find($maintenanceId);
+        $lifecycleService = new PpeLifecycleService();
+        
+        $lifecycleService->completeMaintenance($maintenance, [
+            'vendor_name' => $this->maintenance_vendor,
+            'parts_replaced' => $this->maintenance_parts_replaced,
+            'cost' => $this->maintenance_cost,
+            'notes' => $this->maintenance_description,
+        ]);
+
+        $this->emit('showNotification', 'Maintenance completed successfully', 'success');
+    }
+
+    // Transfer Management Methods
+    public function initiateTransfer($ppeId)
+    {
+        $this->showTransferForm = true;
+        $this->ppeId = $ppeId;
+        $this->transfer_date = now()->format('Y-m-d');
+    }
+
+    public function saveTransfer()
+    {
+        $this->validate([
+            'transfer_to_location' => 'required|string',
+            'transfer_reason' => 'required|string',
+            'transfer_date' => 'required|date',
+        ]);
+
+        $lifecycleService = new PpeLifecycleService();
+        $ppe = PPE::find($this->ppeId);
+        
+        $lifecycleService->transferAsset($ppe, [
+            'to_location' => $this->transfer_to_location,
+            'to_department_id' => $this->transfer_to_department,
+            'to_custodian_id' => $this->transfer_to_custodian,
+            'transfer_date' => $this->transfer_date,
+            'reason' => $this->transfer_reason,
+            'notes' => $this->transfer_notes,
+            'requires_approval' => true,
+        ]);
+
+        $this->resetTransferForm();
+        $this->emit('showNotification', 'Transfer initiated successfully', 'success');
+    }
+
+    public function approveTransfer($transferId)
+    {
+        $transfer = PpeTransfer::find($transferId);
+        $transfer->approve(auth()->user()->name);
+        $this->emit('showNotification', 'Transfer approved successfully', 'success');
+    }
+
+    // Insurance Management Methods
+    public function addInsurance($ppeId)
+    {
+        $this->showInsuranceForm = true;
+        $this->ppeId = $ppeId;
+        $this->insurance_start_date = now()->format('Y-m-d');
+        $this->insurance_end_date = now()->addYear()->format('Y-m-d');
+    }
+
+    public function saveInsurance()
+    {
+        $this->validate([
+            'policy_number' => 'required|string',
+            'insurance_company' => 'required|string',
+            'premium_amount' => 'required|numeric|min:0',
+            'insurance_end_date' => 'required|date|after:insurance_start_date',
+        ]);
+
+        $lifecycleService = new PpeLifecycleService();
+        $ppe = PPE::find($this->ppeId);
+        
+        $lifecycleService->createInsurancePolicy($ppe, [
+            'policy_number' => $this->policy_number,
+            'insurance_company' => $this->insurance_company,
+            'coverage_type' => $this->coverage_type,
+            'insured_value' => $this->insured_value ?? $ppe->closing_value,
+            'premium_amount' => $this->premium_amount,
+            'start_date' => $this->insurance_start_date,
+            'end_date' => $this->insurance_end_date,
+            'deductible' => $this->deductible,
+            'coverage_details' => $this->coverage_details,
+            'agent_name' => $this->agent_name,
+            'agent_contact' => $this->agent_contact,
+        ]);
+
+        $this->resetInsuranceForm();
+        $this->emit('showNotification', 'Insurance policy added successfully', 'success');
+    }
+
+    public function renewInsurance($insuranceId)
+    {
+        $insurance = PpeInsurance::find($insuranceId);
+        $insurance->renew(now()->addYear());
+        $this->emit('showNotification', 'Insurance renewed successfully', 'success');
+    }
+
+    // Revaluation Management Methods
+    public function initiateRevaluation($ppeId)
+    {
+        $this->showRevaluationForm = true;
+        $this->ppeId = $ppeId;
+        $this->revaluation_date = now()->format('Y-m-d');
+    }
+
+    public function saveRevaluation()
+    {
+        $this->validate([
+            'new_value' => 'required|numeric|min:0',
+            'revaluation_reason' => 'required|string',
+            'revaluation_date' => 'required|date',
+        ]);
+
+        $lifecycleService = new PpeLifecycleService();
+        $ppe = PPE::find($this->ppeId);
+        
+        $lifecycleService->revalueAsset($ppe, [
+            'new_value' => $this->new_value,
+            'revaluation_date' => $this->revaluation_date,
+            'reason' => $this->revaluation_reason,
+            'performed_by' => auth()->user()->name,
+            'valuation_method' => $this->valuation_method,
+            'supporting_documents' => $this->supporting_documents,
+            'requires_approval' => true,
+        ]);
+
+        $this->resetRevaluationForm();
+        $this->emit('showNotification', 'Revaluation initiated successfully', 'success');
+    }
+
+    // Import Pre-existing Assets
+    public function importPreExistingAsset()
+    {
+        $this->importMode = true;
+        $this->selectedMenuItem = 2;
+        // Pre-fill with existing asset data
+        $this->purchase_date = now()->subYears(2)->format('Y-m-d'); // Assume 2 years old
+        $this->accumulated_depreciation = 0; // Will be calculated
+    }
+
+    public function processImport()
+    {
+        // This method can be extended to handle bulk imports from CSV/Excel
+        $this->validate();
+        
+        // Calculate initial depreciation for pre-existing asset
+        if ($this->purchase_date < now()->format('Y-m-d')) {
+            $yearsInUse = Carbon::parse($this->purchase_date)->diffInYears(now());
+            $this->accumulated_depreciation = ($this->purchase_price - $this->salvage_value) / $this->useful_life * $yearsInUse;
+        }
+        
+        $this->store();
+        $this->importMode = false;
+        $this->emit('showNotification', 'Pre-existing asset imported successfully', 'success');
+    }
+
+    // Reset methods for forms
+    public function resetMaintenanceForm()
+    {
+        $this->showMaintenanceForm = false;
+        $this->maintenanceId = null;
+        $this->maintenance_type = 'preventive';
+        $this->maintenance_date = '';
+        $this->maintenance_description = '';
+        $this->maintenance_vendor = '';
+        $this->maintenance_cost = 0;
+        $this->maintenance_parts_replaced = '';
+        $this->next_maintenance_date = '';
+    }
+
+    public function resetTransferForm()
+    {
+        $this->showTransferForm = false;
+        $this->transferId = null;
+        $this->transfer_to_location = '';
+        $this->transfer_to_department = '';
+        $this->transfer_to_custodian = '';
+        $this->transfer_date = '';
+        $this->transfer_reason = '';
+        $this->transfer_notes = '';
+    }
+
+    public function resetInsuranceForm()
+    {
+        $this->showInsuranceForm = false;
+        $this->insuranceId = null;
+        $this->policy_number = '';
+        $this->insurance_company = '';
+        $this->coverage_type = 'comprehensive';
+        $this->insured_value = '';
+        $this->premium_amount = '';
+        $this->insurance_start_date = '';
+        $this->insurance_end_date = '';
+        $this->deductible = '';
+        $this->coverage_details = '';
+        $this->agent_name = '';
+        $this->agent_contact = '';
+    }
+
+    public function resetRevaluationForm()
+    {
+        $this->showRevaluationForm = false;
+        $this->revaluationId = null;
+        $this->revaluation_date = '';
+        $this->new_value = '';
+        $this->revaluation_reason = '';
+        $this->valuation_method = '';
+        $this->supporting_documents = '';
+    }
+
+    // Computed Properties for new features
+    public function getMaintenanceScheduleProperty()
+    {
+        return PpeMaintenanceRecord::with('ppe')
+            ->whereIn('status', ['scheduled', 'in_progress'])
+            ->orderBy('maintenance_date')
+            ->limit(10)
+            ->get();
+    }
+
+    public function getMaintenanceDueCountProperty()
+    {
+        return PPE::where('next_maintenance_date', '<=', now()->endOfMonth())
+            ->where('next_maintenance_date', '>=', now()->startOfMonth())
+            ->count();
+    }
+
+    public function getMaintenanceOverdueCountProperty()
+    {
+        return PPE::where('next_maintenance_date', '<', now())->count();
+    }
+
+    public function getMaintenanceCompletedCountProperty()
+    {
+        return PpeMaintenanceRecord::where('status', 'completed')
+            ->whereMonth('maintenance_date', now()->month)
+            ->count();
+    }
+
+    public function getMaintenanceCostMTDProperty()
+    {
+        return PpeMaintenanceRecord::where('status', 'completed')
+            ->whereMonth('maintenance_date', now()->month)
+            ->sum('cost');
+    }
+
+    public function getTransfersProperty()
+    {
+        return PpeTransfer::with('ppe')
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+    }
+
+    public function getInsurancePoliciesProperty()
+    {
+        return PpeInsurance::with('ppe')
+            ->where('status', 'active')
+            ->orderBy('end_date')
+            ->get();
+    }
+
+    public function getActivePoliciesCountProperty()
+    {
+        return PpeInsurance::active()->count();
+    }
+
+    public function getExpiringPoliciesCountProperty()
+    {
+        return PpeInsurance::expiring(30)->count();
+    }
+
+    public function getTotalAnnualPremiumProperty()
+    {
+        return PpeInsurance::active()->sum('premium_amount');
+    }
+
+    public function getRevaluationsProperty()
+    {
+        return PpeRevaluation::with('ppe')
+            ->orderBy('revaluation_date', 'desc')
+            ->limit(10)
+            ->get();
+    }
+
     public function render()
     {
         // Get bank accounts for other account selection
@@ -1144,9 +1560,26 @@ class PpeManagement extends Component
             ->orderBy('bank_name')
             ->get();
             
+        // Get departments for dropdowns
+        $departments = DB::table('departments')
+            ->select('id', 'department_name as name')
+            ->where('status', true)
+            ->whereNull('deleted_at')
+            ->orderBy('department_name')
+            ->get();
+            
+        // Get users for custodian selection
+        $users = DB::table('users')
+            ->select('id', 'name')
+            ->where('status', 'ACTIVE')
+            ->orderBy('name')
+            ->get();
+            
         return view('livewire.accounting.ppe-management', [
             'ppes' => $this->getPpes(),
             'otherAccounts' => $otherAccounts,
+            'departments' => $departments,
+            'users' => $users,
         ]);
     }
 }

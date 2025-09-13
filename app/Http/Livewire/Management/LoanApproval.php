@@ -48,7 +48,7 @@ class LoanApproval extends LivewireDatatable
           $query->where('status', "AWAITING_APPROVAL");
         // } else {
         //     $query->where('branch_id', auth()->user()->branch)
-        //         ->where('supervisor_id', auth()->user()->employeeId)
+        //         ->where('supervisor_id', auth()->user()->id)
         //         ->where('status', $this->getLoanOfficerStatus($loanStage));
         // }
 

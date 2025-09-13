@@ -10,8 +10,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">User Management</h1>
-                        <p class="text-gray-600 mt-1">Manage users, roles, departments, and permissions with ease and clarity</p>
+                        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">User Management System</h1>
+                        <p class="text-gray-600 mt-1">Hierarchical organization structure: Departments → Roles → Sub-Roles → Permissions → Users</p>
                     </div>
                 </div>
                 
@@ -88,139 +88,215 @@
                     
                     @php
                         $user_sections = [
-                            [
-                                'id' => 'users', 
-                                'label' => 'Users Management', 
-                                'icon' => 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
-                                'description' => 'Manage user accounts',
-                                'count' => $totalUsers ?? 0,
-                                'color' => 'indigo'
-                            ],
-                            [
-                                'id' => 'roles', 
-                                'label' => 'Roles & Permissions', 
-                                'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-                                'description' => 'Define user roles',
-                                'count' => $totalRoles ?? 0,
-                                'color' => 'green'
-                            ],
+                            // Step 1: Organization Structure
                             [
                                 'id' => 'departments', 
-                                'label' => 'Departments', 
+                                'label' => '1. Departments', 
                                 'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
-                                'description' => 'Organize departments',
+                                'description' => 'Setup organizational departments',
                                 'count' => $totalDepartments ?? 0,
-                                'color' => 'blue'
+                                'color' => 'blue',
+                                'step' => 1
                             ],
+                            // Step 2: Roles & Sub-Roles
+                            [
+                                'id' => 'roles', 
+                                'label' => '2. Roles & Sub-Roles', 
+                                'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+                                'description' => 'Define roles within departments',
+                                'count' => $totalRoles ?? 0,
+                                'color' => 'green',
+                                'step' => 2
+                            ],
+                            // Step 3: Permissions
                             [
                                 'id' => 'permissions', 
-                                'label' => 'Permissions', 
+                                'label' => '3. Permissions', 
                                 'icon' => 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z',
-                                'description' => 'Manage permissions',
+                                'description' => 'Configure role permissions',
                                 'count' => null,
-                                'color' => 'yellow'
+                                'color' => 'purple',
+                                'step' => 3
                             ],
-                           // [
-                           //     'id' => 'settings', 
-                           //     'label' => 'Settings', 
-                           //     'icon' => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
-                          //      'description' => 'System configuration',
-                           //     'count' => null,
-                           //     'color' => 'gray'
-                            //],
+                            // Step 4: Users
+                            [
+                                'id' => 'users', 
+                                'label' => '4. Users', 
+                                'icon' => 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+                                'description' => 'Assign users to roles',
+                                'count' => $totalUsers ?? 0,
+                                'color' => 'indigo',
+                                'step' => 4
+                            ],
+                            // Additional Tools
                             [
                                 'id' => 'organizational-structure', 
-                                'label' => 'Organizational Structure', 
-                                'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
-                                'description' => 'SACCOS hierarchy & roles',
+                                'label' => 'View Hierarchy', 
+                                'icon' => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+                                'description' => 'Visualize organization',
                                 'count' => null,
-                                'color' => 'purple'
+                                'color' => 'yellow',
+                                'step' => null
                             ],
                             [
                                 'id' => 'audit-logs', 
-                                'label' => 'Audit Logs', 
+                                'label' => 'Activity Logs', 
                                 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-                                'description' => 'Activity tracking',
+                                'description' => 'Track user activities',
                                 'count' => null,
-                                'color' => 'pink'
+                                'color' => 'gray',
+                                'step' => null
                             ],
                         ];
                     @endphp
 
-                    <nav class="space-y-2">
-                        @foreach ($user_sections as $section)
-                            @php
-                                $isActive = $this->section === $section['id'];
-                                $colorClasses = [
-                                    'indigo' => $isActive ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100',
-                                    'green' => $isActive ? 'bg-green-600 text-white' : 'bg-green-50 text-green-700 hover:bg-green-100',
-                                    'blue' => $isActive ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100',
-                                    'yellow' => $isActive ? 'bg-yellow-600 text-white' : 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100',
-                                    'gray' => $isActive ? 'bg-gray-700 text-white' : 'bg-gray-50 text-gray-700 hover:bg-gray-100',
-                                    'purple' => $isActive ? 'bg-purple-600 text-white' : 'bg-purple-50 text-purple-700 hover:bg-purple-100',
-                                    'pink' => $isActive ? 'bg-pink-600 text-white' : 'bg-pink-50 text-pink-700 hover:bg-pink-100',
-                                ];
-                                $iconColorClasses = [
-                                    'indigo' => $isActive ? 'text-white' : 'text-indigo-600',
-                                    'green' => $isActive ? 'text-white' : 'text-green-600',
-                                    'blue' => $isActive ? 'text-white' : 'text-blue-600',
-                                    'yellow' => $isActive ? 'text-white' : 'text-yellow-600',
-                                    'gray' => $isActive ? 'text-white' : 'text-gray-600',
-                                    'purple' => $isActive ? 'text-white' : 'text-purple-600',
-                                    'pink' => $isActive ? 'text-white' : 'text-pink-600',
-                                ];
-                            @endphp
+                    <!-- Setup Steps -->
+                    <div class="mb-4">
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">Setup Workflow</h3>
+                        @php
+                            $setupSteps = array_filter($user_sections, fn($s) => $s['step'] !== null);
+                            $additionalTools = array_filter($user_sections, fn($s) => $s['step'] === null);
+                        @endphp
+                        
+                        <!-- Progress Steps -->
+                        <nav class="space-y-2">
+                            @foreach ($setupSteps as $section)
+                                @php
+                                    $isActive = $this->section === $section['id'];
+                                    $colorClasses = [
+                                        'indigo' => $isActive ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100',
+                                        'green' => $isActive ? 'bg-green-600 text-white' : 'bg-green-50 text-green-700 hover:bg-green-100',
+                                        'blue' => $isActive ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100',
+                                        'yellow' => $isActive ? 'bg-yellow-600 text-white' : 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100',
+                                        'gray' => $isActive ? 'bg-gray-700 text-white' : 'bg-gray-50 text-gray-700 hover:bg-gray-100',
+                                        'purple' => $isActive ? 'bg-purple-600 text-white' : 'bg-purple-50 text-purple-700 hover:bg-purple-100',
+                                        'pink' => $isActive ? 'bg-pink-600 text-white' : 'bg-pink-50 text-pink-700 hover:bg-pink-100',
+                                    ];
+                                    $iconColorClasses = [
+                                        'indigo' => $isActive ? 'text-white' : 'text-indigo-600',
+                                        'green' => $isActive ? 'text-white' : 'text-green-600',
+                                        'blue' => $isActive ? 'text-white' : 'text-blue-600',
+                                        'yellow' => $isActive ? 'text-white' : 'text-yellow-600',
+                                        'gray' => $isActive ? 'text-white' : 'text-gray-600',
+                                        'purple' => $isActive ? 'text-white' : 'text-purple-600',
+                                        'pink' => $isActive ? 'text-white' : 'text-pink-600',
+                                    ];
+                                @endphp
 
-                            <button
-                                wire:click="setSection('{{ $section['id'] }}')"
-                                class="relative w-full group transition-all duration-200"
-                                aria-label="{{ $section['label'] }}"
-                            >
-                                <div class="flex items-center p-3 rounded-xl transition-all duration-200 shadow-sm
-                                    @if ($isActive) 
-                                        {{ $colorClasses[$section['color']] }} shadow-lg scale-105
-                                    @else 
-                                        {{ $colorClasses[$section['color']] }} hover:shadow-md
-                                    @endif">
-                                    
-                                    <!-- Loading State -->
-                                    <div wire:loading wire:target="setSection('section', '{{ $section['id'] }}')" class="mr-3">
-                                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                    </div>
-
-                                    <!-- Icon -->
-                                    <div wire:loading.remove wire:target="setSection('section', '{{ $section['id'] }}')" class="mr-3">
-                                        <svg class="w-5 h-5 {{ $iconColorClasses[$section['color']] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $section['icon'] }}"></path>
-                                        </svg>
-                                    </div>
-
-                                    <!-- Content -->
-                                    <div class="flex-1 text-left">
-                                        <div class="font-medium text-sm">{{ $section['label'] }}</div>
-                                        <div class="text-xs opacity-75">{{ $section['description'] }}</div>
-                                    </div>
-
-                                    <!-- Count Badge -->
-                                    @if ($section['count'] !== null)
-                                        <div class="ml-2">
-                                            <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full min-w-[20px] h-5
-                                                @if ($isActive)
-                                                    bg-white bg-opacity-20 text-white
-                                                @else
-                                                    bg-white bg-opacity-80 {{ $iconColorClasses[$section['color']] }}
-                                                @endif">
-                                                {{ $section['count'] > 99 ? '99+' : $section['count'] }}
-                                            </span>
+                                <button
+                                    wire:click="setSection('{{ $section['id'] }}')"
+                                    class="relative w-full group transition-all duration-200"
+                                    aria-label="{{ $section['label'] }}"
+                                >
+                                    <div class="flex items-center p-3 rounded-xl transition-all duration-200 shadow-sm
+                                        @if ($isActive) 
+                                            {{ $colorClasses[$section['color']] }} shadow-lg scale-105
+                                        @else 
+                                            {{ $colorClasses[$section['color']] }} hover:shadow-md
+                                        @endif">
+                                        
+                                        <!-- Step Number -->
+                                        @if($section['step'])
+                                            <div class="mr-3 flex-shrink-0">
+                                                <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
+                                                    @if($isActive) 
+                                                        bg-white bg-opacity-20 text-white
+                                                    @else 
+                                                        bg-white {{ $iconColorClasses[$section['color']] }}
+                                                    @endif">
+                                                    {{ $section['step'] }}
+                                                </div>
+                                            </div>
+                                        @endif
+                                        
+                                        <!-- Icon -->
+                                        <div class="mr-3">
+                                            <svg class="w-5 h-5 {{ $iconColorClasses[$section['color']] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $section['icon'] }}"></path>
+                                            </svg>
                                         </div>
-                                    @endif
-                                </div>
-                            </button>
-                        @endforeach
-                    </nav>
+
+                                        <!-- Content -->
+                                        <div class="flex-1 text-left">
+                                            <div class="font-medium text-sm">{{ str_replace($section['step'] . '. ', '', $section['label']) }}</div>
+                                            <div class="text-xs opacity-75">{{ $section['description'] }}</div>
+                                        </div>
+
+                                        <!-- Count Badge -->
+                                        @if ($section['count'] !== null)
+                                            <div class="ml-2">
+                                                <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full min-w-[20px] h-5
+                                                    @if ($isActive)
+                                                        bg-white bg-opacity-20 text-white
+                                                    @else
+                                                        bg-white bg-opacity-80 {{ $iconColorClasses[$section['color']] }}
+                                                    @endif">
+                                                    {{ $section['count'] > 99 ? '99+' : $section['count'] }}
+                                                </span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </button>
+                            @endforeach
+                        </nav>
+                    </div>
+                    
+                    <!-- Additional Tools -->
+                    <div class="border-t pt-4">
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">Tools</h3>
+                        <nav class="space-y-2">
+                            @foreach ($additionalTools as $section)
+                                @php
+                                    $isActive = $this->section === $section['id'];
+                                    $colorClasses = [
+                                        'indigo' => $isActive ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100',
+                                        'green' => $isActive ? 'bg-green-600 text-white' : 'bg-green-50 text-green-700 hover:bg-green-100',
+                                        'blue' => $isActive ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100',
+                                        'yellow' => $isActive ? 'bg-yellow-600 text-white' : 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100',
+                                        'gray' => $isActive ? 'bg-gray-700 text-white' : 'bg-gray-50 text-gray-700 hover:bg-gray-100',
+                                        'purple' => $isActive ? 'bg-purple-600 text-white' : 'bg-purple-50 text-purple-700 hover:bg-purple-100',
+                                        'pink' => $isActive ? 'bg-pink-600 text-white' : 'bg-pink-50 text-pink-700 hover:bg-pink-100',
+                                    ];
+                                    $iconColorClasses = [
+                                        'indigo' => $isActive ? 'text-white' : 'text-indigo-600',
+                                        'green' => $isActive ? 'text-white' : 'text-green-600',
+                                        'blue' => $isActive ? 'text-white' : 'text-blue-600',
+                                        'yellow' => $isActive ? 'text-white' : 'text-yellow-600',
+                                        'gray' => $isActive ? 'text-white' : 'text-gray-600',
+                                        'purple' => $isActive ? 'text-white' : 'text-purple-600',
+                                        'pink' => $isActive ? 'text-white' : 'text-pink-600',
+                                    ];
+                                @endphp
+
+                                <button
+                                    wire:click="setSection('{{ $section['id'] }}')"
+                                    class="relative w-full group transition-all duration-200"
+                                    aria-label="{{ $section['label'] }}"
+                                >
+                                    <div class="flex items-center p-3 rounded-xl transition-all duration-200 shadow-sm
+                                        @if ($isActive) 
+                                            {{ $colorClasses[$section['color']] }} shadow-lg scale-105
+                                        @else 
+                                            {{ $colorClasses[$section['color']] }} hover:shadow-md
+                                        @endif">
+                                        
+                                        <!-- Icon -->
+                                        <div class="mr-3">
+                                            <svg class="w-5 h-5 {{ $iconColorClasses[$section['color']] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $section['icon'] }}"></path>
+                                            </svg>
+                                        </div>
+
+                                        <!-- Content -->
+                                        <div class="flex-1 text-left">
+                                            <div class="font-medium text-sm">{{ $section['label'] }}</div>
+                                            <div class="text-xs opacity-75">{{ $section['description'] }}</div>
+                                        </div>
+                                    </div>
+                                </button>
+                            @endforeach
+                        </nav>
+                    </div>
                 </div>
 
                 <!-- Quick Actions -->
@@ -246,13 +322,13 @@
             <!-- Main Content Area -->
             <div class="flex-1">
                 @if($this->section === 'users')
-                    <livewire:users.users />
+                    <livewire:users.simple-users />
                 @elseif($this->section === 'roles')
-                    <livewire:users.roles />
+                    <livewire:users.hierarchical-roles />
                 @elseif($this->section === 'departments')
-                    <livewire:users.departments />
+                    <livewire:users.hierarchical-departments />
                 @elseif($this->section === 'permissions')
-                    <livewire:users.manage-permissions />
+                    <livewire:users.hierarchical-permissions />
                 @elseif($this->section === 'organizational-structure')
                     <livewire:users.organizational-structure />
                 {{--@elseif($this->section === 'settings')

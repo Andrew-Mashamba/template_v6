@@ -71,51 +71,38 @@
             @if(count($assetsData['current']) > 0)
             <div class="mt-3">
                 <h4 class="text-xs font-semibold text-gray-700 mb-2 px-2">Current Assets</h4>
-                <table class="w-full text-xs border-collapse border border-gray-300">
+                <table class="text-xs border-collapse border border-gray-300" style="width: calc(100% - 2rem); margin-left: 2rem;">
                     <thead>
                         <tr class="bg-gray-50">
-                            <th class="border border-gray-300 px-2 py-1 text-left w-2/5">Account</th>
-                            <th class="border border-gray-300 px-2 py-1 text-center w-1/12">Note</th>
+                            <th class="border border-gray-300 px-2 py-1 text-left" style="width: 40%;">Account</th>
+                            <th class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;">Note</th>
                             @foreach($comparisonYears as $year)
-                            <th class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $year }}</th>
+                            <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $year }}</th>
                             @endforeach
-                            <th class="border border-gray-300 px-2 py-1 text-right w-1/6">Change %</th>
+                            <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">Change %</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($assetsData['current'] as $index => $asset)
                         <tr class="hover:bg-gray-50">
-                            <td class="border border-gray-300 px-2 py-1 w-2/5">
+                            <td class="border border-gray-300 px-2 py-1" style="width: 40%;">
                                 <div class="flex items-center justify-between">
                                     <span class="font-medium">{{ $asset['account_name'] }}</span>
-                                    <div class="flex space-x-1">
-                                        @if(count($asset['children']) > 0 || DB::table('accounts')->where('parent_account_number', $asset['account_number'])->exists())
-                                        <button wire:click="toggleCategory('{{ $asset['account_number'] }}')" 
-                                                class="text-blue-600 hover:text-blue-800">
-                                            <svg class="w-3 h-3 transform {{ in_array($asset['account_number'], $expandedCategories) ? 'rotate-90' : '' }}" 
-                                                 fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
-                                            </svg>
-                                        </button>
-                                        @endif
-                                        <button wire:click="drillDown('{{ $asset['account_number'] }}', '{{ $asset['account_name'] }}', 2)" 
-                                                class="text-gray-500 hover:text-gray-700">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
                                 </div>
                             </td>
-                            <td class="border border-gray-300 px-2 py-1 text-center w-1/12 text-gray-500">
-                                {{ $index + 5 }}
+                            <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;">
+                                <button 
+                                    wire:click="showNote({{ $index + 5 }}, '{{ $asset['account_name'] }}')"
+                                    class="text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer">
+                                    {{ $index + 5 }}
+                                </button>
                             </td>
                             @foreach($comparisonYears as $year)
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/5 font-medium">
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;" font-medium">
                                 {{ $this->formatNumber($asset['years'][$year] ?? 0) }}
                             </td>
                             @endforeach
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/6 {{ $this->calculateVariance($asset['years'][$comparisonYears[0]] ?? 0, $asset['years'][$comparisonYears[1]] ?? 0) >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;" {{ $this->calculateVariance($asset['years'][$comparisonYears[0]] ?? 0, $asset['years'][$comparisonYears[1]] ?? 0) >= 0 ? 'text-green-600' : 'text-red-600' }}">
                                 {{ number_format($this->calculateVariance($asset['years'][$comparisonYears[0]] ?? 0, $asset['years'][$comparisonYears[1]] ?? 0), 1) }}%
                             </td>
                         </tr>
@@ -123,58 +110,35 @@
                         @if(in_array($asset['account_number'], $expandedCategories))
                             @foreach($asset['children'] as $l3)
                             <tr class="bg-gray-50">
-                                <td class="border border-gray-300 px-2 py-1 pl-6 w-2/5">
+                                <td class="border border-gray-300 px-2 py-1 pl-6" style="width: 40%;">
                                     <div class="flex items-center justify-between">
                                         <span class="text-gray-600">{{ $l3['account_name'] }}</span>
-                                        <div class="flex space-x-1">
-                                            @if(count($l3['children']) > 0 || DB::table('accounts')->where('parent_account_number', $l3['account_number'])->exists())
-                                            <button wire:click="toggleSubcategory('{{ $l3['account_number'] }}')" 
-                                                    class="text-blue-500 hover:text-blue-700">
-                                                <svg class="w-3 h-3 transform {{ in_array($l3['account_number'], $expandedSubcategories) ? 'rotate-90' : '' }}" 
-                                                     fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
-                                                </svg>
-                                            </button>
-                                            @endif
-                                            <button wire:click="showAccountDetails('{{ $l3['account_number'] }}', '{{ $l3['account_name'] }}')" 
-                                                    class="text-gray-400 hover:text-gray-600">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                            </button>
-                                        </div>
                                     </div>
                                 </td>
-                                <td class="border border-gray-300 px-2 py-1 text-center w-1/12"></td>
+                                <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;""></td>
                                 @foreach($comparisonYears as $year)
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5 text-gray-600">
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;" text-gray-600">
                                     {{ $this->formatNumber($l3['years'][$year] ?? 0) }}
                                 </td>
                                 @endforeach
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/6"></td>
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;""></td>
                             </tr>
                             
                             @if(in_array($l3['account_number'], $expandedSubcategories))
                                 @foreach($l3['children'] as $l4)
                                 <tr class="bg-blue-50">
-                                    <td class="border border-gray-300 px-2 py-1 pl-10 w-2/5">
+                                    <td class="border border-gray-300 px-2 py-1 pl-10" style="width: 40%;">
                                         <div class="flex items-center justify-between">
                                             <span class="text-gray-500 text-xs">{{ $l4['account_name'] }}</span>
-                                            <button wire:click="showAccountDetails('{{ $l4['account_number'] }}', '{{ $l4['account_name'] }}')" 
-                                                    class="text-gray-400 hover:text-gray-600">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                            </button>
                                         </div>
                                     </td>
-                                    <td class="border border-gray-300 px-2 py-1 text-center w-1/12"></td>
+                                    <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;""></td>
                                     @foreach($comparisonYears as $year)
-                                    <td class="border border-gray-300 px-2 py-1 text-right w-1/5 text-xs text-gray-500">
+                                    <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;" text-xs text-gray-500">
                                         {{ $this->formatNumber($l4['years'][$year] ?? 0) }}
                                     </td>
                                     @endforeach
-                                    <td class="border border-gray-300 px-2 py-1 text-right w-1/6"></td>
+                                    <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;""></td>
                                 </tr>
                                 @endforeach
                             @endif
@@ -184,8 +148,8 @@
                         
                         <!-- Current Assets Subtotal -->
                         <tr class="bg-blue-100 font-semibold">
-                            <td class="border border-gray-300 px-2 py-1 w-2/5">Total Current Assets</td>
-                            <td class="border border-gray-300 px-2 py-1 text-center w-1/12"></td>
+                            <td class="border border-gray-300 px-2 py-1" style="width: 40%;">Total Current Assets</td>
+                            <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;""></td>
                             @php
                                 $currentAssetsTotal = [];
                                 foreach($comparisonYears as $year) {
@@ -196,11 +160,11 @@
                                 }
                             @endphp
                             @foreach($comparisonYears as $year)
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/5">
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;"">
                                 {{ $this->formatNumber($currentAssetsTotal[$year]) }}
                             </td>
                             @endforeach
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/6"></td>
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;""></td>
                         </tr>
                     </tbody>
                 </table>
@@ -211,51 +175,38 @@
             @if(count($assetsData['non_current']) > 0)
             <div class="mt-3">
                 <h4 class="text-xs font-semibold text-gray-700 mb-2 px-2">Non-Current Assets</h4>
-                <table class="w-full text-xs border-collapse border border-gray-300">
+                <table class="text-xs border-collapse border border-gray-300" style="width: calc(100% - 2rem); margin-left: 2rem;">
                     <thead>
                         <tr class="bg-gray-50">
-                            <th class="border border-gray-300 px-2 py-1 text-left w-2/5">Account</th>
-                            <th class="border border-gray-300 px-2 py-1 text-center w-1/12">Note</th>
+                            <th class="border border-gray-300 px-2 py-1 text-left" style="width: 40%;">Account</th>
+                            <th class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;">Note</th>
                             @foreach($comparisonYears as $year)
-                            <th class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $year }}</th>
+                            <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $year }}</th>
                             @endforeach
-                            <th class="border border-gray-300 px-2 py-1 text-right w-1/6">Change %</th>
+                            <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">Change %</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($assetsData['non_current'] as $index => $asset)
                         <tr class="hover:bg-gray-50">
-                            <td class="border border-gray-300 px-2 py-1 w-2/5">
+                            <td class="border border-gray-300 px-2 py-1" style="width: 40%;">
                                 <div class="flex items-center justify-between">
                                     <span class="font-medium">{{ $asset['account_name'] }}</span>
-                                    <div class="flex space-x-1">
-                                        @if(count($asset['children']) > 0 || DB::table('accounts')->where('parent_account_number', $asset['account_number'])->exists())
-                                        <button wire:click="toggleCategory('{{ $asset['account_number'] }}')" 
-                                                class="text-blue-600 hover:text-blue-800">
-                                            <svg class="w-3 h-3 transform {{ in_array($asset['account_number'], $expandedCategories) ? 'rotate-90' : '' }}" 
-                                                 fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
-                                            </svg>
-                                        </button>
-                                        @endif
-                                        <button wire:click="drillDown('{{ $asset['account_number'] }}', '{{ $asset['account_name'] }}', 2)" 
-                                                class="text-gray-500 hover:text-gray-700">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
                                 </div>
                             </td>
-                            <td class="border border-gray-300 px-2 py-1 text-center w-1/12 text-gray-500">
-                                {{ count($assetsData['current']) + $index + 5 }}
+                            <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;">
+                                <button 
+                                    wire:click="showNote({{ count($assetsData['current']) + $index + 5 }}, '{{ $asset['account_name'] }}')"
+                                    class="text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer">
+                                    {{ count($assetsData['current']) + $index + 5 }}
+                                </button>
                             </td>
                             @foreach($comparisonYears as $year)
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/5 font-medium">
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;" font-medium">
                                 {{ $this->formatNumber($asset['years'][$year] ?? 0) }}
                             </td>
                             @endforeach
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/6 {{ $this->calculateVariance($asset['years'][$comparisonYears[0]] ?? 0, $asset['years'][$comparisonYears[1]] ?? 0) >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;" {{ $this->calculateVariance($asset['years'][$comparisonYears[0]] ?? 0, $asset['years'][$comparisonYears[1]] ?? 0) >= 0 ? 'text-green-600' : 'text-red-600' }}">
                                 {{ number_format($this->calculateVariance($asset['years'][$comparisonYears[0]] ?? 0, $asset['years'][$comparisonYears[1]] ?? 0), 1) }}%
                             </td>
                         </tr>
@@ -263,24 +214,18 @@
                         @if(in_array($asset['account_number'], $expandedCategories))
                             @foreach($asset['children'] as $l3)
                             <tr class="bg-gray-50">
-                                <td class="border border-gray-300 px-2 py-1 pl-6 w-2/5">
+                                <td class="border border-gray-300 px-2 py-1 pl-6" style="width: 40%;">
                                     <div class="flex items-center justify-between">
                                         <span class="text-gray-600">{{ $l3['account_name'] }}</span>
-                                        <button wire:click="showAccountDetails('{{ $l3['account_number'] }}', '{{ $l3['account_name'] }}')" 
-                                                class="text-gray-400 hover:text-gray-600">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                            </svg>
-                                        </button>
                                     </div>
                                 </td>
-                                <td class="border border-gray-300 px-2 py-1 text-center w-1/12"></td>
+                                <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;""></td>
                                 @foreach($comparisonYears as $year)
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5 text-gray-600">
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;" text-gray-600">
                                     {{ $this->formatNumber($l3['years'][$year] ?? 0) }}
                                 </td>
                                 @endforeach
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/6"></td>
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;""></td>
                             </tr>
                             @endforeach
                         @endif
@@ -288,8 +233,8 @@
                         
                         <!-- Non-Current Assets Subtotal -->
                         <tr class="bg-blue-100 font-semibold">
-                            <td class="border border-gray-300 px-2 py-1 w-2/5">Total Non-Current Assets</td>
-                            <td class="border border-gray-300 px-2 py-1 text-center w-1/12"></td>
+                            <td class="border border-gray-300 px-2 py-1" style="width: 40%;">Total Non-Current Assets</td>
+                            <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;""></td>
                             @php
                                 $nonCurrentAssetsTotal = [];
                                 foreach($comparisonYears as $year) {
@@ -300,11 +245,11 @@
                                 }
                             @endphp
                             @foreach($comparisonYears as $year)
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/5">
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;"">
                                 {{ $this->formatNumber($nonCurrentAssetsTotal[$year]) }}
                             </td>
                             @endforeach
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/6"></td>
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;""></td>
                         </tr>
                     </tbody>
                 </table>
@@ -312,17 +257,17 @@
             @endif
             
             <!-- Total Assets -->
-            <table class="w-full text-xs border-collapse border border-gray-300 mt-2">
+            <table class="text-xs border-collapse border border-gray-300 mt-2" style="width: calc(100% - 2rem); margin-left: 2rem;">
                 <tbody>
-                    <tr class="bg-blue-900 text-white font-bold">
-                        <td class="border border-gray-300 px-2 py-2 w-2/5">TOTAL ASSETS</td>
-                        <td class="border border-gray-300 px-2 py-2 text-center w-1/12"></td>
+                    <tr class="bg-blue-200  font-bold">
+                        <td class="border border-gray-300 px-2 py-2" style="width: 40%;">TOTAL ASSETS</td>
+                        <td class="border border-gray-300 px-2 py-2 text-center" style="width: 10%;"></td>
                         @foreach($comparisonYears as $year)
-                        <td class="border border-gray-300 px-2 py-2 text-right w-1/5">
+                        <td class="border border-gray-300 px-2 py-2 text-right" style="width: 16.67%;">
                             {{ $this->formatNumber($assetsData['total'][$year] ?? 0) }}
                         </td>
                         @endforeach
-                        <td class="border border-gray-300 px-2 py-2 text-right w-1/6">
+                        <td class="border border-gray-300 px-2 py-2 text-right" style="width: 16.67%;">
                             {{ number_format($this->calculateVariance($assetsData['total'][$comparisonYears[0]] ?? 0, $assetsData['total'][$comparisonYears[1]] ?? 0), 1) }}%
                         </td>
                     </tr>
@@ -337,51 +282,38 @@
             <!-- Equity -->
             <div class="mt-3">
                 <h4 class="text-xs font-semibold text-gray-700 mb-2 px-2">Members' Equity</h4>
-                <table class="w-full text-xs border-collapse border border-gray-300">
+                <table class="text-xs border-collapse border border-gray-300" style="width: calc(100% - 2rem); margin-left: 2rem;">
                     <thead>
                         <tr class="bg-gray-50">
-                            <th class="border border-gray-300 px-2 py-1 text-left w-2/5">Account</th>
-                            <th class="border border-gray-300 px-2 py-1 text-center w-1/12">Note</th>
+                            <th class="border border-gray-300 px-2 py-1 text-left" style="width: 40%;">Account</th>
+                            <th class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;">Note</th>
                             @foreach($comparisonYears as $year)
-                            <th class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $year }}</th>
+                            <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $year }}</th>
                             @endforeach
-                            <th class="border border-gray-300 px-2 py-1 text-right w-1/6">Change %</th>
+                            <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">Change %</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach(array_merge($equityData['current'], $equityData['non_current']) as $index => $equity)
                         <tr class="hover:bg-gray-50">
-                            <td class="border border-gray-300 px-2 py-1 w-2/5">
+                            <td class="border border-gray-300 px-2 py-1" style="width: 40%;">
                                 <div class="flex items-center justify-between">
                                     <span class="font-medium">{{ $equity['account_name'] }}</span>
-                                    <div class="flex space-x-1">
-                                        @if(count($equity['children']) > 0 || DB::table('accounts')->where('parent_account_number', $equity['account_number'])->exists())
-                                        <button wire:click="toggleCategory('{{ $equity['account_number'] }}')" 
-                                                class="text-blue-600 hover:text-blue-800">
-                                            <svg class="w-3 h-3 transform {{ in_array($equity['account_number'], $expandedCategories) ? 'rotate-90' : '' }}" 
-                                                 fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
-                                            </svg>
-                                        </button>
-                                        @endif
-                                        <button wire:click="drillDown('{{ $equity['account_number'] }}', '{{ $equity['account_name'] }}', 2)" 
-                                                class="text-gray-500 hover:text-gray-700">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
                                 </div>
                             </td>
-                            <td class="border border-gray-300 px-2 py-1 text-center w-1/12 text-gray-500">
-                                {{ $index + 7 }}
+                            <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;">
+                                <button 
+                                    wire:click="showNote({{ $index + 7 }}, '{{ $equity['account_name'] }}')"
+                                    class="text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer">
+                                    {{ $index + 7 }}
+                                </button>
                             </td>
                             @foreach($comparisonYears as $year)
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/5 font-medium">
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;" font-medium">
                                 {{ $this->formatNumber($equity['years'][$year] ?? 0) }}
                             </td>
                             @endforeach
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/6 {{ $this->calculateVariance($equity['years'][$comparisonYears[0]] ?? 0, $equity['years'][$comparisonYears[1]] ?? 0) >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;" {{ $this->calculateVariance($equity['years'][$comparisonYears[0]] ?? 0, $equity['years'][$comparisonYears[1]] ?? 0) >= 0 ? 'text-green-600' : 'text-red-600' }}">
                                 {{ number_format($this->calculateVariance($equity['years'][$comparisonYears[0]] ?? 0, $equity['years'][$comparisonYears[1]] ?? 0), 1) }}%
                             </td>
                         </tr>
@@ -389,31 +321,31 @@
                         @if(in_array($equity['account_number'], $expandedCategories))
                             @foreach($equity['children'] as $l3)
                             <tr class="bg-gray-50">
-                                <td class="border border-gray-300 px-2 py-1 pl-6 w-2/5">
+                                <td class="border border-gray-300 px-2 py-1 pl-6" style="width: 40%;">
                                     <span class="text-gray-600">{{ $l3['account_name'] }}</span>
                                 </td>
-                                <td class="border border-gray-300 px-2 py-1 text-center w-1/12"></td>
+                                <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;""></td>
                                 @foreach($comparisonYears as $year)
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5 text-gray-600">
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;" text-gray-600">
                                     {{ $this->formatNumber($l3['years'][$year] ?? 0) }}
                                 </td>
                                 @endforeach
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/6"></td>
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;""></td>
                             </tr>
                             @endforeach
                         @endif
                         @endforeach
                         
                         <!-- Total Equity -->
-                        <tr class="bg-green-100 font-semibold">
-                            <td class="border border-gray-300 px-2 py-1 w-2/5">Total Equity</td>
-                            <td class="border border-gray-300 px-2 py-1 text-center w-1/12"></td>
+                        <tr class="bg-blue-100 font-semibold">
+                            <td class="border border-gray-300 px-2 py-1" style="width: 40%;">Total Equity</td>
+                            <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;""></td>
                             @foreach($comparisonYears as $year)
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/5">
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;"">
                                 {{ $this->formatNumber($equityData['total'][$year] ?? 0) }}
                             </td>
                             @endforeach
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/6"></td>
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;""></td>
                         </tr>
                     </tbody>
                 </table>
@@ -423,51 +355,38 @@
             @if(count($liabilitiesData['current']) > 0)
             <div class="mt-3">
                 <h4 class="text-xs font-semibold text-gray-700 mb-2 px-2">Current Liabilities</h4>
-                <table class="w-full text-xs border-collapse border border-gray-300">
+                <table class="text-xs border-collapse border border-gray-300" style="width: calc(100% - 2rem); margin-left: 2rem;">
                     <thead>
                         <tr class="bg-gray-50">
-                            <th class="border border-gray-300 px-2 py-1 text-left w-2/5">Account</th>
-                            <th class="border border-gray-300 px-2 py-1 text-center w-1/12">Note</th>
+                            <th class="border border-gray-300 px-2 py-1 text-left" style="width: 40%;">Account</th>
+                            <th class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;">Note</th>
                             @foreach($comparisonYears as $year)
-                            <th class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $year }}</th>
+                            <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $year }}</th>
                             @endforeach
-                            <th class="border border-gray-300 px-2 py-1 text-right w-1/6">Change %</th>
+                            <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">Change %</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($liabilitiesData['current'] as $index => $liability)
                         <tr class="hover:bg-gray-50">
-                            <td class="border border-gray-300 px-2 py-1 w-2/5">
+                            <td class="border border-gray-300 px-2 py-1" style="width: 40%;">
                                 <div class="flex items-center justify-between">
                                     <span class="font-medium">{{ $liability['account_name'] }}</span>
-                                    <div class="flex space-x-1">
-                                        @if(count($liability['children']) > 0 || DB::table('accounts')->where('parent_account_number', $liability['account_number'])->exists())
-                                        <button wire:click="toggleCategory('{{ $liability['account_number'] }}')" 
-                                                class="text-blue-600 hover:text-blue-800">
-                                            <svg class="w-3 h-3 transform {{ in_array($liability['account_number'], $expandedCategories) ? 'rotate-90' : '' }}" 
-                                                 fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
-                                            </svg>
-                                        </button>
-                                        @endif
-                                        <button wire:click="drillDown('{{ $liability['account_number'] }}', '{{ $liability['account_name'] }}', 2)" 
-                                                class="text-gray-500 hover:text-gray-700">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
                                 </div>
                             </td>
-                            <td class="border border-gray-300 px-2 py-1 text-center w-1/12 text-gray-500">
-                                {{ $index + 6 }}
+                            <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;">
+                                <button 
+                                    wire:click="showNote({{ $index + 6 }}, '{{ $liability['account_name'] }}')"
+                                    class="text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer">
+                                    {{ $index + 6 }}
+                                </button>
                             </td>
                             @foreach($comparisonYears as $year)
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/5 font-medium">
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;" font-medium">
                                 {{ $this->formatNumber($liability['years'][$year] ?? 0) }}
                             </td>
                             @endforeach
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/6 {{ $this->calculateVariance($liability['years'][$comparisonYears[0]] ?? 0, $liability['years'][$comparisonYears[1]] ?? 0) >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;" {{ $this->calculateVariance($liability['years'][$comparisonYears[0]] ?? 0, $liability['years'][$comparisonYears[1]] ?? 0) >= 0 ? 'text-green-600' : 'text-red-600' }}">
                                 {{ number_format($this->calculateVariance($liability['years'][$comparisonYears[0]] ?? 0, $liability['years'][$comparisonYears[1]] ?? 0), 1) }}%
                             </td>
                         </tr>
@@ -475,25 +394,25 @@
                         @if(in_array($liability['account_number'], $expandedCategories))
                             @foreach($liability['children'] as $l3)
                             <tr class="bg-gray-50">
-                                <td class="border border-gray-300 px-2 py-1 pl-6 w-2/5">
+                                <td class="border border-gray-300 px-2 py-1 pl-6" style="width: 40%;">
                                     <span class="text-gray-600">{{ $l3['account_name'] }}</span>
                                 </td>
-                                <td class="border border-gray-300 px-2 py-1 text-center w-1/12"></td>
+                                <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;""></td>
                                 @foreach($comparisonYears as $year)
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5 text-gray-600">
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;" text-gray-600">
                                     {{ $this->formatNumber($l3['years'][$year] ?? 0) }}
                                 </td>
                                 @endforeach
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/6"></td>
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;""></td>
                             </tr>
                             @endforeach
                         @endif
                         @endforeach
                         
                         <!-- Current Liabilities Subtotal -->
-                        <tr class="bg-yellow-100 font-semibold">
-                            <td class="border border-gray-300 px-2 py-1 w-2/5">Total Current Liabilities</td>
-                            <td class="border border-gray-300 px-2 py-1 text-center w-1/12"></td>
+                        <tr class="bg-blue-100 font-semibold">
+                            <td class="border border-gray-300 px-2 py-1" style="width: 40%;">Total Current Liabilities</td>
+                            <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;""></td>
                             @php
                                 $currentLiabilitiesTotal = [];
                                 foreach($comparisonYears as $year) {
@@ -504,11 +423,11 @@
                                 }
                             @endphp
                             @foreach($comparisonYears as $year)
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/5">
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;"">
                                 {{ $this->formatNumber($currentLiabilitiesTotal[$year]) }}
                             </td>
                             @endforeach
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/6"></td>
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;""></td>
                         </tr>
                     </tbody>
                 </table>
@@ -519,51 +438,38 @@
             @if(count($liabilitiesData['non_current']) > 0)
             <div class="mt-3">
                 <h4 class="text-xs font-semibold text-gray-700 mb-2 px-2">Non-Current Liabilities</h4>
-                <table class="w-full text-xs border-collapse border border-gray-300">
+                <table class="text-xs border-collapse border border-gray-300" style="width: calc(100% - 2rem); margin-left: 2rem;">
                     <thead>
                         <tr class="bg-gray-50">
-                            <th class="border border-gray-300 px-2 py-1 text-left w-2/5">Account</th>
-                            <th class="border border-gray-300 px-2 py-1 text-center w-1/12">Note</th>
+                            <th class="border border-gray-300 px-2 py-1 text-left" style="width: 40%;">Account</th>
+                            <th class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;">Note</th>
                             @foreach($comparisonYears as $year)
-                            <th class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $year }}</th>
+                            <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">{{ $year }}</th>
                             @endforeach
-                            <th class="border border-gray-300 px-2 py-1 text-right w-1/6">Change %</th>
+                            <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">Change %</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($liabilitiesData['non_current'] as $index => $liability)
                         <tr class="hover:bg-gray-50">
-                            <td class="border border-gray-300 px-2 py-1 w-2/5">
+                            <td class="border border-gray-300 px-2 py-1" style="width: 40%;">
                                 <div class="flex items-center justify-between">
                                     <span class="font-medium">{{ $liability['account_name'] }}</span>
-                                    <div class="flex space-x-1">
-                                        @if(count($liability['children']) > 0 || DB::table('accounts')->where('parent_account_number', $liability['account_number'])->exists())
-                                        <button wire:click="toggleCategory('{{ $liability['account_number'] }}')" 
-                                                class="text-blue-600 hover:text-blue-800">
-                                            <svg class="w-3 h-3 transform {{ in_array($liability['account_number'], $expandedCategories) ? 'rotate-90' : '' }}" 
-                                                 fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
-                                            </svg>
-                                        </button>
-                                        @endif
-                                        <button wire:click="drillDown('{{ $liability['account_number'] }}', '{{ $liability['account_name'] }}', 2)" 
-                                                class="text-gray-500 hover:text-gray-700">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
                                 </div>
                             </td>
-                            <td class="border border-gray-300 px-2 py-1 text-center w-1/12 text-gray-500">
-                                {{ count($liabilitiesData['current']) + $index + 6 }}
+                            <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;">
+                                <button 
+                                    wire:click="showNote({{ count($liabilitiesData['current']) + $index + 6 }}, '{{ $liability['account_name'] }}')"
+                                    class="text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer">
+                                    {{ count($liabilitiesData['current']) + $index + 6 }}
+                                </button>
                             </td>
                             @foreach($comparisonYears as $year)
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/5 font-medium">
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;" font-medium">
                                 {{ $this->formatNumber($liability['years'][$year] ?? 0) }}
                             </td>
                             @endforeach
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/6 {{ $this->calculateVariance($liability['years'][$comparisonYears[0]] ?? 0, $liability['years'][$comparisonYears[1]] ?? 0) >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;" {{ $this->calculateVariance($liability['years'][$comparisonYears[0]] ?? 0, $liability['years'][$comparisonYears[1]] ?? 0) >= 0 ? 'text-green-600' : 'text-red-600' }}">
                                 {{ number_format($this->calculateVariance($liability['years'][$comparisonYears[0]] ?? 0, $liability['years'][$comparisonYears[1]] ?? 0), 1) }}%
                             </td>
                         </tr>
@@ -571,25 +477,25 @@
                         @if(in_array($liability['account_number'], $expandedCategories))
                             @foreach($liability['children'] as $l3)
                             <tr class="bg-gray-50">
-                                <td class="border border-gray-300 px-2 py-1 pl-6 w-2/5">
+                                <td class="border border-gray-300 px-2 py-1 pl-6" style="width: 40%;">
                                     <span class="text-gray-600">{{ $l3['account_name'] }}</span>
                                 </td>
-                                <td class="border border-gray-300 px-2 py-1 text-center w-1/12"></td>
+                                <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;""></td>
                                 @foreach($comparisonYears as $year)
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/5 text-gray-600">
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;" text-gray-600">
                                     {{ $this->formatNumber($l3['years'][$year] ?? 0) }}
                                 </td>
                                 @endforeach
-                                <td class="border border-gray-300 px-2 py-1 text-right w-1/6"></td>
+                                <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;""></td>
                             </tr>
                             @endforeach
                         @endif
                         @endforeach
                         
                         <!-- Non-Current Liabilities Subtotal -->
-                        <tr class="bg-yellow-100 font-semibold">
-                            <td class="border border-gray-300 px-2 py-1 w-2/5">Total Non-Current Liabilities</td>
-                            <td class="border border-gray-300 px-2 py-1 text-center w-1/12"></td>
+                        <tr class="bg-blue-100 font-semibold">
+                            <td class="border border-gray-300 px-2 py-1" style="width: 40%;">Total Non-Current Liabilities</td>
+                            <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;""></td>
                             @php
                                 $nonCurrentLiabilitiesTotal = [];
                                 foreach($comparisonYears as $year) {
@@ -600,11 +506,11 @@
                                 }
                             @endphp
                             @foreach($comparisonYears as $year)
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/5">
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;"">
                                 {{ $this->formatNumber($nonCurrentLiabilitiesTotal[$year]) }}
                             </td>
                             @endforeach
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/6"></td>
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;""></td>
                         </tr>
                     </tbody>
                 </table>
@@ -612,33 +518,33 @@
             @endif
             
             <!-- Total Liabilities -->
-            <table class="w-full text-xs border-collapse border border-gray-300 mt-2">
+            <table class="text-xs border-collapse border border-gray-300 mt-2" style="width: calc(100% - 2rem); margin-left: 2rem;">
                 <tbody>
-                    <tr class="bg-orange-100 font-semibold">
-                        <td class="border border-gray-300 px-2 py-1 w-2/5">Total Liabilities</td>
-                        <td class="border border-gray-300 px-2 py-1 text-center w-1/12"></td>
+                    <tr class="bg-blue-100 font-semibold">
+                        <td class="border border-gray-300 px-2 py-1" style="width: 40%;">Total Liabilities</td>
+                        <td class="border border-gray-300 px-2 py-1 text-center" style="width: 10%;"></td>
                         @foreach($comparisonYears as $year)
-                        <td class="border border-gray-300 px-2 py-1 text-right w-1/5">
+                        <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">
                             {{ $this->formatNumber($liabilitiesData['total'][$year] ?? 0) }}
                         </td>
                         @endforeach
-                        <td class="border border-gray-300 px-2 py-1 text-right w-1/6"></td>
+                        <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;"></td>
                     </tr>
                 </tbody>
             </table>
             
             <!-- Total Equity and Liabilities -->
-            <table class="w-full text-xs border-collapse border border-gray-300 mt-2">
+            <table class="text-xs border-collapse border border-gray-300 mt-2" style="width: calc(100% - 2rem); margin-left: 2rem;">
                 <tbody>
-                    <tr class="bg-blue-900 text-white font-bold">
-                        <td class="border border-gray-300 px-2 py-2 w-2/5">TOTAL EQUITY AND LIABILITIES</td>
-                        <td class="border border-gray-300 px-2 py-2 text-center w-1/12"></td>
+                    <tr class="bg-blue-200 font-bold">
+                        <td class="border border-gray-300 px-2 py-2" style="width: 40%;">TOTAL EQUITY AND LIABILITIES</td>
+                        <td class="border border-gray-300 px-2 py-2 text-center" style="width: 10%;"></td>
                         @foreach($comparisonYears as $year)
-                        <td class="border border-gray-300 px-2 py-2 text-right w-1/5">
+                        <td class="border border-gray-300 px-2 py-2 text-right" style="width: 16.67%;">
                             {{ $this->formatNumber($summaryData[$year]['total_liabilities_equity'] ?? 0) }}
                         </td>
                         @endforeach
-                        <td class="border border-gray-300 px-2 py-2 text-right w-1/6">
+                        <td class="border border-gray-300 px-2 py-2 text-right" style="width: 16.67%;">
                             {{ number_format($this->calculateVariance(
                                 $summaryData[$comparisonYears[0]]['total_liabilities_equity'] ?? 0, 
                                 $summaryData[$comparisonYears[1]]['total_liabilities_equity'] ?? 0
@@ -660,76 +566,6 @@
         @endif
     </div>
     
-    <!-- Drill-Down Modal -->
-    @if($selectedCategory)
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
-            <div class="bg-gradient-to-r from-blue-900 to-blue-800 text-white px-4 py-3">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h3 class="text-sm font-bold">Account Details</h3>
-                        <p class="text-xs">{{ $selectedCategory['name'] }} ({{ $selectedCategory['number'] }})</p>
-                    </div>
-                    <button wire:click="closeDrillDown" class="text-white hover:text-gray-200">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="p-4 overflow-y-auto max-h-[calc(80vh-100px)]">
-                <table class="w-full text-xs border-collapse border border-gray-300">
-                    <thead>
-                        <tr class="bg-gray-100">
-                            <th class="border border-gray-300 px-2 py-1 text-left w-2/5">Account</th>
-                            @foreach($comparisonYears as $year)
-                            <th class="border border-gray-300 px-2 py-1 text-right w-1/5">{{ $year }}</th>
-                            @endforeach
-                            <th class="border border-gray-300 px-2 py-1 text-right w-1/5">Change %</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($drillDownData as $account)
-                        <tr class="hover:bg-gray-50">
-                            <td class="border border-gray-300 px-2 py-1 w-2/5">
-                                <div class="flex items-center justify-between">
-                                    <span>{{ $account['account_name'] }}</span>
-                                    <div class="flex space-x-1">
-                                        @if($account['has_children'])
-                                        <button wire:click="drillDown('{{ $account['account_number'] }}', '{{ $account['account_name'] }}', {{ $account['account_level'] }})" 
-                                                class="text-blue-600 hover:text-blue-800">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
-                                        </button>
-                                        @endif
-                                        <button wire:click="showAccountDetails('{{ $account['account_number'] }}', '{{ $account['account_name'] }}')" 
-                                                class="text-gray-500 hover:text-gray-700">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            </td>
-                            @foreach($comparisonYears as $year)
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/5">
-                                {{ $this->formatNumber($account['years'][$year] ?? 0) }}
-                            </td>
-                            @endforeach
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/5 {{ $this->calculateVariance($account['years'][$comparisonYears[0]] ?? 0, $account['years'][$comparisonYears[1]] ?? 0) >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                                {{ number_format($this->calculateVariance($account['years'][$comparisonYears[0]] ?? 0, $account['years'][$comparisonYears[1]] ?? 0), 1) }}%
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    @endif
-    
     <!-- Account Detail Modal -->
     @if($showAccountDetail)
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -749,32 +585,96 @@
             </div>
             
             <div class="p-4 overflow-y-auto max-h-[calc(80vh-100px)]">
-                <table class="w-full text-xs border-collapse border border-gray-300">
+                <table class="text-xs border-collapse border border-gray-300" style="width: calc(100% - 2rem); margin-left: 2rem;">
                     <thead>
                         <tr class="bg-gray-100 text-gray-700">
-                            <th class="border border-gray-300 px-2 py-1 text-left w-1/6">Date</th>
-                            <th class="border border-gray-300 px-2 py-1 text-left w-1/6">Reference</th>
-                            <th class="border border-gray-300 px-2 py-1 text-left w-2/6">Description</th>
-                            <th class="border border-gray-300 px-2 py-1 text-right w-1/6">Debit</th>
-                            <th class="border border-gray-300 px-2 py-1 text-right w-1/6">Credit</th>
+                            <th class="border border-gray-300 px-2 py-1 text-left" style="width: 16.67%;">Date</th>
+                            <th class="border border-gray-300 px-2 py-1 text-left" style="width: 16.67%;">Reference</th>
+                            <th class="border border-gray-300 px-2 py-1 text-left" style="width: 33.33%;">Description</th>
+                            <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">Debit</th>
+                            <th class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;">Credit</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($accountTransactions as $transaction)
                         <tr class="hover:bg-gray-50">
-                            <td class="border border-gray-300 px-2 py-1 w-1/6">{{ $transaction['date'] }}</td>
-                            <td class="border border-gray-300 px-2 py-1 w-1/6">{{ $transaction['reference'] }}</td>
-                            <td class="border border-gray-300 px-2 py-1 w-2/6">{{ $transaction['description'] }}</td>
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/6">
+                            <td class="border border-gray-300 px-2 py-1" style="width: 16.67%;">{{ $transaction['date'] }}</td>
+                            <td class="border border-gray-300 px-2 py-1" style="width: 16.67%;">{{ $transaction['reference'] }}</td>
+                            <td class="border border-gray-300 px-2 py-1" style="width: 33.33%;">{{ $transaction['description'] }}</td>
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;"">
                                 {{ $transaction['debit'] > 0 ? number_format($transaction['debit'], 2) : '-' }}
                             </td>
-                            <td class="border border-gray-300 px-2 py-1 text-right w-1/6">
+                            <td class="border border-gray-300 px-2 py-1 text-right" style="width: 16.67%;"">
                                 {{ $transaction['credit'] > 0 ? number_format($transaction['credit'], 2) : '-' }}
                             </td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+    @endif
+    
+    <!-- Note Modal -->
+    @if($showNoteModal)
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50">
+        <div class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">
+                                Note {{ $noteNumber }}: {{ $noteTitle }}
+                            </h3>
+                            <button wire:click="closeNote" class="text-gray-400 hover:text-gray-500">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="mt-4">
+                            @if(is_array($noteContent) && count($noteContent) > 0)
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Number</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Name</th>
+                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @foreach($noteContent as $item)
+                                        <tr>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{{ $item['account_number'] }}</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{{ $item['account_name'] }}</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                                                {{ number_format($item['balance'], 2) }}
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                        <tr class="font-semibold bg-gray-50">
+                                            <td colspan="2" class="px-4 py-2 text-sm text-gray-900">Total</td>
+                                            <td class="px-4 py-2 text-sm text-gray-900 text-right">
+                                                {{ number_format(collect($noteContent)->sum('balance'), 2) }}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            @else
+                                <p class="text-gray-500">No data available for this note.</p>
+                            @endif
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <button type="button" wire:click="closeNote"
+                            class="inline-flex w-full justify-center rounded-md bg-blue-200 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto">
+                            Close
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
