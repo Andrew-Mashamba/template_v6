@@ -15,7 +15,7 @@ class PPE extends Model
         'name', 'category', 'purchase_price', 'purchase_date', 'salvage_value',
         'useful_life', 'quantity', 'initial_value', 'depreciation_rate',
         'accumulated_depreciation', 'depreciation_for_year', 'depreciation_for_month',
-        'closing_value', 'status', 'location', 'notes', 'account_number',
+        'closing_value', 'status', 'location', 'notes', 'account_number', 'depreciation_account_number',
         // Additional costs for proper capitalization
         'legal_fees', 'registration_fees', 'renovation_costs', 'transportation_costs',
         'installation_costs', 'other_costs',
@@ -449,7 +449,7 @@ class PPE extends Model
                         ->orderBy('id', 'desc')
                         ->first();
         
-        $sequence = $lastAsset ? (intval(substr($lastAsset->asset_code, -4)) + 1) : 1;
+        $sequence = ($lastAsset && $lastAsset->asset_code) ? (intval(substr($lastAsset->asset_code, -4)) + 1) : 1;
         
         return sprintf('%s-%s-%04d', $prefix, $year, $sequence);
     }

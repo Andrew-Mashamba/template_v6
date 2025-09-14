@@ -152,6 +152,7 @@ class Accounting extends Component
                 'pendingActivities' => $this->pendingActivities,
                 'menuItems' => $this->menuItems,
                 'menuCategories' => $this->menuCategories,
+                'menuSearch' => $this->menuSearch,
                 'permissions' => $this->permissions
             ]
         ));

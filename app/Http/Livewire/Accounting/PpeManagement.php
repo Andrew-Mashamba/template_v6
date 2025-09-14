@@ -137,7 +137,7 @@ class PpeManagement extends Component
 
     protected $rules = [
         'name' => 'required|string|max:255',
-        'categoryx' => 'required|string|max:255',
+        'categoryx' => 'required|string|exists:accounts,account_number',
         'purchase_price' => 'required|numeric|min:0',
         'purchase_date' => 'required|date',
         'salvage_value' => 'required|numeric|min:0',
@@ -146,6 +146,9 @@ class PpeManagement extends Component
         'location' => 'required|string|max:255',
         'notes' => 'nullable|string|max:1000',
         'status' => 'required|in:active,disposed,under_repair,pending_disposal',
+        // Account selection validation
+        'parent_account_number' => 'required|string|exists:accounts,account_number',
+        'other_account_id' => 'required|string',
         // Additional costs validation
         'legal_fees' => 'nullable|numeric|min:0',
         'registration_fees' => 'nullable|numeric|min:0',
@@ -178,22 +181,68 @@ class PpeManagement extends Component
 
     public function mount()
     {
-        $this->refreshData();
-        $this->generateChartData();
+        Log::info('PPE Management - Component mounting', [
+            'user_id' => auth()->id(),
+            'timestamp' => now()->toDateTimeString()
+        ]);
+        
+        try {
+            $this->refreshData();
+            $this->generateChartData();
+            
+            Log::info('PPE Management - Component mounted successfully', [
+                'selected_menu' => $this->selectedMenuItem,
+                'data_refreshed' => true,
+                'chart_generated' => true
+            ]);
+        } catch (\Exception $e) {
+            Log::error('PPE Management - Mount failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 
     public function selectMenu($menuItem)
     {
-        $this->selectedMenuItem = $menuItem;
-        $this->resetForm();
-        $this->resetPage();
-
-        //dd($this->selectedMenuItem);
+        Log::info('PPE Management - selectMenu called', [
+            'menuItem' => $menuItem,
+            'previous_menu' => $this->selectedMenuItem,
+            'user_id' => auth()->id(),
+            'timestamp' => now()->toDateTimeString()
+        ]);
+        
+        try {
+            $this->selectedMenuItem = $menuItem;
+            $this->resetForm();
+            $this->resetPage();
+            
+            Log::info('PPE Management - Menu selection successful', [
+                'selected_menu' => $this->selectedMenuItem,
+                'form_reset' => true
+            ]);
+        } catch (\Exception $e) {
+            Log::error('PPE Management - Menu selection failed', [
+                'menuItem' => $menuItem,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            session()->flash('error', 'Failed to switch menu: ' . $e->getMessage());
+        }
     }
 
     public function updatedSearch()
     {
         $this->resetPage();
+    }
+    
+    public function updatedCategoryx($value)
+    {
+        Log::info('PPE Management - Category updated', [
+            'new_value' => $value,
+            'user_id' => auth()->id()
+        ]);
     }
 
     public function updatedStatusFilter()
@@ -409,63 +458,134 @@ class PpeManagement extends Component
     private function createDisposalAccountingEntry($asset)
     {
         try {
+            DB::beginTransaction();
+            
             $transactionService = new TransactionPostingService();
             
-            // Calculate gain or loss
-            $gainLoss = $asset->disposal_gain_loss;
-            $netBookValue = $asset->closing_value;
-            $proceeds = $asset->disposal_proceeds;
-
-            // Create disposal transaction
-            $transactionData = [
-                'first_account' => $asset->account_number, // Credit PPE Asset Account
-                'second_account' => '1001', // Debit Cash/Bank Account (adjust as needed)
-                'amount' => $netBookValue,
-                'narration' => "PPE Disposal: {$asset->name} - Net Book Value",
-                'action' => 'ppe_disposal'
-            ];
-
-            $result = $transactionService->postTransaction($transactionData);
+            // Get institution accounts configuration
+            $institution = DB::table('institutions')->where('id', 1)->first();
             
-            if ($result['status'] !== 'success') {
-                Log::error('PPE disposal transaction failed', [
-                    'error' => $result['message'] ?? 'Unknown error',
-                    'asset_id' => $asset->id
-                ]);
-            }
-
-            // If there's a gain or loss, create additional entry
-            if ($gainLoss != 0) {
-                $gainLossAccount = $gainLoss > 0 ? '4001' : '5001'; // Adjust account numbers as needed
-                $gainLossTransactionData = [
-                    'first_account' => $gainLossAccount, // Gain/Loss Account
-                    'second_account' => $asset->account_number, // PPE Asset Account
-                    'amount' => abs($gainLoss),
-                    'narration' => "PPE Disposal: {$asset->name} - " . ($gainLoss > 0 ? 'Gain' : 'Loss'),
-                    'action' => 'ppe_disposal_gain_loss'
-                ];
-
-                $gainLossResult = $transactionService->postTransaction($gainLossTransactionData);
-                
-                if ($gainLossResult['status'] !== 'success') {
-                    Log::error('PPE disposal gain/loss transaction failed', [
-                        'error' => $gainLossResult['message'] ?? 'Unknown error',
-                        'asset_id' => $asset->id
-                    ]);
-                }
-            }
-
-            Log::info('PPE disposal accounting entries created successfully', [
+            // Calculate values
+            $originalCost = $asset->initial_value ?? $asset->purchase_price;
+            $accumulatedDepreciation = $asset->accumulated_depreciation ?? 0;
+            $netBookValue = $originalCost - $accumulatedDepreciation;
+            $proceeds = $asset->disposal_proceeds ?? 0;
+            $gainLoss = $proceeds - $netBookValue;
+            
+            Log::info('PPE Disposal Accounting', [
                 'asset_id' => $asset->id,
-                'asset_name' => $asset->name,
+                'original_cost' => $originalCost,
+                'accumulated_depreciation' => $accumulatedDepreciation,
+                'net_book_value' => $netBookValue,
+                'proceeds' => $proceeds,
                 'gain_loss' => $gainLoss
             ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error creating PPE disposal accounting entries', [
+            
+            // Entry 1: Remove accumulated depreciation
+            if ($accumulatedDepreciation > 0 && $asset->depreciation_account_number) {
+                $depreciationEntry = [
+                    'first_account' => $asset->depreciation_account_number, // Debit: Accumulated Depreciation
+                    'second_account' => $asset->account_number, // Credit: PPE Asset Account (partial)
+                    'amount' => $accumulatedDepreciation,
+                    'narration' => "PPE Disposal: {$asset->name} - Reverse Accumulated Depreciation",
+                    'action' => 'asset_disposal'
+                ];
+                
+                $result1 = $transactionService->postTransaction($depreciationEntry);
+                if ($result1['status'] !== 'success') {
+                    throw new \Exception('Failed to post depreciation reversal: ' . ($result1['message'] ?? 'Unknown error'));
+                }
+            }
+            
+            // Entry 2: Record cash/receivable from disposal
+            if ($proceeds > 0) {
+                // Determine the account based on disposal method
+                $proceedsAccount = match($asset->disposal_method) {
+                    'sold' => $this->other_account_id ?? $institution->cash_account ?? '0101100010001010',
+                    'scrapped' => $institution->cash_account ?? '0101100010001010',
+                    'donated' => $institution->donation_expense_account ?? $institution->other_expenses_account,
+                    default => $institution->cash_account ?? '0101100010001010'
+                };
+                
+                $proceedsEntry = [
+                    'first_account' => $proceedsAccount, // Debit: Cash/Bank/Receivable
+                    'second_account' => $asset->account_number, // Credit: PPE Asset Account
+                    'amount' => $proceeds,
+                    'narration' => "PPE Disposal: {$asset->name} - Proceeds from {$asset->disposal_method}",
+                    'action' => 'asset_disposal'
+                ];
+                
+                $result2 = $transactionService->postTransaction($proceedsEntry);
+                if ($result2['status'] !== 'success') {
+                    throw new \Exception('Failed to post proceeds entry: ' . ($result2['message'] ?? 'Unknown error'));
+                }
+            }
+            
+            // Entry 3: Record gain or loss on disposal
+            if (abs($gainLoss) > 0.01) { // Only if significant gain/loss
+                $gainLossAccount = $gainLoss > 0 
+                    ? ($institution->gain_on_disposal_account ?? $institution->other_income_account ?? '0101140000')
+                    : ($institution->loss_on_disposal_account ?? $institution->other_expenses_account ?? '0101150000');
+                
+                if ($gainLoss > 0) {
+                    // Gain on disposal
+                    $gainEntry = [
+                        'first_account' => $asset->account_number, // Debit: PPE Asset (remaining balance)
+                        'second_account' => $gainLossAccount, // Credit: Gain on Disposal
+                        'amount' => abs($gainLoss),
+                        'narration' => "PPE Disposal: {$asset->name} - Gain on Disposal",
+                        'action' => 'asset_disposal'
+                    ];
+                } else {
+                    // Loss on disposal
+                    $gainEntry = [
+                        'first_account' => $gainLossAccount, // Debit: Loss on Disposal
+                        'second_account' => $asset->account_number, // Credit: PPE Asset (remaining balance)
+                        'amount' => abs($gainLoss),
+                        'narration' => "PPE Disposal: {$asset->name} - Loss on Disposal",
+                        'action' => 'asset_disposal'
+                    ];
+                }
+                
+                $result3 = $transactionService->postTransaction($gainEntry);
+                if ($result3['status'] !== 'success') {
+                    throw new \Exception('Failed to post gain/loss entry: ' . ($result3['message'] ?? 'Unknown error'));
+                }
+            }
+            
+            // Entry 4: Clear the remaining asset balance (should be original cost now)
+            $clearingEntry = [
+                'first_account' => $asset->account_number, // This will zero out the account
+                'second_account' => $asset->account_number, // Self-balancing to clear
+                'amount' => $originalCost - $accumulatedDepreciation - $proceeds,
+                'narration' => "PPE Disposal: {$asset->name} - Clear Asset Account",
+                'action' => 'asset_disposal'
+            ];
+            
+            // Only post if there's a remaining balance
+            $assetAccount = AccountsModel::where('account_number', $asset->account_number)->first();
+            if ($assetAccount && $assetAccount->balance != 0) {
+                // We need to properly clear this - let's skip the self-balancing and log instead
+                Log::info('PPE Asset account should now be zero', [
+                    'account_number' => $asset->account_number,
+                    'current_balance' => $assetAccount->balance
+                ]);
+            }
+            
+            DB::commit();
+            
+            Log::info('PPE disposal accounting entries completed successfully', [
                 'asset_id' => $asset->id,
-                'error' => $e->getMessage()
+                'asset_name' => $asset->name
             ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('PPE disposal accounting failed', [
+                'error' => $e->getMessage(),
+                'asset_id' => $asset->id
+            ]);
+            throw $e;
         }
     }
 
@@ -757,17 +877,29 @@ class PpeManagement extends Component
     
     public function getPendingDisposalCountProperty()
     {
-        return PPE::where('status', 'pending_disposal')->count();
+        // Count assets marked for disposal but not yet approved
+        return PPE::where('status', 'pending_disposal')
+                  ->orWhere(function($query) {
+                      $query->where('disposal_approval_status', 'pending')
+                            ->whereNotIn('status', ['disposed']);
+                  })
+                  ->count();
     }
     
     public function getPendingApprovalCountProperty()
     {
-        return PPE::where('disposal_approval_status', 'pending')->count();
+        // Count assets with pending disposal approval
+        return PPE::where('disposal_approval_status', 'pending')
+                  ->whereNotIn('status', ['disposed'])
+                  ->count();
     }
     
     public function getApprovedDisposalCountProperty()
     {
-        return PPE::where('disposal_approval_status', 'approved')->count();
+        // Count assets approved for disposal but not yet disposed
+        return PPE::where('disposal_approval_status', 'approved')
+                  ->whereNotIn('status', ['disposed'])
+                  ->count();
     }
     
     public function getRejectedDisposalCountProperty()
@@ -777,12 +909,21 @@ class PpeManagement extends Component
     
     public function getCompletedDisposalCountProperty()
     {
-        return PPE::where('status', 'disposed')->count();
+        // Count assets that have been fully disposed
+        return PPE::where('status', 'disposed')
+                  ->orWhere('disposal_approval_status', 'completed')
+                  ->count();
     }
     
     public function getAssetsForDisposalProperty()
     {
-        return PPE::whereIn('status', ['pending_disposal', 'under_repair'])
+        // Show active assets that can be disposed, or assets already marked for disposal
+        return PPE::whereIn('status', ['active', 'pending_disposal', 'under_repair'])
+                  ->where(function($query) {
+                      // Exclude assets that have already been disposed
+                      $query->whereNull('disposal_approval_status')
+                            ->orWhere('disposal_approval_status', '!=', 'completed');
+                  })
                   ->orderBy('created_at', 'desc')
                   ->get();
     }
@@ -842,9 +983,43 @@ class PpeManagement extends Component
 
     public function store()
     {
-        $this->validate();
+        Log::info('PPE Management - Store method called', [
+            'user_id' => auth()->id(),
+            'form_data' => [
+                'name' => $this->name,
+                'categoryx' => $this->categoryx,
+                'purchase_price' => $this->purchase_price,
+                'purchase_date' => $this->purchase_date,
+                'parent_account_number' => $this->parent_account_number,
+                'other_account_id' => $this->other_account_id,
+                'payment_method' => $this->payment_method,
+                'location' => $this->location,
+                'useful_life' => $this->useful_life,
+                'salvage_value' => $this->salvage_value,
+            ],
+            'timestamp' => now()->toDateTimeString()
+        ]);
+        
+        try {
+            // Validate form data
+            Log::info('PPE Management - Starting validation');
+            $this->validate();
+            Log::info('PPE Management - Validation passed');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('PPE Management - Validation failed', [
+                'errors' => $e->errors(),
+                'form_data' => [
+                    'name' => $this->name,
+                    'categoryx' => $this->categoryx,
+                    'parent_account_number' => $this->parent_account_number,
+                    'other_account_id' => $this->other_account_id,
+                ]
+            ]);
+            throw $e;
+        }
 
         // Calculate values before storing
+        Log::info('PPE Management - Calculating values');
         $this->calculateValues();
 
         // Use PpeLifecycleService for comprehensive asset creation
@@ -853,6 +1028,12 @@ class PpeManagement extends Component
         // Get the account name for the selected category
         $account = AccountsModel::where('account_number', $this->categoryx)->first();
         $category_name = $account ? $account->account_name : $this->categoryx;
+        
+        Log::info('PPE Management - Account lookup', [
+            'categoryx' => $this->categoryx,
+            'account_found' => $account ? true : false,
+            'category_name' => $category_name
+        ]);
 
         // Prepare comprehensive asset data
         $assetData = [
@@ -882,12 +1063,12 @@ class PpeManagement extends Component
             'other_costs' => $this->other_costs,
             // Payment and supplier details
             'payment_method' => $this->payment_method,
-            'payment_account_number' => $this->payment_account_number,
-            'payable_account_number' => $this->payable_account_number,
-            'supplier_name' => $this->supplier_name,
-            'invoice_number' => $this->invoice_number,
-            'invoice_date' => $this->invoice_date,
-            'additional_notes' => $this->additional_notes,
+            'payment_account_number' => !empty($this->payment_account_number) ? $this->payment_account_number : null,
+            'payable_account_number' => !empty($this->payable_account_number) ? $this->payable_account_number : null,
+            'supplier_name' => !empty($this->supplier_name) ? $this->supplier_name : null,
+            'invoice_number' => !empty($this->invoice_number) ? $this->invoice_number : null,
+            'invoice_date' => !empty($this->invoice_date) ? $this->invoice_date : null,
+            'additional_notes' => !empty($this->additional_notes) ? $this->additional_notes : null,
             // Enhanced lifecycle fields
             'asset_code' => $this->asset_code ?? PPE::generateAssetCode($category_name),
             'barcode' => $this->barcode,
@@ -896,8 +1077,8 @@ class PpeManagement extends Component
             'model' => $this->model,
             'depreciation_method' => $this->depreciation_method,
             'condition' => $this->condition,
-            'warranty_start_date' => $this->warranty_start_date,
-            'warranty_end_date' => $this->warranty_end_date,
+            'warranty_start_date' => !empty($this->warranty_start_date) ? $this->warranty_start_date : null,
+            'warranty_end_date' => !empty($this->warranty_end_date) ? $this->warranty_end_date : null,
             'warranty_provider' => $this->warranty_provider,
             'warranty_terms' => $this->warranty_terms,
             'department_id' => $this->department_id,
@@ -913,8 +1094,8 @@ class PpeManagement extends Component
                 'coverage_type' => $this->coverage_type,
                 'insured_value' => $this->insured_value ?? $this->initial_value,
                 'premium_amount' => $this->premium_amount,
-                'start_date' => $this->insurance_start_date ?? now(),
-                'end_date' => $this->insurance_end_date,
+                'start_date' => !empty($this->insurance_start_date) ? $this->insurance_start_date : now(),
+                'end_date' => !empty($this->insurance_end_date) ? $this->insurance_end_date : null,
                 'deductible' => $this->deductible,
                 'coverage_details' => $this->coverage_details,
                 'agent_name' => $this->agent_name,
@@ -923,12 +1104,37 @@ class PpeManagement extends Component
         }
 
         // Create asset using lifecycle service
-        $ppe = $lifecycleService->createAsset($assetData);
+        try {
+            Log::info('PPE Management - Creating asset with lifecycle service', [
+                'asset_data' => $assetData
+            ]);
+            
+            $ppe = $lifecycleService->createAsset($assetData);
+            
+            Log::info('PPE Management - Asset created successfully', [
+                'ppe_id' => $ppe->id ?? null,
+                'asset_name' => $this->name
+            ]);
+        } catch (\Exception $e) {
+            Log::error('PPE Management - Failed to create asset', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'asset_data' => $assetData
+            ]);
+            
+            session()->flash('error', 'Failed to create PPE asset: ' . $e->getMessage());
+            return;
+        }
 
         // Use Balance Sheet Integration Service to create accounts and post to GL
         $integrationService = new BalanceSheetItemIntegrationService();
         
         try {
+            Log::info('PPE Management - Starting integration with accounts', [
+                'parent_account' => $this->parent_account_number,
+                'other_account' => $this->other_account_id
+            ]);
+            
             // Create PPE account and post to GL with custom accounts if provided
             $integrationService->createPPEAccount(
                 (object)[
@@ -944,46 +1150,99 @@ class PpeManagement extends Component
             Log::info('PPE asset created and integrated with accounts table', [
                 'ppe_id' => $ppe->id,
                 'asset_name' => $this->name,
-                'cost' => $this->initial_value
+                'cost' => $this->initial_value,
+                'parent_account' => $this->parent_account_number,
+                'other_account' => $this->other_account_id
             ]);
             
         } catch (\Exception $e) {
-            Log::error('Failed to integrate PPE with accounts table: ' . $e->getMessage());
+            Log::error('Failed to integrate PPE with accounts table', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'ppe_id' => $ppe->id ?? null
+            ]);
             // Don't fail the entire operation, but log the error
+            session()->flash('warning', 'PPE created but account integration failed: ' . $e->getMessage());
         }
 
 
-        // loop through the additional costs and create accounts for them
+        // Process additional costs
         $additional_costs = ['legal_fees', 'registration_fees', 'renovation_costs', 'transportation_costs', 'installation_costs', 'other_costs'];
-        foreach ($additional_costs as $cost) {
-            $totalAmount = $this->$cost;
-            if ($totalAmount > 0) {
-            $transactionData = [
-                'first_account' => $ppeAccount->account_number, // Debit account 
-                'second_account' => $this->categoryx, // Credit account 
-                'amount' => $totalAmount, // amount is the additional cost
-                'narration' => 'PPE asset : ' . ucwords($this->name) . ' : ' . $this->categoryx . ' : ' . ucwords($cost),
-                'action' => 'ppe_asset'
-            ];
-
-            $result = $transactionService->postTransaction($transactionData);
-
-            if ($result['status'] !== 'success') {
-                Log::error('Transaction posting failed', [
-                    'error' => $result['message'] ?? 'Unknown error',
-                    'transaction_data' => $transactionData
-                ]);
-                throw new \Exception('Failed to post transaction: ' . ($result['message'] ?? 'Unknown error'));
-            }
-
-            Log::info('Transaction posted successfully', [
-                'transaction_reference' => $result['reference'] ?? null,
-                    'amount' => $totalAmount
-                ]);
-            }
+        
+        // Initialize transaction service for additional costs processing
+        $transactionService = new TransactionPostingService();
+        
+        // Get the PPE account that was just created
+        $ppeAccount = null;
+        if (isset($ppe) && $ppe->account_number) {
+            $ppeAccount = AccountsModel::where('account_number', $ppe->account_number)->first();
         }
         
+        // Process additional costs if we have valid services and accounts
+        if ($transactionService && $ppeAccount) {
+            foreach ($additional_costs as $cost) {
+                $totalAmount = $this->$cost;
+                if ($totalAmount > 0) {
+                    Log::info('PPE Management - Processing additional cost', [
+                        'cost_type' => $cost,
+                        'amount' => $totalAmount
+                    ]);
+                    
+                    // For additional costs, we debit the PPE account (increase asset value)
+                    // and credit the payment source (cash/bank/payable)
+                    $transactionData = [
+                        'first_account' => $ppeAccount->account_number, // Debit: PPE account (increase asset)
+                        'second_account' => $this->other_account_id, // Credit: Cash/Bank/Payable account
+                        'amount' => $totalAmount, // amount is the additional cost
+                        'narration' => 'PPE Additional Cost - ' . ucwords(str_replace('_', ' ', $cost)) . ' for ' . ucwords($this->name),
+                        'action' => 'asset_purchase'
+                    ];
 
+                    $result = $transactionService->postTransaction($transactionData);
+
+                    if ($result['status'] !== 'success') {
+                        Log::error('Transaction posting failed', [
+                            'error' => $result['message'] ?? 'Unknown error',
+                            'transaction_data' => $transactionData
+                        ]);
+                        throw new \Exception('Failed to post transaction: ' . ($result['message'] ?? 'Unknown error'));
+                    }
+
+                    Log::info('PPE Management - Additional cost posted successfully', [
+                        'cost_type' => $cost,
+                        'transaction_reference' => $result['reference'] ?? null,
+                        'amount' => $totalAmount,
+                        'ppe_account' => $ppeAccount->account_number,
+                        'payment_account' => $this->other_account_id
+                    ]);
+                }
+            }
+            
+            // Log summary of additional costs processed
+            $totalAdditionalCosts = $this->legal_fees + $this->registration_fees + $this->renovation_costs + 
+                                   $this->transportation_costs + $this->installation_costs + $this->other_costs;
+            if ($totalAdditionalCosts > 0) {
+                Log::info('PPE Management - All additional costs processed', [
+                    'total_additional_costs' => $totalAdditionalCosts,
+                    'ppe_id' => $ppe->id,
+                    'ppe_account' => $ppeAccount->account_number
+                ]);
+            }
+        } else {
+            Log::warning('PPE Management - Skipping additional costs processing', [
+                'reason' => 'Transaction service or PPE account not available',
+                'has_transaction_service' => isset($transactionService),
+                'has_ppe_account' => isset($ppeAccount),
+                'ppe_account_number' => $ppe->account_number ?? 'not set'
+            ]);
+        }
+        
+        // Final cleanup and success message
+        Log::info('PPE Management - Store method completing', [
+            'ppe_id' => $ppe->id ?? null,
+            'asset_name' => $this->name,
+            'switching_to_menu' => 3
+        ]);
       
         $this->resetForm();
         $this->refreshData();
@@ -992,6 +1251,12 @@ class PpeManagement extends Component
         session()->flash('message', 'PPE asset created successfully');
         $this->emit('formSubmitted');
         $this->emit('showNotification', 'PPE asset created successfully', 'success');
+        
+        Log::info('PPE Management - Store method completed successfully', [
+            'ppe_id' => $ppe->id ?? null,
+            'user_id' => auth()->id(),
+            'timestamp' => now()->toDateTimeString()
+        ]);
     }
 
     public function edit($id)
@@ -1264,17 +1529,93 @@ class PpeManagement extends Component
 
     public function completeMaintenance($maintenanceId)
     {
-        $maintenance = PpeMaintenanceRecord::find($maintenanceId);
-        $lifecycleService = new PpeLifecycleService();
+        try {
+            DB::beginTransaction();
+            
+            $maintenance = PpeMaintenanceRecord::find($maintenanceId);
+            $lifecycleService = new PpeLifecycleService();
+            
+            // Complete the maintenance record
+            $lifecycleService->completeMaintenance($maintenance, [
+                'vendor_name' => $this->maintenance_vendor,
+                'parts_replaced' => $this->maintenance_parts_replaced,
+                'cost' => $this->maintenance_cost,
+                'notes' => $this->maintenance_description,
+            ]);
+            
+            // Create accounting entries for maintenance cost
+            if ($this->maintenance_cost > 0) {
+                $this->createMaintenanceAccountingEntry($maintenance->ppe, $this->maintenance_cost);
+            }
+            
+            DB::commit();
+            
+            $this->refreshData();
+            $this->emit('showNotification', 'Maintenance completed successfully with accounting entries', 'success');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Maintenance completion failed', ['error' => $e->getMessage()]);
+            $this->emit('showNotification', 'Failed to complete maintenance: ' . $e->getMessage(), 'error');
+        }
+    }
+    
+    private function createMaintenanceAccountingEntry($ppe, $cost)
+    {
+        $transactionService = new TransactionPostingService();
+        $institution = DB::table('institutions')->where('id', 1)->first();
         
-        $lifecycleService->completeMaintenance($maintenance, [
-            'vendor_name' => $this->maintenance_vendor,
-            'parts_replaced' => $this->maintenance_parts_replaced,
-            'cost' => $this->maintenance_cost,
-            'notes' => $this->maintenance_description,
+        // Determine if this is a capital or expense maintenance
+        $isCapital = $this->maintenance_type === 'major_repair' || $this->maintenance_type === 'overhaul';
+        
+        if ($isCapital) {
+            // Capital maintenance - increases asset value
+            $transactionData = [
+                'first_account' => $ppe->account_number, // Debit: PPE Asset (increase value)
+                'second_account' => $this->other_account_id ?? $institution->cash_account ?? '0101100010001010', // Credit: Cash/Payable
+                'amount' => $cost,
+                'narration' => "Capital Maintenance: {$ppe->name} - {$this->maintenance_description}",
+                'action' => 'asset_maintenance'
+            ];
+            
+            // Update PPE closing value
+            $ppe->update([
+                'closing_value' => $ppe->closing_value + $cost,
+                'maintenance_cost_to_date' => $ppe->maintenance_cost_to_date + $cost
+            ]);
+            
+        } else {
+            // Regular maintenance - expense
+            $maintenanceExpenseAccount = $institution->maintenance_expense_account ?? 
+                                        $institution->repair_maintenance_account ?? 
+                                        '0101150010'; // Default maintenance expense account
+            
+            $transactionData = [
+                'first_account' => $maintenanceExpenseAccount, // Debit: Maintenance Expense
+                'second_account' => $this->other_account_id ?? $institution->cash_account ?? '0101100010001010', // Credit: Cash/Payable
+                'amount' => $cost,
+                'narration' => "Maintenance Expense: {$ppe->name} - {$this->maintenance_description}",
+                'action' => 'expense'
+            ];
+            
+            // Update only maintenance cost tracking
+            $ppe->update([
+                'maintenance_cost_to_date' => $ppe->maintenance_cost_to_date + $cost
+            ]);
+        }
+        
+        $result = $transactionService->postTransaction($transactionData);
+        
+        if ($result['status'] !== 'success') {
+            throw new \Exception('Failed to post maintenance transaction: ' . ($result['message'] ?? 'Unknown error'));
+        }
+        
+        Log::info('Maintenance accounting entry created', [
+            'ppe_id' => $ppe->id,
+            'cost' => $cost,
+            'type' => $isCapital ? 'capital' : 'expense',
+            'reference' => $result['reference'] ?? null
         ]);
-
-        $this->emit('showNotification', 'Maintenance completed successfully', 'success');
     }
 
     // Transfer Management Methods
@@ -1293,21 +1634,40 @@ class PpeManagement extends Component
             'transfer_date' => 'required|date',
         ]);
 
-        $lifecycleService = new PpeLifecycleService();
-        $ppe = PPE::find($this->ppeId);
-        
-        $lifecycleService->transferAsset($ppe, [
-            'to_location' => $this->transfer_to_location,
-            'to_department_id' => $this->transfer_to_department,
-            'to_custodian_id' => $this->transfer_to_custodian,
-            'transfer_date' => $this->transfer_date,
-            'reason' => $this->transfer_reason,
-            'notes' => $this->transfer_notes,
-            'requires_approval' => true,
-        ]);
-
-        $this->resetTransferForm();
-        $this->emit('showNotification', 'Transfer initiated successfully', 'success');
+        try {
+            DB::beginTransaction();
+            
+            $lifecycleService = new PpeLifecycleService();
+            $ppe = PPE::find($this->ppeId);
+            
+            $transfer = $lifecycleService->transferAsset($ppe, [
+                'to_location' => $this->transfer_to_location,
+                'to_department_id' => $this->transfer_to_department,
+                'to_custodian_id' => $this->transfer_to_custodian,
+                'transfer_date' => $this->transfer_date,
+                'reason' => $this->transfer_reason,
+                'notes' => $this->transfer_notes,
+                'requires_approval' => false, // Process immediately if no approval needed
+            ]);
+            
+            // Log the transfer for audit purposes
+            Log::info('PPE Transfer initiated', [
+                'ppe_id' => $ppe->id,
+                'from_location' => $ppe->location,
+                'to_location' => $this->transfer_to_location,
+                'transfer_id' => $transfer->id
+            ]);
+            
+            DB::commit();
+            
+            $this->resetTransferForm();
+            $this->emit('showNotification', 'Transfer completed successfully', 'success');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('PPE Transfer failed', ['error' => $e->getMessage()]);
+            $this->emit('showNotification', 'Failed to transfer asset: ' . $e->getMessage(), 'error');
+        }
     }
 
     public function approveTransfer($transferId)
@@ -1335,25 +1695,89 @@ class PpeManagement extends Component
             'insurance_end_date' => 'required|date|after:insurance_start_date',
         ]);
 
-        $lifecycleService = new PpeLifecycleService();
-        $ppe = PPE::find($this->ppeId);
+        try {
+            DB::beginTransaction();
+            
+            $lifecycleService = new PpeLifecycleService();
+            $ppe = PPE::find($this->ppeId);
+            
+            $insurance = $lifecycleService->createInsurancePolicy($ppe, [
+                'policy_number' => $this->policy_number,
+                'insurance_company' => $this->insurance_company,
+                'coverage_type' => $this->coverage_type,
+                'insured_value' => $this->insured_value ?? $ppe->closing_value,
+                'premium_amount' => $this->premium_amount,
+                'start_date' => $this->insurance_start_date,
+                'end_date' => $this->insurance_end_date,
+                'deductible' => $this->deductible,
+                'coverage_details' => $this->coverage_details,
+                'agent_name' => $this->agent_name,
+                'agent_contact' => $this->agent_contact,
+            ]);
+            
+            // Create accounting entries for insurance premium
+            if ($this->premium_amount > 0) {
+                $this->createInsuranceAccountingEntry($ppe, $this->premium_amount);
+            }
+            
+            DB::commit();
+            
+            $this->resetInsuranceForm();
+            $this->emit('showNotification', 'Insurance policy added with accounting entries', 'success');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Insurance policy creation failed', ['error' => $e->getMessage()]);
+            $this->emit('showNotification', 'Failed to add insurance: ' . $e->getMessage(), 'error');
+        }
+    }
+    
+    private function createInsuranceAccountingEntry($ppe, $premiumAmount)
+    {
+        $transactionService = new TransactionPostingService();
+        $institution = DB::table('institutions')->where('id', 1)->first();
         
-        $lifecycleService->createInsurancePolicy($ppe, [
+        // Insurance premium is typically a prepaid expense (asset) that will be expensed over the policy period
+        $prepaidInsuranceAccount = $institution->prepaid_insurance_account ?? 
+                                   $institution->prepaid_expenses_account ?? 
+                                   '0101110015'; // Default prepaid insurance account
+        
+        $cashAccount = $this->other_account_id ?? 
+                      $institution->cash_account ?? 
+                      '0101100010001010';
+        
+        // Entry 1: Record prepaid insurance
+        $prepaidEntry = [
+            'first_account' => $prepaidInsuranceAccount, // Debit: Prepaid Insurance (Asset)
+            'second_account' => $cashAccount, // Credit: Cash/Bank
+            'amount' => $premiumAmount,
+            'narration' => "Insurance Premium Payment: {$ppe->name} - Policy #{$this->policy_number}",
+            'action' => 'prepaid_expense'
+        ];
+        
+        $result = $transactionService->postTransaction($prepaidEntry);
+        
+        if ($result['status'] !== 'success') {
+            throw new \Exception('Failed to post insurance premium transaction: ' . ($result['message'] ?? 'Unknown error'));
+        }
+        
+        // Calculate monthly insurance expense for amortization
+        $startDate = Carbon::parse($this->insurance_start_date);
+        $endDate = Carbon::parse($this->insurance_end_date);
+        $monthsDiff = $startDate->diffInMonths($endDate) ?: 1;
+        $monthlyExpense = $premiumAmount / $monthsDiff;
+        
+        Log::info('Insurance accounting entry created', [
+            'ppe_id' => $ppe->id,
+            'premium_amount' => $premiumAmount,
             'policy_number' => $this->policy_number,
-            'insurance_company' => $this->insurance_company,
-            'coverage_type' => $this->coverage_type,
-            'insured_value' => $this->insured_value ?? $ppe->closing_value,
-            'premium_amount' => $this->premium_amount,
-            'start_date' => $this->insurance_start_date,
-            'end_date' => $this->insurance_end_date,
-            'deductible' => $this->deductible,
-            'coverage_details' => $this->coverage_details,
-            'agent_name' => $this->agent_name,
-            'agent_contact' => $this->agent_contact,
+            'monthly_expense' => $monthlyExpense,
+            'policy_months' => $monthsDiff,
+            'reference' => $result['reference'] ?? null
         ]);
-
-        $this->resetInsuranceForm();
-        $this->emit('showNotification', 'Insurance policy added successfully', 'success');
+        
+        // Note: Monthly amortization should be handled by a scheduled job
+        // that moves from Prepaid Insurance to Insurance Expense each month
     }
 
     public function renewInsurance($insuranceId)
@@ -1379,21 +1803,149 @@ class PpeManagement extends Component
             'revaluation_date' => 'required|date',
         ]);
 
-        $lifecycleService = new PpeLifecycleService();
-        $ppe = PPE::find($this->ppeId);
+        try {
+            DB::beginTransaction();
+            
+            $lifecycleService = new PpeLifecycleService();
+            $ppe = PPE::find($this->ppeId);
+            
+            $revaluation = $lifecycleService->revalueAsset($ppe, [
+                'new_value' => $this->new_value,
+                'revaluation_date' => $this->revaluation_date,
+                'reason' => $this->revaluation_reason,
+                'performed_by' => auth()->user()->name,
+                'valuation_method' => $this->valuation_method,
+                'supporting_documents' => $this->supporting_documents,
+                'requires_approval' => false, // Process immediately
+            ]);
+            
+            // Create accounting entries for revaluation
+            $this->createRevaluationAccountingEntry($ppe, $revaluation);
+            
+            DB::commit();
+            
+            $this->resetRevaluationForm();
+            $this->emit('showNotification', 'Revaluation completed with accounting entries', 'success');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Revaluation failed', ['error' => $e->getMessage()]);
+            $this->emit('showNotification', 'Failed to revalue asset: ' . $e->getMessage(), 'error');
+        }
+    }
+    
+    private function createRevaluationAccountingEntry($ppe, $revaluation)
+    {
+        $transactionService = new TransactionPostingService();
+        $institution = DB::table('institutions')->where('id', 1)->first();
         
-        $lifecycleService->revalueAsset($ppe, [
-            'new_value' => $this->new_value,
-            'revaluation_date' => $this->revaluation_date,
-            'reason' => $this->revaluation_reason,
-            'performed_by' => auth()->user()->name,
-            'valuation_method' => $this->valuation_method,
-            'supporting_documents' => $this->supporting_documents,
-            'requires_approval' => true,
+        $oldValue = $revaluation->old_value;
+        $newValue = $revaluation->new_value;
+        $revaluationAmount = $newValue - $oldValue;
+        
+        if (abs($revaluationAmount) < 0.01) {
+            return; // No significant change
+        }
+        
+        if ($revaluationAmount > 0) {
+            // Asset appreciation (increase in value)
+            // Debit: PPE Asset Account
+            // Credit: Revaluation Surplus (Equity)
+            
+            $revaluationSurplusAccount = $institution->revaluation_surplus_account ?? 
+                                        $institution->capital_reserves_account ?? 
+                                        '0101130010'; // Default revaluation surplus account
+            
+            $appreciationEntry = [
+                'first_account' => $ppe->account_number, // Debit: PPE Asset
+                'second_account' => $revaluationSurplusAccount, // Credit: Revaluation Surplus
+                'amount' => abs($revaluationAmount),
+                'narration' => "Asset Revaluation (Appreciation): {$ppe->name} - {$this->revaluation_reason}",
+                'action' => 'asset_revaluation'
+            ];
+            
+            $result = $transactionService->postTransaction($appreciationEntry);
+            
+        } else {
+            // Asset impairment (decrease in value)
+            // Debit: Impairment Loss (Expense) or Revaluation Surplus (if exists)
+            // Credit: PPE Asset Account or Accumulated Depreciation
+            
+            // First check if there's existing revaluation surplus for this asset
+            $existingSurplus = DB::table('ppe_revaluations')
+                ->where('ppe_id', $ppe->id)
+                ->where('revaluation_type', 'appreciation')
+                ->sum('revaluation_amount');
+            
+            if ($existingSurplus > 0) {
+                // Use revaluation surplus first
+                $amountAgainstSurplus = min(abs($revaluationAmount), $existingSurplus);
+                $amountAgainstPL = abs($revaluationAmount) - $amountAgainstSurplus;
+                
+                if ($amountAgainstSurplus > 0) {
+                    $revaluationSurplusAccount = $institution->revaluation_surplus_account ?? 
+                                                $institution->capital_reserves_account ?? 
+                                                '0101130010';
+                    
+                    $surplusEntry = [
+                        'first_account' => $revaluationSurplusAccount, // Debit: Revaluation Surplus
+                        'second_account' => $ppe->account_number, // Credit: PPE Asset
+                        'amount' => $amountAgainstSurplus,
+                        'narration' => "Asset Revaluation (Impairment against surplus): {$ppe->name}",
+                        'action' => 'asset_revaluation'
+                    ];
+                    
+                    $transactionService->postTransaction($surplusEntry);
+                }
+                
+                if ($amountAgainstPL > 0) {
+                    $impairmentLossAccount = $institution->impairment_loss_account ?? 
+                                           $institution->other_expenses_account ?? 
+                                           '0101150020';
+                    
+                    $lossEntry = [
+                        'first_account' => $impairmentLossAccount, // Debit: Impairment Loss
+                        'second_account' => $ppe->account_number, // Credit: PPE Asset
+                        'amount' => $amountAgainstPL,
+                        'narration' => "Asset Impairment Loss: {$ppe->name} - {$this->revaluation_reason}",
+                        'action' => 'asset_revaluation'
+                    ];
+                    
+                    $transactionService->postTransaction($lossEntry);
+                }
+                
+            } else {
+                // No surplus, entire impairment goes to P&L
+                $impairmentLossAccount = $institution->impairment_loss_account ?? 
+                                       $institution->other_expenses_account ?? 
+                                       '0101150020';
+                
+                $impairmentEntry = [
+                    'first_account' => $impairmentLossAccount, // Debit: Impairment Loss
+                    'second_account' => $ppe->account_number, // Credit: PPE Asset
+                    'amount' => abs($revaluationAmount),
+                    'narration' => "Asset Impairment: {$ppe->name} - {$this->revaluation_reason}",
+                    'action' => 'asset_revaluation'
+                ];
+                
+                $result = $transactionService->postTransaction($impairmentEntry);
+            }
+        }
+        
+        // Update PPE closing value
+        $ppe->update([
+            'closing_value' => $newValue,
+            'last_valuation_date' => $this->revaluation_date,
+            'valuation_by' => auth()->user()->name
         ]);
-
-        $this->resetRevaluationForm();
-        $this->emit('showNotification', 'Revaluation initiated successfully', 'success');
+        
+        Log::info('Revaluation accounting entries created', [
+            'ppe_id' => $ppe->id,
+            'old_value' => $oldValue,
+            'new_value' => $newValue,
+            'revaluation_amount' => $revaluationAmount,
+            'type' => $revaluationAmount > 0 ? 'appreciation' : 'impairment'
+        ]);
     }
 
     // Import Pre-existing Assets

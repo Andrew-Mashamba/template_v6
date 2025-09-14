@@ -33,17 +33,17 @@
                     Dashboard
                 </button>
                 <button wire:click="selectMenu(2)" 
+                    wire:loading.attr="disabled"
+                    wire:loading.class="opacity-50 cursor-not-allowed"
                     class="px-6 py-3 text-sm font-medium {{ $selectedMenuItem == 2 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }} transition-colors">
-                    Add PPE
+                    <span wire:loading.remove wire:target="selectMenu">Add PPE</span>
+                    <span wire:loading wire:target="selectMenu">Loading...</span>
                 </button>
                 <button wire:click="selectMenu(3)" 
                     class="px-6 py-3 text-sm font-medium {{ $selectedMenuItem == 3 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }} transition-colors">
                     PPE Register
                 </button>
-                <button wire:click="selectMenu(4)" 
-                    class="px-6 py-3 text-sm font-medium {{ $selectedMenuItem == 4 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }} transition-colors">
-                    Depreciation
-                </button>
+               
                 <button wire:click="selectMenu(5)" 
                     class="px-6 py-3 text-sm font-medium {{ $selectedMenuItem == 5 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }} transition-colors">
                     Disposal
@@ -218,6 +218,29 @@
                             </div>
                         @endif
 
+                        {{-- Validation Errors Display --}}
+                        @if ($errors->any())
+                            <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h3 class="text-sm font-medium text-red-800">Please fix the following errors:</h3>
+                                        <div class="mt-2 text-sm text-red-700">
+                                            <ul class="list-disc pl-5 space-y-1">
+                                                @foreach ($errors->all() as $error)
+                                                    <li>{{ $error }}</li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                        
                         <form wire:submit.prevent="{{ $importMode ? 'processImport' : ($isEditMode ? 'update' : 'store') }}" class="space-y-6">
                             {{-- Basic Information --}}
                             <div class="bg-white rounded-lg border border-gray-200 p-6">
@@ -232,34 +255,62 @@
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">PPE Category *</label>
-                                        <select wire:model="category" 
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">PPE Category * 
+                                            <span class="text-xs text-gray-500">(Select the type of asset)</span>
+                                        </label>
+                                        <select wire:model="categoryx" 
+                                            class="w-full px-3 py-2 border {{ $errors->has('categoryx') ? 'border-red-500' : 'border-gray-300' }} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
                                             <option value="">Select Category</option>
                                             @php
-                                                // Get PPE categories from accounts
+                                                // Get the institution's PPE account configuration
+                                                $institution = \Illuminate\Support\Facades\DB::table('institutions')
+                                                    ->where('id', 1)
+                                                    ->first();
+                                                
+                                                // Method 1: Get all accounts in category 1600 (Property and Equipment)
                                                 $ppeCategories = \Illuminate\Support\Facades\DB::table('accounts')
-                                                    ->where('major_category_code', '1000') // Assets
-                                                    ->where('account_level', '2')
-                                                    ->where(function($query) {
-                                                        $query->where('account_name', 'LIKE', '%PROPERTY%')
-                                                              ->orWhere('account_name', 'LIKE', '%PLANT%')
-                                                              ->orWhere('account_name', 'LIKE', '%EQUIPMENT%')
-                                                              ->orWhere('account_name', 'LIKE', '%BUILDING%')
-                                                              ->orWhere('account_name', 'LIKE', '%VEHICLE%')
-                                                              ->orWhere('account_name', 'LIKE', '%FURNITURE%')
-                                                              ->orWhere('account_name', 'LIKE', '%MACHINERY%');
-                                                    })
+                                                    ->where('category_code', '1600')
                                                     ->where('status', 'ACTIVE')
                                                     ->whereNull('deleted_at')
+                                                    ->orderBy('account_level')
                                                     ->orderBy('account_name')
                                                     ->get();
+                                                
+                                                // If no category 1600 accounts, fallback to name-based search
+                                                if ($ppeCategories->isEmpty()) {
+                                                    $ppeCategories = \Illuminate\Support\Facades\DB::table('accounts')
+                                                        ->where('major_category_code', '1000') // Assets
+                                                        ->where(function($query) {
+                                                            $query->where('account_name', 'LIKE', '%PROPERTY%')
+                                                                  ->orWhere('account_name', 'LIKE', '%EQUIPMENT%')
+                                                                  ->orWhere('account_name', 'LIKE', '%BUILDING%')
+                                                                  ->orWhere('account_name', 'LIKE', '%VEHICLE%')
+                                                                  ->orWhere('account_name', 'LIKE', '%FURNITURE%')
+                                                                  ->orWhere('account_name', 'LIKE', '%MACHINERY%')
+                                                                  ->orWhere('account_name', 'LIKE', '%COMPUTER%')
+                                                                  ->orWhere('account_name', 'LIKE', '%OFFICE%');
+                                                        })
+                                                        ->where('status', 'ACTIVE')
+                                                        ->whereNull('deleted_at')
+                                                        ->orderBy('account_level')
+                                                        ->orderBy('account_name')
+                                                        ->get();
+                                                }
                                             @endphp
-                                            @foreach($ppeCategories as $category)
-                                                <option value="{{ $category->account_number }}">{{ $category->account_name }}</option>
-                                            @endforeach
+                                            @if($ppeCategories->isEmpty())
+                                                <option value="" disabled>No PPE categories found. Please create PPE accounts first.</option>
+                                            @else
+                                                @foreach($ppeCategories as $category)
+                                                    <option value="{{ $category->account_number }}">
+                                                        {{ str_repeat('—', max(0, $category->account_level - 2)) }} 
+                                                        {{ $category->account_name }}
+                                                    </option>
+                                                @endforeach
+                                            @endif
                                         </select>
-                                        @error('category') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                                        @error('categoryx') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                                        {{-- Debug: Show current value --}}
+                                        <p class="text-xs text-gray-400 mt-1">Current value: {{ $categoryx ?? 'none' }}</p>
                                     </div>
 
                                     <div>
@@ -640,31 +691,80 @@
                                 <p class="text-sm text-gray-600 mb-4">Select where to create the PPE account and the other account for double-entry posting</p>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Parent Account (Create PPE Under) *</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">PPE Account (Create Asset Under) *</label>
                                         <select wire:model="parent_account_number" 
                                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
-                                            <option value="">Select Parent Account</option>
+                                            <option value="">Select PPE Account</option>
                                             @php
-                                                // Get Asset parent accounts for creating PPE under
-                                                $parentAccounts = \Illuminate\Support\Facades\DB::table('accounts')
-                                                    ->where('major_category_code', '1000') // Assets
-                                                    ->where('account_level', '<=', 2) // Parent level accounts only
-                                                    ->where(function($query) {
-                                                        $query->where('account_name', 'LIKE', '%PROPERTY%')
-                                                              ->orWhere('account_name', 'LIKE', '%PLANT%')
-                                                              ->orWhere('account_name', 'LIKE', '%EQUIPMENT%')
-                                                              ->orWhere('account_name', 'LIKE', '%FIXED ASSET%')
-                                                              ->orWhere('account_name', 'LIKE', '%ASSET%');
-                                                    })
-                                                    ->where('status', 'ACTIVE')
-                                                    ->orderBy('account_name')
-                                                    ->get();
+                                                // Get the institution's configured PPE parent account
+                                                $institution = \Illuminate\Support\Facades\DB::table('institutions')
+                                                    ->where('id', 1) // Or use session institution ID
+                                                    ->first();
+                                                
+                                                $ppeAccounts = collect();
+                                                
+                                                if ($institution && $institution->property_and_equipment_account) {
+                                                    // Get the main PPE account and all its descendant accounts (recursive)
+                                                    $ppeParentAccount = $institution->property_and_equipment_account;
+                                                    
+                                                    // Using recursive query to get all descendants
+                                                    $ppeAccounts = \Illuminate\Support\Facades\DB::table('accounts as a1')
+                                                        ->where('a1.status', 'ACTIVE')
+                                                        ->where(function($query) use ($ppeParentAccount) {
+                                                            // Include the parent account itself
+                                                            $query->where('a1.account_number', $ppeParentAccount)
+                                                                  // Include direct children
+                                                                  ->orWhere('a1.parent_account_number', $ppeParentAccount)
+                                                                  // Include grandchildren (accounts whose parent's parent is the PPE account)
+                                                                  ->orWhereIn('a1.parent_account_number', function($subQuery) use ($ppeParentAccount) {
+                                                                      $subQuery->select('account_number')
+                                                                               ->from('accounts')
+                                                                               ->where('parent_account_number', $ppeParentAccount);
+                                                                  })
+                                                                  // Include great-grandchildren
+                                                                  ->orWhereIn('a1.parent_account_number', function($subQuery) use ($ppeParentAccount) {
+                                                                      $subQuery->select('a2.account_number')
+                                                                               ->from('accounts as a2')
+                                                                               ->join('accounts as a3', 'a2.parent_account_number', '=', 'a3.account_number')
+                                                                               ->where('a3.parent_account_number', $ppeParentAccount);
+                                                                  });
+                                                        })
+                                                        ->orderBy('a1.account_level')
+                                                        ->orderBy('a1.account_name')
+                                                        ->get();
+                                                } else {
+                                                    // Fallback: Get default PPE accounts from Assets category
+                                                    $ppeAccounts = \Illuminate\Support\Facades\DB::table('accounts')
+                                                        ->where('major_category_code', '1000') // Assets
+                                                        ->where(function($query) {
+                                                            $query->where('category_code', '1600') // Property and Equipment category
+                                                                  ->orWhere(function($q) {
+                                                                      $q->where('account_name', 'LIKE', '%PROPERTY%')
+                                                                        ->where('account_name', 'LIKE', '%EQUIPMENT%');
+                                                                  })
+                                                                  ->orWhere('account_name', 'LIKE', '%FIXED ASSET%');
+                                                        })
+                                                        ->where('status', 'ACTIVE')
+                                                        ->orderBy('account_level')
+                                                        ->orderBy('account_name')
+                                                        ->get();
+                                                }
                                             @endphp
-                                            @foreach($parentAccounts as $account)
-                                                <option value="{{ $account->account_number }}">{{ $account->account_number }} - {{ $account->account_name }}</option>
-                                            @endforeach
+                                            @if($ppeAccounts->isEmpty())
+                                                <option value="" disabled>No PPE accounts configured. Please configure in Institution Settings.</option>
+                                            @else
+                                                @foreach($ppeAccounts as $account)
+                                                    <option value="{{ $account->account_number }}">
+                                                        {{ str_repeat('—', max(0, $account->account_level - 1)) }} 
+                                                        {{ $account->account_number }} - {{ $account->account_name }}
+                                                    </option>
+                                                @endforeach
+                                            @endif
                                         </select>
-                                        <p class="text-xs text-gray-500 mt-1">New PPE account will be created under this parent</p>
+                                        <p class="text-xs text-gray-500 mt-1">New PPE asset account will be created under this parent</p>
+                                        @if(!$institution || !$institution->property_and_equipment_account)
+                                            <p class="text-xs text-yellow-600 mt-1">⚠️ No PPE account configured in Institution Settings. Using default accounts.</p>
+                                        @endif
                                         @error('parent_account_number') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                                     </div>
 
@@ -673,11 +773,71 @@
                                         <select wire:model="other_account_id" 
                                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" required>
                                             <option value="">Select Payment Account</option>
-                                            @foreach($otherAccounts as $account)
-                                                <option value="{{ $account->internal_mirror_account_number }}">
-                                                    {{ $account->bank_name }} - {{ $account->account_number }}
-                                                </option>
-                                            @endforeach
+                                            
+                                            @php
+                                                // Get various payment source accounts
+                                                $bankAccounts = collect($otherAccounts); // Bank accounts from component
+                                                
+                                                // Get cash accounts from institution settings
+                                                $cashAccounts = collect();
+                                                if ($institution) {
+                                                    $cashAccountNumbers = array_filter([
+                                                        $institution->main_vaults_account,
+                                                        $institution->main_till_account,
+                                                        $institution->main_petty_cash_account
+                                                    ]);
+                                                    
+                                                    if (!empty($cashAccountNumbers)) {
+                                                        $cashAccounts = \Illuminate\Support\Facades\DB::table('accounts')
+                                                            ->whereIn('account_number', $cashAccountNumbers)
+                                                            ->where('status', 'ACTIVE')
+                                                            ->get();
+                                                    }
+                                                }
+                                                
+                                                // Get accounts payable
+                                                $payableAccounts = \Illuminate\Support\Facades\DB::table('accounts')
+                                                    ->where('major_category_code', '2000') // Liabilities
+                                                    ->where(function($query) {
+                                                        $query->where('category_code', '2400') // Accounts Payable
+                                                              ->orWhere('account_name', 'LIKE', '%PAYABLE%')
+                                                              ->orWhere('account_name', 'LIKE', '%CREDITOR%');
+                                                    })
+                                                    ->where('status', 'ACTIVE')
+                                                    ->orderBy('account_name')
+                                                    ->limit(20)
+                                                    ->get();
+                                            @endphp
+                                            
+                                            @if($bankAccounts->isNotEmpty())
+                                                <optgroup label="Bank Accounts">
+                                                    @foreach($bankAccounts as $account)
+                                                        <option value="{{ $account->internal_mirror_account_number }}">
+                                                            {{ $account->bank_name }} - {{ $account->account_number }}
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+                                            @endif
+                                            
+                                            @if($cashAccounts->isNotEmpty())
+                                                <optgroup label="Cash Accounts">
+                                                    @foreach($cashAccounts as $account)
+                                                        <option value="{{ $account->account_number }}">
+                                                            {{ $account->account_number }} - {{ $account->account_name }}
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+                                            @endif
+                                            
+                                            @if($payableAccounts->isNotEmpty())
+                                                <optgroup label="Accounts Payable">
+                                                    @foreach($payableAccounts as $account)
+                                                        <option value="{{ $account->account_number }}">
+                                                            {{ $account->account_number }} - {{ $account->account_name }}
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+                                            @endif
                                         </select>
                                         <p class="text-xs text-gray-500 mt-1">Account to be credited (Cash paid or Payable created)</p>
                                         @error('other_account_id') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
@@ -692,8 +852,11 @@
                                     Cancel
                                 </button>
                                 <button type="submit" 
-                                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                    {{ $isEditMode ? 'Update PPE' : 'Add PPE' }}
+                                    wire:loading.attr="disabled"
+                                    wire:loading.class="opacity-50 cursor-not-allowed"
+                                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <span wire:loading.remove wire:target="store,update">{{ $isEditMode ? 'Update PPE' : 'Add PPE' }}</span>
+                                    <span wire:loading wire:target="store,update">Processing...</span>
                                 </button>
                             </div>
                         </form>

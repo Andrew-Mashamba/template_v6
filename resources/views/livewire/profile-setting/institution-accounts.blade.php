@@ -59,7 +59,7 @@
                 <div class="relative">
                     <select wire:loading.attr="disabled" wire:model="mandatory_savings_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
                         <option value="">Select Account</option>
-                        @foreach($this->getAccountsForCategory('2000', '3000') as $account)
+                        @foreach($this->getAccountsForCategory('2000', '2999') as $account)
                             <option value="{{ $account->account_number }}">
                                 {{ $account->account_name }} ({{ $account->account_number }})
                             </option>
@@ -191,7 +191,7 @@
                 <div class="relative">
                     <select wire:loading.attr="disabled" wire:model="members_external_loans_crealance" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
                         <option value="">Select Account (Optional)</option>
-                        @foreach($this->getAccountsForCategory('2000', '5999') as $account)
+                        @foreach($this->getAccountsForCategory('1000', '1999') as $account)
                             <option value="{{ $account->account_number }}">
                                 {{ $account->account_name }} ({{ $account->account_number }})
                             </option>
@@ -215,7 +215,7 @@
                 <div class="relative">
                     <select wire:loading.attr="disabled" wire:model="temp_shares_holding_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
                         <option value="">Select Account (Optional)</option>
-                        @foreach($this->getAccountsForCategory('2000', '5999') as $account)
+                        @foreach($this->getAccountsForCategory('1000', '1999') as $account)
                             <option value="{{ $account->account_number }}">
                                 {{ $account->account_name }} ({{ $account->account_number }})
                             </option>
@@ -239,7 +239,7 @@
                 <div class="relative">
                     <select wire:loading.attr="disabled" wire:model="property_and_equipment_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
                         <option value="">Select Account (Optional)</option>
-                        @foreach($this->getAccountsForCategory('1800', '1899') as $account)
+                        @foreach($this->getAccountsForCategory('1000', '1999') as $account)
                             <option value="{{ $account->account_number }}">
                                 {{ $account->account_name }} ({{ $account->account_number }})
                             </option>
@@ -263,7 +263,7 @@
                 <div class="relative">
                     <select wire:loading.attr="disabled" wire:model="depreciation_expense_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
                         <option value="">Select Account (Optional)</option>
-                        @foreach($this->getAccountsForCategory('4000', '4999') as $account)
+                        @foreach($this->getAccountsForCategory('5000', '5999') as $account)
                             <option value="{{ $account->account_number }}">
                                 {{ $account->account_name }} ({{ $account->account_number }})
                             </option>
@@ -287,7 +287,7 @@
                 <div class="relative">
                     <select wire:loading.attr="disabled" wire:model="accumulated_depreciation_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
                         <option value="">Select Account (Optional)</option>
-                        @foreach($this->getAccountsForCategory('2900', '2999') as $account)
+                        @foreach($this->getAccountsForCategory('1000', '1999') as $account)
                             <option value="{{ $account->account_number }}">
                                 {{ $account->account_name }} ({{ $account->account_number }})
                             </option>
@@ -301,6 +301,684 @@
                     </div>
                 </div>
                 @error('accumulated_depreciation_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+        </div>
+    </div>
+
+    {{-- Asset Accounts --}}
+    <div class="mb-8">
+        <h3 class="text-lg font-medium mb-4 text-gray-800 border-b border-gray-200 pb-2">Asset Accounts</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Trade Receivables Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Trade Receivables Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="trade_receivables_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('1000', '1999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="trade_receivables_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('trade_receivables_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Prepaid Expenses Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Prepaid Expenses Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="prepaid_expenses_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('1000', '1999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="prepaid_expenses_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('prepaid_expenses_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Short-term Investments Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Short-term Investments Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="short_term_investments_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('1000', '1999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="short_term_investments_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('short_term_investments_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Long-term Investments Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Long-term Investments Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="long_term_investments_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('1000', '1999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="long_term_investments_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('long_term_investments_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Other Current Assets Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Other Current Assets Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="other_current_assets_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('1000', '1999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="other_current_assets_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('other_current_assets_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Intangible Assets Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Intangible Assets Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="intangible_assets_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('1000', '1999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="intangible_assets_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('intangible_assets_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+        </div>
+    </div>
+
+    {{-- Liability Accounts --}}
+    <div class="mb-8">
+        <h3 class="text-lg font-medium mb-4 text-gray-800 border-b border-gray-200 pb-2">Liability Accounts</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Trade Payables Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Trade Payables Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="trade_payables_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('2000', '2999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="trade_payables_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('trade_payables_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Interest Payable Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Interest Payable Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="interest_payable_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('2000', '2999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="interest_payable_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('interest_payable_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Unearned Revenue Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Unearned Revenue Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="unearned_revenue_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('2000', '2999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="unearned_revenue_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('unearned_revenue_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Accrued Expenses Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Accrued Expenses Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="accrued_expenses_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('2000', '2999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="accrued_expenses_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('accrued_expenses_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Other Payables Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Other Payables Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="other_payables_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('2000', '2999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="other_payables_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('other_payables_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Deferred Tax Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Deferred Tax Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="deferred_tax_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('2000', '2999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="deferred_tax_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('deferred_tax_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Long-term Debt Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Long-term Debt Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="long_term_debt_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('2000', '2999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="long_term_debt_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('long_term_debt_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Provisions Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Provisions Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="provisions_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('2000', '2999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="provisions_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('provisions_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+        </div>
+    </div>
+
+    {{-- Equity Accounts --}}
+    <div class="mb-8">
+        <h3 class="text-lg font-medium mb-4 text-gray-800 border-b border-gray-200 pb-2">Equity Accounts</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Retained Earnings Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Retained Earnings Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="retained_earnings_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('3000', '3999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="retained_earnings_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('retained_earnings_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Reserves Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Reserves Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="reserves_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('3000', '3999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="reserves_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('reserves_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Share Capital Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Share Capital Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="share_capital_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('3000', '3999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="share_capital_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('share_capital_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Share Premium Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Share Premium Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="share_premium_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('3000', '3999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="share_premium_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('share_premium_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+        </div>
+    </div>
+
+    {{-- Income Accounts --}}
+    <div class="mb-8">
+        <h3 class="text-lg font-medium mb-4 text-gray-800 border-b border-gray-200 pb-2">Income Accounts</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Fee Income Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Fee Income Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="fee_income_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('4000', '4999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="fee_income_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('fee_income_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Other Income Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Other Income Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="other_income_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('4000', '4999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="other_income_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('other_income_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Interest Income Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Interest Income Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="interest_income_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('4000', '4999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="interest_income_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('interest_income_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+        </div>
+    </div>
+
+    {{-- Expense Accounts --}}
+    <div class="mb-8">
+        <h3 class="text-lg font-medium mb-4 text-gray-800 border-b border-gray-200 pb-2">Expense Accounts</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Interest Expense Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Interest Expense Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="interest_expense_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('5000', '5999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="interest_expense_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('interest_expense_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Deposit Interest Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Deposit Interest Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="deposit_interest_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('5000', '5999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="deposit_interest_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('deposit_interest_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Loan Loss Provision Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Loan Loss Provision Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="loan_loss_provision_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('5000', '5999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="loan_loss_provision_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('loan_loss_provision_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Operating Expenses Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Operating Expenses Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="operating_expenses_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('5000', '5999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="operating_expenses_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('operating_expenses_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Administrative Expenses Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Administrative Expenses Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="administrative_expenses_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('5000', '5999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="administrative_expenses_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('administrative_expenses_account')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Personnel Expenses Account -->
+            <div class="p-4 border rounded-lg">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Personnel Expenses Account</label>
+                <div class="relative">
+                    <select wire:loading.attr="disabled" wire:model="personnel_expenses_account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                        <option value="">Select Account (Optional)</option>
+                        @foreach($this->getAccountsForCategory('5000', '5999') as $account)
+                            <option value="{{ $account->account_number }}">
+                                {{ $account->account_name }} ({{ $account->account_number }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div wire:loading wire:target="personnel_expenses_account" class="absolute right-2 top-2">
+                        <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                @error('personnel_expenses_account')
                     <span class="text-red-500 text-sm">{{ $message }}</span>
                 @enderror
             </div>
