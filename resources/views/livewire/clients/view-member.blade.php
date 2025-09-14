@@ -1,6 +1,7 @@
 {{-- View Member Modal --}}
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-    <div class="bg-white rounded-2xl w-full max-w-8xl shadow-none p-0 overflow-hidden">
+<div class="fixed inset-0 z-50 bg-black bg-opacity-30 overflow-y-auto">
+    <div class="min-h-full flex items-start justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-8xl shadow-lg mt-8 mb-8">
         <div class="flex flex-col md:flex-row gap-0">
             {{-- Profile and Basic Info --}}
             <div class="md:w-1/3 bg-gray-50 flex flex-col items-center justify-center p-8">
@@ -177,9 +178,12 @@
                 </div>
             </div>
         </div>
-        <div class="flex justify-end bg-gray-50 p-4">
-            <button wire:click="$emit('closeModal')" class="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-800">Close</button>
+        
+        <!-- Close Button - Fixed at bottom -->
+        <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-4 rounded-b-2xl">
+            <div class="flex justify-end">
+                <button wire:click="closeModal" class="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-800">Close</button>
+            </div>
         </div>
     </div>
-
 </div> 

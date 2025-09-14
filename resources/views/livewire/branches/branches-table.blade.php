@@ -149,7 +149,7 @@
 
     <!-- View Modal -->
     @if($showViewModal && $selectedBranch)
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 overflow-y-auto z-50">
+    <div class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto z-50">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
                 <div class="flex justify-between items-center mb-4">
@@ -294,7 +294,7 @@
 
     <!-- Edit Modal -->
     @if($showEditModal)
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 overflow-y-auto z-50">
+    <div class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto z-50">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
                 <div class="flex justify-between items-center mb-4">
@@ -445,7 +445,7 @@
 
     <!-- Delete Confirmation Modal -->
     @if($showDeleteModal && $selectedBranch)
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 overflow-y-auto z-50">
+    <div class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto z-50">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg max-w-md w-full p-6">
                 <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full">

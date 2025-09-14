@@ -446,31 +446,36 @@
     @endif
 
     @if($showAllDataModal && $viewingMember)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-            <div class="bg-white rounded-2xl w-full max-w-4xl shadow-none p-0 overflow-hidden">
-                <div class="p-4">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-semibold text-gray-900">All Member Data</h3>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="window.print()" class="text-gray-600 hover:text-gray-900">
-                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                </svg>
-                            </button>
-                            <button wire:click="closeAllDataModal" class="text-gray-400 hover:text-gray-500">
-                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
+        <div class="fixed inset-0 z-50 bg-black bg-opacity-30 overflow-y-auto">
+            <div class="min-h-full flex items-start justify-center p-4">
+                <div class="bg-white rounded-2xl w-full max-w-4xl shadow-lg mt-8 mb-8">
+                    <!-- Header - Fixed -->
+                    <div class="sticky top-0 bg-white border-b border-gray-200 p-4 rounded-t-2xl z-10">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl font-semibold text-gray-900">All Member Data</h3>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="window.print()" class="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100">
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                    </svg>
+                                </button>
+                                <button wire:click="closeAllDataModal" class="text-gray-400 hover:text-gray-500 p-1 rounded hover:bg-gray-100">
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div class="h-[90vh] overflow-y-auto print:overflow-visible print:h-auto">
+                    
+                    <!-- Content - Scrollable -->
+                    <div class="p-4">
                         <div class="grid grid-cols-5 gap-4 print:grid-cols-3">
                             @foreach($viewingMember->toArray() as $key => $value)
                             @if( $key !== 'id' && $key !== 'created_at' && $key !== 'updated_at' && $key !== 'deleted_at' && $key !== 'branch_id' && $key !== 'bills' && $key !== 'loans' && $key !== 'accounts' )
                                 <div class="border-b border-gray-200 p-2">
                                     <div class="font-bold text-gray-700 text-xs">{{ ucfirst(str_replace('_', ' ', $key)) }}</div>
-                                    <div class="text-gray-600 text-xs">{{ is_array($value) ? json_encode($value) : $value }}</div>
+                                    <div class="text-gray-600 text-xs break-words">{{ is_array($value) ? json_encode($value) : $value }}</div>
                                 </div>
                             @endif
                             @endforeach
@@ -489,18 +494,22 @@
                     position: absolute;
                     left: 0;
                     top: 0;
+                    background: none !important;
                 }
                 .fixed.inset-0, .fixed.inset-0 * {
                     visibility: visible;
-                }
-                .fixed.inset-0 {
-                    background: none;
                 }
                 .bg-white {
                     box-shadow: none;
                 }
                 button {
                     display: none !important;
+                }
+                .sticky {
+                    position: static !important;
+                }
+                .overflow-y-auto {
+                    overflow: visible !important;
                 }
             }
         </style>
