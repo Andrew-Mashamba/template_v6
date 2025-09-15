@@ -38,11 +38,16 @@ class DatabaseSeeder extends Seeder
                 DepartmentsSeeder::class,
 
                 // User and Role Management
-                RolesSeeder::class,
+                // RolesSeeder::class,
+                // RoleSeeder::class,
+                SACCOSRolesSeeder::class,
                 SubrolesSeeder::class,
+                SubRoleSeeder::class,
+                SACCOSSubRolesSeeder::class,
                 PermissionsSeeder::class,
                 UsersSeeder::class,
                 UserrolesSeeder::class,
+                UserRoleSeeder::class,
                 UserpermissionsSeeder::class,
                 SubrolepermissionsSeeder::class,
                 RolepermissionsSeeder::class,

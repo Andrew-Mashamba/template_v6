@@ -262,7 +262,7 @@
                                 <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
                                     Declare Dividend
                                 </h3>
-                                <div class="mt-4 space-y-4">
+                                <div class="mt-4 space-y-4 text-left">
                                     <div>
                                         <label for="year" class="block text-sm font-medium text-gray-700">Year</label>
                                         <input type="number" wire:model="year" id="year" 
