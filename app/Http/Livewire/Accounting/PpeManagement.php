@@ -74,6 +74,14 @@ class PpeManagement extends Component
     public $statusFilter = '';
     public $categoryFilter = '';
     public $conditionFilter = '';
+    
+    // Report properties
+    public $reportType = 'summary';
+    public $reportDateRange = 'this_month';
+    public $reportStartDate = '';
+    public $reportEndDate = '';
+    public $reportCategory = 'all';
+    public $reportStatus = 'all';
 
     // Category management
     public $showCategoryForm = false;
@@ -81,10 +89,7 @@ class PpeManagement extends Component
     public $categoryDepreciationRate = '';
     public $editingCategoryId = null;
 
-    // Reports and exports
-    public $reportDateRange = '30';
-    public $reportCategory = '';
-    public $reportStatus = '';
+    // Reports and exports (removed duplicates - already defined above)
 
     // Chart data
     public $chartLabels = [];
@@ -661,6 +666,35 @@ class PpeManagement extends Component
     // Reports and Exports
     public function generateReport()
     {
+        // Check if reportType is set and handle accordingly
+        if ($this->reportType) {
+            // Validate report parameters
+            $this->validate([
+                'reportType' => 'required|in:summary,disposal,depreciation,valuation,maintenance,register',
+                'reportDateRange' => 'required|in:this_month,last_month,this_quarter,this_year,custom,30,60,90',
+            ]);
+            
+            // Generate report based on type
+            switch ($this->reportType) {
+                case 'summary':
+                    return $this->generateSummaryReport();
+                case 'register':
+                    return $this->generateAssetRegisterReport();
+                case 'disposal':
+                    return $this->generateDisposalReport();
+                case 'depreciation':
+                    return $this->generateDepreciationReport();
+                case 'valuation':
+                    return $this->generateValuationReport();
+                case 'maintenance':
+                    return $this->generateMaintenanceReport();
+                default:
+                    // Fall back to default report
+                    break;
+            }
+        }
+        
+        // Default report generation (existing logic)
         $assets = PPE::when($this->statusFilter, function ($query) {
             return $query->where('status', $this->statusFilter);
         })->get();
@@ -672,20 +706,15 @@ class PpeManagement extends Component
 
     public function exportExcel()
     {
-        $assets = $this->generateReport();
-        
-        $this->dispatchBrowserEvent('downloadCSV', [
-            'data' => $this->formatExportData($assets),
-            'filename' => 'ppe_report_' . date('Y-m-d') . '.csv'
-        ]);
+        // Generate Excel-compatible CSV based on selected report type
+        return $this->generateReport();
     }
 
     public function exportPdf()
     {
-        $assets = $this->generateReport();
-        
-        // Generate PDF logic here
-        $this->emit('showNotification', 'PDF export feature coming soon', 'info');
+        // For now, generate CSV (PDF generation requires additional packages)
+        $this->emit('showNotification', 'Downloading report as CSV (PDF export coming soon)', 'info');
+        return $this->generateReport();
     }
 
     private function formatExportData($assets)
@@ -1496,6 +1525,21 @@ class PpeManagement extends Component
 
 
     // Maintenance Management Methods
+    public function openMaintenanceForm($ppeId = null)
+    {
+        $this->showMaintenanceForm = true;
+        if ($ppeId) {
+            $this->ppeId = $ppeId;
+            // Load existing PPE data if needed
+            $ppe = PPE::find($ppeId);
+            if ($ppe) {
+                // You can pre-populate form fields here if needed
+            }
+        }
+        $this->maintenance_date = now()->format('Y-m-d');
+        $this->maintenance_type = 'preventive';
+    }
+    
     public function scheduleMaintenance($ppeId)
     {
         $this->showMaintenanceForm = true;
@@ -1512,6 +1556,9 @@ class PpeManagement extends Component
             'maintenance_description' => 'required|string',
         ]);
 
+        // Convert empty date strings to null
+        $nextMaintenanceDate = !empty($this->next_maintenance_date) ? $this->next_maintenance_date : null;
+        
         $lifecycleService = new PpeLifecycleService();
         $ppe = PPE::find($this->ppeId);
         
@@ -1520,7 +1567,8 @@ class PpeManagement extends Component
             'maintenance_date' => $this->maintenance_date,
             'description' => $this->maintenance_description,
             'performed_by' => $this->maintenance_vendor ?? 'TBD',
-            'next_maintenance_date' => $this->next_maintenance_date,
+            'next_maintenance_date' => $nextMaintenanceDate,
+            'notes' => $this->maintenance_notes ?? null,
         ]);
 
         $this->resetMaintenanceForm();
@@ -1619,6 +1667,20 @@ class PpeManagement extends Component
     }
 
     // Transfer Management Methods
+    public function openTransferForm($ppeId = null)
+    {
+        $this->showTransferForm = true;
+        if ($ppeId) {
+            $this->ppeId = $ppeId;
+            // Load existing PPE data
+            $ppe = PPE::find($ppeId);
+            if ($ppe) {
+                // Pre-populate if needed
+            }
+        }
+        $this->transfer_date = now()->format('Y-m-d');
+    }
+    
     public function initiateTransfer($ppeId)
     {
         $this->showTransferForm = true;
@@ -1678,6 +1740,46 @@ class PpeManagement extends Component
     }
 
     // Insurance Management Methods
+    public function openInsuranceForm($ppeId = null)
+    {
+        Log::info('PPE Management - openInsuranceForm called', [
+            'ppeId' => $ppeId,
+            'showInsuranceForm_before' => $this->showInsuranceForm,
+            'user_id' => auth()->id(),
+            'timestamp' => now()->toIso8601String()
+        ]);
+        
+        $this->showInsuranceForm = true;
+        $this->insurance_start_date = now()->format('Y-m-d');
+        $this->insurance_end_date = now()->addYear()->format('Y-m-d');
+        $this->coverage_type = 'comprehensive';
+        
+        if ($ppeId) {
+            $this->ppeId = $ppeId;
+            // Load existing PPE data
+            $ppe = PPE::find($ppeId);
+            if ($ppe) {
+                $this->insured_value = $ppe->closing_value ?: $ppe->purchase_price;
+                Log::info('PPE Management - Insurance form PPE loaded', [
+                    'ppe_name' => $ppe->name,
+                    'ppe_id' => $ppeId,
+                    'insured_value' => $this->insured_value
+                ]);
+            } else {
+                Log::warning('PPE Management - PPE not found for insurance', [
+                    'ppeId' => $ppeId
+                ]);
+            }
+        }
+        
+        Log::info('PPE Management - Insurance form opened', [
+            'showInsuranceForm_after' => $this->showInsuranceForm,
+            'start_date' => $this->insurance_start_date,
+            'end_date' => $this->insurance_end_date,
+            'coverage_type' => $this->coverage_type
+        ]);
+    }
+    
     public function addInsurance($ppeId)
     {
         $this->showInsuranceForm = true;
@@ -1688,18 +1790,99 @@ class PpeManagement extends Component
 
     public function saveInsurance()
     {
-        $this->validate([
-            'policy_number' => 'required|string',
-            'insurance_company' => 'required|string',
-            'premium_amount' => 'required|numeric|min:0',
-            'insurance_end_date' => 'required|date|after:insurance_start_date',
+        Log::info('PPE Management - saveInsurance called', [
+            'ppeId' => $this->ppeId,
+            'policy_number' => $this->policy_number,
+            'insurance_company' => $this->insurance_company,
+            'premium_amount' => $this->premium_amount,
+            'start_date' => $this->insurance_start_date,
+            'end_date' => $this->insurance_end_date,
+            'user_id' => auth()->id(),
+            'timestamp' => now()->toIso8601String()
         ]);
 
         try {
+            $this->validate([
+                'policy_number' => 'required|string',
+                'insurance_company' => 'required|string',
+                'premium_amount' => 'required|numeric|min:0',
+                'insurance_end_date' => 'required|date|after:insurance_start_date',
+            ]);
+            
+            Log::info('PPE Management - Insurance validation passed', [
+                'ppeId' => $this->ppeId,
+                'policy_number' => $this->policy_number
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('PPE Management - Insurance validation failed', [
+                'errors' => $e->errors(),
+                'ppeId' => $this->ppeId
+            ]);
+            throw $e;
+        }
+
+        try {
+            // Pre-check account balance
+            Log::info('PPE Management - Checking account balance', [
+                'other_account_id' => $this->other_account_id
+            ]);
+            
+            $institution = DB::table('institutions')->where('id', 1)->first();
+            $cashAccount = $this->other_account_id ?? 
+                          $institution->cash_account ?? 
+                          '0101100010001010';
+            
+            Log::info('PPE Management - Using cash account', [
+                'cash_account' => $cashAccount,
+                'premium_amount' => $this->premium_amount
+            ]);
+            
+            $account = DB::table('accounts')
+                ->where('account_number', $cashAccount)
+                ->first();
+            
+            if ($account && $account->balance < $this->premium_amount) {
+                Log::warning('PPE Management - Insufficient balance', [
+                    'account' => $cashAccount,
+                    'account_name' => $account->account_name,
+                    'available' => $account->balance,
+                    'required' => $this->premium_amount
+                ]);
+                
+                $this->emit('showNotification', 
+                    "Insufficient balance in account {$account->account_name}. Available: " . 
+                    number_format($account->balance, 2) . ", Required: " . 
+                    number_format($this->premium_amount, 2), 
+                    'error'
+                );
+                return;
+            }
+            
+            Log::info('PPE Management - Balance check passed', [
+                'account' => $cashAccount,
+                'available' => $account->balance ?? 'N/A',
+                'required' => $this->premium_amount
+            ]);
+            
             DB::beginTransaction();
+            Log::info('PPE Management - Transaction started');
             
             $lifecycleService = new PpeLifecycleService();
             $ppe = PPE::find($this->ppeId);
+            
+            if (!$ppe) {
+                Log::error('PPE Management - PPE not found', ['ppeId' => $this->ppeId]);
+                throw new \Exception("PPE with ID {$this->ppeId} not found");
+            }
+            
+            Log::info('PPE Management - Creating insurance policy', [
+                'ppe_name' => $ppe->name,
+                'policy_data' => [
+                    'policy_number' => $this->policy_number,
+                    'insurance_company' => $this->insurance_company,
+                    'premium_amount' => $this->premium_amount
+                ]
+            ]);
             
             $insurance = $lifecycleService->createInsurancePolicy($ppe, [
                 'policy_number' => $this->policy_number,
@@ -1715,19 +1898,38 @@ class PpeManagement extends Component
                 'agent_contact' => $this->agent_contact,
             ]);
             
+            Log::info('PPE Management - Insurance policy created', [
+                'insurance_id' => $insurance->id ?? 'N/A'
+            ]);
+            
             // Create accounting entries for insurance premium
             if ($this->premium_amount > 0) {
+                Log::info('PPE Management - Creating accounting entries', [
+                    'premium_amount' => $this->premium_amount
+                ]);
                 $this->createInsuranceAccountingEntry($ppe, $this->premium_amount);
+                Log::info('PPE Management - Accounting entries created');
             }
             
             DB::commit();
+            Log::info('PPE Management - Transaction committed successfully');
             
             $this->resetInsuranceForm();
             $this->emit('showNotification', 'Insurance policy added with accounting entries', 'success');
             
+            Log::info('PPE Management - Insurance save completed successfully', [
+                'ppeId' => $this->ppeId,
+                'policy_number' => $this->policy_number
+            ]);
+            
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Insurance policy creation failed', ['error' => $e->getMessage()]);
+            Log::error('PPE Management - Insurance policy creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'ppeId' => $this->ppeId,
+                'policy_number' => $this->policy_number
+            ]);
             $this->emit('showNotification', 'Failed to add insurance: ' . $e->getMessage(), 'error');
         }
     }
@@ -1738,9 +1940,33 @@ class PpeManagement extends Component
         $institution = DB::table('institutions')->where('id', 1)->first();
         
         // Insurance premium is typically a prepaid expense (asset) that will be expensed over the policy period
-        $prepaidInsuranceAccount = $institution->prepaid_insurance_account ?? 
-                                   $institution->prepaid_expenses_account ?? 
-                                   '0101110015'; // Default prepaid insurance account
+        // First try to find a specific prepaid insurance child account
+        $prepaidInsuranceAccount = null;
+        
+        // Check if there's a specific prepaid insurance account under prepaid expenses
+        if ($institution->prepaid_expenses_account) {
+            $insuranceAccount = DB::table('accounts')
+                ->where('parent_account_number', $institution->prepaid_expenses_account)
+                ->where('account_name', 'LIKE', '%INSURANCE%')
+                ->where('account_level', '>=', 3)
+                ->first();
+            
+            if ($insuranceAccount) {
+                $prepaidInsuranceAccount = $insuranceAccount->account_number;
+                Log::info('PPE Management - Using prepaid insurance account', [
+                    'account' => $prepaidInsuranceAccount,
+                    'name' => $insuranceAccount->account_name
+                ]);
+            }
+        }
+        
+        // Fallback to the known prepaid insurance account
+        if (!$prepaidInsuranceAccount) {
+            $prepaidInsuranceAccount = '0101100018001810'; // Prepaid Insurance (Level 3 account)
+            Log::info('PPE Management - Using default prepaid insurance account', [
+                'account' => $prepaidInsuranceAccount
+            ]);
+        }
         
         $cashAccount = $this->other_account_id ?? 
                       $institution->cash_account ?? 
@@ -1788,6 +2014,22 @@ class PpeManagement extends Component
     }
 
     // Revaluation Management Methods
+    public function openRevaluationForm($ppeId = null)
+    {
+        $this->showRevaluationForm = true;
+        $this->revaluation_date = now()->format('Y-m-d');
+        $this->valuation_method = 'market_value';
+        
+        if ($ppeId) {
+            $this->ppeId = $ppeId;
+            // Load existing PPE data
+            $ppe = PPE::find($ppeId);
+            if ($ppe) {
+                $this->new_value = $ppe->closing_value ?: $ppe->purchase_price;
+            }
+        }
+    }
+    
     public function initiateRevaluation($ppeId)
     {
         $this->showRevaluationForm = true;
@@ -1847,21 +2089,50 @@ class PpeManagement extends Component
             return; // No significant change
         }
         
+        // Get the proper PPE account (level 3)
+        $ppeAccount = $ppe->account_number;
+        
+        // If the PPE account is a parent account (level 2), find appropriate child account
+        $account = DB::table('accounts')->where('account_number', $ppeAccount)->first();
+        if ($account && $account->account_level < 3) {
+            // Try to find a general PPE child account or use Land and Buildings as default
+            $childAccount = DB::table('accounts')
+                ->where('parent_account_number', $ppeAccount)
+                ->where('account_level', '3')
+                ->orderBy('account_number')
+                ->first();
+            
+            if ($childAccount) {
+                $ppeAccount = $childAccount->account_number;
+                Log::info('PPE Management - Using child PPE account for revaluation', [
+                    'original' => $ppe->account_number,
+                    'child' => $ppeAccount,
+                    'name' => $childAccount->account_name
+                ]);
+            } else {
+                // Default to Land and Buildings if no child found
+                $ppeAccount = '0101100016001610';
+                Log::info('PPE Management - Using default PPE account for revaluation', [
+                    'account' => $ppeAccount
+                ]);
+            }
+        }
+        
         if ($revaluationAmount > 0) {
             // Asset appreciation (increase in value)
             // Debit: PPE Asset Account
             // Credit: Revaluation Surplus (Equity)
             
+            // Use the proper Property Revaluation Reserve account (level 3)
             $revaluationSurplusAccount = $institution->revaluation_surplus_account ?? 
-                                        $institution->capital_reserves_account ?? 
-                                        '0101130010'; // Default revaluation surplus account
+                                        '0101300034003410'; // Property Revaluation Reserve (Level 3)
             
             $appreciationEntry = [
-                'first_account' => $ppe->account_number, // Debit: PPE Asset
-                'second_account' => $revaluationSurplusAccount, // Credit: Revaluation Surplus
+                'first_account' => $ppeAccount, // Debit: PPE Asset (Level 3)
+                'second_account' => $revaluationSurplusAccount, // Credit: Revaluation Surplus (Level 3)
                 'amount' => abs($revaluationAmount),
-                'narration' => "Asset Revaluation (Appreciation): {$ppe->name} - {$this->revaluation_reason}",
-                'action' => 'asset_revaluation'
+                'narration' => "PPE Revaluation (Appreciation): {$ppe->name}",
+                'action' => 'ppe_revaluation'
             ];
             
             $result = $transactionService->postTransaction($appreciationEntry);
@@ -1883,32 +2154,46 @@ class PpeManagement extends Component
                 $amountAgainstPL = abs($revaluationAmount) - $amountAgainstSurplus;
                 
                 if ($amountAgainstSurplus > 0) {
+                    // Use the proper Property Revaluation Reserve account (level 3)
                     $revaluationSurplusAccount = $institution->revaluation_surplus_account ?? 
-                                                $institution->capital_reserves_account ?? 
-                                                '0101130010';
+                                                '0101300034003410'; // Property Revaluation Reserve (Level 3)
                     
                     $surplusEntry = [
                         'first_account' => $revaluationSurplusAccount, // Debit: Revaluation Surplus
-                        'second_account' => $ppe->account_number, // Credit: PPE Asset
+                        'second_account' => $ppeAccount, // Credit: PPE Asset (Level 3)
                         'amount' => $amountAgainstSurplus,
-                        'narration' => "Asset Revaluation (Impairment against surplus): {$ppe->name}",
-                        'action' => 'asset_revaluation'
+                        'narration' => "PPE Revaluation (Impairment against surplus): {$ppe->name}",
+                        'action' => 'ppe_revaluation'
                     ];
                     
                     $transactionService->postTransaction($surplusEntry);
                 }
                 
                 if ($amountAgainstPL > 0) {
+                    // Find a proper impairment loss account (level 3)
                     $impairmentLossAccount = $institution->impairment_loss_account ?? 
                                            $institution->other_expenses_account ?? 
                                            '0101150020';
                     
+                    // Ensure we have a level 3 account
+                    $lossAccount = DB::table('accounts')->where('account_number', $impairmentLossAccount)->first();
+                    if ($lossAccount && $lossAccount->account_level < 3) {
+                        // Find a child account
+                        $childLoss = DB::table('accounts')
+                            ->where('parent_account_number', $impairmentLossAccount)
+                            ->where('account_level', '3')
+                            ->first();
+                        if ($childLoss) {
+                            $impairmentLossAccount = $childLoss->account_number;
+                        }
+                    }
+                    
                     $lossEntry = [
                         'first_account' => $impairmentLossAccount, // Debit: Impairment Loss
-                        'second_account' => $ppe->account_number, // Credit: PPE Asset
+                        'second_account' => $ppeAccount, // Credit: PPE Asset (Level 3)
                         'amount' => $amountAgainstPL,
-                        'narration' => "Asset Impairment Loss: {$ppe->name} - {$this->revaluation_reason}",
-                        'action' => 'asset_revaluation'
+                        'narration' => "Asset Impairment Loss: {$ppe->name}",
+                        'action' => 'ppe_revaluation'
                     ];
                     
                     $transactionService->postTransaction($lossEntry);
@@ -1920,12 +2205,25 @@ class PpeManagement extends Component
                                        $institution->other_expenses_account ?? 
                                        '0101150020';
                 
+                // Ensure we have a level 3 account
+                $lossAccount = DB::table('accounts')->where('account_number', $impairmentLossAccount)->first();
+                if ($lossAccount && $lossAccount->account_level < 3) {
+                    // Find a child account
+                    $childLoss = DB::table('accounts')
+                        ->where('parent_account_number', $impairmentLossAccount)
+                        ->where('account_level', '3')
+                        ->first();
+                    if ($childLoss) {
+                        $impairmentLossAccount = $childLoss->account_number;
+                    }
+                }
+                
                 $impairmentEntry = [
                     'first_account' => $impairmentLossAccount, // Debit: Impairment Loss
-                    'second_account' => $ppe->account_number, // Credit: PPE Asset
+                    'second_account' => $ppeAccount, // Credit: PPE Asset (Level 3)
                     'amount' => abs($revaluationAmount),
-                    'narration' => "Asset Impairment: {$ppe->name} - {$this->revaluation_reason}",
-                    'action' => 'asset_revaluation'
+                    'narration' => "Asset Impairment: {$ppe->name}",
+                    'action' => 'ppe_revaluation'
                 ];
                 
                 $result = $transactionService->postTransaction($impairmentEntry);
@@ -2101,6 +2399,174 @@ class PpeManagement extends Component
             ->orderBy('revaluation_date', 'desc')
             ->limit(10)
             ->get();
+    }
+    
+    // Report generation helper methods
+    private function generateAssetRegisterReport()
+    {
+        // Get date range
+        $startDate = now()->subDays($this->reportDateRange == '30' ? 30 : ($this->reportDateRange == '60' ? 60 : 90));
+        $endDate = now();
+        
+        // Query PPE assets (removed non-existent relationships)
+        $assets = PPE::when($this->reportStatus && $this->reportStatus != 'all', function($q) {
+                return $q->where('status', $this->reportStatus);
+            })
+            ->when($this->reportCategory && $this->reportCategory != 'all', function($q) {
+                return $q->where('categoryx', $this->reportCategory);
+            })
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->orderBy('id', 'desc')
+            ->get();
+        
+        // Generate CSV content
+        $csv = "Asset Code,Name,Category,Purchase Date,Purchase Price,Depreciation,Book Value,Status,Location\n";
+        
+        foreach ($assets as $asset) {
+            $csv .= sprintf(
+                '"%s","%s","%s","%s",%.2f,%.2f,%.2f,"%s","%s"' . "\n",
+                $asset->asset_code ?? 'N/A',
+                $asset->name,
+                $asset->categoryx ?? 'N/A',
+                $asset->purchase_date,
+                $asset->purchase_price,
+                $asset->accumulated_depreciation ?? 0,
+                $asset->closing_value ?? ($asset->purchase_price - ($asset->accumulated_depreciation ?? 0)),
+                $asset->status,
+                $asset->location ?? 'N/A'
+            );
+        }
+        
+        // Return download response
+        return response()->streamDownload(
+            function () use ($csv) {
+                echo $csv;
+            },
+            'asset_register_' . date('Y-m-d') . '.csv',
+            [
+                'Content-Type' => 'text/csv',
+            ]
+        );
+    }
+    
+    private function generateSummaryReport()
+    {
+        $assets = PPE::all();
+        
+        $summary = [
+            'total_assets' => $assets->count(),
+            'total_value' => $assets->sum('purchase_price'),
+            'total_depreciation' => $assets->sum('accumulated_depreciation'),
+            'net_book_value' => $assets->sum('closing_value'),
+            'active_assets' => $assets->where('status', 'active')->count(),
+            'disposed_assets' => $assets->where('status', 'disposed')->count(),
+        ];
+        
+        $csv = "PPE Summary Report - Generated: " . date('Y-m-d H:i:s') . "\n\n";
+        $csv .= "Metric,Value\n";
+        $csv .= "Total Assets," . $summary['total_assets'] . "\n";
+        $csv .= "Total Purchase Value," . number_format($summary['total_value'], 2) . "\n";
+        $csv .= "Total Depreciation," . number_format($summary['total_depreciation'], 2) . "\n";
+        $csv .= "Net Book Value," . number_format($summary['net_book_value'], 2) . "\n";
+        $csv .= "Active Assets," . $summary['active_assets'] . "\n";
+        $csv .= "Disposed Assets," . $summary['disposed_assets'] . "\n";
+        
+        return response()->streamDownload(
+            function () use ($csv) {
+                echo $csv;
+            },
+            'ppe_summary_' . date('Y-m-d') . '.csv',
+            ['Content-Type' => 'text/csv']
+        );
+    }
+    
+    private function generateDisposalReport()
+    {
+        $disposals = PPE::whereIn('status', ['disposed', 'pending_disposal'])
+            ->orderBy('disposal_date', 'desc')
+            ->get();
+        
+        $csv = "Disposal Report - Generated: " . date('Y-m-d H:i:s') . "\n\n";
+        $csv .= "Asset Code,Asset Name,Purchase Price,Book Value,Disposal Date,Disposal Method,Proceeds,Gain/Loss,Status\n";
+        
+        foreach ($disposals as $asset) {
+            $bookValue = $asset->purchase_price - ($asset->accumulated_depreciation ?? 0);
+            $gainLoss = ($asset->disposal_proceeds ?? 0) - $bookValue;
+            
+            $csv .= sprintf(
+                '"%s","%s",%.2f,%.2f,"%s","%s",%.2f,%.2f,"%s"' . "\n",
+                $asset->asset_code ?? 'N/A',
+                $asset->name,
+                $asset->purchase_price,
+                $bookValue,
+                $asset->disposal_date ?? 'Pending',
+                $asset->disposal_method ?? 'N/A',
+                $asset->disposal_proceeds ?? 0,
+                $gainLoss,
+                $asset->status
+            );
+        }
+        
+        return response()->streamDownload(
+            function () use ($csv) {
+                echo $csv;
+            },
+            'disposal_report_' . date('Y-m-d') . '.csv',
+            ['Content-Type' => 'text/csv']
+        );
+    }
+    
+    private function generateDepreciationReport()
+    {
+        $assets = PPE::where('status', 'active')->get();
+        
+        $csv = "Depreciation Schedule - Generated: " . date('Y-m-d H:i:s') . "\n\n";
+        $csv .= "Asset Code,Asset Name,Purchase Price,Purchase Date,Useful Life,Salvage Value,Monthly Depreciation,Accumulated Depreciation,Book Value\n";
+        
+        foreach ($assets as $asset) {
+            $monthlyDepreciation = ($asset->purchase_price - $asset->salvage_value) / ($asset->useful_life * 12);
+            
+            $csv .= sprintf(
+                '"%s","%s",%.2f,"%s",%d,%.2f,%.2f,%.2f,%.2f' . "\n",
+                $asset->asset_code ?? 'N/A',
+                $asset->name,
+                $asset->purchase_price,
+                $asset->purchase_date,
+                $asset->useful_life,
+                $asset->salvage_value,
+                $monthlyDepreciation,
+                $asset->accumulated_depreciation ?? 0,
+                $asset->closing_value ?? ($asset->purchase_price - ($asset->accumulated_depreciation ?? 0))
+            );
+        }
+        
+        return response()->streamDownload(
+            function () use ($csv) {
+                echo $csv;
+            },
+            'depreciation_schedule_' . date('Y-m-d') . '.csv',
+            ['Content-Type' => 'text/csv']
+        );
+    }
+    
+    private function generateValuationReport()
+    {
+        $this->emit('showNotification', 'Generating Valuation Report...', 'info');
+        // Similar implementation as above
+        return $this->generateSummaryReport(); // For now, return summary
+    }
+    
+    private function generateMaintenanceReport()
+    {
+        $this->emit('showNotification', 'Generating Maintenance Report...', 'info');
+        // Similar implementation as above
+        return $this->generateSummaryReport(); // For now, return summary
+    }
+    
+    public function exportReport()
+    {
+        $this->emit('showNotification', 'Exporting report...', 'info');
+        // TODO: Implement report export functionality
     }
 
     public function render()

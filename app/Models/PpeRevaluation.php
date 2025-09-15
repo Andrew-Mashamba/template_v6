@@ -55,22 +55,63 @@ class PpeRevaluation extends Model
         
         try {
             $transactionService = new TransactionPostingService();
+            $institution = \DB::table('institutions')->where('id', 1)->first();
+            
+            // Get proper PPE account (level 3)
+            $ppeAccount = $this->ppe->account_number;
+            $account = \DB::table('accounts')->where('account_number', $ppeAccount)->first();
+            if ($account && $account->account_level < 3) {
+                // Find appropriate child account
+                $childAccount = \DB::table('accounts')
+                    ->where('parent_account_number', $ppeAccount)
+                    ->where('account_level', '3')
+                    ->orderBy('account_number')
+                    ->first();
+                
+                if ($childAccount) {
+                    $ppeAccount = $childAccount->account_number;
+                } else {
+                    // Default to Land and Buildings
+                    $ppeAccount = '0101100016001610';
+                }
+            }
             
             // Determine accounts based on revaluation type
             if ($this->revaluation_type === 'appreciation') {
+                // Use proper Property Revaluation Reserve account (level 3)
+                $revaluationSurplusAccount = $institution->revaluation_surplus_account ?? 
+                                            '0101300034003410'; // Property Revaluation Reserve
+                
                 // Debit: PPE Asset Account, Credit: Revaluation Surplus
                 $transactionData = [
-                    'first_account' => $this->ppe->account_number,
-                    'second_account' => '3001', // Revaluation Surplus account
+                    'first_account' => $ppeAccount,
+                    'second_account' => $revaluationSurplusAccount,
                     'amount' => abs($this->revaluation_amount),
                     'narration' => "PPE Revaluation (Appreciation): {$this->ppe->name}",
                     'action' => 'ppe_revaluation'
                 ];
             } else {
+                // Find proper impairment loss account (level 3)
+                $impairmentLossAccount = $institution->impairment_loss_account ?? 
+                                       $institution->other_expenses_account ?? 
+                                       '0101150020';
+                
+                // Ensure we have a level 3 account
+                $lossAccount = \DB::table('accounts')->where('account_number', $impairmentLossAccount)->first();
+                if ($lossAccount && $lossAccount->account_level < 3) {
+                    $childLoss = \DB::table('accounts')
+                        ->where('parent_account_number', $impairmentLossAccount)
+                        ->where('account_level', '3')
+                        ->first();
+                    if ($childLoss) {
+                        $impairmentLossAccount = $childLoss->account_number;
+                    }
+                }
+                
                 // Impairment: Debit: Impairment Loss, Credit: PPE Asset Account
                 $transactionData = [
-                    'first_account' => '5002', // Impairment Loss account
-                    'second_account' => $this->ppe->account_number,
+                    'first_account' => $impairmentLossAccount,
+                    'second_account' => $ppeAccount,
                     'amount' => abs($this->revaluation_amount),
                     'narration' => "PPE Revaluation (Impairment): {$this->ppe->name}",
                     'action' => 'ppe_revaluation'

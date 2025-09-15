@@ -403,7 +403,7 @@
 
         {{-- Account Details Modal Placeholder --}}
         @if(isset($showAccountModal) && $showAccountModal)
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
             <div class="fixed inset-0 overflow-y-auto">
                 <div class="flex items-end sm:items-center justify-center min-h-full p-4 text-center sm:p-0">
                     <div class="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-4xl sm:w-full">

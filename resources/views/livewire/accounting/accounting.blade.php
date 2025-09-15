@@ -205,7 +205,7 @@
                                             }
                                             
                                             // Risk management - require special permission
-                                            if (in_array($menuItem['id'], [17, 23, 31])) {
+                                            if (in_array($menuItem['id'], [17])) {
                                                 $showMenuItem = ($permissions['canManageRisk'] ?? false) || ($permissions['canEdit'] ?? false);
                                             }
                                             
@@ -335,7 +335,6 @@
                                     @case(18) Track accounts receivable and collections @break
                                     @case(20) Manage property, plant, and equipment @break
                                     @case(21) Handle insurance policies and claims @break
-                                    @case(23) Manage bad loan write-offs and recovery processes @break
                                     @case(37) Review detailed ledger accounts @break
                                     @case(43) Manage approval workflows and processes @break
                                     @case(44) Process internal fund transfers between accounts @break
@@ -436,8 +435,6 @@
                         <livewire:accounting.investiments />
                     @elseif($this->tab_id == 30)
                         <livewire:accounting.trade-and-other-payables />
-                    @elseif($this->tab_id == 31)
-                        <livewire:accounting.provision />
                     @elseif($this->tab_id == 32)
                         <livewire:accounting.depreciation />
                     @elseif($this->tab_id == 33)
@@ -464,8 +461,6 @@
                         <livewire:accounting.financial-insurance />
                     @elseif($this->tab_id == 24)
                         <livewire:accounting.creditors />
-                        @elseif($this->tab_id == 23)
-                            <livewire:active-loan.write-offs />
                         @elseif($this->tab_id == 43)
                             {{-- Approvers Manager --}}
                   

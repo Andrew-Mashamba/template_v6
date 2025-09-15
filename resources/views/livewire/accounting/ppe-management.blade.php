@@ -1367,7 +1367,7 @@
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
                             <h2 class="text-xl font-semibold text-gray-900">Maintenance Management</h2>
-                            <button wire:click="showMaintenanceForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            <button wire:click="openMaintenanceForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                                 Schedule Maintenance
                             </button>
                         </div>
@@ -1490,7 +1490,7 @@
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
                             <h2 class="text-xl font-semibold text-gray-900">Asset Transfer Management</h2>
-                            <button wire:click="showTransferForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            <button wire:click="openTransferForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                                 Initiate Transfer
                             </button>
                         </div>
@@ -1557,7 +1557,7 @@
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
                             <h2 class="text-xl font-semibold text-gray-900">Insurance Management</h2>
-                            <button wire:click="showInsuranceForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            <button wire:click="openInsuranceForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                                 Add Insurance Policy
                             </button>
                         </div>
@@ -1635,7 +1635,7 @@
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
                             <h2 class="text-xl font-semibold text-gray-900">Asset Revaluation</h2>
-                            <button wire:click="showRevaluationForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            <button wire:click="openRevaluationForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                                 New Revaluation
                             </button>
                         </div>
@@ -1798,6 +1798,321 @@
                         Delete
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Maintenance Form Modal --}}
+    @if($showMaintenanceForm)
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Schedule Maintenance</h3>
+                    <button wire:click="resetMaintenanceForm" class="text-gray-400 hover:text-gray-500">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <form wire:submit.prevent="saveMaintenance">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">PPE Asset</label>
+                            <select wire:model="ppeId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="">Select Asset</option>
+                                @foreach(App\Models\PPE::where('status', 'active')->get() as $ppe)
+                                <option value="{{ $ppe->id }}">{{ $ppe->name }} ({{ $ppe->asset_code }})</option>
+                                @endforeach
+                            </select>
+                            @error('ppeId') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Maintenance Type</label>
+                            <select wire:model="maintenance_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="preventive">Preventive</option>
+                                <option value="corrective">Corrective</option>
+                                <option value="emergency">Emergency</option>
+                            </select>
+                            @error('maintenance_type') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Maintenance Date</label>
+                            <input type="date" wire:model="maintenance_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            @error('maintenance_date') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Description</label>
+                            <textarea wire:model="maintenance_description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                            @error('maintenance_description') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Cost</label>
+                            <input type="number" step="0.01" wire:model="maintenance_cost" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            @error('maintenance_cost') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Vendor</label>
+                            <input type="text" wire:model="maintenance_vendor" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            @error('maintenance_vendor') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" wire:click="resetMaintenanceForm" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                            Save Maintenance
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Transfer Form Modal --}}
+    @if($showTransferForm)
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Asset Transfer</h3>
+                    <button wire:click="resetTransferForm" class="text-gray-400 hover:text-gray-500">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <form wire:submit.prevent="saveTransfer">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">PPE Asset</label>
+                            <select wire:model="ppeId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="">Select Asset</option>
+                                @foreach(App\Models\PPE::where('status', 'active')->get() as $ppe)
+                                <option value="{{ $ppe->id }}">{{ $ppe->name }} ({{ $ppe->asset_code }})</option>
+                                @endforeach
+                            </select>
+                            @error('ppeId') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Transfer To Location</label>
+                            <input type="text" wire:model="transfer_to_location" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            @error('transfer_to_location') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Transfer To Department</label>
+                            <input type="text" wire:model="transfer_to_department" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            @error('transfer_to_department') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">New Custodian</label>
+                            <input type="text" wire:model="transfer_to_custodian" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            @error('transfer_to_custodian') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Transfer Date</label>
+                            <input type="date" wire:model="transfer_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            @error('transfer_date') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Reason for Transfer</label>
+                            <textarea wire:model="transfer_reason" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                            @error('transfer_reason') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" wire:click="resetTransferForm" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                            Process Transfer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Insurance Form Modal --}}
+    @if($showInsuranceForm)
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Add Insurance Policy</h3>
+                    <button wire:click="resetInsuranceForm" class="text-gray-400 hover:text-gray-500">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <form wire:submit.prevent="saveInsurance">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">PPE Asset</label>
+                            <select wire:model="ppeId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="">Select Asset</option>
+                                @foreach(App\Models\PPE::where('status', 'active')->get() as $ppe)
+                                <option value="{{ $ppe->id }}">{{ $ppe->name }} ({{ $ppe->asset_code }})</option>
+                                @endforeach
+                            </select>
+                            @error('ppeId') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Policy Number</label>
+                            <input type="text" wire:model="policy_number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            @error('policy_number') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Insurance Company</label>
+                            <input type="text" wire:model="insurance_company" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            @error('insurance_company') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Coverage Type</label>
+                            <select wire:model="coverage_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="comprehensive">Comprehensive</option>
+                                <option value="fire">Fire</option>
+                                <option value="theft">Theft</option>
+                                <option value="damage">Damage</option>
+                            </select>
+                            @error('coverage_type') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Start Date</label>
+                                <input type="date" wire:model="insurance_start_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                @error('insurance_start_date') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">End Date</label>
+                                <input type="date" wire:model="insurance_end_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                @error('insurance_end_date') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Premium Amount</label>
+                            <input type="number" step="0.01" wire:model="premium_amount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            @error('premium_amount') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" wire:click="resetInsuranceForm" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                            onclick="console.log('Save Insurance button clicked at ' + new Date().toISOString())"
+                            wire:loading.attr="disabled"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span wire:loading.remove wire:target="saveInsurance">Save Insurance</span>
+                            <span wire:loading wire:target="saveInsurance">Processing...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Revaluation Form Modal --}}
+    @if($showRevaluationForm)
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Asset Revaluation</h3>
+                    <button wire:click="resetRevaluationForm" class="text-gray-400 hover:text-gray-500">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <form wire:submit.prevent="saveRevaluation">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">PPE Asset</label>
+                            <select wire:model="ppeId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="">Select Asset</option>
+                                @foreach(App\Models\PPE::where('status', 'active')->get() as $ppe)
+                                <option value="{{ $ppe->id }}">{{ $ppe->name }} - Current Value: {{ number_format($ppe->closing_value ?: $ppe->purchase_price, 2) }}</option>
+                                @endforeach
+                            </select>
+                            @error('ppeId') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Revaluation Date</label>
+                            <input type="date" wire:model="revaluation_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            @error('revaluation_date') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">New Value</label>
+                            <input type="number" step="0.01" wire:model="new_value" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            @error('new_value') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Valuation Method</label>
+                            <select wire:model="valuation_method" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="market_value">Market Value</option>
+                                <option value="professional_valuation">Professional Valuation</option>
+                                <option value="cost_approach">Cost Approach</option>
+                                <option value="income_approach">Income Approach</option>
+                            </select>
+                            @error('valuation_method') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Reason for Revaluation</label>
+                            <textarea wire:model="revaluation_reason" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                            @error('revaluation_reason') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" wire:click="resetRevaluationForm" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                            Save Revaluation
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

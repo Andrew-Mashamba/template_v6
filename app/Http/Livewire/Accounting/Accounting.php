@@ -34,6 +34,16 @@ class Accounting extends Component
     }
     
     /**
+     * Stub method to prevent errors when child components try to call this
+     * The actual implementation is in LoanLossReserveManager component
+     */
+    public function loadYearEndData()
+    {
+        // This is a stub method - actual implementation is in LoanLossReserveManager
+        return;
+    }
+    
+    /**
      * Override to specify the module name for permissions
      * 
      * @return string
@@ -119,13 +129,11 @@ class Accounting extends Component
             ['id' => 20, 'label' => 'PPE Management'],
             ['id' => 21, 'label' => 'Other Income'],
             // Removed: ['id' => 22, 'label' => 'Financial Insurance'],
-            ['id' => 23, 'label' => 'Bad Loan Writeoffs'],
             ['id' => 24, 'label' => 'Creditors'],
             ['id' => 25, 'label' => 'Interest Payable'],
             ['id' => 26, 'label' => 'Short-term / Long-term Loans'],
             ['id' => 27, 'label' => 'Unearned / deferred revenue'],
             ['id' => 29, 'label' => 'Investments'],
-            ['id' => 31, 'label' => 'Provisions'],
             ['id' => 32, 'label' => 'Depreciation'],
             ['id' => 33, 'label' => 'Shares'],
             ['id' => 34, 'label' => 'Savings'],
@@ -140,7 +148,7 @@ class Accounting extends Component
             'Core Accounting' => [37, 47, 3, 4, 6], // Removed 1, 2
             'Financial Statements' => [12, 50], // Removed 40, 41, 42, 28, 8, 5
             'Asset Management' => [20, 32], // Removed 16
-            'Risk Management' => [17, 23, 31],
+            'Risk Management' => [17], // Removed 23, 31
             'Operations' => [18, 30, 21, 24, 25, 26, 27, 29, 36], // Removed 19, 22
         ];
 

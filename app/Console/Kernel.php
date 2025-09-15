@@ -37,11 +37,44 @@ class Kernel extends ConsoleKernel
                 ->monthlyOn(1, '07:00')
                 ->appendOutputTo(storage_path('logs/monthly-reports.log'));
         
+        // Monthly Loan Loss Provision Cycle - Run on the 5th of each month at 9:00 AM
+        // CALCULATE and COMPARE only - Manual ADJUSTMENT required via UI
+        $schedule->command('provision:cycle MONTHLY')
+                ->monthlyOn(5, '09:00')
+                ->withoutOverlapping()
+                ->runInBackground()
+                ->appendOutputTo(storage_path('logs/provision-cycle.log'))
+                ->emailOutputTo('andrew.s.mashamba@gmail.com') // Always send report
+                ->onSuccess(function () {
+                    \Log::info('Monthly provision cycle calculated - awaiting manual adjustment approval');
+                })
+                ->onFailure(function () {
+                    \Log::error('Monthly provision cycle calculation failed');
+                });
+        
         // Monthly budget close - Run on the last day of each month at 11:30 PM
         $schedule->command('budget:period-close --type=monthly')
                 ->monthlyOn(date('t'), '23:30')
                 ->withoutOverlapping()
                 ->appendOutputTo(storage_path('logs/budget-monthly-close.log'));
+        
+        // Quarterly Loan Loss Provision Cycle - Run on the 5th day of each quarter at 9:30 AM
+        // (Jan 5, Apr 5, Jul 5, Oct 5)
+        $schedule->command('provision:cycle QUARTERLY')
+                ->quarterly()
+                ->at('09:30')
+                ->when(function () {
+                    // Only run if not already run this month (avoid duplicate with monthly)
+                    $lastCycle = \DB::table('provision_cycles')
+                        ->where('frequency', 'QUARTERLY')
+                        ->whereMonth('created_at', now()->month)
+                        ->whereYear('created_at', now()->year)
+                        ->first();
+                    return !$lastCycle;
+                })
+                ->withoutOverlapping()
+                ->runInBackground()
+                ->appendOutputTo(storage_path('logs/provision-cycle-quarterly.log'));
         
         // Quarterly budget close - Run on the last day of each quarter at 11:45 PM
         $schedule->command('budget:period-close --type=quarterly')
