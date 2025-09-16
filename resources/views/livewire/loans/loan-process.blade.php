@@ -422,6 +422,18 @@
                         </div>
                     @endif
 
+                    @if ($activeTab === 'accounting')
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-semibold text-gray-900">Accounting Information</h2>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm text-gray-500">Review loan accounting details</span>
+                                </div>
+                            </div>
+                            @livewire('loans.sections.accounting')
+                        </div>
+                    @endif
+
                     @if ($activeTab === 'creditScore')
                         <div class="space-y-4">
                             <div class="flex items-center justify-between">

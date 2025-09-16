@@ -274,6 +274,7 @@
   'loans.new-loans-table' => 'App\\Http\\Livewire\\Loans\\NewLoansTable',
   'loans.restructure' => 'App\\Http\\Livewire\\Loans\\Restructure',
   'loans.search' => 'App\\Http\\Livewire\\Loans\\Search',
+  'loans.sections.accounting' => 'App\\Http\\Livewire\\Loans\\Sections\\Accounting',
   'loans.sections.lending-framework' => 'App\\Http\\Livewire\\Loans\\Sections\\LendingFramework',
   'loans.sections.loans-to-be-topped-up' => 'App\\Http\\Livewire\\Loans\\Sections\\LoansToBeToppedUp',
   'loans.sections.simple-exceptions' => 'App\\Http\\Livewire\\Loans\\Sections\\SimpleExceptions',
