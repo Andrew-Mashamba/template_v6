@@ -287,6 +287,7 @@ class Savings extends Component
             ]);
 
             $product = sub_products::create([
+                'sub_product_name' => $this->form['product_name'],
                 'product_name' => $this->form['product_name'],
                 'product_type' => '2000',
                 'savings_type_id' => $this->form['savings_type_id'],
@@ -402,6 +403,7 @@ class Savings extends Component
         $product = sub_products::findOrFail($id);
         $this->editingProduct = $product;
         $this->form = [
+            'sub_product_name' => $product->sub_product_name,
             'product_name' => $product->product_name,
             'savings_type_id' => $product->savings_type_id,            
             'interest_value' => $product->interest_value,
@@ -473,6 +475,7 @@ class Savings extends Component
             ]);
 
             $editPackage = json_encode([
+                'sub_product_name' => $this->form['sub_product_name'],
                 'product_name' => $this->form['product_name'],
                 'savings_type_id' => $this->form['savings_type_id'],
                 'interest' => $this->form['interest_rate'],
@@ -662,6 +665,7 @@ class Savings extends Component
     public function resetForm()
     {
         $this->form = [
+            'sub_product_name' => '',
             'product_name' => '',
             'savings_type_id' => '',
             'interest_value' => '',
