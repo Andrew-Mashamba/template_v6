@@ -15,6 +15,7 @@ class Products extends Component
     public $totalShares = 0;
     public $totalDeposits = 0;
     public $activeLoans = 0;
+    public $search = '';
 
 
 

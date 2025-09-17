@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
 
 class AccountCreationService
 {
-    private const status_ACTIVE = 'PENDING';
+    private const status_ACTIVE = 'ACTIVE';
     private const ACCOUNT_USE_INTERNAL = 'internal';
     private const ACCOUNT_USE_EXTERNAL = 'external';
     private const REQUIRED_FIELDS = [
@@ -469,7 +469,6 @@ class AccountCreationService
         ]);
 
         $defaults = [
-            'status' => self::status_ACTIVE,
             'status' => self::status_ACTIVE,
             'account_level' => '1',
             'sub_product_number' => null,
