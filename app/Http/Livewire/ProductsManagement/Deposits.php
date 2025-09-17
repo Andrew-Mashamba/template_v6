@@ -662,7 +662,7 @@ class Deposits extends Component
     public function updated($property)
     {
         if ($property === 'form.product_account') {
-            $account = Account::find($this->form['product_account']);
+            $account = Account::where('account_number', $this->form['product_account'])->first();
             if ($account) {
                 $this->form['product_name'] = $account->account_name;
             }
