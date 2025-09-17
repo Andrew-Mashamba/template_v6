@@ -20,7 +20,7 @@ class DepartmentsSeeder extends Seeder
         // Insert existing data
         $data = [
             [
-                'id' => 1,
+                // 'id' => 1,
                 'department_name' => 'Governance & Oversight',
                 'department_code' => 'GOV',
                 'parent_department_id' => null,
@@ -35,7 +35,7 @@ class DepartmentsSeeder extends Seeder
                 'dashboard_type' => null,
             ],
             [
-                'id' => 2,
+                // 'id' => 2,
                 'department_name' => 'Board of Directors',
                 'department_code' => 'BOD',
                 'parent_department_id' => 1,
@@ -50,7 +50,7 @@ class DepartmentsSeeder extends Seeder
                 'dashboard_type' => null,
             ],
             [
-                'id' => 3,
+                // 'id' => 3,
                 'department_name' => 'Supervisory Committee',
                 'department_code' => 'SUP',
                 'parent_department_id' => 1,
@@ -65,7 +65,7 @@ class DepartmentsSeeder extends Seeder
                 'dashboard_type' => null,
             ],
             [
-                'id' => 4,
+                // 'id' => 4,
                 'department_name' => 'Core Management & Operations',
                 'department_code' => 'CMO',
                 'parent_department_id' => null,
@@ -80,7 +80,7 @@ class DepartmentsSeeder extends Seeder
                 'dashboard_type' => null,
             ],
             [
-                'id' => 5,
+                // 'id' => 5,
                 'department_name' => 'Administration & General Services',
                 'department_code' => 'AGS',
                 'parent_department_id' => 4,
@@ -95,7 +95,7 @@ class DepartmentsSeeder extends Seeder
                 'dashboard_type' => null,
             ],
             [
-                'id' => 6,
+                // 'id' => 6,
                 'department_name' => 'Finance & Accounting',
                 'department_code' => 'FAC',
                 'parent_department_id' => 4,
@@ -110,7 +110,7 @@ class DepartmentsSeeder extends Seeder
                 'dashboard_type' => null,
             ],
             [
-                'id' => 7,
+                // 'id' => 7,
                 'department_name' => 'Credit Department',
                 'department_code' => 'CRD',
                 'parent_department_id' => 4,
@@ -125,7 +125,7 @@ class DepartmentsSeeder extends Seeder
                 'dashboard_type' => null,
             ],
             [
-                'id' => 8,
+                // 'id' => 8,
                 'department_name' => 'Savings & Deposits',
                 'department_code' => 'SVD',
                 'parent_department_id' => 4,
@@ -140,7 +140,7 @@ class DepartmentsSeeder extends Seeder
                 'dashboard_type' => null,
             ],
             [
-                'id' => 9,
+                // 'id' => 9,
                 'department_name' => 'Member Services',
                 'department_code' => 'MBS',
                 'parent_department_id' => 4,
@@ -155,7 +155,7 @@ class DepartmentsSeeder extends Seeder
                 'dashboard_type' => null,
             ],
             [
-                'id' => 10,
+                // 'id' => 10,
                 'department_name' => 'Internal Audit & Compliance',
                 'department_code' => 'IAC',
                 'parent_department_id' => 4,
@@ -170,7 +170,7 @@ class DepartmentsSeeder extends Seeder
                 'dashboard_type' => null,
             ],
             [
-                'id' => 11,
+                // 'id' => 11,
                 'department_name' => 'Human Resources',
                 'department_code' => 'HRD',
                 'parent_department_id' => 4,
@@ -185,7 +185,7 @@ class DepartmentsSeeder extends Seeder
                 'dashboard_type' => null,
             ],
             [
-                'id' => 12,
+                // 'id' => 12,
                 'department_name' => 'Information Systems',
                 'department_code' => 'ICT',
                 'parent_department_id' => 4,
@@ -200,7 +200,7 @@ class DepartmentsSeeder extends Seeder
                 'dashboard_type' => null,
             ],
             [
-                'id' => 13,
+                // 'id' => 13,
                 'department_name' => 'Marketing & Business Development',
                 'department_code' => 'MBD',
                 'parent_department_id' => 4,
@@ -215,7 +215,7 @@ class DepartmentsSeeder extends Seeder
                 'dashboard_type' => null,
             ],
             [
-                'id' => 14,
+                // 'id' => 14,
                 'department_name' => 'Legal & Governance',
                 'department_code' => 'LGD',
                 'parent_department_id' => 4,
@@ -230,7 +230,7 @@ class DepartmentsSeeder extends Seeder
                 'dashboard_type' => null,
             ],
             [
-                'id' => 15,
+                // 'id' => 15,
                 'department_name' => 'Risk Management',
                 'department_code' => 'RMD',
                 'parent_department_id' => 4,
@@ -245,7 +245,7 @@ class DepartmentsSeeder extends Seeder
                 'dashboard_type' => null,
             ],
             [
-                'id' => 16,
+                //'id' => 16,
                 'department_name' => 'Procurement & Logistics',
                 'department_code' => 'PRL',
                 'parent_department_id' => 4,

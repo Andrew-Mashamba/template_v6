@@ -875,6 +875,15 @@
                                                     case 'ASSET_DISP':
                                                         $tableData = \App\Models\PPE::find($approval->process_id);
                                                         break;
+                                                    case 'PROD_EDIT':
+                                                    $tableData = \App\Models\sub_products::find($approval->process_id);
+                                                    break;
+                                                    case 'PRODUCT_CRE':
+                                                    $tableData = \App\Models\sub_products::find($approval->process_id);
+                                                    break;
+                                                    case 'PROD_DEACTIVATE':
+                                                    $tableData = \App\Models\sub_products::find($approval->process_id);
+                                                    break;
                                                 }
                                             @endphp                                            
                                             @if($tableData)                                            
