@@ -119,7 +119,7 @@
     </div>
 
     <!-- Bulk Actions Section -->
-    @if(count($selectedLoans) > 0)
+    @if(is_array($selectedLoans) && count($selectedLoans) > 0)
     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div class="flex items-center justify-between">
             <div class="flex items-center">
@@ -467,7 +467,7 @@
                             </div>
 
                             <!-- Loan Schedule -->
-                            @if($loanSchedule && $loanSchedule->count() > 0)
+                            @if($loanSchedule && count($loanSchedule) > 0)
                             <div class="mb-6">
                                 <h4 class="text-sm font-medium text-gray-900 mb-2">Payment Schedule</h4>
                                 <div class="overflow-x-auto">
@@ -508,8 +508,8 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                @if($loanSchedule->count() > 5)
-                                    <p class="text-sm text-gray-500 mt-2">Showing first 5 installments of {{ $loanSchedule->count() }} total</p>
+                                @if(count($loanSchedule) > 5)
+                                    <p class="text-sm text-gray-500 mt-2">Showing first 5 installments of {{ count($loanSchedule) }} total</p>
                                 @endif
                             </div>
                             @endif
@@ -635,7 +635,10 @@
             <!-- Modal Header -->
             <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
                 @php
-                    $loanControlNumber = DB::table('bills')->where('client_number', $selectedLoan->client->client_number)->where('amount_due', '>', 0)->first();
+                    $loanControlNumber = null;
+                    if ($selectedLoan && $selectedLoan->client && $selectedLoan->client->client_number) {
+                        $loanControlNumber = DB::table('bills')->where('client_number', $selectedLoan->client->client_number)->where('amount_due', '>', 0)->first();
+                    }
                 @endphp
                 <h3 class="text-lg sm:text-xl font-semibold text-gray-900">Loan Details - {{ $loanControlNumber->control_number ?? $selectedLoan->loan_number }}</h3>
                 <button wire:click="closeDetailsModal" class="text-gray-400 hover:text-gray-600">
@@ -651,13 +654,13 @@
                 <div class="mb-6">
                     <div class="flex items-center space-x-4 mb-4">
                         <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                            {{ strtoupper(substr($selectedLoan->client->first_name ?? 'U', 0, 1)) }}
+                            {{ strtoupper(substr(optional($selectedLoan->client)->first_name ?? 'U', 0, 1)) }}
                         </div>
                         <div class="flex-1">
                             <h4 class="text-lg font-bold text-gray-900">
-                                {{ $selectedLoan->client->first_name ?? '' }} {{ $selectedLoan->client->middle_name ?? '' }} {{ $selectedLoan->client->last_name ?? '' }}
+                                {{ optional($selectedLoan->client)->first_name ?? '' }} {{ optional($selectedLoan->client)->middle_name ?? '' }} {{ optional($selectedLoan->client)->last_name ?? '' }}
                             </h4>
-                            <p class="text-sm text-gray-600">ID: {{ $selectedLoan->client->client_number ?? 'N/A' }} | {{ $selectedLoan->client->phone_number ?? 'N/A' }}</p>
+                            <p class="text-sm text-gray-600">ID: {{ optional($selectedLoan->client)->client_number ?? 'N/A' }} | {{ optional($selectedLoan->client)->phone_number ?? 'N/A' }}</p>
                             <div class="flex flex-wrap gap-2 mt-1">
                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                     {{ $selectedLoan->loanProduct->sub_product_name ?? 'N/A' }}
@@ -666,7 +669,7 @@
                                     {{ $selectedLoan->status }}
                                 </span>
                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                    {{ $selectedLoan->client->membership_type ?? 'N/A' }}
+                                    {{ optional($selectedLoan->client)->membership_type ?? 'N/A' }}
                                 </span>
                             </div>
                         </div>
@@ -741,83 +744,83 @@
                         <!-- Basic Information -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Membership Type</label>
-                            <div class="text-sm font-semibold text-gray-900">{{ $selectedLoan->client->membership_type ?? 'N/A' }}</div>
+                            <div class="text-sm font-semibold text-gray-900">{{ optional($selectedLoan->client)->membership_type ?? 'N/A' }}</div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-                            <div class="text-sm font-semibold text-gray-900">{{ $selectedLoan->client->phone_number ?? 'N/A' }}</div>
+                            <div class="text-sm font-semibold text-gray-900">{{ optional($selectedLoan->client)->phone_number ?? 'N/A' }}</div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Email</label>
-                            <div class="text-sm font-semibold text-gray-900">{{ $selectedLoan->client->email ?? 'N/A' }}</div>
+                            <div class="text-sm font-semibold text-gray-900">{{ optional($selectedLoan->client)->email ?? 'N/A' }}</div>
                         </div>
                         
                         <!-- Individual Specific Fields -->
-                        @if(($selectedLoan->client->membership_type ?? '') === 'Individual')
+                        @if((optional($selectedLoan->client)->membership_type ?? '') === 'Individual')
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Date of Birth</label>
-                                <div class="text-sm font-semibold text-gray-900">{{ $selectedLoan->client->date_of_birth ?? 'N/A' }}</div>
+                                <div class="text-sm font-semibold text-gray-900">{{ optional($selectedLoan->client)->date_of_birth ?? 'N/A' }}</div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Gender</label>
-                                <div class="text-sm font-semibold text-gray-900">{{ $selectedLoan->client->gender ?? 'N/A' }}</div>
+                                <div class="text-sm font-semibold text-gray-900">{{ optional($selectedLoan->client)->gender ?? 'N/A' }}</div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Marital Status</label>
-                                <div class="text-sm font-semibold text-gray-900">{{ $selectedLoan->client->marital_status ?? 'N/A' }}</div>
+                                <div class="text-sm font-semibold text-gray-900">{{ optional($selectedLoan->client)->marital_status ?? 'N/A' }}</div>
                             </div>
                         @endif
                         
                         <!-- Business Specific Fields -->
-                        @if(($selectedLoan->client->membership_type ?? '') === 'Business' || ($selectedLoan->client->membership_type ?? '') === 'Group')
+                        @if((optional($selectedLoan->client)->membership_type ?? '') === 'Business' || (optional($selectedLoan->client)->membership_type ?? '') === 'Group')
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Business Name</label>
-                                <div class="text-sm font-semibold text-gray-900">{{ $selectedLoan->client->business_name ?? 'N/A' }}</div>
+                                <div class="text-sm font-semibold text-gray-900">{{ optional($selectedLoan->client)->business_name ?? 'N/A' }}</div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Incorporation Number</label>
-                                <div class="text-sm font-semibold text-gray-900">{{ $selectedLoan->client->incorporation_number ?? 'N/A' }}</div>
+                                <div class="text-sm font-semibold text-gray-900">{{ optional($selectedLoan->client)->incorporation_number ?? 'N/A' }}</div>
                             </div>
                         @endif
                         
                         <!-- Common Fields -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Address</label>
-                            <div class="text-sm font-semibold text-gray-900">{{ $selectedLoan->client->address ?? 'N/A' }}</div>
+                            <div class="text-sm font-semibold text-gray-900">{{ optional($selectedLoan->client)->address ?? 'N/A' }}</div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">TIN Number</label>
-                            <div class="text-sm font-semibold text-gray-900">{{ $selectedLoan->client->tin_number ?? 'N/A' }}</div>
+                            <div class="text-sm font-semibold text-gray-900">{{ optional($selectedLoan->client)->tin_number ?? 'N/A' }}</div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Nationality</label>
-                            <div class="text-sm font-semibold text-gray-900">{{ $selectedLoan->client->nationarity ?? 'N/A' }}</div>
+                            <div class="text-sm font-semibold text-gray-900">{{ optional($selectedLoan->client)->nationarity ?? 'N/A' }}</div>
                         </div>
                         
                         <!-- Financial Information -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Income Available</label>
-                            <div class="text-sm font-semibold text-gray-900">{{ number_format($selectedLoan->client->income_available ?? 0, 2) }} TZS</div>
+                            <div class="text-sm font-semibold text-gray-900">{{ number_format(optional($selectedLoan->client)->income_available ?? 0, 2) }} TZS</div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Income Source</label>
-                            <div class="text-sm font-semibold text-gray-900">{{ $selectedLoan->client->income_source ?? 'N/A' }}</div>
+                            <div class="text-sm font-semibold text-gray-900">{{ optional($selectedLoan->client)->income_source ?? 'N/A' }}</div>
                         </div>
                         
                         <!-- Guarantor Information -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Guarantor Name</label>
                             <div class="text-sm font-semibold text-gray-900">
-                                {{ ($selectedLoan->client->guarantor_first_name ?? '') . ' ' . ($selectedLoan->client->guarantor_last_name ?? '') }}
+                                {{ (optional($selectedLoan->client)->guarantor_first_name ?? '') . ' ' . (optional($selectedLoan->client)->guarantor_last_name ?? '') }}
                             </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Guarantor Phone</label>
-                            <div class="text-sm font-semibold text-gray-900">{{ $selectedLoan->client->guarantor_full_name ?? 'N/A' }}</div>
+                            <div class="text-sm font-semibold text-gray-900">{{ optional($selectedLoan->client)->guarantor_full_name ?? 'N/A' }}</div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Guarantor Email</label>
-                            <div class="text-sm font-semibold text-gray-900">{{ $selectedLoan->client->guarantor_email ?? 'N/A' }}</div>
+                            <div class="text-sm font-semibold text-gray-900">{{ optional($selectedLoan->client)->guarantor_email ?? 'N/A' }}</div>
                         </div>
                     </div>
                 </div>
@@ -826,7 +829,7 @@
                 @php
                     $collaterals = DB::table('collaterals')->where('loan_id', $selectedLoan->loan_id)->get();
                 @endphp
-                @if($collaterals->count() > 0)
+                @if($collaterals && count($collaterals) > 0)
                 <div class="mb-6">
                     <div class="relative flex py-3 items-center mb-4">
                         <div class="flex-grow border-t border-gray-400"></div>
@@ -1049,7 +1052,10 @@
 
                 <!-- Member SACCO Financial Details -->
                 @php
-                    $memberLoans = DB::table('loans')->where('client_number', $selectedLoan->client->client_number)->where('status', 'active')->get();
+                    $memberLoans = collect();
+                    if ($selectedLoan && $selectedLoan->client && $selectedLoan->client->client_number) {
+                        $memberLoans = DB::table('loans')->where('client_number', $selectedLoan->client->client_number)->where('status', 'active')->get();
+                    }
                 @endphp
                 <div class="mb-6">
                     <div class="relative flex py-3 items-center mb-4">
@@ -1093,9 +1099,9 @@
                 </div>
 
                 <!-- Payment Schedule -->
-                @if($loanSchedule && $loanSchedule->count() > 0)
+                @if($loanSchedule && count($loanSchedule) > 0)
                 <div class="mb-6">
-                    <div class="font-semibold text-gray-700 mb-3">Complete Payment Schedule ({{ $loanSchedule->count() }} Installments)</div>
+                    <div class="font-semibold text-gray-700 mb-3">Complete Payment Schedule ({{ count($loanSchedule) }} Installments)</div>
                     <div class="overflow-x-auto border border-gray-300 rounded-lg">
                         <table class="w-full text-sm border-collapse">
                             <thead>

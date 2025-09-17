@@ -6,6 +6,14 @@ use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Traits\Livewire\WithModulePermissions;
+use App\Services\SmsUsageService;
+use App\Services\EmailUsageService;
+use App\Services\PaymentLinksUsageService;
+use App\Services\ControlNumbersUsageService;
+use App\Services\MobileAppUsageService;
+use App\Services\AiUsageService;
+use App\Services\SubscriptionService;
+use App\Models\Subscription;
 
 class Subscriptions extends Component
 {
@@ -13,12 +21,18 @@ class Subscriptions extends Component
     public $activeTab = 'overview';
     public $loading = false;
     public $services = [];
-    public $billingHistory = [];
     public $currentPlan = [];
     public $showUpgradeModal = false;
     public $selectedService = null;
     public $totalMonthlyBill = 0;
     public $usageStats = [];
+    protected $smsUsageService;
+    protected $emailUsageService;
+    protected $paymentLinksUsageService;
+    protected $controlNumbersUsageService;
+    protected $mobileAppUsageService;
+    protected $aiUsageService;
+    protected $subscriptionService;
 
     protected $listeners = ['refreshComponent' => '$refresh'];
 
@@ -26,126 +40,61 @@ class Subscriptions extends Component
     {
         // Initialize the permission system for this module
         $this->initializeWithModulePermissions();
+        $this->smsUsageService = new SmsUsageService();
+        $this->emailUsageService = new EmailUsageService();
+        $this->paymentLinksUsageService = new PaymentLinksUsageService();
+        $this->controlNumbersUsageService = new ControlNumbersUsageService();
+        $this->mobileAppUsageService = new MobileAppUsageService();
+        $this->aiUsageService = new AiUsageService();
+        $this->subscriptionService = new SubscriptionService();
+        
+        // Initialize system subscriptions if they don't exist
+        $this->subscriptionService->initializeSystemSubscriptions();
+        
         $this->loadServices();
-        $this->loadBillingHistory();
         $this->calculateTotalBill();
         $this->loadUsageStats();
     }
 
     public function loadServices()
     {
-        $this->services = [
-            [
-                'id' => 1,
-                'name' => 'SMS Service',
-                'description' => 'Send SMS notifications to members for transactions, alerts, and reminders',
-                'type' => 'mandatory',
-                'status' => 'active',
-                'price' => 50000,
-                'billing_cycle' => 'monthly',
-                'features' => ['Transaction alerts', 'Payment reminders', 'Marketing messages', 'OTP verification'],
-                'usage' => ['sent' => 12500, 'limit' => 20000, 'percentage' => 62.5]
-            ],
-            [
-                'id' => 2,
-                'name' => 'Email Service',
-                'description' => 'Professional email communications for statements, notifications, and marketing',
-                'type' => 'mandatory',
-                'status' => 'active',
-                'price' => 30000,
-                'billing_cycle' => 'monthly',
-                'features' => ['Transaction emails', 'Monthly statements', 'Marketing campaigns', 'Email templates'],
-                'usage' => ['sent' => 8500, 'limit' => 50000, 'percentage' => 17]
-            ],
-            [
-                'id' => 3,
-                'name' => 'Control Number Payment',
-                'description' => 'Generate control numbers for member payments through banks and mobile networks',
-                'type' => 'mandatory',
-                'status' => 'active',
-                'price' => 100000,
-                'billing_cycle' => 'monthly',
-                'features' => ['Automated control numbers', 'Multi-bank integration', 'Real-time reconciliation', 'Payment tracking'],
-                'usage' => ['generated' => 450, 'limit' => 1000, 'percentage' => 45]
-            ],
-            [
-                'id' => 4,
-                'name' => 'Pay by Link',
-                'description' => 'Send payment links to members for easy online payments',
-                'type' => 'mandatory',
-                'status' => 'active',
-                'price' => 75000,
-                'billing_cycle' => 'monthly',
-                'features' => ['Secure payment links', 'Multiple payment methods', 'Automatic receipts', 'Link expiration control'],
-                'usage' => ['created' => 320, 'limit' => 500, 'percentage' => 64]
-            ],
-            [
-                'id' => 5,
-                'name' => 'Mobile Application',
-                'description' => 'Branded mobile app for Android and iOS for member self-service',
-                'type' => 'optional',
-                'status' => 'active',
-                'price' => 200000,
-                'billing_cycle' => 'monthly',
-                'features' => ['Account access', 'Loan applications', 'Transfer funds', 'Push notifications', 'Biometric login'],
-                'usage' => ['downloads' => 850, 'active_users' => 620]
-            ],
-            [
-                'id' => 6,
-                'name' => 'Members Portal',
-                'description' => 'Web-based self-service portal for members to access accounts online',
-                'type' => 'optional',
-                'status' => 'inactive',
-                'price' => 150000,
-                'billing_cycle' => 'monthly',
-                'features' => ['Online account access', 'Loan applications', 'Document downloads', 'Support tickets'],
-                'usage' => null
-            ],
-            [
-                'id' => 7,
-                'name' => 'Zona AI Assistant',
-                'description' => 'AI-powered chatbot for 24/7 customer support and assistance',
-                'type' => 'optional',
-                'status' => 'inactive',
-                'price' => 250000,
-                'billing_cycle' => 'monthly',
-                'features' => ['24/7 availability', 'Multi-language support', 'Loan eligibility check', 'FAQ responses', 'Escalation to human agents'],
-                'usage' => null
-            ],
-            [
-                'id' => 8,
-                'name' => 'CRB Integration',
-                'description' => 'Credit Reference Bureau integration for credit scoring and reporting',
-                'type' => 'optional',
-                'status' => 'inactive',
-                'price' => 300000,
-                'billing_cycle' => 'monthly',
-                'features' => ['Credit score checking', 'Automated reporting', 'Member credit history', 'Risk assessment'],
-                'usage' => null
-            ]
-        ];
+        // Use the new subscription service to get all services
+        $this->services = $this->subscriptionService->getAllSubscriptions();
     }
 
-    public function loadBillingHistory()
-    {
-        $this->billingHistory = [
-            ['date' => '2025-07-01', 'amount' => 455000, 'status' => 'paid', 'invoice' => 'INV-2025-07-001'],
-            ['date' => '2025-06-01', 'amount' => 455000, 'status' => 'paid', 'invoice' => 'INV-2025-06-001'],
-            ['date' => '2025-05-01', 'amount' => 455000, 'status' => 'paid', 'invoice' => 'INV-2025-05-001'],
-            ['date' => '2025-04-01', 'amount' => 255000, 'status' => 'paid', 'invoice' => 'INV-2025-04-001'],
-        ];
-    }
 
     public function loadUsageStats()
     {
+        // Get real usage data for today
+        $todaySmsUsage = $this->smsUsageService->getTodaySmsUsage();
+        $todayEmailUsage = $this->emailUsageService->getTodayEmailUsage();
+        $todayPaymentLinksUsage = $this->paymentLinksUsageService->getTodayPaymentLinksUsage();
+        $todayControlNumbersUsage = $this->controlNumbersUsageService->getTodayControlNumbersUsage();
+        $todayMobileAppUsage = $this->mobileAppUsageService->getTodayMobileAppUsage();
+        $todayAiUsage = $this->aiUsageService->getTodayAiUsage();
+        
         $this->usageStats = [
-            'sms_sent_today' => 450,
-            'emails_sent_today' => 320,
-            'payment_links_today' => 28,
-            'control_numbers_today' => 15,
-            'app_logins_today' => 185,
-            'ai_queries_today' => 0,
-            'crb_checks_today' => 0
+            'sms_sent_today' => $todaySmsUsage['delivered'],
+            'sms_total_today' => $todaySmsUsage['total'],
+            'sms_failed_today' => $todaySmsUsage['failed'],
+            'sms_success_rate' => $todaySmsUsage['success_rate'],
+            'emails_sent_today' => $todayEmailUsage['delivered'],
+            'emails_total_today' => $todayEmailUsage['total'],
+            'emails_failed_today' => $todayEmailUsage['failed'],
+            'emails_success_rate' => $todayEmailUsage['success_rate'],
+            'payment_links_today' => $todayPaymentLinksUsage['total'],
+            'payment_links_used_today' => $todayPaymentLinksUsage['used'],
+            'payment_links_conversion_rate' => $todayPaymentLinksUsage['conversion_rate'],
+            'control_numbers_today' => $todayControlNumbersUsage['total'],
+            'control_numbers_paid_today' => $todayControlNumbersUsage['paid'],
+            'control_numbers_payment_rate' => $todayControlNumbersUsage['payment_rate'],
+            'app_logins_today' => $todayMobileAppUsage['total_logins'],
+            'app_unique_users_today' => $todayMobileAppUsage['unique_users'],
+            'app_success_rate' => $todayMobileAppUsage['success_rate'],
+            'ai_queries_today' => $todayAiUsage['total_queries'],
+            'ai_sessions_today' => $todayAiUsage['unique_sessions'],
+            'ai_users_today' => $todayAiUsage['unique_users'],
+            'crb_checks_today' => 0 // TODO: Implement CRB usage service
         ];
     }
 
@@ -169,6 +118,115 @@ class Subscriptions extends Component
         if ($service && $service['type'] === 'optional') {
             $this->selectedService = $service;
             $this->showUpgradeModal = true;
+        }
+    }
+
+    /**
+     * Pause a subscription
+     */
+    public function pauseSubscription($subscriptionId)
+    {
+        if (!($this->permissions['canManage'] ?? false)) {
+            session()->flash('error', 'You do not have permission to manage subscriptions');
+            return;
+        }
+
+        $result = $this->subscriptionService->pauseSubscription($subscriptionId);
+        
+        if ($result) {
+            $this->loadServices();
+            $this->calculateTotalBill();
+            session()->flash('message', 'Subscription paused successfully!');
+        } else {
+            session()->flash('error', 'Failed to pause subscription. It may not be pausable.');
+        }
+    }
+
+    /**
+     * Resume a subscription
+     */
+    public function resumeSubscription($subscriptionId)
+    {
+        if (!($this->permissions['canManage'] ?? false)) {
+            session()->flash('error', 'You do not have permission to manage subscriptions');
+            return;
+        }
+
+        $result = $this->subscriptionService->resumeSubscription($subscriptionId);
+        
+        if ($result) {
+            $this->loadServices();
+            $this->calculateTotalBill();
+            session()->flash('message', 'Subscription resumed successfully!');
+        } else {
+            session()->flash('error', 'Failed to resume subscription. It may not be resumable.');
+        }
+    }
+
+    /**
+     * Cancel a subscription
+     */
+    public function cancelSubscription($subscriptionId)
+    {
+        if (!($this->permissions['canManage'] ?? false)) {
+            session()->flash('error', 'You do not have permission to manage subscriptions');
+            return;
+        }
+
+        $result = $this->subscriptionService->cancelSubscription($subscriptionId);
+        
+        if ($result) {
+            $this->loadServices();
+            $this->calculateTotalBill();
+            session()->flash('message', 'Subscription cancelled successfully!');
+        } else {
+            session()->flash('error', 'Failed to cancel subscription. It may not be cancellable.');
+        }
+    }
+
+    /**
+     * Restart a subscription
+     */
+    public function restartSubscription($subscriptionId)
+    {
+        if (!($this->permissions['canManage'] ?? false)) {
+            session()->flash('error', 'You do not have permission to manage subscriptions');
+            return;
+        }
+
+        $result = $this->subscriptionService->restartSubscription($subscriptionId);
+        
+        if ($result) {
+            $this->loadServices();
+            $this->calculateTotalBill();
+            session()->flash('message', 'Subscription restarted successfully!');
+        } else {
+            session()->flash('error', 'Failed to restart subscription. It may not be restartable.');
+        }
+    }
+
+    /**
+     * Process due subscriptions for billing
+     */
+    public function processDueSubscriptions()
+    {
+        if (!($this->permissions['canManage'] ?? false)) {
+            session()->flash('error', 'You do not have permission to process subscriptions');
+            return;
+        }
+
+        $result = $this->subscriptionService->processDueSubscriptions();
+        
+        if ($result['total_processed'] > 0) {
+            $this->loadServices();
+            $this->calculateTotalBill();
+            session()->flash('message', "Processed {$result['total_processed']} subscriptions for billing.");
+        } else {
+            session()->flash('message', 'No subscriptions were due for billing.');
+        }
+
+        if ($result['total_errors'] > 0) {
+            session()->flash('error', "Failed to process {$result['total_errors']} subscriptions. Check logs for details.");
         }
     }
 
@@ -203,17 +261,6 @@ class Subscriptions extends Component
         $this->selectedService = null;
     }
 
-    public function downloadInvoice($invoiceNumber)
-    {
-        // Check permission to download invoices
-        if (!($this->permissions['canExport'] ?? false)) {
-            session()->flash('error', 'You do not have permission to download invoices');
-            return;
-        }
-        
-        // Logic to download invoice
-        session()->flash('message', 'Invoice downloaded successfully!');
-    }
 
     public function setActiveTab($tab)
     {
@@ -247,7 +294,6 @@ class Subscriptions extends Component
         $tabPermissionMap = [
             'overview' => 'view',    // Services Overview
             'usage' => 'view',       // Usage Statistics
-            'billing' => 'view',     // Billing History
         ];
         
         return $tabPermissionMap[$tab] ?? 'view';

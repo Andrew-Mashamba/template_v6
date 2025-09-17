@@ -1,13 +1,6 @@
 {{-- Arrears Overview Dashboard --}}
 <div class="space-y-6">
-    <!-- COMPONENT LOADED TEST -->
-    <div class="bg-red-500 text-white px-4 py-3 rounded mb-4 text-center font-bold">
-        🔥 OVERVIEW COMPONENT IS LOADED! 🔥
-    </div>
-    <!-- Debug Info -->
-    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
-        <strong>Debug Info:</strong> Portfolio at Risk: {{ $portfolioAtRisk }}%, Loans in Arrears: {{ $loansInArrears }}, Total Active: {{ $totalActiveLoans }}
-    </div>
+  
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Portfolio at Risk -->
@@ -92,7 +85,7 @@
                 </div>
             </div>
             <div class="mt-4">
-                <p class="text-sm text-gray-600">Amount: TZS {{ number_format($this->calculatePARAmount(90), 2) }}</p>
+                <p class="text-sm text-gray-600">Amount: TZS {{ number_format($criticalArrearsAmount, 2) }}</p>
             </div>
         </div>
 
@@ -111,7 +104,7 @@
                 </div>
             </div>
             <div class="mt-4">
-                <p class="text-sm text-gray-600">Amount: TZS {{ number_format($this->calculatePARAmount(30) - $this->calculatePARAmount(90), 2) }}</p>
+                <p class="text-sm text-gray-600">Amount: TZS {{ number_format($highRiskAmount, 2) }}</p>
             </div>
         </div>
 
@@ -130,7 +123,7 @@
                 </div>
             </div>
             <div class="mt-4">
-                <p class="text-sm text-gray-600">Amount: TZS {{ number_format($this->calculateTotalArrearsAmount() - $this->calculatePARAmount(30), 2) }}</p>
+                <p class="text-sm text-gray-600">Amount: TZS {{ number_format($mediumRiskAmount, 2) }}</p>
             </div>
         </div>
 
@@ -149,7 +142,7 @@
                 </div>
             </div>
             <div class="mt-4">
-                <p class="text-sm text-gray-600">Amount: TZS {{ number_format($performingAmount, 2) }}</p>
+                <p class="text-sm text-gray-600">Amount: TZS {{ number_format($performingSchedulesAmount, 2) }}</p>
             </div>
         </div>
     </div>

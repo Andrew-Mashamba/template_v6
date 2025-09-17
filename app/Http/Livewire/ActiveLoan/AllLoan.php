@@ -10,6 +10,9 @@ class AllLoan extends Component
     use WithModulePermissions;
     public $tab_id = 1;
     
+    // Filter visibility
+    public $showFilters = false;
+    
     // Sub-tabs for each main section
     public $loanTab = 'summary';
     public $paymentTab = 'new';
@@ -84,6 +87,11 @@ class AllLoan extends Component
     {
         // Refresh data method
         $this->emit('dataRefreshed');
+    }
+    
+    public function toggleFilters()
+    {
+        $this->showFilters = !$this->showFilters;
     }
 
     public function render()
