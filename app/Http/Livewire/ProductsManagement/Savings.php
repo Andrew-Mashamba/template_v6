@@ -64,7 +64,8 @@ class Savings extends Component
         'ledger_fees_value' => 0,
         'collection_account_withdraw_charges' => '',
         'collection_account_deposit_charges' => '',
-        'collection_account_interest_charges' => ''
+        'collection_account_interest_charges' => '',
+        'status' => 'PENDING'
     ];
 
     // Validation Rules
@@ -104,7 +105,8 @@ class Savings extends Component
         'form.ledger_fees_value' => 'required|numeric|min:0',
         'form.collection_account_withdraw_charges' => 'nullable|string|max:30',
         'form.collection_account_deposit_charges' => 'nullable|string|max:30',
-        'form.collection_account_interest_charges' => 'nullable|string|max:30'
+        'form.collection_account_interest_charges' => 'nullable|string|max:30',
+        'form.status' => 'required|string|max:50'
     ];
 
     protected $messages = [
@@ -180,7 +182,10 @@ class Savings extends Component
         'form.ledger_fees_value.numeric' => 'The ledger fees value must be a number.',
         'form.collection_account_withdraw_charges.max' => 'The collection account withdraw charges cannot exceed 30 characters.',
         'form.collection_account_deposit_charges.max' => 'The collection account deposit charges cannot exceed 30 characters.',
-        'form.collection_account_interest_charges.max' => 'The collection account interest charges cannot exceed 30 characters.'
+        'form.collection_account_interest_charges.max' => 'The collection account interest charges cannot exceed 30 characters.',
+        'form.status.required' => 'The status is required.',
+        'form.status.string' => 'The status must be a string.',
+        'form.status.max' => 'The status cannot exceed 50 characters.'
     ];
 
     public function mount()
@@ -282,7 +287,7 @@ class Savings extends Component
             ]);
 
             $product = sub_products::create([
-                'product_name' => $this->form['product_name'] ?? 'New Savings Product',
+                'product_name' => $this->form['product_name'],
                 'product_type' => '2000',
                 'savings_type_id' => $this->form['savings_type_id'],
                 'interest' => $this->form['interest_rate'],
@@ -319,9 +324,8 @@ class Savings extends Component
                 'collection_account_withdraw_charges' => $this->form['collection_account_withdraw_charges'],
                 'collection_account_deposit_charges' => $this->form['collection_account_deposit_charges'],
                 'collection_account_interest_charges' => $this->form['collection_account_interest_charges'],
-                'status' => 'PENDING',
-                'created_by' => auth()->id()
-             
+                'status' => $this->form['status'],
+                'created_by' => auth()->id(),
             ]);
 
             Log::info('Savings product created successfully', [
@@ -338,8 +342,7 @@ class Savings extends Component
             }
 
             // Prepare approval data
-            $approvalData = [
-              
+            $approvalData = [              
                 'process_name' => 'createSavingsProduct',
                 'process_description' => $user->name . ' has created a new savings product',
                 'approval_process_description' => 'has approved a transaction',
@@ -400,8 +403,10 @@ class Savings extends Component
         $this->editingProduct = $product;
         $this->form = [
             'product_name' => $product->product_name,
-            'savings_type_id' => $product->savings_type_id,
-            'interest' => $product->interest,
+            'savings_type_id' => $product->savings_type_id,            
+            'interest_value' => $product->interest_value,
+            'interest_tenure' => $product->interest_tenure,
+            'interest_rate' => $product->interest,
             'min_balance' => $product->min_balance,
             'product_account' => $product->product_account,
             'notes' => $product->notes,
@@ -413,9 +418,7 @@ class Savings extends Component
             'withdraw' => $product->withdraw,
             'withdraw_charge' => $product->withdraw_charge,
             'withdraw_charge_min_value' => $product->withdraw_charge_min_value,
-            'withdraw_charge_max_value' => $product->withdraw_charge_max_value,
-            'interest_value' => $product->interest_value,
-            'interest_tenure' => $product->interest_tenure,
+            'withdraw_charge_max_value' => $product->withdraw_charge_max_value,            
             'maintenance_fees' => $product->maintenance_fees,
             'maintenance_fees_value' => $product->maintenance_fees_value,
             'profit_account' => $product->profit_account,
@@ -434,7 +437,8 @@ class Savings extends Component
             'ledger_fees_value' => $product->ledger_fees_value,
             'collection_account_withdraw_charges' => $product->collection_account_withdraw_charges,
             'collection_account_deposit_charges' => $product->collection_account_deposit_charges,
-            'collection_account_interest_charges' => $product->collection_account_interest_charges
+            'collection_account_interest_charges' => $product->collection_account_interest_charges,
+            'status' => $product->status
         ];
         $this->showAddModal = true;
     }
@@ -468,10 +472,12 @@ class Savings extends Component
                 'original_values' => $product->toArray()
             ]);
 
-            $product->update([
+            $editPackage = json_encode([
                 'product_name' => $this->form['product_name'],
                 'savings_type_id' => $this->form['savings_type_id'],
                 'interest' => $this->form['interest_rate'],
+                'interest_value' => $this->form['interest_value'],
+                'interest_tenure' => $this->form['interest_tenure'],
                 'min_balance' => $this->form['min_balance'],
                 'product_account' => $this->form['product_account'],
                 'notes' => $this->form['notes'],
@@ -483,9 +489,7 @@ class Savings extends Component
                 'withdraw' => $this->form['withdraw'],
                 'withdraw_charge' => $this->form['withdraw_charge'],
                 'withdraw_charge_min_value' => $this->form['withdraw_charge_min_value'],
-                'withdraw_charge_max_value' => $this->form['withdraw_charge_max_value'],
-                'interest_value' => $this->form['interest_value'],
-                'interest_tenure' => $this->form['interest_tenure'],
+                'withdraw_charge_max_value' => $this->form['withdraw_charge_max_value'],                
                 'maintenance_fees' => $this->form['maintenance_fees'],
                 'maintenance_fees_value' => $this->form['maintenance_fees_value'],
                 'profit_account' => $this->form['profit_account'],
@@ -505,9 +509,10 @@ class Savings extends Component
                 'collection_account_withdraw_charges' => $this->form['collection_account_withdraw_charges'],
                 'collection_account_deposit_charges' => $this->form['collection_account_deposit_charges'],
                 'collection_account_interest_charges' => $this->form['collection_account_interest_charges'],
-                'status' => 'PENDING',
+                'status' => $this->form['status'],
                 'updated_by' => auth()->id()
             ]);
+            
 
             Log::info('Savings product updated successfully', [
                 'product_id' => $product->id,
@@ -522,17 +527,17 @@ class Savings extends Component
             }
 
             // Prepare approval data
-            $approvalData = [
-         
+            $approvalData = [         
                 'process_name' => 'updateSavingsProduct',
                 'process_description' => $user->name . ' has updated a savings product',
                 'approval_process_description' => 'has approved a transaction',
-                'process_code' => '104',
+                'process_code' => 'PROD_EDIT',
                 'process_id' => $product->id,
                 'approval_status' => 'PENDING',
                 'process_status' => 'PENDING',
                 'user_id' => $user->id,
-                'team_id' => 1 // Set default team ID to 1
+                'team_id' => 1, // Set default team ID to 1
+                'edit_package' => $editPackage
             ];
 
             Log::info('Creating approval request for update', [
@@ -605,7 +610,7 @@ class Savings extends Component
                 'process_name' => 'deleteSavingsProduct',
                 'process_description' => $user->name . ' has requested to delete a savings product',
                 'approval_process_description' => 'has approved a transaction',
-                'process_code' => '105',
+                'process_code' => 'PROD_DEACTIVATE',
                 'process_id' => $product->id,
                 'approval_status' => 'PENDING',
                 'process_status' => 'PENDING',
@@ -659,6 +664,8 @@ class Savings extends Component
         $this->form = [
             'product_name' => '',
             'savings_type_id' => '',
+            'interest_value' => '',
+            'interest_tenure' => '',
             'interest_rate' => '',
             'min_balance' => '',
             'product_account' => '',
@@ -672,8 +679,6 @@ class Savings extends Component
             'withdraw_charge' => 0,
             'withdraw_charge_min_value' => 0,
             'withdraw_charge_max_value' => 0,
-            'interest_value' => 0,
-            'interest_tenure' => 0,
             'maintenance_fees' => 0,
             'maintenance_fees_value' => 0,
             'profit_account' => '',
@@ -692,7 +697,8 @@ class Savings extends Component
             'ledger_fees_value' => 0,
             'collection_account_withdraw_charges' => '',
             'collection_account_deposit_charges' => '',
-            'collection_account_interest_charges' => ''
+            'collection_account_interest_charges' => '',
+            'status' => 'PENDING'
         ];
         $this->editingProduct = null;
     }
@@ -700,7 +706,7 @@ class Savings extends Component
     public function updated($property)
     {
         if ($property === 'form.product_account') {
-            $account = Account::find($this->form['product_account']);
+            $account = Account::where('account_number', $this->form['product_account'])->first();
             if ($account) {
                 $this->form['product_name'] = $account->account_name;
             }
