@@ -173,7 +173,7 @@
                 </div>
 
                 <!-- Quick Actions -->
-                <div class="p-4 border-t border-gray-100 bg-gray-50">
+                {{--<div class="p-4 border-t border-gray-100 bg-gray-50">
                     <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">Quick Actions</h3>
                     <div class="space-y-2">
                         @if($permissions['canShares'] ?? false)
@@ -209,7 +209,7 @@
                         </button>
                         @endif
                     </div>
-                </div>
+                </div>--}}
             </div>
 
             <!-- Main Content Area -->
@@ -239,14 +239,14 @@
                                 Export Data
                             </button>
                             @endif
-                            @if($permissions['canCreate'] ?? false)
+                            {{--@if($permissions['canCreate'] ?? false)
                             <button class="inline-flex items-center px-4 py-2 bg-blue-900 text-white rounded-lg text-sm font-medium hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                 </svg>
                                 Add Product
                             </button>
-                            @endif
+                            @endif--}}
                         </div>
                     </div>
                 </div>

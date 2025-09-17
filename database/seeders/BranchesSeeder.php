@@ -23,7 +23,7 @@ class BranchesSeeder extends Seeder
         // Insert branch data
         $data = [
             [
-                'id' => 1,
+                // 'id' => 1,
                 'name' => 'Headquarters',
                 'region' => 'Dar es Salaam',
                 'wilaya' => 'Ilala',

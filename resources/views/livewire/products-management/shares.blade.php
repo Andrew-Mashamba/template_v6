@@ -1,5 +1,21 @@
 <div>
     <!-- Header Section -->
+     @if(session()->has('message'))
+     <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-2 rounded flex items-center text-sm" role="alert">
+        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        <span>{{ session('message') }}</span>
+    </div>
+     @endif
+     @if(session()->has('error'))
+     <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-2 rounded flex items-center text-sm" role="alert">
+        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        </svg>
+        <span>{{ session('error') }}</span>
+    </div>
+     @endif
     <div class="bg-white shadow-sm border-b border-gray-100 mb-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex justify-between items-center">
@@ -31,9 +47,9 @@
                     <label class="block text-sm font-medium text-gray-700">Status</label>
                     <select wire:model="filters.status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg">
                         <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="pending">Pending</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="INACTIVE">Inactive</option>
+                        <option value="PENDING">Pending</option>
                     </select>
                 </div>
                 <div>
@@ -80,20 +96,31 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse($products as $product)
+                        @forelse($products as $product)                        
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $product->sub_product_name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $product->shareType->type ?? 'N/A' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($product->shares_allocated) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($product->nominal_price, 2) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $product->sub_product_status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                        {{ $product->sub_product_status ? 'Active' : 'Inactive' }}
-                                    </span>
+                                <td class="px-6 py-4 whitespace-nowrap">                                    
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {{ $product->status == 'ACTIVE' 
+                                        ? 'bg-green-100 text-green-800' 
+                                        : ($product->status == 'INACTIVE' 
+                                            ? 'bg-red-100 text-red-800' 
+                                            : 'bg-yellow-100 text-yellow-800') }}">
+                                    {{ $product->status == 'ACTIVE' 
+                                        ? 'Active' 
+                                        : ($product->status == 'INACTIVE' 
+                                            ? 'Inactive' 
+                                            : 'Pending') }}
+                                </span>                    
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <button wire:click="editProduct({{ $product->id }})" class="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                                    @if($product->status !== 'PENDING')
+                                    <button wire:click="editProduct({{ $product->id }})" class="text-blue-600 hover:text-blue-900 mr-3">Edit</button>                                    
                                     <button wire:click="deleteProduct({{ $product->id }})" class="text-red-600 hover:text-red-900">Delete</button>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -134,7 +161,7 @@
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label for="sub_product_name" class="block text-sm font-medium text-gray-700">Product Name</label>
-                                            <input type="text" wire:model="sub_product_name" id="sub_product_name" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <input readonly type="text" wire:model="sub_product_name" id="sub_product_name" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                             @error('sub_product_name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                         </div>
 
@@ -153,8 +180,12 @@
                                         <div>
                                             <label for="productStatus" class="block text-sm font-medium text-gray-700">Status</label>
                                             <select wire:model="productStatus" id="productStatus" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg">
-                                                <option value="1">Active</option>
-                                                <option value="0">Inactive</option>
+                                               @if($selectedAction == 1)
+                                                <option value="PENDING">Pending</option>
+                                                @else
+                                                <option value="ACTIVE">Active</option>
+                                                <option value="INACTIVE">Inactive</option>
+                                                @endif
                                             </select>
                                             @error('productStatus') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                         </div>

@@ -29,7 +29,7 @@ class Shares extends Component
 
     // New Product Form Properties
     public $sub_product_name;
-    public $productStatus = true;
+    public $productStatus = 'PENDING';
     public $currency = 'TZS';
     public $selectedShareType = 1;
     public $allocated_shares;
@@ -301,7 +301,8 @@ class Shares extends Component
                 'product_name' => $this->sub_product_name,
                 'product_type' => 1000,
                 'sub_product_name' => $this->sub_product_name,
-                'sub_product_status' => $this->productStatus,
+                'sub_product_status' => true, //always true
+                'status' => $this->productStatus,
                 'currency' => $this->currency,
                 'share_type_id' => 1,
                 'shares_allocated' => $this->allocated_shares,
@@ -339,24 +340,54 @@ class Shares extends Component
 
             if ($this->selectedAction === 1) {
             $product = sub_products::create($productData);
+            // $editPackage = json_encode($productData);
+            approvals::create([
+                'process_name' => 'create_share_product',
+                'process_description' => Auth::user()->name . ' has added a new share product ' . $this->sub_product_name,
+                'approval_process_description' => 'Share product creation approval required',
+                'process_code' => 'PRODUCT_CRE',
+                'process_id' => $product->id,
+                'process_status' => 'PENDING',
+                'user_id' => auth()->user()->id,
+                'approver_id' => null,
+                'approval_status' => 'PENDING',
+                'edit_package' => null
+            ]);
+            session()->flash('message', 'Share product created successfully and pending approval.');
+            $this->selectedAction = 0;
+            $this->resetForm();
             }
             if ($this->selectedAction === 2) {                
                 $product = sub_products::find($this->selectedProductId);               
-                $product->update($productData);
-                $product->save();
+                // $product->update($productData);
+                // $product->save();
+                $editPackage = json_encode($productData);
+                approvals::create([
+                    'process_name' => 'update_share_product',
+                    'process_description' => Auth::user()->name . ' has updated the share product ' . $this->sub_product_name,
+                    'approval_process_description' => 'Share product update approval required',
+                    'process_code' => 'PROD_EDIT',
+                    'process_id' => $product->id,
+                    'process_status' => 'PENDING',
+                    'user_id' => auth()->user()->id,
+                    'approver_id' => null,
+                    'approval_status' => 'PENDING',
+                    'edit_package' => $editPackage
+                ]);
+                session()->flash('message', 'Share product updated successfully and pending approval.');
+                $this->selectedAction = 0;
+                $this->resetForm();                
             }
 
             DB::commit();
 
             Log::info('Share product created successfully', [
-                'product_id' => $product->id,
-                'product_name' => $product->sub_product_name,
+                'product_id' => $product?->id ?? null,
+                'product_name' => $product?->sub_product_name ?? $productData['sub_product_name'],
                 'created_by' => Auth::id()
             ]);
 
-            session()->flash('message', 'Share product created successfully.');
-            $this->selectedAction = 0;
-            $this->resetForm();
+            
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::warning('Share product validation failed', [
@@ -385,7 +416,7 @@ class Shares extends Component
         if ($product) {
             $this->selectedProductId = $id;
             $this->sub_product_name = $product->sub_product_name;
-            $this->productStatus = $product->sub_product_status;
+            $this->productStatus = $product->status;            
             $this->currency = $product->currency;
             $this->selectedShareType = $product->share_type_id;
             $this->allocated_shares = $product->shares_allocated;
@@ -443,7 +474,7 @@ class Shares extends Component
                 'process_name' => 'Share Product Deletion',
                 'process_description' => 'Delete share product: ' . $product->sub_product_name,
                 'approval_process_description' => 'has requested to delete a share product',
-                'process_code' => 'SPD',
+                'process_code' => 'PROD_DEACTIVATE',
                 'process_id' => $product->id,
                 'approval_status' => 'PENDING',
                 'process_status' => 'PENDING',

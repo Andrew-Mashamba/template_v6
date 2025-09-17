@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\ApprovalComment;
 use Livewire\WithPagination;
 use App\Traits\Livewire\WithModulePermissions;
+use App\Models\sub_products;
 
 
 class Approvals extends Component
@@ -1179,6 +1180,17 @@ class Approvals extends Component
                 'rejection_status' => 'REJECTED'
             ],
 
+            'PROD_EDIT' => [
+                'table' => 'sub_products',
+                'approval_status' => 'ACTIVE',
+                'rejection_status' => 'REJECTED'
+            ],
+
+            'PROD_DEACTIVATE' => [
+                'table' => 'sub_products',
+                'approval_status' => 'INACTIVE',
+                'rejection_status' => 'REJECTED'
+            ],
 
             
             'BRANCH_CREATE' => [
@@ -1354,6 +1366,11 @@ class Approvals extends Component
                         ? $update['approval_status'] 
                         : $update['rejection_status'];
                     $this->updateAccountStatus($approval, $accEditStatus);
+                    return;
+                }
+
+                if($approval->process_code == 'PROD_EDIT'){
+                    $this->updateProductStatus($approval, $editPackage, $approval->process_code);
                     return;
                 }
 
@@ -3664,6 +3681,25 @@ class Approvals extends Component
         } catch (\Exception $e) {
             Log::error('Error handling budget delete approval', [
                 'approval_id' => $approval->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+
+    /**
+     * Update product (share, savings, deposit) details
+     */
+    private function updateProductStatus($approval, $editPackage, $processCode): void
+    {
+        try{
+        $product = sub_products::find($approval->process_id);
+        if($processCode == 'PROD_EDIT'){
+            $product->update($editPackage);
+        }
+
+        } catch (\Exception $e) {
+            Log::error('Error updating product status', [
                 'error' => $e->getMessage()
             ]);
         }
