@@ -265,7 +265,7 @@ class Deposits extends Component
             ->where('product_type', 'deposits')
             ->with('depositType')
             ->when($this->search, function ($query) {
-                $query->where('product_name', 'like', '%' . $this->search . '%');
+                $query->where('product_name', 'ilike', '%' . $this->search . '%');
             })
             ->when($this->filters['status'] !== '', function ($query) {
                 $query->where('status', $this->filters['status']);
@@ -298,8 +298,9 @@ class Deposits extends Component
             ]);
 
             $product = sub_products::create([
+                'sub_product_name' => $this->form['product_name'],
                 'product_name' => $this->form['product_name'],
-                'product_type' => 'deposits',
+                'product_type' => '3000',
                 'deposit_type_id' => $this->form['deposit_type_id'],
                 'interest' => $this->form['interest_rate'],
                 'min_balance' => $this->form['min_balance'],
@@ -335,6 +336,7 @@ class Deposits extends Component
                 'collection_account_withdraw_charges' => $this->form['collection_account_withdraw_charges'],
                 'collection_account_deposit_charges' => $this->form['collection_account_deposit_charges'],
                 'collection_account_interest_charges' => $this->form['collection_account_interest_charges'],
+                'created_by' => auth()->id(),
                 'status' => 'PENDING'
             ]);
 
@@ -355,7 +357,7 @@ class Deposits extends Component
                     'process_name' => 'Deposit Product Creation',
                     'process_description' => 'New deposit product: ' . $product->product_name,
                     'approval_process_description' => 'has created a new deposit product',
-                    'process_code' => 'DPC',
+                    'process_code' => 'PRODUCT_CRE',
                     'process_id' => $product->id,
                     'approval_status' => 'PENDING',
                     'process_status' => 'PENDING',
@@ -395,6 +397,7 @@ class Deposits extends Component
     {
         $this->editingProduct = sub_products::findOrFail($id);
         $this->form = [
+            'sub_product_name' => $this->editingProduct->sub_product_name,
             'product_name' => $this->editingProduct->product_name,
             'deposit_type_id' => $this->editingProduct->deposit_type_id,
             'interest_rate' => $this->editingProduct->interest,
@@ -430,7 +433,8 @@ class Deposits extends Component
             'ledger_fees_value' => $this->editingProduct->ledger_fees_value,
             'collection_account_withdraw_charges' => $this->editingProduct->collection_account_withdraw_charges,
             'collection_account_deposit_charges' => $this->editingProduct->collection_account_deposit_charges,
-            'collection_account_interest_charges' => $this->editingProduct->collection_account_interest_charges
+            'collection_account_interest_charges' => $this->editingProduct->collection_account_interest_charges,
+            'status' => $this->editingProduct->status,            
         ];
         $this->showAddModal = true;
     }
@@ -457,7 +461,8 @@ class Deposits extends Component
                 'original_values' => $product->toArray()
             ]);
 
-            $product->update([
+            $editPackage = json_encode([
+                'sub_product_name' => $this->form['sub_product_name'],
                 'product_name' => $this->form['product_name'],
                 'deposit_type_id' => $this->form['deposit_type_id'],
                 'interest' => $this->form['interest_rate'],
@@ -494,7 +499,8 @@ class Deposits extends Component
                 'collection_account_withdraw_charges' => $this->form['collection_account_withdraw_charges'],
                 'collection_account_deposit_charges' => $this->form['collection_account_deposit_charges'],
                 'collection_account_interest_charges' => $this->form['collection_account_interest_charges'],
-                'status' => 'PENDING'
+                'status' => $this->form['status'],
+                'updated_by' => auth()->id()
             ]);
 
             Log::info('Deposit product updated successfully', [
@@ -509,12 +515,12 @@ class Deposits extends Component
                     throw new \Exception('User not authenticated');
                 }
 
-                $approvalData = [
-                    
+                $approvalData = [                    
+                    'edit_package' => $editPackage,
                     'process_name' => 'Deposit Product Update',
                     'process_description' => 'Updated deposit product: ' . $product->product_name,
                     'approval_process_description' => 'has updated a deposit product',
-                    'process_code' => 'DPU',
+                    'process_code' => 'PROD_EDIT',
                     'process_id' => $product->id,
                     'approval_status' => 'PENDING',
                     'process_status' => 'PENDING',
@@ -574,12 +580,13 @@ class Deposits extends Component
                 'process_name' => 'Deposit Product Deletion',
                 'process_description' => 'Delete deposit product: ' . $product->product_name,
                 'approval_process_description' => 'has requested to delete a deposit product',
-                'process_code' => 'DPD',
+                'process_code' => 'PROD_DEACTIVATE',
                 'process_id' => $product->id,
                 'approval_status' => 'PENDING',
                 'process_status' => 'PENDING',
                 'user_id' => $user->id,
-                'team_id' => $user->currentTeam->id ?? null
+                'team_id' => $user->currentTeam->id ?? null,
+                'edit_package' => null
             ];
 
             $approval = approvals::create($approvalData);
@@ -610,6 +617,7 @@ class Deposits extends Component
     public function resetForm()
     {
         $this->form = [
+            'sub_product_name' => '',
             'product_name' => '',
             'deposit_type_id' => '',
             'interest_rate' => '',
@@ -645,7 +653,8 @@ class Deposits extends Component
             'ledger_fees_value' => 0,
             'collection_account_withdraw_charges' => '',
             'collection_account_deposit_charges' => '',
-            'collection_account_interest_charges' => ''
+            'collection_account_interest_charges' => '',
+            'status' => 'PENDING'
         ];
         $this->editingProduct = null;
     }
@@ -653,7 +662,7 @@ class Deposits extends Component
     public function updated($property)
     {
         if ($property === 'form.product_account') {
-            $account = Account::find($this->form['product_account']);
+            $account = Account::where('account_number', $this->form['product_account'])->first();
             if ($account) {
                 $this->form['product_name'] = $account->account_name;
             }
