@@ -467,7 +467,7 @@ class DailyLoanReportsService
                 'loans.loan_id',
                 'clients.client_number',
                 DB::raw("CONCAT(clients.first_name, ' ', clients.last_name) as member_name"),
-                'clients.mobile_number',
+                'clients.mobile_phone_number',
                 'loans.principle',
                 DB::raw("{$this->getBalanceSQL()} as balance"),
                 'loans.total_arrears',
@@ -484,7 +484,7 @@ class DailyLoanReportsService
             $sheet->setCellValue('A' . $row, $loan->loan_id);
             $sheet->setCellValue('B' . $row, $loan->client_number);
             $sheet->setCellValue('C' . $row, $loan->member_name);
-            $sheet->setCellValue('D' . $row, $loan->mobile_number);
+            $sheet->setCellValue('D' . $row, $loan->mobile_phone_number);
             $sheet->setCellValue('E' . $row, $loan->principle);
             $sheet->setCellValue('F' . $row, $loan->balance);
             $sheet->setCellValue('G' . $row, $loan->total_arrears);

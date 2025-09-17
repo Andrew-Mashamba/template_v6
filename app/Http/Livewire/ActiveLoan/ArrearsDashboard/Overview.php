@@ -17,9 +17,13 @@ class Overview extends Component
     
     // Risk categories
     public $criticalArrears = 0;
+    public $criticalArrearsAmount = 0;
     public $highRisk = 0;
+    public $highRiskAmount = 0;
     public $mediumRisk = 0;
+    public $mediumRiskAmount = 0;
     public $performing = 0;
+    public $performingSchedulesAmount = 0;
     
     // PAR metrics
     public $par30 = 0;
@@ -74,23 +78,37 @@ class Overview extends Component
             ->count();
         $this->collectionRate = $totalSchedules > 0 ? ($paidSchedules / $totalSchedules) * 100 : 0;
         
-        // Risk categories based on days in arrears
+        // Risk categories - count schedules and calculate amounts properly
         $this->criticalArrears = DB::table('loans_schedules')
             ->whereNotNull('days_in_arrears')
             ->where('days_in_arrears', '>', 90)
             ->count();
+        $this->criticalArrearsAmount = DB::table('loans_schedules')
+            ->whereNotNull('days_in_arrears')
+            ->where('days_in_arrears', '>', 90)
+            ->sum(DB::raw('COALESCE(amount_in_arrears, 0)'));
             
         $this->highRisk = DB::table('loans_schedules')
             ->whereNotNull('days_in_arrears')
             ->where('days_in_arrears', '>', 30)
             ->where('days_in_arrears', '<=', 90)
             ->count();
+        $this->highRiskAmount = DB::table('loans_schedules')
+            ->whereNotNull('days_in_arrears')
+            ->where('days_in_arrears', '>', 30)
+            ->where('days_in_arrears', '<=', 90)
+            ->sum(DB::raw('COALESCE(amount_in_arrears, 0)'));
             
         $this->mediumRisk = DB::table('loans_schedules')
             ->whereNotNull('days_in_arrears')
             ->where('days_in_arrears', '>', 0)
             ->where('days_in_arrears', '<=', 30)
             ->count();
+        $this->mediumRiskAmount = DB::table('loans_schedules')
+            ->whereNotNull('days_in_arrears')
+            ->where('days_in_arrears', '>', 0)
+            ->where('days_in_arrears', '<=', 30)
+            ->sum(DB::raw('COALESCE(amount_in_arrears, 0)'));
             
         $this->performing = DB::table('loans_schedules')
             ->where(function($query) {
@@ -98,15 +116,21 @@ class Overview extends Component
                       ->orWhere('days_in_arrears', '<=', 0);
             })
             ->count();
+        $this->performingSchedulesAmount = DB::table('loans_schedules')
+            ->where(function($query) {
+                $query->whereNull('days_in_arrears')
+                      ->orWhere('days_in_arrears', '<=', 0);
+            })
+            ->sum('installment');
         
         // PAR calculations
         $this->par30 = $this->calculatePAR(30);
         $this->par90 = $this->calculatePAR(90);
         $this->par30Amount = $this->calculatePARAmount(30);
         $this->par90Amount = $this->calculatePARAmount(90);
-        $this->performingAmount = $totalLoanAmount - $arrearsAmount;
+        $this->performingAmount = $totalLoanAmount - max($this->par30Amount, $this->par90Amount);
         
-        // Arrears distribution
+        // Arrears distribution with amounts
         $this->arrears1to7 = DB::table('loans_schedules')
             ->whereNotNull('days_in_arrears')
             ->where('days_in_arrears', '>', 0)
@@ -150,24 +174,38 @@ class Overview extends Component
         $totalLoanAmount = LoansModel::where('status', 'ACTIVE')->sum('principle');
         if ($totalLoanAmount <= 0) return 0;
         
-        $parAmount = DB::table('loans_schedules')
+        // Get loans that have any schedule with arrears > days
+        $loansWithArrears = DB::table('loans_schedules')
             ->join('loans', 'loans_schedules.loan_id', '=', DB::raw('CAST(loans.id AS TEXT)'))
             ->where('loans.status', 'ACTIVE')
             ->whereNotNull('loans_schedules.days_in_arrears')
             ->where('loans_schedules.days_in_arrears', '>', $days)
-            ->sum('loans.principle');
+            ->distinct('loans.id')
+            ->pluck('loans.id');
+        
+        // Sum the outstanding balance for those loans
+        $parAmount = LoansModel::whereIn('id', $loansWithArrears)
+            ->where('status', 'ACTIVE')
+            ->sum('principle');
             
         return ($parAmount / $totalLoanAmount) * 100;
     }
     
     private function calculatePARAmount($days)
     {
-        return DB::table('loans_schedules')
+        // Get loans that have any schedule with arrears > days
+        $loansWithArrears = DB::table('loans_schedules')
             ->join('loans', 'loans_schedules.loan_id', '=', DB::raw('CAST(loans.id AS TEXT)'))
             ->where('loans.status', 'ACTIVE')
             ->whereNotNull('loans_schedules.days_in_arrears')
             ->where('loans_schedules.days_in_arrears', '>', $days)
-            ->sum('loans.principle');
+            ->distinct('loans.id')
+            ->pluck('loans.id');
+        
+        // Sum the outstanding balance for those loans
+        return LoansModel::whereIn('id', $loansWithArrears)
+            ->where('status', 'ACTIVE')
+            ->sum('principle');
     }
     
     private function loadRecentArrearsActivity()

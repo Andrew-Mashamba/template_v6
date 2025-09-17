@@ -244,29 +244,38 @@
             <!-- Top 10 Concentration -->
             <div class="text-center">
                 <div class="text-3xl font-bold text-blue-600 mb-2">
-                    {{ number_format((App\Models\LoansModel::whereIn('status', ['IN_ARREAR', 'DELINQUENT'])->orderBy('principle', 'desc')->limit(10)->sum('principle') / App\Models\LoansModel::whereIn('status', ['IN_ARREAR', 'DELINQUENT'])->sum('principle')) * 100, 1) }}%
+                    @php
+                        $totalArrears = App\Models\LoansModel::whereIn('status', ['IN_ARREAR', 'DELINQUENT'])->sum('principle');
+                        $top10Arrears = App\Models\LoansModel::whereIn('status', ['IN_ARREAR', 'DELINQUENT'])->orderBy('principle', 'desc')->limit(10)->sum('principle');
+                        $top10Percentage = $totalArrears > 0 ? ($top10Arrears / $totalArrears) * 100 : 0;
+                    @endphp
+                    {{ number_format($top10Percentage, 1) }}%
                 </div>
                 <p class="text-sm text-gray-600">Top 10 Loans</p>
                 <p class="text-xs text-gray-500 mt-1">
-                    TZS {{ number_format(App\Models\LoansModel::whereIn('status', ['IN_ARREAR', 'DELINQUENT'])->orderBy('principle', 'desc')->limit(10)->sum('principle'), 2) }}
+                    TZS {{ number_format($top10Arrears, 2) }}
                 </p>
             </div>
             
             <!-- Top 20 Concentration -->
             <div class="text-center">
                 <div class="text-3xl font-bold text-orange-600 mb-2">
-                    {{ number_format((App\Models\LoansModel::whereIn('status', ['IN_ARREAR', 'DELINQUENT'])->orderBy('principle', 'desc')->limit(20)->sum('principle') / App\Models\LoansModel::whereIn('status', ['IN_ARREAR', 'DELINQUENT'])->sum('principle')) * 100, 1) }}%
+                    @php
+                        $top20Arrears = App\Models\LoansModel::whereIn('status', ['IN_ARREAR', 'DELINQUENT'])->orderBy('principle', 'desc')->limit(20)->sum('principle');
+                        $top20Percentage = $totalArrears > 0 ? ($top20Arrears / $totalArrears) * 100 : 0;
+                    @endphp
+                    {{ number_format($top20Percentage, 1) }}%
                 </div>
                 <p class="text-sm text-gray-600">Top 20 Loans</p>
                 <p class="text-xs text-gray-500 mt-1">
-                    TZS {{ number_format(App\Models\LoansModel::whereIn('status', ['IN_ARREAR', 'DELINQUENT'])->orderBy('principle', 'desc')->limit(20)->sum('principle'), 2) }}
+                    TZS {{ number_format($top20Arrears, 2) }}
                 </p>
             </div>
             
             <!-- Average Arrears Amount -->
             <div class="text-center">
                 <div class="text-3xl font-bold text-green-600 mb-2">
-                    TZS {{ number_format(App\Models\LoansModel::whereIn('status', ['IN_ARREAR', 'DELINQUENT'])->avg('principle'), 0) }}
+                    TZS {{ number_format(App\Models\LoansModel::whereIn('status', ['IN_ARREAR', 'DELINQUENT'])->avg('principle') ?? 0, 0) }}
                 </div>
                 <p class="text-sm text-gray-600">Average Amount</p>
                 <p class="text-xs text-gray-500 mt-1">Per delinquent loan</p>

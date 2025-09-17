@@ -45,7 +45,9 @@ class InternalFundsTransferService
         $startTime = microtime(true);
         $this->logInfo("Starting account lookup via NBC API", [
             'account' => $accountNumber,
-            'type' => $accountType
+            'type' => $accountType,
+            'timestamp' => now()->toIso8601String(),
+            'method' => 'lookupAccount'
         ]);
 
         try {
@@ -68,12 +70,40 @@ class InternalFundsTransferService
                 'channelName' => config('services.account_details.channel_name', 'NBC_SACCOS')
             ];
             
+            $this->logDebug("[TECHNICAL] Account Lookup API Request", [
+                'endpoint' => $lookupUrl,
+                'method' => 'POST',
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'x-api-key' => substr(config('services.account_details.api_key'), 0, 10) . '...MASKED'
+                ],
+                'request_body' => json_encode($lookupPayload, JSON_PRETTY_PRINT),
+                'raw_payload' => $lookupPayload,
+                'account_type' => $accountType,
+                'ssl_verify' => false,
+                'timeout' => 30
+            ]);
+            
+            $this->logInfo("[HTTP] Executing Account Lookup Request", [
+                'target' => $lookupUrl,
+                'account' => $accountNumber
+            ]);
+            
             $lookupResponse = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'x-api-key' => config('services.account_details.api_key'),  // lowercase as per NBC documentation
             ])->withOptions(['verify' => false])
               ->timeout(30)
               ->post($lookupUrl, $lookupPayload);
+            
+            $this->logDebug("[TECHNICAL] Account Lookup API Response", [
+                'http_status' => $lookupResponse->status(),
+                'response_headers' => $lookupResponse->headers(),
+                'response_body' => $lookupResponse->body(),
+                'parsed_response' => $lookupResponse->json(),
+                'successful' => $lookupResponse->successful(),
+                'account' => $accountNumber
+            ]);
             
             $response = [
                 'success' => $lookupResponse->successful(),
@@ -85,9 +115,19 @@ class InternalFundsTransferService
             if ($response['success']) {
                 $accountData = $response['data'];
                 
-                $this->logInfo("Account validated successfully via API", [
+                $this->logInfo("[SUCCESS] Account Validation Complete", [
                     'account' => $accountNumber,
-                    'duration_ms' => $duration
+                    'full_response' => json_encode($accountData, JSON_PRETTY_PRINT),
+                    'extracted_data' => [
+                        'account_name' => $accountData['accountName'] ?? 'Not provided',
+                        'status' => $accountData['status'] ?? 'Unknown',
+                        'branch' => $accountData['branchName'] ?? 'Unknown',
+                        'currency' => $accountData['currency'] ?? 'TZS',
+                        'can_receive' => $accountData['canReceive'] ?? null,
+                        'can_debit' => $accountData['canDebit'] ?? null
+                    ],
+                    'duration_ms' => $duration,
+                    'api_call_completed' => true
                 ]);
 
                 return [
@@ -106,7 +146,9 @@ class InternalFundsTransferService
                 // If validation API fails, use basic validation
                 $this->logWarning("API validation failed, using basic validation", [
                     'account' => $accountNumber,
-                    'api_error' => $response['message']
+                    'api_error' => $response['message'] ?? 'No error message',
+                    'api_response' => $response,
+                    'fallback_mode' => 'basic_validation'
                 ]);
                 
                 // Return basic validation result
@@ -129,6 +171,8 @@ class InternalFundsTransferService
             $this->logError("Account lookup failed", [
                 'account' => $accountNumber,
                 'error' => $e->getMessage(),
+                'error_type' => get_class($e),
+                'trace' => $e->getTraceAsString(),
                 'duration_ms' => round((microtime(true) - $startTime) * 1000, 2)
             ]);
 
@@ -155,7 +199,10 @@ class InternalFundsTransferService
             'reference' => $reference,
             'from_account' => $transferData['from_account'],
             'to_account' => $transferData['to_account'],
-            'amount' => $transferData['amount']
+            'amount' => $transferData['amount'],
+            'narration' => $transferData['narration'] ?? 'Not provided',
+            'sender_name' => $transferData['sender_name'] ?? 'Not provided',
+            'timestamp' => now()->toIso8601String()
         ]);
 
         try {
@@ -163,16 +210,58 @@ class InternalFundsTransferService
             $this->validateTransferData($transferData);
 
             // Step 1: Validate source account
+            $this->logDebug("Validating source account", [
+                'account' => $transferData['from_account'],
+                'reference' => $reference
+            ]);
+            
             $sourceAccount = $this->lookupAccount($transferData['from_account'], 'source');
             if (!$sourceAccount['success']) {
+                $this->logError("Source account validation failed", [
+                    'account' => $transferData['from_account'],
+                    'error' => $sourceAccount['error'] ?? 'Unknown error',
+                    'reference' => $reference
+                ]);
                 throw new Exception("Source account validation failed: " . ($sourceAccount['error'] ?? 'Unknown error'));
             }
+            
+            $this->logDebug("[VALIDATION] Source Account Validated", [
+                'account' => $transferData['from_account'],
+                'validation_response' => json_encode($sourceAccount, JSON_PRETTY_PRINT),
+                'account_details' => [
+                    'name' => $sourceAccount['account_name'] ?? 'Unknown',
+                    'status' => $sourceAccount['account_status'] ?? 'Unknown',
+                    'can_debit' => $sourceAccount['can_debit'] ?? false
+                ],
+                'reference' => $reference
+            ]);
 
             // Step 2: Validate destination account
+            $this->logDebug("Validating destination account", [
+                'account' => $transferData['to_account'],
+                'reference' => $reference
+            ]);
+            
             $destAccount = $this->lookupAccount($transferData['to_account'], 'destination');
             if (!$destAccount['success']) {
+                $this->logError("Destination account validation failed", [
+                    'account' => $transferData['to_account'],
+                    'error' => $destAccount['error'] ?? 'Unknown error',
+                    'reference' => $reference
+                ]);
                 throw new Exception("Destination account validation failed: " . ($destAccount['error'] ?? 'Unknown error'));
             }
+            
+            $this->logDebug("[VALIDATION] Destination Account Validated", [
+                'account' => $transferData['to_account'],
+                'validation_response' => json_encode($destAccount, JSON_PRETTY_PRINT),
+                'account_details' => [
+                    'name' => $destAccount['account_name'] ?? 'Unknown',
+                    'status' => $destAccount['account_status'] ?? 'Unknown',
+                    'can_receive' => $destAccount['can_receive'] ?? false
+                ],
+                'reference' => $reference
+            ]);
 
             // Step 3: Execute real IFT Transfer via NBC API
             // Build transfer request payload according to NBC API spec
@@ -195,14 +284,38 @@ class InternalFundsTransferService
                 'narration' => $transferData['narration'] ?? 'Internal Funds Transfer'
             ];
             
-            $this->logInfo("Sending transfer request to NBC API", [
+            $this->logInfo("[TECHNICAL] NBC IFT Transfer Request Prepared", [
                 'reference' => $reference,
                 'channel_ref' => $channelRef,
-                'payload' => $this->sanitizeForLogging($payload)
+                'request_structure' => [
+                    'header' => $payload['header'],
+                    'channelId' => $payload['channelId'],
+                    'channelRef' => $payload['channelRef'],
+                    'amount' => $payload['amount'],
+                    'narration' => $payload['narration']
+                ],
+                'full_request_payload' => json_encode($payload, JSON_PRETTY_PRINT),
+                'raw_request' => $payload,
+                'payload_bytes' => strlen(json_encode($payload)),
+                'accounts' => [
+                    'from' => $transferData['from_account'],
+                    'to' => $transferData['to_account']
+                ]
             ]);
             
             // Make the actual API call
+            $this->logDebug("Initiating NBC API call", [
+                'reference' => $reference,
+                'method' => 'sendRealNBCRequest'
+            ]);
+            
             $response = $this->sendRealNBCRequest($payload);
+            
+            $this->logDebug("NBC API call completed", [
+                'reference' => $reference,
+                'success' => $response['success'] ?? false,
+                'has_data' => isset($response['data'])
+            ]);
             
             $duration = round((microtime(true) - $startTime) * 1000, 2);
             
@@ -223,10 +336,30 @@ class InternalFundsTransferService
                     'duration_ms' => $duration
                 ]);
 
-                $this->logInfo("IFT transfer successful via NBC API", [
+                $this->logInfo("[SUCCESS] IFT Transfer Completed", [
                     'reference' => $reference,
                     'nbc_reference' => $nbcReference,
-                    'duration_ms' => $duration
+                    'transfer_details' => [
+                        'amount' => $transferData['amount'],
+                        'from_account' => $transferData['from_account'],
+                        'to_account' => $transferData['to_account'],
+                        'narration' => $transferData['narration'] ?? 'Not provided'
+                    ],
+                    'nbc_response' => [
+                        'status_code' => $response['data']['statusCode'] ?? 'Unknown',
+                        'message' => $response['data']['message'] ?? 'Unknown',
+                        'references' => [
+                            'internal' => $reference,
+                            'nbc' => $nbcReference,
+                            'cbs' => $response['data']['hostReferenceCbs'] ?? null,
+                            'gateway' => $response['data']['hostReferenceGw'] ?? null
+                        ]
+                    ],
+                    'performance' => [
+                        'total_duration_ms' => $duration,
+                        'timestamp' => now()->toIso8601String()
+                    ],
+                    'full_api_response' => json_encode($response['data'] ?? [], JSON_PRETTY_PRINT)
                 ]);
 
                 return [
@@ -242,14 +375,41 @@ class InternalFundsTransferService
                     'api_response' => $response['data']
                 ];
             } else {
-                throw new Exception($response['message'] ?? 'Transfer failed');
+                $errorMessage = $response['message'] ?? 'Transfer failed';
+                $this->logError("[FAILURE] NBC Transfer Request Failed", [
+                    'reference' => $reference,
+                    'error_message' => $errorMessage,
+                    'full_error_response' => json_encode($response, JSON_PRETTY_PRINT),
+                    'response_data' => $response['data'] ?? null,
+                    'duration_ms' => $duration,
+                    'request_summary' => [
+                        'from' => $transferData['from_account'],
+                        'to' => $transferData['to_account'],
+                        'amount' => $transferData['amount']
+                    ]
+                ]);
+                throw new Exception($errorMessage);
             }
 
         } catch (Exception $e) {
-            $this->logError("IFT transfer failed", [
+            $this->logError("[EXCEPTION] IFT Transfer Failed", [
                 'reference' => $reference,
-                'error' => $e->getMessage(),
-                'duration_ms' => round((microtime(true) - $startTime) * 1000, 2)
+                'exception' => [
+                    'class' => get_class($e),
+                    'message' => $e->getMessage(),
+                    'code' => $e->getCode(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ],
+                'transfer_request' => [
+                    'from_account' => $transferData['from_account'] ?? 'Unknown',
+                    'to_account' => $transferData['to_account'] ?? 'Unknown',
+                    'amount' => $transferData['amount'] ?? 0,
+                    'narration' => $transferData['narration'] ?? 'Not provided'
+                ],
+                'stack_trace' => $e->getTraceAsString(),
+                'duration_ms' => round((microtime(true) - $startTime) * 1000, 2),
+                'timestamp' => now()->toIso8601String()
             ]);
 
             // Save failed transaction
@@ -382,21 +542,46 @@ class InternalFundsTransferService
      */
     protected function validateTransferData(array $data): void
     {
+        $this->logDebug("Validating transfer data", [
+            'has_from_account' => isset($data['from_account']),
+            'has_to_account' => isset($data['to_account']),
+            'has_amount' => isset($data['amount']),
+            'amount_value' => $data['amount'] ?? 'Not set'
+        ]);
+        
         $required = ['from_account', 'to_account', 'amount'];
         
         foreach ($required as $field) {
             if (empty($data[$field])) {
+                $this->logError("Transfer validation failed - missing field", [
+                    'missing_field' => $field,
+                    'provided_fields' => array_keys($data)
+                ]);
                 throw new Exception("Missing required field: {$field}");
             }
         }
 
         if (!is_numeric($data['amount']) || $data['amount'] <= 0) {
+            $this->logError("Transfer validation failed - invalid amount", [
+                'amount' => $data['amount'],
+                'is_numeric' => is_numeric($data['amount'])
+            ]);
             throw new Exception("Invalid amount");
         }
 
         if ($data['from_account'] === $data['to_account']) {
+            $this->logError("Transfer validation failed - same accounts", [
+                'from_account' => $data['from_account'],
+                'to_account' => $data['to_account']
+            ]);
             throw new Exception("Source and destination accounts cannot be the same");
         }
+        
+        $this->logDebug("Transfer data validation successful", [
+            'from_account' => substr($data['from_account'], 0, 3) . '****',
+            'to_account' => substr($data['to_account'], 0, 3) . '****',
+            'amount' => $data['amount']
+        ]);
     }
 
     /**
@@ -411,9 +596,17 @@ class InternalFundsTransferService
         try {
             $url = $this->baseUrl . $endpoint;
             
-            $this->logDebug("Sending request", [
-                'url' => $url,
-                'payload' => $payload
+            $this->logDebug("[TECHNICAL] Generic API Request", [
+                'endpoint' => $url,
+                'method' => 'POST',
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'x-api-key' => '***MASKED***',
+                    'Client-Id' => $this->clientId,
+                    'Service-Name' => 'IFT'
+                ],
+                'request_body' => json_encode($payload, JSON_PRETTY_PRINT),
+                'raw_payload' => $payload
             ]);
 
             $response = Http::withHeaders([
@@ -428,9 +621,12 @@ class InternalFundsTransferService
             $statusCode = $response->status();
             $responseData = $response->json() ?? [];
 
-            $this->logDebug("Response received", [
-                'status_code' => $statusCode,
-                'response' => $responseData
+            $this->logDebug("[TECHNICAL] Generic API Response", [
+                'http_status' => $statusCode,
+                'response_headers' => $response->headers(),
+                'response_body' => $response->body(),
+                'parsed_response' => json_encode($responseData, JSON_PRETTY_PRINT),
+                'raw_response' => $responseData
             ]);
 
             if ($statusCode === 200 || $statusCode === 201) {
@@ -474,25 +670,63 @@ class InternalFundsTransferService
             // Generate authentication headers
             $headers = $this->generateNBCHeaders($payload);
             
-            $this->logDebug("Sending NBC IFT request", [
-                'url' => $url,
-                'headers' => array_diff_key($headers, array_flip(['NBC-Authorization', 'Signature'])), // Log headers except sensitive ones
-                'payload' => $this->sanitizeForLogging($payload)
+            $this->logDebug("[TECHNICAL] NBC API HTTP Request Details", [
+                'endpoint' => $url,
+                'method' => 'POST',
+                'service_name' => $serviceName,
+                'base_url' => $this->baseUrl,
+                'headers_sent' => array_merge(
+                    array_diff_key($headers, array_flip(['NBC-Authorization', 'Signature'])),
+                    [
+                        'NBC-Authorization' => isset($headers['NBC-Authorization']) ? 'Basic ***MASKED***' : 'Not set',
+                        'Signature' => isset($headers['Signature']) ? 'SHA256 ***MASKED***' : 'Not set'
+                    ]
+                ),
+                'request_body' => json_encode($payload, JSON_PRETTY_PRINT),
+                'raw_payload' => $payload,
+                'payload_size_bytes' => strlen(json_encode($payload)),
+                'channel_ref' => $payload['channelRef'] ?? 'Unknown',
+                'timeout_seconds' => config('services.nbc_internal_fund_transfer.timeout', 30),
+                'ssl_verification' => config('services.nbc_internal_fund_transfer.verify_ssl', false)
             ]);
 
+            $httpStartTime = microtime(true);
+            $this->logInfo("[HTTP] Executing NBC Transfer Request", [
+                'url' => $url,
+                'method' => 'POST'
+            ]);
+            
             $response = Http::withHeaders($headers)
                 ->withOptions([
                     'verify' => config('services.nbc_internal_fund_transfer.verify_ssl', false)
                 ])
                 ->timeout(config('services.nbc_internal_fund_transfer.timeout', 30))
                 ->post($url, $payload);
+            
+            $httpDuration = round((microtime(true) - $httpStartTime) * 1000, 2);
+            $this->logInfo("[HTTP] NBC Transfer Response Received", [
+                'http_duration_ms' => $httpDuration,
+                'http_status' => $response->status()
+            ]);
 
             $statusCode = $response->status();
             $responseData = $response->json() ?? [];
 
-            $this->logDebug("NBC API response received", [
-                'status_code' => $statusCode,
-                'response' => $this->sanitizeForLogging($responseData)
+            $this->logDebug("[TECHNICAL] NBC API HTTP Response Details", [
+                'http_status_code' => $statusCode,
+                'response_headers' => $response->headers(),
+                'raw_response_body' => $response->body(),
+                'parsed_response' => json_encode($responseData, JSON_PRETTY_PRINT),
+                'response_structure' => [
+                    'statusCode' => $responseData['statusCode'] ?? null,
+                    'message' => $responseData['message'] ?? null,
+                    'hostReferenceCbs' => $responseData['hostReferenceCbs'] ?? null,
+                    'hostReferenceGw' => $responseData['hostReferenceGw'] ?? null,
+                    'has_body' => isset($responseData['body']),
+                    'body_content' => $responseData['body'] ?? null
+                ],
+                'response_size_bytes' => strlen($response->body()),
+                'full_response_data' => $responseData
             ]);
 
             // Check NBC specific status codes
@@ -500,19 +734,41 @@ class InternalFundsTransferService
                 $nbcStatusCode = $responseData['statusCode'] ?? null;
                 
                 if ($nbcStatusCode == 600) { // NBC success code
+                    $this->logInfo("[SUCCESS] NBC Transfer Confirmed", [
+                        'nbc_status_code' => $nbcStatusCode,
+                        'nbc_message' => $responseData['message'] ?? 'Success',
+                        'nbc_references' => [
+                            'cbs_reference' => $responseData['hostReferenceCbs'] ?? null,
+                            'gateway_reference' => $responseData['hostReferenceGw'] ?? null
+                        ],
+                        'full_success_response' => json_encode($responseData, JSON_PRETTY_PRINT)
+                    ]);
                     return [
                         'success' => true,
                         'data' => array_merge($responseData, ['body' => $responseData['body'] ?? []])
                     ];
                 } else {
+                    $errorMsg = $this->getNBCErrorMessage($nbcStatusCode);
+                    $this->logError("[FAILURE] NBC Transfer Failed", [
+                        'nbc_status_code' => $nbcStatusCode,
+                        'interpreted_error' => $errorMsg,
+                        'raw_nbc_message' => $responseData['message'] ?? 'No message',
+                        'full_error_response' => json_encode($responseData, JSON_PRETTY_PRINT),
+                        'response_dump' => $responseData
+                    ]);
                     return [
                         'success' => false,
-                        'message' => $this->getNBCErrorMessage($nbcStatusCode),
+                        'message' => $errorMsg,
                         'data' => $responseData
                     ];
                 }
             }
 
+            $this->logError("[FAILURE] HTTP Request Failed", [
+                'http_status' => $statusCode,
+                'response_body' => $response->body(),
+                'parsed_response' => $responseData
+            ]);
             return [
                 'success' => false,
                 'message' => "Request failed with HTTP status {$statusCode}",
@@ -520,9 +776,15 @@ class InternalFundsTransferService
             ];
 
         } catch (Exception $e) {
-            $this->logError("NBC API request failed", [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+            $this->logError("[EXCEPTION] NBC API Request Failed", [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'exception_code' => $e->getCode(),
+                'url' => $url ?? 'Not set',
+                'request_payload' => isset($payload) ? json_encode($payload, JSON_PRETTY_PRINT) : 'Not available',
+                'stack_trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
             ]);
 
             return [

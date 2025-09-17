@@ -165,9 +165,9 @@
             
             <div class="space-y-4">
                 @php
-                    $branches = App\Models\LoansModel::whereIn('status', ['IN_ARREAR', 'DELINQUENT'])
-                        ->where('days_in_arrears', '>', 0)
-                        ->join('branches', 'loans.branch_id', '=', 'branches.id')
+                    $branches = App\Models\LoansModel::whereIn('loans.status', ['IN_ARREAR', 'DELINQUENT'])
+                        ->where('loans.days_in_arrears', '>', 0)
+                        ->join('branches', DB::raw('CAST(loans.branch_id AS BIGINT)'), '=', 'branches.id')
                         ->select('branches.name', DB::raw('count(*) as count'), DB::raw('sum(loans.principle) as total_amount'))
                         ->groupBy('branches.name')
                         ->orderBy('total_amount', 'desc')

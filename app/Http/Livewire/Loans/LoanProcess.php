@@ -793,7 +793,14 @@ class LoanProcess extends Component
                 } else {
                     // Rollback on disbursement failure
                     DB::rollback();
-                    $this->showErrorMessage('Loan approved but disbursement failed: ' . ($disbursementResult['message'] ?? 'Unknown error'));
+                    // Show detailed error message to user
+                    $errorMessage = $disbursementResult['message'] ?? 'Unknown error occurred during disbursement';
+                    $this->showErrorMessage('Loan approved but disbursement failed: ' . $errorMessage);
+                    Log::error('Disbursement failed after approval', [
+                        'loan_id' => $this->loan->id,
+                        'error' => $errorMessage,
+                        'full_result' => $disbursementResult
+                    ]);
                 }
                 
                 $this->loadLoanData(); // Reload loan data to reflect new status
@@ -1601,7 +1608,7 @@ class LoanProcess extends Component
             
             // Get the actual bank account details from bank_accounts table
             $bankAccount = DB::table('bank_accounts')
-                ->where('mirror_account_number', $bankMirrorAccount)
+                ->where('internal_mirror_account_number', $bankMirrorAccount)
                 ->first();
                 
             if (!$bankAccount || !$bankAccount->account_number) {
@@ -1649,13 +1656,15 @@ class LoanProcess extends Component
                 $transferResult = $iftService->transfer($transferData);
                 
                 if (!$transferResult['success']) {
+                    $errorDetails = $transferResult['message'] ?? 'Unknown error - please check bank connectivity';
                     Log::error('NBC Internal Transfer failed', [
                         'loan_id' => $this->loan->id,
-                        'error' => $transferResult['message'] ?? 'Unknown error'
+                        'error' => $errorDetails,
+                        'response' => $transferResult
                     ]);
                     return [
                         'status' => 'error', 
-                        'message' => 'NBC Internal Transfer failed: ' . ($transferResult['message'] ?? 'Unknown error')
+                        'message' => 'NBC Bank Transfer Failed: ' . $errorDetails . '. Please verify bank account details and try again.'
                     ];
                 }
                 
@@ -1671,13 +1680,28 @@ class LoanProcess extends Component
                 $this->loan->save();
                 
             } catch (\Exception $transferException) {
+                $errorMessage = $transferException->getMessage();
                 Log::error('NBC Internal Transfer exception', [
                     'loan_id' => $this->loan->id,
-                    'error' => $transferException->getMessage()
+                    'error' => $errorMessage,
+                    'trace' => $transferException->getTraceAsString()
                 ]);
+                
+                // Provide user-friendly error message
+                $userMessage = 'Bank transfer error: ';
+                if (strpos($errorMessage, 'Connection') !== false || strpos($errorMessage, 'timeout') !== false) {
+                    $userMessage .= 'Unable to connect to NBC bank. Please try again later.';
+                } elseif (strpos($errorMessage, 'insufficient') !== false) {
+                    $userMessage .= 'Insufficient funds in SACCOS bank account.';
+                } elseif (strpos($errorMessage, 'account') !== false) {
+                    $userMessage .= 'Invalid account details. Please verify member\'s NBC account.';
+                } else {
+                    $userMessage .= $errorMessage;
+                }
+                
                 return [
                     'status' => 'error',
-                    'message' => 'NBC Internal Transfer failed: ' . $transferException->getMessage()
+                    'message' => $userMessage
                 ];
             }
             

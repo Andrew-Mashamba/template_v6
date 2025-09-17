@@ -91,7 +91,7 @@ class LoanAssessmentService
                 'full_name' => trim(($client->first_name ?? '') . ' ' . ($client->last_name ?? '')),
                 'id_number' => $client->national_id ?? $client->identification_number ?? '',
                 'date_of_birth' => $client->date_of_birth ?? '',
-                'phone_number' => $client->mobile_number ?? '',
+                'phone_number' => $client->mobile_phone_number ?? '',
                 'id_type' => 'NationalID',
             ];
             
