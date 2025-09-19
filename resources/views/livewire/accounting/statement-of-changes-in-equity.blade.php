@@ -71,11 +71,14 @@
                         Particulars
                     </th>
                     @foreach($equityAccounts as $account)
+                    @php
+                        $acc = is_array($account) ? (object)$account : $account;
+                    @endphp
                     <th class="border border-gray-300 px-2 py-2 text-center font-medium" style="width: {{ 60 / count($equityAccounts) }}%;">
                         <div class="flex flex-col">
-                            <span>{{ $account->account_name }}</span>
-                            @if($account->percent)
-                            <span class="text-gray-500 text-xs">({{ $account->percent }}%)</span>
+                            <span>{{ $acc->account_name }}</span>
+                            @if(isset($acc->percent) && $acc->percent)
+                            <span class="text-gray-500 text-xs">({{ $acc->percent }}%)</span>
                             @endif
                         </div>
                     </th>
@@ -107,7 +110,8 @@
                     @php $openingTotal = 0; @endphp
                     @foreach($equityAccounts as $account)
                     @php 
-                        $openingBalance = $yearData['opening_balance'][$account->account_number] ?? 0;
+                        $acc = is_array($account) ? (object)$account : $account;
+                        $openingBalance = $yearData['opening_balance'][$acc->account_number] ?? 0;
                         $openingTotal += $openingBalance;
                     @endphp
                     <td class="border border-gray-300 px-2 py-1 text-right">
@@ -133,8 +137,11 @@
                         Profit for the year
                     </td>
                     @foreach($equityAccounts as $account)
+                    @php
+                        $acc = is_array($account) ? (object)$account : $account;
+                    @endphp
                     <td class="border border-gray-300 px-2 py-1 text-right">
-                        @if(str_contains(strtolower($account->account_name), 'retained'))
+                        @if(str_contains(strtolower($acc->account_name), 'retained'))
                             {{ $this->formatNumber($yearData['profit_for_year']) }}
                         @else
                             -
@@ -152,6 +159,9 @@
                         Other comprehensive income
                     </td>
                     @foreach($equityAccounts as $account)
+                    @php
+                        $acc = is_array($account) ? (object)$account : $account;
+                    @endphp
                     <td class="border border-gray-300 px-2 py-1 text-right">
                         -
                     </td>
@@ -168,8 +178,11 @@
                         Total comprehensive income
                     </td>
                     @foreach($equityAccounts as $account)
+                    @php
+                        $acc = is_array($account) ? (object)$account : $account;
+                    @endphp
                     <td class="border border-gray-300 px-2 py-1 text-right">
-                        @if(str_contains(strtolower($account->account_name), 'retained'))
+                        @if(str_contains(strtolower($acc->account_name), 'retained'))
                             {{ $this->formatNumber($yearData['total_comprehensive_income']) }}
                         @else
                             -
@@ -199,13 +212,13 @@
                     @php $appropriationTotal = 0; @endphp
                     @foreach($equityAccounts as $account)
                     @php 
-                        $appropriation = $yearData['appropriations'][$account->account_number] ?? 0;
-                        if (!str_contains(strtolower($account->account_name), 'retained')) {
+                        $appropriation = $yearData['appropriations'][$acc->account_number] ?? 0;
+                        if (!str_contains(strtolower($acc->account_name), 'retained')) {
                             $appropriationTotal += $appropriation;
                         }
                     @endphp
                     <td class="border border-gray-300 px-2 py-1 text-right">
-                        @if(str_contains(strtolower($account->account_name), 'retained'))
+                        @if(str_contains(strtolower($acc->account_name), 'retained'))
                             ({{ number_format($appropriationTotal, 2) }})
                         @else
                             {{ $appropriation > 0 ? $this->formatNumber($appropriation) : '-' }}
@@ -227,7 +240,7 @@
                     @php $dividendTotal = 0; @endphp
                     @foreach($equityAccounts as $account)
                     @php 
-                        $dividend = $yearData['dividends'][$account->account_number] ?? 0;
+                        $dividend = $yearData['dividends'][$acc->account_number] ?? 0;
                         $dividendTotal += $dividend;
                     @endphp
                     <td class="border border-gray-300 px-2 py-1 text-right">
@@ -249,7 +262,7 @@
                     @php $contributionTotal = 0; @endphp
                     @foreach($equityAccounts as $account)
                     @php 
-                        $contribution = $yearData['contributions'][$account->account_number] ?? 0;
+                        $contribution = $yearData['contributions'][$acc->account_number] ?? 0;
                         $contributionTotal += $contribution;
                     @endphp
                     <td class="border border-gray-300 px-2 py-1 text-right">
@@ -272,7 +285,7 @@
                     @php $otherTotal = 0; @endphp
                     @foreach($equityAccounts as $account)
                     @php 
-                        $other = $yearData['other_changes'][$account->account_number] ?? 0;
+                        $other = $yearData['other_changes'][$acc->account_number] ?? 0;
                         $otherTotal += $other;
                     @endphp
                     <td class="border border-gray-300 px-2 py-1 text-right">
@@ -293,7 +306,7 @@
                     @php $closingTotal = 0; @endphp
                     @foreach($equityAccounts as $account)
                     @php 
-                        $closingBalance = $yearData['closing_balance'][$account->account_number] ?? 0;
+                        $closingBalance = $yearData['closing_balance'][$acc->account_number] ?? 0;
                         $closingTotal += $closingBalance;
                     @endphp
                     <td class="border border-gray-300 px-2 py-1 text-right">
@@ -325,17 +338,17 @@
             @foreach($equityAccounts as $account)
             <div class="border border-gray-200 rounded p-3">
                 <h4 class="text-xs font-semibold mb-2 flex justify-between items-center">
-                    <span>{{ $account->account_name }}</span>
-                    <button wire:click="toggleAccount('{{ $account->account_number }}')" 
+                    <span>{{ $acc->account_name }}</span>
+                    <button wire:click="toggleAccount('{{ $acc->account_number }}')" 
                             class="text-blue-600 hover:text-blue-800">
-                        <svg class="w-4 h-4 transform {{ in_array($account->account_number, $expandedAccounts) ? 'rotate-90' : '' }}" 
+                        <svg class="w-4 h-4 transform {{ in_array($acc->account_number, $expandedAccounts) ? 'rotate-90' : '' }}" 
                              fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" />
                         </svg>
                     </button>
                 </h4>
                 
-                @if(in_array($account->account_number, $expandedAccounts))
+                @if(in_array($acc->account_number, $expandedAccounts))
                 <table class="w-full text-xs">
                     <thead>
                         <tr class="bg-gray-50">
@@ -349,8 +362,8 @@
                         @foreach($comparisonYears as $year)
                         @php
                             $yearData = $equityData[$year];
-                            $opening = $yearData['opening_balance'][$account->account_number] ?? 0;
-                            $closing = $yearData['closing_balance'][$account->account_number] ?? 0;
+                            $opening = $yearData['opening_balance'][$acc->account_number] ?? 0;
+                            $closing = $yearData['closing_balance'][$acc->account_number] ?? 0;
                             $change = $closing - $opening;
                         @endphp
                         <tr class="border-t">
@@ -407,9 +420,9 @@
                         <div class="space-y-2">
                             @foreach($equityAccounts as $account)
                             <div class="flex items-center space-x-2">
-                                <label class="text-xs w-1/2">{{ $account->account_name }}</label>
+                                <label class="text-xs w-1/2">{{ $acc->account_name }}</label>
                                 <input type="number" step="0.01" 
-                                       wire:model="entryAccounts.{{ $account->account_number }}"
+                                       wire:model="entryAccounts.{{ $acc->account_number }}"
                                        class="w-1/2 text-xs border-gray-300 rounded-md"
                                        placeholder="0.00">
                             </div>

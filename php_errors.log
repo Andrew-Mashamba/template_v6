@@ -14,3 +14,11 @@ Stack trace:
 [04-Sep-2025 06:26:03 UTC] PHP Parse error:  syntax error, unexpected token "??", expecting "->" or "?->" or "{" or "[" in /var/www/html/template/app/Services/NbcPayments/LukuService.php on line 187
 [04-Sep-2025 06:26:26 UTC] PHP Parse error:  syntax error, unexpected token "??", expecting "->" or "?->" or "{" or "[" in /var/www/html/template/app/Services/NbcPayments/LukuService.php on line 187
 [04-Sep-2025 06:26:50 UTC] PHP Parse error:  syntax error, unexpected token "??", expecting "->" or "?->" or "{" or "[" in /var/www/html/template/app/Services/NbcPayments/LukuService.php on line 187
+[09-Sep-2025 13:53:44 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[08006] [7] could not connect to server: Connection refused
+	Is the server running on host "localhost" (127.0.0.1) and accepting
+	TCP/IP connections on port 5432?
+could not create socket: Address family not supported by protocol in Command line code:2
+Stack trace:
+#0 Command line code(2): PDO->__construct()
+#1 {main}
+  thrown in Command line code on line 2
