@@ -150,19 +150,14 @@
             <div class="grid grid-cols-6 gap-2 p-2">
                 @php
                     $menuItems = [
-                        ['id' => 1, 'label' => 'Human Resources'],
-                        ['id' => 2, 'label' => 'Procurement'],
-                        ['id' => 3, 'label' => 'Others'],
-
-
+                        ['id' => 1, 'label' => 'Human Resources', 'permission' => 'hr'],
+                        ['id' => 2, 'label' => 'Procurement', 'permission' => 'procurement'],
+                        ['id' => 3, 'label' => 'Others', 'permission' => 'others'],
                     ];
-
-                    //    ['id' => 2, 'label' => ' Manage Sessions'],
-                    //      ['id' => 3, 'label' => ' Reports'],
-
                 @endphp
 
                 @foreach ($menuItems as $menuItem)
+                    @if($permissions[$menuItem['permission']] ?? false)
                     <button wire:click="menuItemClicked({{ $menuItem['id'] }})"
                         class="flex hover:text-white text-center items-center w-full
             @if ($this->tab_id == $menuItem['id']) bg-blue-900 @else bg-gray-100 @endif
@@ -192,6 +187,7 @@
                         </div>
                         {{ $menuItem['label'] }}
                     </button>
+                    @endif
                 @endforeach
             </div>
             {{--            @endif --}}
@@ -217,16 +213,29 @@
 
 
 
-            @if ($this->tab_id == 1)
+            @if ($this->tab_id == 1 && ($permissions['hr'] ?? false))
                    <livewire:services.add-service/>
             @endif
 
-            @if ($this->tab_id == 2)
+            @if ($this->tab_id == 2 && ($permissions['procurement'] ?? false))
                 <livewire:services.procurement-service />
             @endif
 
-            @if ($this->tab_id == 3)
+            @if ($this->tab_id == 3 && ($permissions['others'] ?? false))
             <livewire:services.procurement-service />
+            @endif
+            
+            <!-- Show message if no permissions for current tab -->
+            @if(!($permissions['hr'] ?? false) && !($permissions['procurement'] ?? false) && !($permissions['others'] ?? false))
+                <div class="text-center py-12">
+                    <div class="mx-auto h-12 w-12 text-gray-400">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                    </div>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No Access</h3>
+                    <p class="mt-1 text-sm text-gray-500">You don't have permission to access any service categories.</p>
+                </div>
             @endif
 
 

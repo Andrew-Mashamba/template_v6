@@ -509,7 +509,7 @@
 
     <!-- Create Account Modal -->
     @if($showCreateModal)
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30"></div>
         <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-lg sm:w-full">
@@ -641,7 +641,7 @@
 
     <!-- Edit Account Modal -->
     @if($showEditModal && $editingAccount)
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30"></div>
         <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-lg sm:w-full">
@@ -720,7 +720,7 @@
 
     <!-- Block Account Confirmation Modal -->
     @if($showBlockModal && $blockingAccount)
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30"></div>
         <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-lg sm:w-full">

@@ -497,15 +497,21 @@
                                                     @if($hasRequiredRole)
                                                         <div class="mt-2">
                                                             <div class="inline-flex rounded-md shadow-xs" role="group">
+                                                                @if($permissions['canView'] ?? false)
                                                                 <button wire:click.stop="showViewChangeDetailsModal('{{ $approval->process_code }}', '{{ $approval->process_id }}')" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-s-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
                                                                     View Details
                                                                 </button>
+                                                                @endif
+                                                                @if($permissions['canApprove'] ?? false)
                                                                 <button wire:click.stop="showApproveConfirmationModal({{ $approval->id }},'1')" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
                                                                     Approve
                                                                 </button>
+                                                                @endif
+                                                                @if($permissions['canReject'] ?? false)
                                                                 <button wire:click.stop="showRejectAndCommentsConfirmationModal({{ $approval->id }})" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-e-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
                                                                     Reject
                                                                 </button>
+                                                                @endif
                                                             </div>
                                                         </div>
                                                     @endif
@@ -540,15 +546,21 @@
                                                     @if($hasRequiredRole)
                                                         <div class="mt-2">
                                                             <div class="inline-flex rounded-md shadow-xs" role="group">
+                                                                @if($permissions['canView'] ?? false)
                                                                 <button wire:click.stop="showViewChangeDetailsModal('{{ $approval->process_code }}', '{{ $approval->process_id }}')" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-s-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
                                                                     View Details
                                                                 </button>
+                                                                @endif
+                                                                @if($permissions['canApprove'] ?? false)
                                                                 <button wire:click.stop="showApproveConfirmationModal({{ $approval->id }},'2')" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
                                                                     Approve
                                                                 </button>
+                                                                @endif
+                                                                @if($permissions['canReject'] ?? false)
                                                                 <button wire:click.stop="showRejectAndCommentsConfirmationModal({{ $approval->id }})" type="button" class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-e-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-blue-500 dark:focus:text-white">
                                                                     Reject
                                                                 </button>
+                                                                @endif
                                                             </div>
                                                         </div>
                                                     @endif
@@ -863,6 +875,15 @@
                                                     case 'ASSET_DISP':
                                                         $tableData = \App\Models\PPE::find($approval->process_id);
                                                         break;
+                                                    case 'PROD_EDIT':
+                                                    $tableData = \App\Models\sub_products::find($approval->process_id);
+                                                    break;
+                                                    case 'PRODUCT_CRE':
+                                                    $tableData = \App\Models\sub_products::find($approval->process_id);
+                                                    break;
+                                                    case 'PROD_DEACTIVATE':
+                                                    $tableData = \App\Models\sub_products::find($approval->process_id);
+                                                    break;
                                                 }
                                             @endphp                                            
                                             @if($tableData)                                            

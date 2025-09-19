@@ -38,8 +38,8 @@ class LoanUpdate extends LivewireDatatable
      // Get the day after tomorrow's date in 'Y-m-d' format
         $dayAfterTomorrow = Carbon::tomorrow()->addDay()->format('Y-m-d');
 
-        if(auth()->user()->employeeId){
-            $loanId=LoansModel::where('supervisor_id',auth()->user()->employeeId)->pluck('loan_id');
+        if(auth()->user()->id){
+            $loanId=LoansModel::where('supervisor_id',auth()->user()->id)->pluck('loan_id');
 
      // Query to get records where the date is today, tomorrow, or day after tomorrow
         $loanSchedule = loans_schedules::query()->whereIn('loan_id',$loanId)->
@@ -205,7 +205,7 @@ class LoanUpdate extends LivewireDatatable
         </button>';
 
 
-                    $loanId=LoansModel::where('supervisor_id',auth()->user()->employeeId)->pluck('loan_id');
+                    $loanId=LoansModel::where('supervisor_id',auth()->user()->id)->pluck('loan_id');
 
 //                    if(is_array($loanId)){
 //

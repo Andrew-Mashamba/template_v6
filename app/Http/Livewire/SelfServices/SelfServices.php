@@ -10,9 +10,11 @@ use App\Models\EmployeeRequest;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Traits\Livewire\WithModulePermissions;
 
 class SelfServices extends Component
 {
+    use WithModulePermissions;
     public $selectedMenu = 'dashboard'; // Default to dashboard
     
     // Employee data
@@ -63,6 +65,8 @@ class SelfServices extends Component
 
     public function mount()
     {
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
         $this->loadEmployeeData();
         $this->loadDashboardStats();
     }
@@ -121,6 +125,12 @@ class SelfServices extends Component
 
     public function submitLeaveRequest()
     {
+        // Check permission to submit leave requests
+        if (!($this->permissions['canLeave'] ?? false)) {
+            session()->flash('error', 'You do not have permission to submit leave requests');
+            return;
+        }
+        
         $this->validate([
             'leaveType' => 'required',
             'leaveStartDate' => 'required|date|after_or_equal:today',
@@ -151,6 +161,12 @@ class SelfServices extends Component
 
     public function submitMaterialsRequest()
     {
+        // Check permission to submit materials requests
+        if (!($this->permissions['canCreate'] ?? false)) {
+            session()->flash('error', 'You do not have permission to submit materials requests');
+            return;
+        }
+        
         $this->validate([
             'materialItems' => 'required|min:5',
             'materialPurpose' => 'required|min:10'
@@ -175,6 +191,12 @@ class SelfServices extends Component
     
     public function submitResignationRequest()
     {
+        // Check permission to submit resignation requests
+        if (!($this->permissions['canCreate'] ?? false)) {
+            session()->flash('error', 'You do not have permission to submit resignation requests');
+            return;
+        }
+        
         $this->validate([
             'resignationDate' => 'required|date|after:today',
             'resignationReason' => 'required|min:20'
@@ -199,6 +221,12 @@ class SelfServices extends Component
     
     public function submitTravelRequest()
     {
+        // Check permission to submit travel requests
+        if (!($this->permissions['canCreate'] ?? false)) {
+            session()->flash('error', 'You do not have permission to submit travel requests');
+            return;
+        }
+        
         $this->validate([
             'travelDestination' => 'required|min:3',
             'travelStartDate' => 'required|date|after_or_equal:today',
@@ -227,6 +255,12 @@ class SelfServices extends Component
     
     public function submitAdvanceRequest()
     {
+        // Check permission to submit advance requests
+        if (!($this->permissions['canCreate'] ?? false)) {
+            session()->flash('error', 'You do not have permission to submit advance requests');
+            return;
+        }
+        
         $this->validate([
             'advanceAmount' => 'required|numeric|min:10000',
             'advanceReason' => 'required|min:10'
@@ -252,6 +286,12 @@ class SelfServices extends Component
     
     public function submitTrainingRequest()
     {
+        // Check permission to submit training requests
+        if (!($this->permissions['canCreate'] ?? false)) {
+            session()->flash('error', 'You do not have permission to submit training requests');
+            return;
+        }
+        
         $this->validate([
             'trainingTitle' => 'required|min:5',
             'trainingStartDate' => 'required|date|after_or_equal:today',
@@ -280,6 +320,12 @@ class SelfServices extends Component
     
     public function submitOvertimeRequest()
     {
+        // Check permission to submit overtime requests
+        if (!($this->permissions['canCreate'] ?? false)) {
+            session()->flash('error', 'You do not have permission to submit overtime requests');
+            return;
+        }
+        
         $this->validate([
             'overtimeDate' => 'required|date',
             'overtimeHours' => 'required|numeric|min:1|max:12',
@@ -307,6 +353,12 @@ class SelfServices extends Component
     
     public function submitPayslipRequest()
     {
+        // Check permission to submit payslip requests
+        if (!($this->permissions['canView'] ?? false)) {
+            session()->flash('error', 'You do not have permission to request payslips or HR documents');
+            return;
+        }
+        
         $this->validate([
             'documentType' => 'required'
         ]);
@@ -332,6 +384,12 @@ class SelfServices extends Component
     
     public function submitGeneralRequest()
     {
+        // Check permission to submit general requests
+        if (!($this->permissions['canCreate'] ?? false)) {
+            session()->flash('error', 'You do not have permission to submit general requests');
+            return;
+        }
+        
         $this->validate([
             'requestSubject' => 'required|min:5',
             'requestDetails' => 'required|min:20'
@@ -435,10 +493,24 @@ class SelfServices extends Component
 
     public function render()
     {
-        return view('livewire.self-services.self-services', [
-            'leaves' => $this->getMyLeaves(),
-            'payrolls' => $this->getMyPayrolls(),
-            'requests' => $this->getMyRequests()
-        ]);
+        return view('livewire.self-services.self-services', array_merge(
+            $this->permissions,
+            [
+                'permissions' => $this->permissions,
+                'leaves' => $this->getMyLeaves(),
+                'payrolls' => $this->getMyPayrolls(),
+                'requests' => $this->getMyRequests()
+            ]
+        ));
+    }
+
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'self-services';
     }
 }

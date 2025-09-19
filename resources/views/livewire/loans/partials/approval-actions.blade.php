@@ -170,7 +170,7 @@
                     <div class="mt-4 flex space-x-3">
                         <button wire:click="clearExceptions" 
                             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                            :disabled="!$wire.policyAdherenceConfirmed || !$wire.approvalComment">
+                            {{ (!$policyAdherenceConfirmed || !$approvalComment) ? 'disabled' : '' }}>
                            
                             Recommendation for approval
                         </button>
@@ -264,7 +264,7 @@
                         @if($nextStage)
                             <button wire:click="validateAndMoveToStage('{{ $nextStage }}')" 
                                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                :disabled="!$wire.policyAdherenceConfirmed {{ $isLoanCommittee ? '|| !$wire.committeeMinutesPath' : '' }}">
+                                {{ (!$policyAdherenceConfirmed || ($isLoanCommittee && !$committeeMinutesPath)) ? 'disabled' : '' }}>
                                
                                 Recommendation for approval
                             </button>
@@ -283,13 +283,117 @@
                                 Decline
                             </button>
                         @elseif($currentStage === 'Approver')
-                            {{-- Final Approval Actions --}}
-                            <button wire:click="confirmApproval()" 
-                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                :disabled="!$wire.policyAdherenceConfirmed {{ $isLoanCommittee ? '|| !$wire.committeeMinutesPath' : '' }}">
-                               
-                                Approve
-                            </button>
+                            {{-- Final Approval Actions with Disbursement --}}
+                            @if($loan->status === 'APPROVED' && $loan->disbursement_status !== 'DISBURSED')
+                                {{-- Disbursement Section for Approved Loans --}}
+                                @php
+                                    // Get bank accounts for disbursement
+                                    $bankAccounts = DB::table('bank_accounts')
+                                        ->where('status', 'ACTIVE')
+                                        ->orderBy('bank_name', 'asc')
+                                        ->get();
+                                    
+                                    // Calculate disbursement amount
+                                    $netDisbursementAmount = $loan->approved_loan_value ?? ($loan->principle ?? 0);
+                                    $totalCharges = $loan->total_charges ?? 0;
+                                    $totalInsurance = $loan->total_insurance ?? 0;
+                                    $firstInterestAmount = $loan->future_interest ?? 0;
+                                    $topUpAmount = 0;
+                                    
+                                    if (in_array($loan->loan_type_2 ?? '', ['Top-up', 'TopUp', 'Top Up'])) {
+                                        if (isset($loan->top_up_amount) && $loan->top_up_amount > 0) {
+                                            $topUpAmount = abs($loan->top_up_amount);
+                                        }
+                                    }
+                                    
+                                    $totalDeductions = $totalCharges + $totalInsurance + $firstInterestAmount + $topUpAmount;
+                                    $netDisbursementAmount = $netDisbursementAmount - $totalDeductions;
+                                    
+                                    $selectedAccount = null;
+                                    if (isset($this->selectedBankAccount) && $this->selectedBankAccount) {
+                                        $selectedAccount = $bankAccounts->firstWhere('internal_mirror_account_number', $this->selectedBankAccount);
+                                    }
+                                    
+                                    $hasInsufficientFunds = $selectedAccount && $selectedAccount->current_balance < $netDisbursementAmount;
+                                    $canDisburse = isset($this->selectedBankAccount) && $this->selectedBankAccount && !$hasInsufficientFunds;
+                                @endphp
+                                
+                                <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <h4 class="text-sm font-semibold text-blue-900 mb-3">Disbursement Information</h4>
+                                    
+                                    {{-- Disbursement Summary --}}
+                                    <div class="grid grid-cols-2 gap-4 mb-3 text-sm">
+                                        <div>
+                                            <span class="text-blue-600">Approved Amount:</span>
+                                            <span class="font-semibold text-blue-900 ml-2">{{ number_format($loan->approved_loan_value ?? 0, 2) }} TZS</span>
+                                        </div>
+                                        <div>
+                                            <span class="text-blue-600">Total Deductions:</span>
+                                            <span class="font-semibold text-red-600 ml-2">-{{ number_format($totalDeductions, 2) }} TZS</span>
+                                        </div>
+                                        <div class="col-span-2 border-t border-blue-200 pt-2">
+                                            <span class="text-blue-700 font-semibold">Net Disbursement:</span>
+                                            <span class="font-bold text-green-600 text-lg ml-2">{{ number_format($netDisbursementAmount, 2) }} TZS</span>
+                                        </div>
+                                    </div>
+                                    
+                                    {{-- Bank Account Selection --}}
+                                    <div class="mb-3">
+                                        <label class="block text-sm font-medium text-blue-700 mb-1">Select Disbursement Account</label>
+                                        <select wire:model="selectedBankAccount" 
+                                                class="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                            <option value="">Choose a bank account...</option>
+                                            @foreach($bankAccounts as $account)
+                                                <option value="{{ $account->internal_mirror_account_number }}">
+                                                    {{ $account->bank_name }} - {{ $account->account_name }} : {{ number_format($account->current_balance, 2) }} TZS
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    
+                                    {{-- Balance Check Alert --}}
+                                    @if($selectedAccount)
+                                        @if($hasInsufficientFunds)
+                                            <div class="p-2 bg-red-100 border border-red-300 rounded text-sm">
+                                                <div class="flex items-center text-red-800">
+                                                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                    <span class="font-semibold">Insufficient Funds - Shortfall: {{ number_format($netDisbursementAmount - $selectedAccount->current_balance, 2) }} TZS</span>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="p-2 bg-green-100 border border-green-300 rounded text-sm">
+                                                <div class="flex items-center text-green-800">
+                                                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                    <span class="font-semibold">Sufficient Funds - Ready for Disbursement</span>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endif
+                                </div>
+                                
+                                {{-- Disbursement Button --}}
+                                <button wire:click="disburseLoan" 
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all
+                                           {{ $canDisburse ? 'bg-blue-900 hover:bg-blue-800 focus:ring-blue-500' : 'bg-gray-400 cursor-not-allowed' }}"
+                                    {{ !$canDisburse ? 'disabled' : '' }}>
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                    </svg>
+                                    Disburse Loan
+                                </button>
+                            @else
+                                {{-- Standard Approval Button --}}
+                                <button wire:click="confirmApproval()" 
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    {{ (!$policyAdherenceConfirmed || ($isLoanCommittee && !$committeeMinutesPath)) ? 'disabled' : '' }}>
+                                   
+                                    Approve
+                                </button>
+                            @endif
                             
                             @if($prevStage)
                                 <button wire:click="moveToStage('{{ $prevStage }}')" 
@@ -438,7 +542,7 @@
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                         <button wire:click="confirmApproval" 
                             type="button" 
-                            :disabled="!$wire.policyAdherenceConfirmed {{ $isLoanCommittee ? '|| !$wire.committeeMinutesPath' : '' }}"
+                            {{ (!$policyAdherenceConfirmed || ($isLoanCommittee && !$committeeMinutesPath)) ? 'disabled' : '' }}
                             class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                             Confirm Approval
                         </button>

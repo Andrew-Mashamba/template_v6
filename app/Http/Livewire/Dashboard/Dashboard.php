@@ -28,10 +28,12 @@ use App\Models\Clients;
 use App\Models\approvals;
 use App\Models\TeamUser;
 use Symfony\Component\Mime\Crypto\SMimeSigner;
+use App\Traits\Livewire\WithModulePermissions;
 
 
 class Dashboard extends Component
 {
+    use WithModulePermissions;
 
     public $tab_id = '1';
     public $title = 'Deposits report';
@@ -98,6 +100,22 @@ class Dashboard extends Component
 
     // temporary account
     public $phone_number;
+    
+    public function mount()
+    {
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
+    }
+    
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    public function getModuleName(): string
+    {
+        return 'dashboard';
+    }
     public $pay_by;
     public $startDate;
     public $endDate;
@@ -196,8 +214,22 @@ class Dashboard extends Component
 
 
 
+    public function setDashboardType($type)
+    {
+        if (!$this->authorize('view', 'You do not have permission to change dashboard type')) {
+            return;
+        }
+        
+        // Logic to handle dashboard type change would go here
+        // For now, we'll just validate the permission
+    }
+
     public function menuItemClicked($tabId)
     {
+        if (!$this->authorize('view', 'You do not have permission to view this section')) {
+            return;
+        }
+        
         $this->tab_id = $tabId;
         if ($tabId == '1') {
             $this->title = 'Deposits report';
@@ -1384,7 +1416,7 @@ public function resetNewClientRegistrationData(){
         // Get the day after tomorrow's date in 'Y-m-d' format
         $dayAfterTomorrow = Carbon::tomorrow()->addDay()->format('Y-m-d');
 
-            $loanId=LoansModel::where('supervisor_id',auth()->user()->employeeId)->pluck('loan_id');
+            $loanId=LoansModel::where('supervisor_id',auth()->user()->id)->pluck('loan_id');
 
             // Query to get records where the date is today, tomorrow, or day after tomorrow
             $this->allPromises = loans_schedules::query()->whereIn('loan_id',$loanId)->
@@ -1415,6 +1447,11 @@ public function resetNewClientRegistrationData(){
 
 
 
-        return view('livewire.dashboard.dashboard');
+        return view('livewire.dashboard.dashboard', array_merge(
+            $this->permissions,
+            [
+                'permissions' => $this->permissions
+            ]
+        ));
     }
 }

@@ -401,7 +401,7 @@
 
     {{-- Creditor Form Modal --}}
     @if($showCreditorForm)
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50">
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
         <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                 <div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
@@ -579,7 +579,7 @@
 
     {{-- Transaction Form Modal --}}
     @if($showTransactionForm)
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50">
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
         <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                 <div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">

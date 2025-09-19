@@ -157,7 +157,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>STATEMENT OF COMPREHENSIVE INCOME</h1>
+        <h1>STATEMENT OF COMPREHENSIVE INCOME Z</h1>
         <h2>For the period from {{ \Carbon\Carbon::parse($startDate)->format('F d, Y') }} to {{ \Carbon\Carbon::parse($endDate)->format('F d, Y') }}</h2>
         <div class="compliance">
             BOT Regulatory Requirements Compliant | Prepared in accordance with IFRS

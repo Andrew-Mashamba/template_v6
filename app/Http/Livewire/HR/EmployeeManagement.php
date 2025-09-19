@@ -34,7 +34,7 @@ class EmployeeManagement extends Component
     public $gender = '';
     public $date_of_birth = '';
     public $address = '';
-    public $employee_status = 'active';
+    public $employee_status = 'ACTIVE';
     public $employment_type = 'full-time';
 
     protected $rules = [
@@ -97,7 +97,7 @@ class EmployeeManagement extends Component
                 'gender' => $this->gender,
                 'date_of_birth' => $this->date_of_birth,
                 'address' => $this->address,
-                'employee_status' => $this->employee_status,
+                'employee_status' => 'ACTIVE',
                 'employment_type' => $this->employment_type,
             ]);
             
@@ -167,6 +167,11 @@ class EmployeeManagement extends Component
             'employment_type' => $this->employment_type,
         ]);
         
+        User::where('employeeId', $this->editingEmployee)->update([
+            'email' => $this->email,
+            'phone_number' => $this->phone,
+        ]);
+        
         session()->flash('success', 'Employee updated successfully!');
         $this->showEditModal = false;
         $this->editingEmployee = null;
@@ -197,7 +202,7 @@ class EmployeeManagement extends Component
                 'employeeId' => $employee->id,
                 'department_code' => $department ? $department->code : null,
                 'branch_id' => 1, // Default branch, can be modified as needed
-                'status' => 'active',
+                'status' => 'ACTIVE',
                 'verification_status' => 1,
                 'email_verified_at' => now(),
                 'created_at' => now(),

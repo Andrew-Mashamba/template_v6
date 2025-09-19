@@ -28,6 +28,6 @@ class departmentsList extends Model
 
     public function roles(): HasMany
     {
-        return $this->hasMany(Role::class);
+        return $this->hasMany(Role::class, 'department_id', 'id');
     }
 }

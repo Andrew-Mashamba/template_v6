@@ -72,53 +72,65 @@
                 <div class="p-4">
                     <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Navigation</h3>
                     <nav class="space-y-1">
+                        @if($permissions['canView'] ?? false)
                         <button wire:click="setMenuNumber(0)" 
-                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md {{ $menuNumber === 0 ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
+                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md {{ $menuNumber === 0 ? 'bg-blue-900 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                             </svg>
                             Dashboard
                         </button>
+                        @endif
 
+                        @if($permissions['canEmployees'] ?? false)
                         <button wire:click="setMenuNumber(1)" 
-                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md {{ $menuNumber === 1 ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
+                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md {{ $menuNumber === 1 ? 'bg-blue-900 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                             </svg>
                             Employees
                         </button>
+                        @endif
 
+                        @if($permissions['canPayroll'] ?? false)
                         <button wire:click="setMenuNumber(2)" 
-                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md {{ $menuNumber === 2 ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
+                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md {{ $menuNumber === 2 ? 'bg-blue-900 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                             Payroll
                         </button>
+                        @endif
 
+                        @if($permissions['canLeave'] ?? false)
                         <button wire:click="setMenuNumber(3)" 
-                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md {{ $menuNumber === 3 ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
+                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md {{ $menuNumber === 3 ? 'bg-blue-900 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             Leave Management
                         </button>
+                        @endif
 
+                        @if($permissions['canAttendance'] ?? false)
                         <button wire:click="setMenuNumber(4)" 
-                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md {{ $menuNumber === 4 ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
+                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md {{ $menuNumber === 4 ? 'bg-blue-900 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             Attendance
                         </button>
+                        @endif
 
+                        @if($permissions['canRequests'] ?? false)
                         <button wire:click="setMenuNumber(5)" 
-                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md {{ $menuNumber === 5 ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
+                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md {{ $menuNumber === 5 ? 'bg-blue-900 text-white' : 'text-gray-700 hover:bg-gray-100' }}">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                             </svg>
                             Request Management
                         </button>
+                        @endif
                     </nav>
                 </div>
             </div>
@@ -143,6 +155,7 @@
                     <div class="p-6">
                         @switch($menuNumber)
                             @case(0)
+                                @if($permissions['canView'] ?? false)
                                 {{-- Dashboard Content --}}
                                 <div class="space-y-6">
                                     {{-- Monthly Payroll Summary --}}
@@ -175,42 +188,57 @@
                                     <div>
                                         <h3 class="text-md font-semibold text-gray-700 mb-3">Quick Actions</h3>
                                         <div class="grid grid-cols-2 gap-3">
-                                            <button wire:click="setMenuNumber(1)" 
+                                            @if($permissions['canEmployees'] ?? false)
+                                            {{--<button wire:click="setMenuNumber(1)" 
                                                 class="p-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition text-sm font-medium">
                                                 Add New Employee
-                                            </button>
+                                            </button>--}}
+                                            @endif
+                                            @if($permissions['canPayroll'] ?? false)
                                             <button wire:click="setMenuNumber(2)" 
                                                 class="p-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition text-sm font-medium">
                                                 Process Payroll
                                             </button>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
+                                @endif
                                 @break
 
                             @case(1)
+                                @if($permissions['canEmployees'] ?? false)
                                 {{-- Employee Management --}}
                                 <livewire:h-r.employee-management />
+                                @endif
                                 @break
 
                             @case(2)
+                                @if($permissions['canPayroll'] ?? false)
                                 {{-- Payroll Management --}}
                                 <livewire:h-r.payroll-management />
+                                @endif
                                 @break
 
                             @case(3)
+                                @if($permissions['canLeave'] ?? false)
                                 {{-- Leave Management --}}
                                 <livewire:h-r.leave-management />
+                                @endif
                                 @break
 
                             @case(4)
+                                @if($permissions['canAttendance'] ?? false)
                                 {{-- Attendance --}}
                                 <livewire:h-r.attendance />
+                                @endif
                                 @break
 
                             @case(5)
+                                @if($permissions['canRequests'] ?? false)
                                 {{-- Request Management --}}
                                 <livewire:h-r.request-management />
+                                @endif
                                 @break
 
                             @default
@@ -218,6 +246,19 @@
                                     <p class="text-gray-500">Select an option from the sidebar</p>
                                 </div>
                         @endswitch
+                        
+                        <!-- Show message if no permissions for current section -->
+                        @if(!($permissions['canView'] ?? false) && !($permissions['canEmployees'] ?? false) && !($permissions['canPayroll'] ?? false) && !($permissions['canLeave'] ?? false) && !($permissions['canAttendance'] ?? false) && !($permissions['canRequests'] ?? false))
+                            <div class="text-center py-12">
+                                <div class="mx-auto h-12 w-12 text-gray-400">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">No Access</h3>
+                                <p class="mt-1 text-sm text-gray-500">You don't have permission to access any HR management features.</p>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

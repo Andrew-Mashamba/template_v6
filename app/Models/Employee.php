@@ -28,7 +28,7 @@ class Employee extends Model
      */
     public function user()
     {
-        return $this->belongsTo(User::class, 'id', 'employeeId');
+        return $this->hasOne(User::class, 'employeeId', 'id');
     }
 
     /**

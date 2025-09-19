@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Collection;
+use App\Models\departmentsList;
 
 class Role extends Model
 {
@@ -64,7 +65,7 @@ class Role extends Model
      */
     public function department(): BelongsTo
     {
-        return $this->belongsTo(Department::class);
+        return $this->belongsTo(departmentsList::class, 'department_id', 'id');
     }
 
     /**
@@ -93,10 +94,6 @@ class Role extends Model
         return $this->hasMany(RoleMenuAction::class);
     }
 
-    public function departments(): BelongsTo
-    {
-        return $this->belongsTo(departmentsList::class);
-    }
 
     /**
      * Get the sub-roles for this role.

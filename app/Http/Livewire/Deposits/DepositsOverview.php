@@ -10,9 +10,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use Exception;
+use App\Traits\Livewire\WithModulePermissions;
 
 class DepositsOverview extends Component
 {
+    use WithModulePermissions;
     public $accounts = [];
     public $recentTransactions = [];
     public $monthlyDeposits = [];
@@ -31,6 +33,8 @@ class DepositsOverview extends Component
 
     public function mount()
     {
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
         $this->loadData();
     }
 
@@ -279,8 +283,22 @@ class DepositsOverview extends Component
     {
         $summaryStats = $this->getSummaryStatistics();
         
-        return view('livewire.deposits.deposits-overview', [
-            'summaryStats' => $summaryStats
-        ]);
+        return view('livewire.deposits.deposits-overview', array_merge(
+            $this->permissions,
+            [
+                'summaryStats' => $summaryStats,
+                'permissions' => $this->permissions
+            ]
+        ));
+    }
+
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'deposits';
     }
 }

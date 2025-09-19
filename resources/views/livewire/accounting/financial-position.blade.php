@@ -302,7 +302,7 @@
                     <!-- Main Asset Accounts Table -->
                 <table class="w-full text-sm text-left text-blue-50 mb-4">
                         <tr class="bg-gray-100 text-black uppercase">
-                            <td class="whitespace-nowrap px-6 py-4 font-medium w-1/4">TOTAL EQUITY AND LIABILITIES</td>
+                            <td class="whitespace-nowrap px-6 py-4 font-medium w-1/4">TOTAL EQUITY AND LIABILITIES x</td>
                             <td class="whitespace-nowrap px-6 py-4 text-right font-bold w-1/4">{{ number_format($overall_this_year_total1 + $overall_this_year_total, 2) }}</td>
                             <td class="whitespace-nowrap px-6 py-4 text-right font-bold w-1/4">{{ number_format($overall_last_year_total1 + $overall_last_year_total, 2) }}</td>
 

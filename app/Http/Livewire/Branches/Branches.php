@@ -9,7 +9,7 @@ use App\Models\approvals;
 use App\Models\Till;
 use App\Models\Vault;
 use App\Services\AccountCreationService;
-use App\Traits\HasRoles;
+use App\Traits\Livewire\WithModulePermissions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Log;
 
 class Branches extends Component
 {
-    use HasRoles;
+    use WithModulePermissions;
 
     public $tab_id = '1';
     public $title = 'Branches list';
@@ -43,7 +43,6 @@ class Branches extends Component
     public $membershipNumber;
     public $permission;
     public $password;
-    public $userPermissions = [];
 
     // New properties for additional fields
     public $email;
@@ -57,13 +56,6 @@ class Branches extends Component
     public $cit_provider_id;
     public $services_offered;
 
-    public $canView = false;
-    public $canEdit = false;
-    public $canDelete = false;
-    public $canCreate = false;
-    public $canApprove = false;
-    public $canReject = false;
-
     public $branchManagers;
 
     protected $listeners = [
@@ -72,17 +64,8 @@ class Branches extends Component
         'editBranch' => 'editBranchModal',
         'viewBranch' => 'viewBranch',
         'refreshStats' => 'loadBranchStats',
-        'refreshBranchesList' => '$refresh'
-    ];
-
-    // Define required permissions for each action
-    private $actionPermissions = [
-        'create' => 'create',
-        'edit' => 'edit',
-        'delete' => 'delete',
-        'view' => 'view',
-        'approve' => 'approve',
-        'reject' => 'reject'
+        'refreshBranchesList' => '$refresh',
+        'refreshPermissions' => 'refreshPermissions'
     ];
 
     protected $rules = [
@@ -125,95 +108,29 @@ class Branches extends Component
 
     public function mount()
     {
-        $this->loadUserPermissions();
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
         
-        // Set permissions with debug logging
-        $this->canView = $this->hasPermission($this->actionPermissions['view']);
-        $this->canEdit = $this->hasPermission($this->actionPermissions['edit']);
-        $this->canDelete = $this->hasPermission($this->actionPermissions['delete']);
-        $this->canCreate = $this->hasPermission($this->actionPermissions['create']);
-        $this->canApprove = $this->hasPermission($this->actionPermissions['approve']);
-        $this->canReject = $this->hasPermission($this->actionPermissions['reject']);
-
-        Log::info('Branch permissions set', [
+        // Load branch statistics
+        $this->loadBranchStats();
+        
+        Log::info('Branch module initialized', [
             'user_id' => auth()->id(),
-            'permissions' => [
-                'view' => $this->canView,
-                'edit' => $this->canEdit,
-                'delete' => $this->canDelete,
-                'create' => $this->canCreate,
-                'approve' => $this->canApprove,
-                'reject' => $this->canReject
-            ]
+            'permissions' => $this->permissions
         ]);
     }
-
-    private function loadUserPermissions()
+    
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
     {
-        try {
-            $user = Auth::user();
-            if (!$user) {
-                $this->userPermissions = [];
-                return;
-            }
-
-            // Get user's role
-            $userRole = DB::table('user_roles')
-                ->where('user_id', $user->id)
-                ->first();
-
-            if (!$userRole) {
-                $this->userPermissions = [];
-                return;
-            }
-
-            // Get sub-role
-            $subRole = DB::table('sub_roles')
-                ->where('role_id', $userRole->role_id)
-                ->first();
-
-            if (!$subRole) {
-                $this->userPermissions = [];
-                return;
-            }
-
-            // Get permissions based on sub-role
-            $rolePermissions = DB::table('role_menu_actions')
-                ->where('sub_role', $subRole->name)
-                ->get();
-
-            $this->userPermissions = $rolePermissions
-                ->pluck('allowed_actions')
-                ->map(function ($actions) {
-                    return json_decode($actions, true);
-                })
-                ->flatten()
-                ->unique()
-                ->values()
-                ->toArray();
-
-            Log::info('User permissions loaded for branch actions', [
-                'user_id' => $user->id,
-                'permissions' => $this->userPermissions
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error loading user permissions', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            $this->userPermissions = [];
-        }
+        return 'branches';
     }
 
-    private function hasPermission($permission)
-    {
-        return in_array($permission, $this->userPermissions);
-    }
 
-    public function boot()
-    {
-        $this->loadBranchStats();
-    }
 
     public function loadBranchStats()
     {
@@ -254,12 +171,10 @@ class Branches extends Component
     {
         Log::info('Opening create branch modal', [
             'user_id' => auth()->id(),
-            'has_permission' => $this->hasPermission($this->actionPermissions['create'])
+            'has_permission' => $this->can('create')
         ]);
 
-        if (!$this->hasPermission($this->actionPermissions['create'])) {
-            session()->flash('message', 'You do not have permission to create branches');
-            session()->flash('alert-class', 'alert-danger');
+        if (!$this->authorize('create', 'You do not have permission to create branches')) {
             return;
         }
 
@@ -299,11 +214,7 @@ class Branches extends Component
 
     public function updateBranch()
     {
-
-        //dd($this->userPermissions);
-        if (!$this->hasPermission($this->actionPermissions['edit'])) {
-            session()->flash('message', 'You do not have permission to edit branches');
-            session()->flash('alert-class', 'alert-danger');
+        if (!$this->authorize('edit', 'You do not have permission to edit branches')) {
             return;
         }
 
@@ -399,14 +310,12 @@ class Branches extends Component
     {
         Log::info('Starting addBranch function', [
             'user_id' => auth()->id(),
-            'has_permission' => $this->hasPermission($this->actionPermissions['create'])
+            'has_permission' => $this->can('create')
         ]);
 
-        // if (!$this->hasPermission($this->actionPermissions['create'])) {
-        //     session()->flash('message', 'You do not have permission to create branches');
-        //     session()->flash('alert-class', 'alert-danger');
-        //     return;
-        // }
+        if (!$this->authorize('create', 'You do not have permission to create branches')) {
+            return;
+        }
 
         try {
             Log::info('Validating branch data', [
@@ -672,9 +581,7 @@ class Branches extends Component
 
     public function blockBranchModal($id)
     {
-        if (!$this->hasPermission($this->actionPermissions['delete'])) {
-            session()->flash('message', 'You do not have permission to block branches');
-            session()->flash('alert-class', 'alert-danger');
+        if (!$this->authorize('delete', 'You do not have permission to block branches')) {
             return;
         }
 
@@ -684,9 +591,7 @@ class Branches extends Component
 
     public function editBranchModal($id)
     {
-        if (!$this->hasPermission($this->actionPermissions['edit'])) {
-            session()->flash('message', 'You do not have permission to edit branches');
-            session()->flash('alert-class', 'alert-danger');
+        if (!$this->authorize('edit', 'You do not have permission to edit branches')) {
             return;
         }
 
@@ -746,12 +651,12 @@ class Branches extends Component
             'user_id' => auth()->id(),
             'branch_id' => $this->branchSelected,
             'action' => $this->permission,
-            'has_permission' => $this->hasPermission($this->actionPermissions['delete'])
+            'has_permission' => $this->can('delete')
         ]);
 
-        if (!$this->hasPermission($this->actionPermissions['delete'])) {
-            session()->flash('message', 'You do not have permission to delete branches');
-            session()->flash('alert-class', 'alert-danger');
+        // Check for different permissions based on action
+        $requiredPermission = ($this->permission === 'ACTIVE') ? 'activate' : 'delete';
+        if (!$this->authorize($requiredPermission, "You do not have permission to {$requiredPermission} branches")) {
             return;
         }
 
@@ -868,17 +773,15 @@ class Branches extends Component
                     ->orderBy('name')
                     ->get();
 
-        // Add permissions to the view
-        return view('livewire.branches.branches', [
-            'canCreate' => $this->canCreate,
-            'canEdit' => $this->canEdit,
-            'canDelete' => $this->canDelete,
-            'canView' => $this->canView,
-            'canApprove' => $this->canApprove,
-            'canReject' => $this->canReject,
-            'branchManagers' => $this->branchManagers,
-            'citProviders' => $citProviders
-        ]);
+        // Pass permissions to the view using the new system
+        return view('livewire.branches.branches', array_merge(
+            $this->permissions,
+            [
+                'branchManagers' => $this->branchManagers,
+                'citProviders' => $citProviders,
+                'permissions' => $this->permissions // Also pass the full permissions array
+            ]
+        ));
     }
 
     public function columns()
@@ -933,12 +836,10 @@ class Branches extends Component
         Log::info('Attempting to view branch', [
             'user_id' => auth()->id(),
             'branch_id' => $id,
-            'has_permission' => $this->hasPermission($this->actionPermissions['view'])
+            'has_permission' => $this->can('view')
         ]);
 
-        if (!$this->hasPermission($this->actionPermissions['view'])) {
-            session()->flash('message', 'You do not have permission to view branch details');
-            session()->flash('alert-class', 'alert-danger');
+        if (!$this->authorize('view', 'You do not have permission to view branch details')) {
             return;
         }
 

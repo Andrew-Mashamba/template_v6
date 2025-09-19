@@ -13,6 +13,9 @@ use App\Services\Payments\InternalFundsTransferService;
 use App\Services\Payments\ExternalFundsTransferService;
 use App\Services\Payments\MobileWalletTransferService;
 use App\Services\Payments\BillPaymentService;
+use App\Services\ResellerApiService;
+use App\Services\PermissionService;
+use Illuminate\Support\Facades\Blade;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +44,20 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ExternalFundsTransferService::class);
         $this->app->singleton(MobileWalletTransferService::class);
         $this->app->singleton(BillPaymentService::class);
+
+        // Register Reseller API Service
+        $this->app->singleton(ResellerApiService::class, function ($app) {
+            return new ResellerApiService();
+        });
+
+        // Register Permission Service
+        $this->app->singleton('permission', function ($app) {
+            return new PermissionService();
+        });
+        
+        $this->app->singleton(PermissionService::class, function ($app) {
+            return $app->make('permission');
+        });
     }
 
     /**
@@ -50,6 +67,37 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        // Register custom Blade directives for permission checking
+        Blade::directive('canModule', function ($expression) {
+            // Parse the expression to get module and action
+            $parts = explode(',', str_replace(['(', ')', ' ', "'", '"'], '', $expression));
+            $module = trim($parts[0] ?? '');
+            $action = trim($parts[1] ?? '');
+            
+            return "<?php if(app('permission')->can('{$module}', '{$action}')): ?>";
+        });
+        
+        Blade::directive('endcanModule', function () {
+            return '<?php endif; ?>';
+        });
+        
+        Blade::directive('canAnyModule', function ($expression) {
+            // Parse module and array of actions
+            return "<?php if(app('permission')->canAny{$expression}): ?>";
+        });
+        
+        Blade::directive('endcanAnyModule', function () {
+            return '<?php endif; ?>';
+        });
+        
+        // Directive to check if user has any permission in a module
+        Blade::directive('hasModuleAccess', function ($expression) {
+            $module = str_replace(['(', ')', ' ', "'", '"'], '', $expression);
+            return "<?php if(count(app('permission')->getModulePermissions('{$module}')) > 0): ?>";
+        });
+        
+        Blade::directive('endhasModuleAccess', function () {
+            return '<?php endif; ?>';
+        });
     }
 }

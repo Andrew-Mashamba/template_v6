@@ -27,6 +27,43 @@ class InstitutionAccounts extends Component
     public $accumulated_depreciation_account;
     public $property_and_equipment_account;
     
+    // Asset Accounts
+    public $trade_receivables_account;
+    public $prepaid_expenses_account;
+    public $short_term_investments_account;
+    public $long_term_investments_account;
+    public $other_current_assets_account;
+    public $intangible_assets_account;
+    
+    // Liability Accounts
+    public $trade_payables_account;
+    public $interest_payable_account;
+    public $unearned_revenue_account;
+    public $accrued_expenses_account;
+    public $other_payables_account;
+    public $deferred_tax_account;
+    public $long_term_debt_account;
+    public $provisions_account;
+    
+    // Equity Accounts
+    public $retained_earnings_account;
+    public $reserves_account;
+    public $share_capital_account;
+    public $share_premium_account;
+    
+    // Income Accounts
+    public $fee_income_account;
+    public $other_income_account;
+    public $interest_income_account;
+    
+    // Expense Accounts
+    public $interest_expense_account;
+    public $deposit_interest_account;
+    public $loan_loss_provision_account;
+    public $operating_expenses_account;
+    public $administrative_expenses_account;
+    public $personnel_expenses_account;
+    
     public $institution_id;
 
     protected $rules = [
@@ -42,6 +79,38 @@ class InstitutionAccounts extends Component
         'depreciation_expense_account' => 'nullable|exists:accounts,account_number',
         'accumulated_depreciation_account' => 'nullable|exists:accounts,account_number',
         'property_and_equipment_account' => 'nullable|exists:accounts,account_number',
+        // Asset Accounts
+        'trade_receivables_account' => 'nullable|exists:accounts,account_number',
+        'prepaid_expenses_account' => 'nullable|exists:accounts,account_number',
+        'short_term_investments_account' => 'nullable|exists:accounts,account_number',
+        'long_term_investments_account' => 'nullable|exists:accounts,account_number',
+        'other_current_assets_account' => 'nullable|exists:accounts,account_number',
+        'intangible_assets_account' => 'nullable|exists:accounts,account_number',
+        // Liability Accounts
+        'trade_payables_account' => 'nullable|exists:accounts,account_number',
+        'interest_payable_account' => 'nullable|exists:accounts,account_number',
+        'unearned_revenue_account' => 'nullable|exists:accounts,account_number',
+        'accrued_expenses_account' => 'nullable|exists:accounts,account_number',
+        'other_payables_account' => 'nullable|exists:accounts,account_number',
+        'deferred_tax_account' => 'nullable|exists:accounts,account_number',
+        'long_term_debt_account' => 'nullable|exists:accounts,account_number',
+        'provisions_account' => 'nullable|exists:accounts,account_number',
+        // Equity Accounts
+        'retained_earnings_account' => 'nullable|exists:accounts,account_number',
+        'reserves_account' => 'nullable|exists:accounts,account_number',
+        'share_capital_account' => 'nullable|exists:accounts,account_number',
+        'share_premium_account' => 'nullable|exists:accounts,account_number',
+        // Income Accounts
+        'fee_income_account' => 'nullable|exists:accounts,account_number',
+        'other_income_account' => 'nullable|exists:accounts,account_number',
+        'interest_income_account' => 'nullable|exists:accounts,account_number',
+        // Expense Accounts
+        'interest_expense_account' => 'nullable|exists:accounts,account_number',
+        'deposit_interest_account' => 'nullable|exists:accounts,account_number',
+        'loan_loss_provision_account' => 'nullable|exists:accounts,account_number',
+        'operating_expenses_account' => 'nullable|exists:accounts,account_number',
+        'administrative_expenses_account' => 'nullable|exists:accounts,account_number',
+        'personnel_expenses_account' => 'nullable|exists:accounts,account_number',
     ];
 
     public function mount()
@@ -199,6 +268,55 @@ class InstitutionAccounts extends Component
                     ]);
                     $this->property_and_equipment_account = null;
                 }
+                
+                // Load new account fields
+                $newAccountFields = [
+                    'trade_receivables_account',
+                    'prepaid_expenses_account',
+                    'short_term_investments_account',
+                    'long_term_investments_account',
+                    'other_current_assets_account',
+                    'intangible_assets_account',
+                    'trade_payables_account',
+                    'interest_payable_account',
+                    'unearned_revenue_account',
+                    'accrued_expenses_account',
+                    'other_payables_account',
+                    'deferred_tax_account',
+                    'long_term_debt_account',
+                    'provisions_account',
+                    'retained_earnings_account',
+                    'reserves_account',
+                    'share_capital_account',
+                    'share_premium_account',
+                    'fee_income_account',
+                    'other_income_account',
+                    'interest_income_account',
+                    'interest_expense_account',
+                    'deposit_interest_account',
+                    'loan_loss_provision_account',
+                    'operating_expenses_account',
+                    'administrative_expenses_account',
+                    'personnel_expenses_account',
+                ];
+                
+                foreach ($newAccountFields as $field) {
+                    try {
+                        if (isset($institution->$field) && $institution->$field) {
+                            $this->$field = DB::table('accounts')
+                                ->where('account_number', $institution->$field)
+                                ->value('account_number');
+                        } else {
+                            $this->$field = null;
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning("Failed to load {$field}", [
+                            'error' => $e->getMessage(),
+                            'account' => $institution->$field ?? 'null'
+                        ]);
+                        $this->$field = null;
+                    }
+                }
             }
         } catch (\Exception $e) {
             Log::error('Failed to load institution accounts', [
@@ -218,6 +336,34 @@ class InstitutionAccounts extends Component
             $this->depreciation_expense_account = null;
             $this->accumulated_depreciation_account = null;
             $this->property_and_equipment_account = null;
+            // New account fields
+            $this->trade_receivables_account = null;
+            $this->prepaid_expenses_account = null;
+            $this->short_term_investments_account = null;
+            $this->long_term_investments_account = null;
+            $this->other_current_assets_account = null;
+            $this->intangible_assets_account = null;
+            $this->trade_payables_account = null;
+            $this->interest_payable_account = null;
+            $this->unearned_revenue_account = null;
+            $this->accrued_expenses_account = null;
+            $this->other_payables_account = null;
+            $this->deferred_tax_account = null;
+            $this->long_term_debt_account = null;
+            $this->provisions_account = null;
+            $this->retained_earnings_account = null;
+            $this->reserves_account = null;
+            $this->share_capital_account = null;
+            $this->share_premium_account = null;
+            $this->fee_income_account = null;
+            $this->other_income_account = null;
+            $this->interest_income_account = null;
+            $this->interest_expense_account = null;
+            $this->deposit_interest_account = null;
+            $this->loan_loss_provision_account = null;
+            $this->operating_expenses_account = null;
+            $this->administrative_expenses_account = null;
+            $this->personnel_expenses_account = null;
         }
     }
 
@@ -265,6 +411,38 @@ class InstitutionAccounts extends Component
                     'depreciation_expense_account' => $this->depreciation_expense_account,
                     'accumulated_depreciation_account' => $this->accumulated_depreciation_account,
                     'property_and_equipment_account' => $this->property_and_equipment_account,
+                    // Asset Accounts
+                    'trade_receivables_account' => $this->trade_receivables_account,
+                    'prepaid_expenses_account' => $this->prepaid_expenses_account,
+                    'short_term_investments_account' => $this->short_term_investments_account,
+                    'long_term_investments_account' => $this->long_term_investments_account,
+                    'other_current_assets_account' => $this->other_current_assets_account,
+                    'intangible_assets_account' => $this->intangible_assets_account,
+                    // Liability Accounts
+                    'trade_payables_account' => $this->trade_payables_account,
+                    'interest_payable_account' => $this->interest_payable_account,
+                    'unearned_revenue_account' => $this->unearned_revenue_account,
+                    'accrued_expenses_account' => $this->accrued_expenses_account,
+                    'other_payables_account' => $this->other_payables_account,
+                    'deferred_tax_account' => $this->deferred_tax_account,
+                    'long_term_debt_account' => $this->long_term_debt_account,
+                    'provisions_account' => $this->provisions_account,
+                    // Equity Accounts
+                    'retained_earnings_account' => $this->retained_earnings_account,
+                    'reserves_account' => $this->reserves_account,
+                    'share_capital_account' => $this->share_capital_account,
+                    'share_premium_account' => $this->share_premium_account,
+                    // Income Accounts
+                    'fee_income_account' => $this->fee_income_account,
+                    'other_income_account' => $this->other_income_account,
+                    'interest_income_account' => $this->interest_income_account,
+                    // Expense Accounts
+                    'interest_expense_account' => $this->interest_expense_account,
+                    'deposit_interest_account' => $this->deposit_interest_account,
+                    'loan_loss_provision_account' => $this->loan_loss_provision_account,
+                    'operating_expenses_account' => $this->operating_expenses_account,
+                    'administrative_expenses_account' => $this->administrative_expenses_account,
+                    'personnel_expenses_account' => $this->personnel_expenses_account,
                     'updated_at' => now(),
                 ]);
 
@@ -286,15 +464,12 @@ class InstitutionAccounts extends Component
     {
         // Clear all account-related caches
         $categories = [
-            ['1000', '1000'], // Operations
-            ['3000', '3000'], // Mandatory Shares
-            ['2000', '2200'], // Mandatory Savings
-            ['2000', '2100'], // Mandatory Deposits
-            ['1000', '1999'], // Cash accounts (for vaults, tills, petty cash)
-            ['4000', '4999'], // Expense accounts (for depreciation)
-            ['1800', '1899'], // Asset accounts (for property and equipment)
-            ['2900', '2999'], // Accumulated depreciation
-            ['5000', '5999'], // Other accounts
+            ['1000', '1000'], // Cash and Cash Equivalents
+            ['1000', '1999'], // All Asset accounts
+            ['2000', '2999'], // All Liability accounts
+            ['3000', '3999'], // All Equity accounts
+            ['4000', '4999'], // All Revenue/Income accounts
+            ['5000', '5999'], // All Expense accounts
         ];
 
         foreach ($categories as [$majorCategory, $category]) {

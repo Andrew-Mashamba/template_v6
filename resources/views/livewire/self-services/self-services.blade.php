@@ -62,60 +62,86 @@
                 <div class="p-4">
                     <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 px-2">Self-Service Menu</h3>
                     <nav class="space-y-2">
+                        @if($permissions['canView'] ?? false)
                         <button wire:click="$set('selectedMenu', 'dashboard')" class="relative w-full group transition-all duration-200">
                             <div class="flex items-center p-3 rounded-xl transition-all duration-200 {{ $selectedMenu === 'dashboard' ? 'bg-blue-900 text-white shadow-lg' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900' }}">
                                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
                                 <span>Dashboard</span>
                             </div>
                         </button>
+                        @endif
+                        
+                        @if($permissions['canLeave'] ?? false)
                         <button wire:click="$set('selectedMenu', 'leave')" class="relative w-full group transition-all duration-200">
                             <div class="flex items-center p-3 rounded-xl transition-all duration-200 {{ $selectedMenu === 'leave' ? 'bg-blue-900 text-white shadow-lg' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900' }}">
                                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                 <span>Leave Request</span>
                             </div>
                         </button>
+                        @endif
+                        
+                        @if($permissions['canCreate'] ?? false)
                         <button wire:click="$set('selectedMenu', 'materials')" class="relative w-full group transition-all duration-200">
                             <div class="flex items-center p-3 rounded-xl transition-all duration-200 {{ $selectedMenu === 'materials' ? 'bg-blue-900 text-white shadow-lg' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900' }}">
                                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                 <span>Working Materials</span>
                             </div>
                         </button>
+                        @endif
+                        
+                        @if($permissions['canCreate'] ?? false)
                         <button wire:click="$set('selectedMenu', 'resignation')" class="relative w-full group transition-all duration-200">
                             <div class="flex items-center p-3 rounded-xl transition-all duration-200 {{ $selectedMenu === 'resignation' ? 'bg-blue-900 text-white shadow-lg' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900' }}">
                                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7" /></svg>
                                 <span>Resignation</span>
                             </div>
                         </button>
+                        @endif
+                        
+                        @if($permissions['canCreate'] ?? false)
                         <button wire:click="$set('selectedMenu', 'travel')" class="relative w-full group transition-all duration-200">
                             <div class="flex items-center p-3 rounded-xl transition-all duration-200 {{ $selectedMenu === 'travel' ? 'bg-blue-900 text-white shadow-lg' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900' }}">
                                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a5 5 0 00-10 0v2a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2z" /></svg>
                                 <span>Travel/Advance</span>
                             </div>
                         </button>
+                        @endif
+                        
+                        @if($permissions['canCreate'] ?? false)
                         <button wire:click="$set('selectedMenu', 'training')" class="relative w-full group transition-all duration-200">
                             <div class="flex items-center p-3 rounded-xl transition-all duration-200 {{ $selectedMenu === 'training' ? 'bg-blue-900 text-white shadow-lg' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900' }}">
                                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6m0 0H3m9 0h9" /></svg>
                                 <span>Training/Workshop</span>
                             </div>
                         </button>
+                        @endif
+                        
+                        @if($permissions['canCreate'] ?? false)
                         <button wire:click="$set('selectedMenu', 'overtime')" class="relative w-full group transition-all duration-200">
                             <div class="flex items-center p-3 rounded-xl transition-all duration-200 {{ $selectedMenu === 'overtime' ? 'bg-blue-900 text-white shadow-lg' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900' }}">
                                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 <span>Overtime Request</span>
                             </div>
                         </button>
+                        @endif
+                        
+                        @if($permissions['canView'] ?? false)
                         <button wire:click="$set('selectedMenu', 'payslip')" class="relative w-full group transition-all duration-200">
                             <div class="flex items-center p-3 rounded-xl transition-all duration-200 {{ $selectedMenu === 'payslip' ? 'bg-blue-900 text-white shadow-lg' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900' }}">
                                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                 <span>Payslip/HR Docs</span>
                             </div>
                         </button>
+                        @endif
+                        
+                        @if($permissions['canCreate'] ?? false)
                         <button wire:click="$set('selectedMenu', 'general')" class="relative w-full group transition-all duration-200">
                             <div class="flex items-center p-3 rounded-xl transition-all duration-200 {{ $selectedMenu === 'general' ? 'bg-blue-900 text-white shadow-lg' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900' }}">
                                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                                 <span>General Request</span>
                             </div>
                         </button>
+                        @endif
                     </nav>
                 </div>
             </div>
@@ -158,6 +184,7 @@
                     <div class="p-8 min-h-[400px]">
                         @switch($selectedMenu)
                             @case('dashboard')
+                                @if($permissions['canView'] ?? false)
                                 {{-- Dashboard summary: show employee information and stats --}}
                                 @if($employee)
                                 <div class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
@@ -265,8 +292,15 @@
                                     </div>
                                 </div>
                                 @endif
+                                @else
+                                <div class="text-center py-12">
+                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No Access</h3>
+                                    <p class="mt-1 text-sm text-gray-500">You don't have permission to view the dashboard.</p>
+                                </div>
+                                @endif
                                 @break
                             @case('leave')
+                                @if($permissions['canLeave'] ?? false)
                                 {{-- Leave Request Form --}}
                                 <div class="max-w-2xl">
                                     @if($showLeaveModal)
@@ -366,8 +400,15 @@
                                         </div>
                                     </div>
                                 </div>
+                                @else
+                                <div class="text-center py-12">
+                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No Access</h3>
+                                    <p class="mt-1 text-sm text-gray-500">You don't have permission to access leave requests.</p>
+                                </div>
+                                @endif
                                 @break
                             @case('materials')
+                                @if($permissions['canCreate'] ?? false)
                                 {{-- Working Materials Request Form --}}
                                 <div class="max-w-2xl">
                                     <form wire:submit.prevent="submitMaterialsRequest">
@@ -395,8 +436,15 @@
                                         </div>
                                     </form>
                                 </div>
+                                @else
+                                <div class="text-center py-12">
+                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No Access</h3>
+                                    <p class="mt-1 text-sm text-gray-500">You don't have permission to request working materials.</p>
+                                </div>
+                                @endif
                                 @break
                             @case('resignation')
+                                @if($permissions['canCreate'] ?? false)
                                 {{-- Resignation Request Form --}}
                                 <div class="max-w-2xl">
                                     <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -428,8 +476,15 @@
                                         </div>
                                     </form>
                                 </div>
+                                @else
+                                <div class="text-center py-12">
+                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No Access</h3>
+                                    <p class="mt-1 text-sm text-gray-500">You don't have permission to submit resignation requests.</p>
+                                </div>
+                                @endif
                                 @break
                             @case('travel')
+                                @if($permissions['canCreate'] ?? false)
                                 {{-- Travel/Advance Request Form --}}
                                 <div class="max-w-2xl">
                                     <div class="mb-6">
@@ -516,8 +571,15 @@
                                     </div>
                                     @endif
                                 </div>
+                                @else
+                                <div class="text-center py-12">
+                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No Access</h3>
+                                    <p class="mt-1 text-sm text-gray-500">You don't have permission to submit travel or advance requests.</p>
+                                </div>
+                                @endif
                                 @break
                             @case('training')
+                                @if($permissions['canCreate'] ?? false)
                                 {{-- Training/Workshop Request Form --}}
                                 <div class="max-w-2xl">
                                     <form wire:submit.prevent="submitTrainingRequest">
@@ -558,8 +620,15 @@
                                         </div>
                                     </form>
                                 </div>
+                                @else
+                                <div class="text-center py-12">
+                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No Access</h3>
+                                    <p class="mt-1 text-sm text-gray-500">You don't have permission to request training or workshops.</p>
+                                </div>
+                                @endif
                                 @break
                             @case('overtime')
+                                @if($permissions['canCreate'] ?? false)
                                 {{-- Overtime Request Form --}}
                                 <div class="max-w-2xl">
                                     <form wire:submit.prevent="submitOvertimeRequest">
@@ -597,8 +666,15 @@
                                         </div>
                                     </form>
                                 </div>
+                                @else
+                                <div class="text-center py-12">
+                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No Access</h3>
+                                    <p class="mt-1 text-sm text-gray-500">You don't have permission to submit overtime requests.</p>
+                                </div>
+                                @endif
                                 @break
                             @case('payslip')
+                                @if($permissions['canView'] ?? false)
                                 {{-- Payslip/HR Docs --}}
                                 <div class="max-w-4xl">
                                     <div class="mb-6">
@@ -664,8 +740,15 @@
                                         </table>
                                     </div>
                                 </div>
+                                @else
+                                <div class="text-center py-12">
+                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No Access</h3>
+                                    <p class="mt-1 text-sm text-gray-500">You don't have permission to view payslips or request HR documents.</p>
+                                </div>
+                                @endif
                                 @break
                             @case('general')
+                                @if($permissions['canCreate'] ?? false)
                                 {{-- General Request Form --}}
                                 <div class="max-w-2xl">
                                     <form wire:submit.prevent="submitGeneralRequest">
@@ -740,8 +823,20 @@
                                         </div>
                                     </div>
                                 </div>
+                                @else
+                                <div class="text-center py-12">
+                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No Access</h3>
+                                    <p class="mt-1 text-sm text-gray-500">You don't have permission to submit general requests.</p>
+                                </div>
+                                @endif
                                 @break
                             @default
+                                @if(!($permissions['canView'] ?? false) && !($permissions['canLeave'] ?? false) && !($permissions['canCreate'] ?? false))
+                                <div class="text-center py-12">
+                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No Access</h3>
+                                    <p class="mt-1 text-sm text-gray-500">You don't have permission to access any self-service features.</p>
+                                </div>
+                                @else
                                 <div class="text-center py-12">
                                     <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -749,6 +844,7 @@
                                     <h3 class="text-lg font-medium text-gray-900 mb-2">Welcome to Self-Services</h3>
                                     <p class="text-gray-600">Select a service from the sidebar to get started</p>
                                 </div>
+                                @endif
                         @endswitch
                     </div>
                 </div>

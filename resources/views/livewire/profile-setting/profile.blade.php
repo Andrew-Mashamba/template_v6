@@ -60,6 +60,18 @@
                 </div>
             </div>
         </div>
+        @if(!($permissions['canView'] ?? false) && !($permissions['canManage'] ?? false))
+        {{-- No Access Message for users with no permissions --}}
+        <div class="bg-white shadow rounded-lg p-8 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No Access</h3>
+            <p class="text-gray-500">You don't have permission to access the profile settings module.</p>
+        </div>
+        @else
         <div class="flex gap-6">
             {{-- Sidebar --}}
             <div class="w-80 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
@@ -80,38 +92,45 @@
                     <nav class="space-y-2">
                         @php
                         $menuItems = [
-                            ['id' => 1, 'label' => 'Settings'],
-                            ['id' => 2, 'label' => 'Leadership'],
-                            ['id' => 3, 'label' => 'End of Day'],
-                            ['id' => 5, 'label' => 'End of Year'],
-                            ['id' => 6, 'label' => 'Statistics'],
-                            ['id' => 7, 'label' => 'Key Financial Ratios'],
-                            ['id' => 8, 'label' => 'Financial Position'],
-                            ['id' => 9, 'label' => 'Capital Summary'],
-                            ['id' => 10, 'label' => 'Shares Ownership'],
-                            ['id' => 11, 'label' => 'Loan Provision Setting'],
-                            ['id' => 12, 'label' => 'Accounts Setup'],
-                            ['id' => 13, 'label' => 'Bills Manager'],
-                            ['id' => 14, 'label' => 'Institution Accounts'],
-                            ['id' => 15, 'label' => 'Approvals Manager'],
-                            ['id' => 16, 'label' => 'Data Migration'],
+                            ['id' => 1, 'label' => 'Settings', 'permission' => 'view'],
+                            ['id' => 2, 'label' => 'Leadership', 'permission' => 'view'],
+                            ['id' => 3, 'label' => 'End of Day', 'permission' => 'view'],
+                            ['id' => 5, 'label' => 'End of Year', 'permission' => 'view'],
+                            ['id' => 6, 'label' => 'Statistics', 'permission' => 'view'],
+                            ['id' => 7, 'label' => 'Key Financial Ratios', 'permission' => 'view'],
+                            ['id' => 8, 'label' => 'Financial Position', 'permission' => 'view'],
+                            ['id' => 9, 'label' => 'Capital Summary', 'permission' => 'view'],
+                            ['id' => 10, 'label' => 'Shares Ownership', 'permission' => 'view'],
+                            ['id' => 11, 'label' => 'Loan Provision Setting', 'permission' => 'view'],
+                            ['id' => 12, 'label' => 'Accounts Setup', 'permission' => 'manage'],
+                            ['id' => 13, 'label' => 'Bills Manager', 'permission' => 'manage'],
+                            ['id' => 14, 'label' => 'Institution Accounts', 'permission' => 'manage'],
+                            ['id' => 15, 'label' => 'Approvals Manager', 'permission' => 'manage'],
+                            ['id' => 16, 'label' => 'Data Migration', 'permission' => 'manage'],
+                            ['id' => 17, 'label' => 'Domain Management', 'permission' => 'manage'],
                         ];
                         @endphp
                         @foreach ($menuItems as $menuItem)
-                        <button wire:click="menu_sub_button({{ $menuItem['id'] }})" class="relative w-full group transition-all duration-200">
-                            <div class="flex items-center p-3 rounded-xl transition-all duration-200 @if ($this->teller_tab == $menuItem['id']) bg-blue-900 text-white shadow-lg @else bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900 @endif">
-                                <div class="mr-3">
-                                    {{-- You can add icons here for each menu item if desired --}}
+                            @php
+                                $permissionKey = 'can' . ucfirst($menuItem['permission']);
+                            @endphp
+                            @if($permissions[$permissionKey] ?? false)
+                            <button wire:click="menu_sub_button({{ $menuItem['id'] }})" class="relative w-full group transition-all duration-200">
+                                <div class="flex items-center p-3 rounded-xl transition-all duration-200 @if ($this->teller_tab == $menuItem['id']) bg-blue-900 text-white shadow-lg @else bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900 @endif">
+                                    <div class="mr-3">
+                                        {{-- You can add icons here for each menu item if desired --}}
+                                    </div>
+                                    <div class="flex-1 text-left">
+                                        <div class="font-medium text-sm">{{ $menuItem['label'] }}</div>
+                                    </div>
                                 </div>
-                                <div class="flex-1 text-left">
-                                    <div class="font-medium text-sm">{{ $menuItem['label'] }}</div>
-                                </div>
-                            </div>
-                        </button>
+                            </button>
+                            @endif
                         @endforeach
                     </nav>
                 </div>
                 {{-- Quick Actions --}}
+                @if($permissions['canManage'] ?? false)
                 <div class="p-4 border-t border-gray-100 bg-gray-50">
                     <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">Quick Actions</h3>
                     <div class="space-y-2">
@@ -129,6 +148,7 @@
                         </button>
                     </div>
                 </div>
+                @endif
             </div>
             {{-- Main Content --}}
             <div class="flex-1">
@@ -155,6 +175,7 @@
                                             14 => 'Institution Accounts',
                                             15 => 'Approvals Manager',
                                             16 => 'Data Migration',
+                                            17 => 'Domain Management',
                                         ];
                                     @endphp
                                     {{ $sectionTitles[$this->teller_tab] ?? 'Organization Settings' }}
@@ -167,54 +188,54 @@
                     </div>
                     {{-- Main Content --}}
                     <div class="p-8">
-                        @if($this->teller_tab==1)
+                        @if($this->teller_tab==1 && ($permissions['canView'] ?? false))
                             <livewire:profile-setting.organization-setting/>
-                        @endif
-                        @if($this->teller_tab==2)
+                        @elseif($this->teller_tab==2 && ($permissions['canView'] ?? false))
                             <livewire:profile-setting.leader-ship />
-                        @endif
-                        @if($this->teller_tab==3)
+                        @elseif($this->teller_tab==3 && ($permissions['canView'] ?? false))
                             <livewire:profile-setting.end-of-day />
-                        @endif
-                        @if($this->teller_tab==5)
+                        @elseif($this->teller_tab==5 && ($permissions['canView'] ?? false))
                             <livewire:profile-setting.divident />
-                        @endif
-                        @if($this->teller_tab==6)
+                        @elseif($this->teller_tab==6 && ($permissions['canView'] ?? false))
                             <livewire:profile-setting.statistics />
-                        @endif
-                        @if($this->teller_tab==7)
+                        @elseif($this->teller_tab==7 && ($permissions['canView'] ?? false))
                             <livewire:profile-setting.ratios />
-                        @endif
-                        @if($this->teller_tab==8)
+                        @elseif($this->teller_tab==8 && ($permissions['canView'] ?? false))
                             <livewire:profile-setting.activities />
-                        @endif
-                        @if($this->teller_tab==9)
+                        @elseif($this->teller_tab==9 && ($permissions['canView'] ?? false))
                             <livewire:profile-setting.capital-summary />
-                        @endif
-                        @if($this->teller_tab==10)
+                        @elseif($this->teller_tab==10 && ($permissions['canView'] ?? false))
                             <livewire:profile-setting.share-ownership />
-                        @endif
-                        @if($this->teller_tab==11)
+                        @elseif($this->teller_tab==11 && ($permissions['canView'] ?? false))
                             <livewire:profile-setting.loan-provision />
-                        @endif
-                        @if($this->teller_tab==12)
+                        @elseif($this->teller_tab==12 && ($permissions['canManage'] ?? false))
                             <livewire:profile-setting.accounts-setup />
-                        @endif
-                        @if($this->teller_tab==13)
+                        @elseif($this->teller_tab==13 && ($permissions['canManage'] ?? false))
                             <livewire:profile-setting.bills-manager />
-                        @endif
-                        @if($this->teller_tab==14)
+                        @elseif($this->teller_tab==14 && ($permissions['canManage'] ?? false))
                             <livewire:profile-setting.institution-accounts />
-                        @endif
-                        @if($this->teller_tab==15)
+                        @elseif($this->teller_tab==15 && ($permissions['canManage'] ?? false))
                             <livewire:approvals.process-code-manager />
-                        @endif
-                        @if($this->teller_tab==16)
+                        @elseif($this->teller_tab==16 && ($permissions['canManage'] ?? false))
                             <livewire:profile-setting.data-migration />
+                        @elseif($this->teller_tab==17 && ($permissions['canManage'] ?? false))
+                            <livewire:profile-setting.domain-management />
+                        @else
+                            {{-- No Access Message --}}
+                            <div class="text-center py-12">
+                                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">No Access</h3>
+                                <p class="text-gray-500">You don't have permission to access this settings section.</p>
+                            </div>
                         @endif
                     </div>
                 </div>
             </div>
         </div>
+        @endif
     </div>
 </div>

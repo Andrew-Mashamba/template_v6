@@ -8,10 +8,11 @@ use App\Models\AccountsModel;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithPagination;
 use Carbon\Carbon;
+use App\Traits\Livewire\WithModulePermissions;
 
 class Transactions extends Component
 {
-    use WithPagination;
+    use WithPagination, WithModulePermissions;
 
     // Navigation
     public $selectedMenuItem = 1;
@@ -60,11 +61,22 @@ class Transactions extends Component
 
     public function mount()
     {
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
         $this->loadStatistics();
     }
 
     public function selectedMenu($menuId)
     {
+        // Check permissions based on the section being accessed
+        $requiredPermission = $this->getRequiredPermissionForSection($menuId);
+        $permissionKey = 'can' . ucfirst($requiredPermission);
+        
+        if (!($this->permissions[$permissionKey] ?? false)) {
+            session()->flash('error', 'You do not have permission to access this transactions section');
+            return;
+        }
+        
         $this->selectedMenuItem = $menuId;
         $this->resetPage();
     }
@@ -146,6 +158,12 @@ class Transactions extends Component
 
     public function viewTransaction($transactionId)
     {
+        // Check permission to view transactions
+        if (!($this->permissions['canView'] ?? false)) {
+            session()->flash('error', 'You do not have permission to view transaction details');
+            return;
+        }
+        
         $this->selectedTransaction = Transaction::with([
             'account',
             'auditLogs',
@@ -159,12 +177,24 @@ class Transactions extends Component
 
     public function reverseTransaction($transactionId)
     {
+        // Check permission to reverse transactions
+        if (!($this->permissions['canManage'] ?? false)) {
+            session()->flash('error', 'You do not have permission to reverse transactions');
+            return;
+        }
+        
         $this->selectedTransaction = Transaction::find($transactionId);
         $this->showReversalModal = true;
     }
 
     public function confirmReversal()
     {
+        // Check permission to reverse transactions
+        if (!($this->permissions['canManage'] ?? false)) {
+            session()->flash('error', 'You do not have permission to reverse transactions');
+            return;
+        }
+        
         $this->validate([
             'reversalReason' => 'required|string|min:10'
         ]);
@@ -182,12 +212,24 @@ class Transactions extends Component
 
     public function retryTransaction($transactionId)
     {
+        // Check permission to retry transactions
+        if (!($this->permissions['canManage'] ?? false)) {
+            session()->flash('error', 'You do not have permission to retry transactions');
+            return;
+        }
+        
         $this->selectedTransaction = Transaction::find($transactionId);
         $this->showRetryModal = true;
     }
 
     public function confirmRetry()
     {
+        // Check permission to retry transactions
+        if (!($this->permissions['canManage'] ?? false)) {
+            session()->flash('error', 'You do not have permission to retry transactions');
+            return;
+        }
+        
         $this->validate([
             'retryReason' => 'required|string|min:10'
         ]);
@@ -205,12 +247,24 @@ class Transactions extends Component
 
     public function reconcileTransaction($transactionId)
     {
+        // Check permission to reconcile transactions
+        if (!($this->permissions['canManage'] ?? false)) {
+            session()->flash('error', 'You do not have permission to reconcile transactions');
+            return;
+        }
+        
         $this->selectedTransaction = Transaction::find($transactionId);
         $this->showReconciliationModal = true;
     }
 
     public function confirmReconciliation()
     {
+        // Check permission to reconcile transactions
+        if (!($this->permissions['canManage'] ?? false)) {
+            session()->flash('error', 'You do not have permission to reconcile transactions');
+            return;
+        }
+        
         try {
             $this->selectedTransaction->reconcile([
                 'notes' => $this->reconciliationNotes,
@@ -227,6 +281,12 @@ class Transactions extends Component
 
     public function exportTransactions()
     {
+        // Check permission to export transactions
+        if (!($this->permissions['canExport'] ?? false)) {
+            session()->flash('error', 'You do not have permission to export transactions');
+            return;
+        }
+        
         // Implementation for CSV/Excel export
         session()->flash('message', 'Export feature coming soon');
     }
@@ -295,14 +355,45 @@ class Transactions extends Component
         $externalSystems = Transaction::distinct()->pluck('external_system')->filter();
         $reconciliationStatuses = Transaction::distinct()->pluck('reconciliation_status')->filter();
 
-        return view('livewire.transactions.transactions', [
-            'transactions' => $transactions,
-            'accounts' => $accounts,
-            'statuses' => $statuses,
-            'types' => $types,
-            'categories' => $categories,
-            'externalSystems' => $externalSystems,
-            'reconciliationStatuses' => $reconciliationStatuses,
-        ]);
+        return view('livewire.transactions.transactions', array_merge(
+            $this->permissions,
+            [
+                'transactions' => $transactions,
+                'accounts' => $accounts,
+                'statuses' => $statuses,
+                'types' => $types,
+                'categories' => $categories,
+                'externalSystems' => $externalSystems,
+                'reconciliationStatuses' => $reconciliationStatuses,
+                'permissions' => $this->permissions
+            ]
+        ));
+    }
+
+    /**
+     * Get the required permission for a specific transactions section
+     */
+    private function getRequiredPermissionForSection($sectionId)
+    {
+        $sectionPermissionMap = [
+            1 => 'view',      // Dashboard Overview
+            2 => 'create',    // New Transaction
+            3 => 'view',      // Transaction List
+            4 => 'view',      // Pending
+            5 => 'manage',    // Reconciliation
+            6 => 'view',      // Reports
+        ];
+        
+        return $sectionPermissionMap[$sectionId] ?? 'view';
+    }
+
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'transactions';
     }
 }

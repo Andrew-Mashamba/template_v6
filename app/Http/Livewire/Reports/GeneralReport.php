@@ -12,8 +12,10 @@ use App\Models\loans_schedules;
 use App\Models\AccountsModel;
 use App\Models\Loan;
 use App\Models\general_ledger;
+use App\Exports\GeneralReportExport;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 use Exception;
 
@@ -96,264 +98,753 @@ class GeneralReport extends Component
 
     public function loadOverviewData()
     {
-        // Sample overview data
+        $dateFilter = $this->getDateFilter();
+        $branchFilter = $this->selectedBranch !== 'all' ? ['branch_id' => $this->selectedBranch] : [];
+
+        // Get total members
+        $totalMembers = ClientsModel::when($branchFilter, function($query) use ($branchFilter) {
+            return $query->where($branchFilter);
+        })->count();
+
+        // Get active members
+        $activeMembers = ClientsModel::where('client_status', 'ACTIVE')
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })->count();
+
+        // Get new members this period
+        $newMembersThisPeriod = ClientsModel::when($dateFilter, function($query) use ($dateFilter) {
+            return $query->whereBetween('created_at', $dateFilter);
+        })->when($branchFilter, function($query) use ($branchFilter) {
+            return $query->where($branchFilter);
+        })->count();
+
+        // Get total loans outstanding
+        $totalLoansOutstanding = LoansModel::whereIn('status', ['ACTIVE', 'APPROVED'])
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })->count();
+
+        // Get total loan portfolio
+        $totalLoanPortfolio = LoansModel::whereIn('status', ['ACTIVE', 'APPROVED'])
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })->sum('principle');
+
+        // Get total deposits (from accounts)
+        $totalDeposits = AccountsModel::whereIn('account_type', ['SAVINGS', 'CURRENT', 'FIXED_DEPOSIT'])
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->whereHas('client', function($q) use ($branchFilter) {
+                    $q->where($branchFilter);
+                });
+            })->sum('account_balance');
+
+        // Get number of branches
+        $numberOfBranches = BranchesModel::where('status', 'ACTIVE')->count();
+
+        // Get number of staff
+        $numberOfStaff = Employee::count();
+
+        // Calculate loan approval rate
+        $totalLoanApplications = LoansModel::when($dateFilter, function($query) use ($dateFilter) {
+            return $query->whereBetween('created_at', $dateFilter);
+        })->when($branchFilter, function($query) use ($branchFilter) {
+            return $query->where($branchFilter);
+        })->count();
+
+        $approvedLoans = LoansModel::where('status', 'APPROVED')
+            ->when($dateFilter, function($query) use ($dateFilter) {
+                return $query->whereBetween('created_at', $dateFilter);
+            })->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })->count();
+
+        $loanApprovalRate = $totalLoanApplications > 0 ? ($approvedLoans / $totalLoanApplications) * 100 : 0;
+
+        // Get financial data from general ledger
+        $totalAssets = general_ledger::where('account_type', 'ASSET')->sum('amount');
+        $totalLiabilities = general_ledger::where('account_type', 'LIABILITY')->sum('amount');
+        $netWorth = $totalAssets - $totalLiabilities;
+
         $this->overviewData = [
             'report_period' => $this->getReportPeriodLabel(),
-            'total_members' => 1250,
-            'active_members' => 1180,
-            'new_members_this_period' => 45,
-            'total_loans_outstanding' => 2850,
-            'total_loan_portfolio' => 125000000,
-            'total_deposits' => 85000000,
-            'total_assets' => 150000000,
-            'total_liabilities' => 65000000,
-            'net_worth' => 85000000,
-            'number_of_branches' => 8,
-            'number_of_staff' => 65,
-            'loan_approval_rate' => 78.5,
-            'member_satisfaction_score' => 4.2,
-            'operational_efficiency' => 85.3
+            'total_members' => $totalMembers,
+            'active_members' => $activeMembers,
+            'new_members_this_period' => $newMembersThisPeriod,
+            'total_loans_outstanding' => $totalLoansOutstanding,
+            'total_loan_portfolio' => $totalLoanPortfolio,
+            'total_deposits' => $totalDeposits,
+            'total_assets' => $totalAssets,
+            'total_liabilities' => $totalLiabilities,
+            'net_worth' => $netWorth,
+            'number_of_branches' => $numberOfBranches,
+            'number_of_staff' => $numberOfStaff,
+            'loan_approval_rate' => round($loanApprovalRate, 1),
+            'member_satisfaction_score' => 4.2, // This would need a separate feedback/satisfaction system
+            'operational_efficiency' => 85.3 // This would need operational metrics calculation
         ];
     }
 
     public function loadClientSummary()
     {
-        // Sample client summary data
+        $branchFilter = $this->selectedBranch !== 'all' ? ['branch_id' => $this->selectedBranch] : [];
+        $totalClients = ClientsModel::when($branchFilter, function($query) use ($branchFilter) {
+            return $query->where($branchFilter);
+        })->count();
+
+        if ($totalClients == 0) {
+            $this->clientSummary = [
+                'by_type' => [
+                    'individual' => ['count' => 0, 'percentage' => 0],
+                    'group' => ['count' => 0, 'percentage' => 0],
+                    'corporate' => ['count' => 0, 'percentage' => 0]
+                ],
+                'by_age_group' => [
+                    '18-25' => ['count' => 0, 'percentage' => 0],
+                    '26-35' => ['count' => 0, 'percentage' => 0],
+                    '36-45' => ['count' => 0, 'percentage' => 0]
+                ],
+                'by_gender' => [
+                    'male' => ['count' => 0, 'percentage' => 0],
+                    'female' => ['count' => 0, 'percentage' => 0]
+                ],
+                'geographical_distribution' => [
+                    'urban' => ['count' => 0, 'percentage' => 0],
+                    'rural' => ['count' => 0, 'percentage' => 0]
+                ]
+            ];
+            return;
+        }
+
+        // Get clients by type
+        $individualCount = ClientsModel::where('membership_type', 'Individual')
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })->count();
+
+        $groupCount = ClientsModel::where('membership_type', 'Group')
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })->count();
+
+        $corporateCount = ClientsModel::where('membership_type', 'Corporate')
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })->count();
+
+        // Get clients by age group
+        $age18_25 = ClientsModel::whereRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 18 AND 25')
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })->count();
+
+        $age26_35 = ClientsModel::whereRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 26 AND 35')
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })->count();
+
+        $age36_45 = ClientsModel::whereRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 36 AND 45')
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })->count();
+
+        // Get clients by gender
+        $maleCount = ClientsModel::where('gender', 'Male')
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })->count();
+
+        $femaleCount = ClientsModel::where('gender', 'Female')
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })->count();
+
+        // Get geographical distribution (assuming we have a field for this)
+        $urbanCount = ClientsModel::where('location_type', 'Urban')
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })->count();
+
+        $ruralCount = ClientsModel::where('location_type', 'Rural')
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })->count();
+
         $this->clientSummary = [
             'by_type' => [
-                'individual' => ['count' => 980, 'percentage' => 78.4, 'total_deposits' => 45000000],
-                'group' => ['count' => 200, 'percentage' => 16.0, 'total_deposits' => 25000000],
-                'corporate' => ['count' => 70, 'percentage' => 5.6, 'total_deposits' => 15000000]
+                'individual' => [
+                    'count' => $individualCount, 
+                    'percentage' => $totalClients > 0 ? round(($individualCount / $totalClients) * 100, 1) : 0
+                ],
+                'group' => [
+                    'count' => $groupCount, 
+                    'percentage' => $totalClients > 0 ? round(($groupCount / $totalClients) * 100, 1) : 0
+                ],
+                'corporate' => [
+                    'count' => $corporateCount, 
+                    'percentage' => $totalClients > 0 ? round(($corporateCount / $totalClients) * 100, 1) : 0
+                ]
             ],
             'by_age_group' => [
-                '18-25' => ['count' => 150, 'percentage' => 12.0],
-                '26-35' => ['count' => 400, 'percentage' => 32.0],
-                '36-45' => ['count' => 350, 'percentage' => 28.0],
-                '46-55' => ['count' => 200, 'percentage' => 16.0],
-                '55+' => ['count' => 150, 'percentage' => 12.0]
+                '18-25' => [
+                    'count' => $age18_25, 
+                    'percentage' => $totalClients > 0 ? round(($age18_25 / $totalClients) * 100, 1) : 0
+                ],
+                '26-35' => [
+                    'count' => $age26_35, 
+                    'percentage' => $totalClients > 0 ? round(($age26_35 / $totalClients) * 100, 1) : 0
+                ],
+                '36-45' => [
+                    'count' => $age36_45, 
+                    'percentage' => $totalClients > 0 ? round(($age36_45 / $totalClients) * 100, 1) : 0
+                ]
             ],
             'by_gender' => [
-                'male' => ['count' => 650, 'percentage' => 52.0],
-                'female' => ['count' => 600, 'percentage' => 48.0]
+                'male' => [
+                    'count' => $maleCount, 
+                    'percentage' => $totalClients > 0 ? round(($maleCount / $totalClients) * 100, 1) : 0
+                ],
+                'female' => [
+                    'count' => $femaleCount, 
+                    'percentage' => $totalClients > 0 ? round(($femaleCount / $totalClients) * 100, 1) : 0
+                ]
             ],
             'geographical_distribution' => [
-                'urban' => ['count' => 750, 'percentage' => 60.0],
-                'rural' => ['count' => 500, 'percentage' => 40.0]
+                'urban' => [
+                    'count' => $urbanCount, 
+                    'percentage' => $totalClients > 0 ? round(($urbanCount / $totalClients) * 100, 1) : 0
+                ],
+                'rural' => [
+                    'count' => $ruralCount, 
+                    'percentage' => $totalClients > 0 ? round(($ruralCount / $totalClients) * 100, 1) : 0
+                ]
             ]
         ];
     }
 
     public function loadLoanSummary()
     {
-        // Sample loan summary data
+        $branchFilter = $this->selectedBranch !== 'all' ? ['branch_id' => $this->selectedBranch] : [];
+        $totalLoans = LoansModel::when($branchFilter, function($query) use ($branchFilter) {
+            return $query->where($branchFilter);
+        })->count();
+
+        if ($totalLoans == 0) {
+            $this->loanSummary = [
+                'by_status' => [
+                    'active' => ['count' => 0, 'amount' => 0, 'percentage' => 0],
+                    'overdue' => ['count' => 0, 'amount' => 0, 'percentage' => 0],
+                    'written_off' => ['count' => 0, 'amount' => 0, 'percentage' => 0],
+                    'completed' => ['count' => 0, 'amount' => 0, 'percentage' => 0]
+                ],
+                'by_product' => [],
+                'by_risk_category' => []
+            ];
+            return;
+        }
+
+        // Get loans by status
+        $activeLoans = LoansModel::where('status', 'ACTIVE')
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            });
+        $activeCount = $activeLoans->count();
+        $activeAmount = $activeLoans->sum('principle');
+
+        $overdueLoans = LoansModel::where('status', 'OVERDUE')
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            });
+        $overdueCount = $overdueLoans->count();
+        $overdueAmount = $overdueLoans->sum('principle');
+
+        $completedLoans = LoansModel::where('status', 'COMPLETED')
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            });
+        $completedCount = $completedLoans->count();
+        $completedAmount = $completedLoans->sum('principle');
+
+        // Get loans by product type
+        $productLoans = LoansModel::with('loanProduct')
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })
+            ->get()
+            ->groupBy('loan_type_2');
+
+        $byProduct = [];
+        foreach ($productLoans as $productType => $loans) {
+            $count = $loans->count();
+            $amount = $loans->sum('principle');
+            $byProduct[strtolower(str_replace(' ', '_', $productType))] = [
+                'count' => $count,
+                'amount' => $amount,
+                'percentage' => $totalLoans > 0 ? round(($count / $totalLoans) * 100, 1) : 0
+            ];
+        }
+
+        // Get loans by risk category (based on days in arrears)
+        $lowRiskLoans = LoansModel::where('days_in_arrears', '<=', 30)
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            });
+        $lowRiskCount = $lowRiskLoans->count();
+        $lowRiskAmount = $lowRiskLoans->sum('principle');
+
+        $mediumRiskLoans = LoansModel::whereBetween('days_in_arrears', [31, 90])
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            });
+        $mediumRiskCount = $mediumRiskLoans->count();
+        $mediumRiskAmount = $mediumRiskLoans->sum('principle');
+
+        $highRiskLoans = LoansModel::where('days_in_arrears', '>', 90)
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            });
+        $highRiskCount = $highRiskLoans->count();
+        $highRiskAmount = $highRiskLoans->sum('principle');
+
         $this->loanSummary = [
             'by_status' => [
-                'active' => ['count' => 2200, 'amount' => 95000000, 'percentage' => 77.2],
-                'overdue' => ['count' => 350, 'amount' => 15000000, 'percentage' => 12.3],
-                'written_off' => ['count' => 50, 'amount' => 5000000, 'percentage' => 1.8],
-                'completed' => ['count' => 250, 'amount' => 10000000, 'percentage' => 8.7]
+                'active' => [
+                    'count' => $activeCount,
+                    'amount' => $activeAmount,
+                    'percentage' => $totalLoans > 0 ? round(($activeCount / $totalLoans) * 100, 1) : 0
+                ],
+                'overdue' => [
+                    'count' => $overdueCount,
+                    'amount' => $overdueAmount,
+                    'percentage' => $totalLoans > 0 ? round(($overdueCount / $totalLoans) * 100, 1) : 0
+                ],
+                'written_off' => [
+                    'count' => 0, // This would need a specific status or field
+                    'amount' => 0,
+                    'percentage' => 0
+                ],
+                'completed' => [
+                    'count' => $completedCount,
+                    'amount' => $completedAmount,
+                    'percentage' => $totalLoans > 0 ? round(($completedCount / $totalLoans) * 100, 1) : 0
+                ]
             ],
-            'by_product' => [
-                'personal_loans' => ['count' => 1200, 'amount' => 45000000, 'percentage' => 36.0],
-                'business_loans' => ['count' => 800, 'amount' => 40000000, 'percentage' => 32.0],
-                'agricultural_loans' => ['count' => 600, 'amount' => 25000000, 'percentage' => 20.0],
-                'emergency_loans' => ['count' => 250, 'amount' => 15000000, 'percentage' => 12.0]
-            ],
+            'by_product' => $byProduct,
             'by_risk_category' => [
-                'low_risk' => ['count' => 1800, 'amount' => 75000000, 'percentage' => 60.0],
-                'medium_risk' => ['count' => 800, 'amount' => 35000000, 'percentage' => 28.0],
-                'high_risk' => ['count' => 250, 'amount' => 15000000, 'percentage' => 12.0]
+                'low_risk' => [
+                    'count' => $lowRiskCount,
+                    'amount' => $lowRiskAmount,
+                    'percentage' => $totalLoans > 0 ? round(($lowRiskCount / $totalLoans) * 100, 1) : 0
+                ],
+                'medium_risk' => [
+                    'count' => $mediumRiskCount,
+                    'amount' => $mediumRiskAmount,
+                    'percentage' => $totalLoans > 0 ? round(($mediumRiskCount / $totalLoans) * 100, 1) : 0
+                ],
+                'high_risk' => [
+                    'count' => $highRiskCount,
+                    'amount' => $highRiskAmount,
+                    'percentage' => $totalLoans > 0 ? round(($highRiskCount / $totalLoans) * 100, 1) : 0
+                ]
             ]
         ];
     }
 
     public function loadDepositSummary()
     {
-        // Sample deposit summary data
+        $branchFilter = $this->selectedBranch !== 'all' ? ['branch_id' => $this->selectedBranch] : [];
+        
+        // Get accounts with branch filter
+        $accountsQuery = AccountsModel::when($branchFilter, function($query) use ($branchFilter) {
+            return $query->whereHas('client', function($q) use ($branchFilter) {
+                $q->where($branchFilter);
+            });
+        });
+
+        $totalAccounts = $accountsQuery->count();
+
+        if ($totalAccounts == 0) {
+            $this->depositSummary = [
+                'by_type' => [
+                    'savings' => ['count' => 0, 'amount' => 0, 'percentage' => 0],
+                    'current' => ['count' => 0, 'amount' => 0, 'percentage' => 0],
+                    'fixed_deposit' => ['count' => 0, 'amount' => 0, 'percentage' => 0]
+                ],
+                'by_balance_range' => [
+                    '0-10000' => ['count' => 0, 'percentage' => 0],
+                    '10001-50000' => ['count' => 0, 'percentage' => 0],
+                    '50001-100000' => ['count' => 0, 'percentage' => 0],
+                    '100000+' => ['count' => 0, 'percentage' => 0]
+                ],
+                'average_balance' => 0,
+                'total_interest_paid' => 0
+            ];
+            return;
+        }
+
+        // Get accounts by type
+        $savingsAccounts = $accountsQuery->where('account_type', 'SAVINGS');
+        $savingsCount = $savingsAccounts->count();
+        $savingsAmount = $savingsAccounts->sum('account_balance');
+
+        $currentAccounts = $accountsQuery->where('account_type', 'CURRENT');
+        $currentCount = $currentAccounts->count();
+        $currentAmount = $currentAccounts->sum('account_balance');
+
+        $fixedDepositAccounts = $accountsQuery->where('account_type', 'FIXED_DEPOSIT');
+        $fixedDepositCount = $fixedDepositAccounts->count();
+        $fixedDepositAmount = $fixedDepositAccounts->sum('account_balance');
+
+        // Get accounts by balance range
+        $balance0_10k = $accountsQuery->whereBetween('account_balance', [0, 10000])->count();
+        $balance10k_50k = $accountsQuery->whereBetween('account_balance', [10001, 50000])->count();
+        $balance50k_100k = $accountsQuery->whereBetween('account_balance', [50001, 100000])->count();
+        $balance100kPlus = $accountsQuery->where('account_balance', '>', 100000)->count();
+
+        // Calculate average balance
+        $totalBalance = $accountsQuery->sum('account_balance');
+        $averageBalance = $totalAccounts > 0 ? $totalBalance / $totalAccounts : 0;
+
+        // Get total interest paid (this would need to be calculated from transaction records)
+        $totalInterestPaid = 0; // This would need a separate calculation from transaction history
+
         $this->depositSummary = [
             'by_type' => [
-                'savings' => ['count' => 1000, 'amount' => 40000000, 'percentage' => 47.1],
-                'current' => ['count' => 200, 'amount' => 25000000, 'percentage' => 29.4],
-                'fixed_deposit' => ['count' => 50, 'amount' => 20000000, 'percentage' => 23.5]
+                'savings' => [
+                    'count' => $savingsCount,
+                    'amount' => $savingsAmount,
+                    'percentage' => $totalAccounts > 0 ? round(($savingsCount / $totalAccounts) * 100, 1) : 0
+                ],
+                'current' => [
+                    'count' => $currentCount,
+                    'amount' => $currentAmount,
+                    'percentage' => $totalAccounts > 0 ? round(($currentCount / $totalAccounts) * 100, 1) : 0
+                ],
+                'fixed_deposit' => [
+                    'count' => $fixedDepositCount,
+                    'amount' => $fixedDepositAmount,
+                    'percentage' => $totalAccounts > 0 ? round(($fixedDepositCount / $totalAccounts) * 100, 1) : 0
+                ]
             ],
             'by_balance_range' => [
-                '0-10000' => ['count' => 600, 'percentage' => 48.0],
-                '10001-50000' => ['count' => 400, 'percentage' => 32.0],
-                '50001-100000' => ['count' => 150, 'percentage' => 12.0],
-                '100000+' => ['count' => 100, 'percentage' => 8.0]
+                '0-10000' => [
+                    'count' => $balance0_10k,
+                    'percentage' => $totalAccounts > 0 ? round(($balance0_10k / $totalAccounts) * 100, 1) : 0
+                ],
+                '10001-50000' => [
+                    'count' => $balance10k_50k,
+                    'percentage' => $totalAccounts > 0 ? round(($balance10k_50k / $totalAccounts) * 100, 1) : 0
+                ],
+                '50001-100000' => [
+                    'count' => $balance50k_100k,
+                    'percentage' => $totalAccounts > 0 ? round(($balance50k_100k / $totalAccounts) * 100, 1) : 0
+                ],
+                '100000+' => [
+                    'count' => $balance100kPlus,
+                    'percentage' => $totalAccounts > 0 ? round(($balance100kPlus / $totalAccounts) * 100, 1) : 0
+                ]
             ],
-            'average_balance' => 68000,
-            'total_interest_paid' => 2500000
+            'average_balance' => round($averageBalance, 2),
+            'total_interest_paid' => $totalInterestPaid
         ];
     }
 
     public function loadBranchPerformance()
     {
-        // Sample branch performance data
-        $this->branchPerformance = [
-            [
-                'branch_name' => 'Main Branch',
-                'total_clients' => 300,
-                'total_loans' => 450,
-                'loan_amount' => 20000000,
-                'total_deposits' => 15000000,
-                'staff_count' => 15,
-                'performance_score' => 92.5
-            ],
-            [
-                'branch_name' => 'Downtown Branch',
-                'total_clients' => 250,
-                'total_loans' => 380,
-                'loan_amount' => 18000000,
-                'total_deposits' => 12000000,
-                'staff_count' => 12,
-                'performance_score' => 88.3
-            ],
-            [
-                'branch_name' => 'Suburban Branch',
-                'total_clients' => 200,
-                'total_loans' => 320,
-                'loan_amount' => 15000000,
-                'total_deposits' => 10000000,
-                'staff_count' => 10,
-                'performance_score' => 85.7
-            ],
-            [
-                'branch_name' => 'Rural Branch',
-                'total_clients' => 150,
-                'total_loans' => 280,
-                'loan_amount' => 12000000,
-                'total_deposits' => 8000000,
-                'staff_count' => 8,
-                'performance_score' => 82.1
-            ]
-        ];
+        $branches = BranchesModel::where('status', 'ACTIVE')->get();
+        $branchPerformance = [];
+
+        foreach ($branches as $branch) {
+            // Get clients for this branch
+            $totalClients = ClientsModel::where('branch_id', $branch->id)->count();
+            
+            // Get loans for this branch
+            $totalLoans = LoansModel::where('branch_id', $branch->id)->count();
+            $loanAmount = LoansModel::where('branch_id', $branch->id)->sum('principle');
+            
+            // Get deposits for this branch
+            $totalDeposits = AccountsModel::whereHas('client', function($query) use ($branch) {
+                $query->where('branch_id', $branch->id);
+            })->sum('account_balance');
+            
+            // Get staff count for this branch
+            $staffCount = Employee::where('branch_id', $branch->id)->count();
+            
+            // Calculate performance score (simplified calculation)
+            $performanceScore = 0;
+            if ($totalClients > 0) {
+                $clientScore = min(($totalClients / 100) * 30, 30); // Max 30 points for clients
+                $loanScore = min(($totalLoans / 50) * 25, 25); // Max 25 points for loans
+                $depositScore = min(($totalDeposits / 10000000) * 25, 25); // Max 25 points for deposits
+                $staffScore = min(($staffCount / 10) * 20, 20); // Max 20 points for staff
+                $performanceScore = round($clientScore + $loanScore + $depositScore + $staffScore, 1);
+            }
+
+            $branchPerformance[] = [
+                'branch_name' => $branch->name,
+                'total_clients' => $totalClients,
+                'total_loans' => $totalLoans,
+                'loan_amount' => $loanAmount,
+                'total_deposits' => $totalDeposits,
+                'staff_count' => $staffCount,
+                'performance_score' => $performanceScore
+            ];
+        }
+
+        // Sort by performance score descending
+        usort($branchPerformance, function($a, $b) {
+            return $b['performance_score'] <=> $a['performance_score'];
+        });
+
+        $this->branchPerformance = $branchPerformance;
     }
 
     public function loadProductPerformance()
     {
-        // Sample product performance data
-        $this->productPerformance = [
-            [
-                'product_name' => 'Personal Loan',
-                'total_loans' => 1200,
-                'total_amount' => 45000000,
-                'average_amount' => 37500,
-                'interest_rate' => 12.5,
-                'default_rate' => 3.2,
-                'profitability' => 85.5
-            ],
-            [
-                'product_name' => 'Business Loan',
-                'total_loans' => 800,
-                'total_amount' => 40000000,
-                'average_amount' => 50000,
-                'interest_rate' => 14.0,
-                'default_rate' => 4.1,
-                'profitability' => 88.2
-            ],
-            [
-                'product_name' => 'Agricultural Loan',
-                'total_loans' => 600,
-                'total_amount' => 25000000,
-                'average_amount' => 41667,
-                'interest_rate' => 10.0,
-                'default_rate' => 2.8,
-                'profitability' => 82.7
-            ],
-            [
-                'product_name' => 'Emergency Loan',
-                'total_loans' => 250,
-                'total_amount' => 15000000,
-                'average_amount' => 60000,
-                'interest_rate' => 15.0,
-                'default_rate' => 5.5,
-                'profitability' => 90.1
-            ]
-        ];
+        $branchFilter = $this->selectedBranch !== 'all' ? ['branch_id' => $this->selectedBranch] : [];
+        
+        // Get loan products with their performance data
+        $loanProducts = LoansModel::with('loanProduct')
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })
+            ->get()
+            ->groupBy('loan_type_2');
+
+        $productPerformance = [];
+
+        foreach ($loanProducts as $productType => $loans) {
+            $totalLoans = $loans->count();
+            $totalAmount = $loans->sum('principle');
+            $averageAmount = $totalLoans > 0 ? $totalAmount / $totalLoans : 0;
+            
+            // Calculate average interest rate
+            $averageInterestRate = $loans->avg('interest') ?? 0;
+            
+            // Calculate default rate (loans with days_in_arrears > 90)
+            $defaultedLoans = $loans->where('days_in_arrears', '>', 90)->count();
+            $defaultRate = $totalLoans > 0 ? ($defaultedLoans / $totalLoans) * 100 : 0;
+            
+            // Calculate profitability (simplified - based on interest rate and default rate)
+            $profitability = max(0, $averageInterestRate - ($defaultRate * 2));
+
+            $productPerformance[] = [
+                'product_name' => $productType,
+                'total_loans' => $totalLoans,
+                'total_amount' => $totalAmount,
+                'average_amount' => round($averageAmount, 2),
+                'interest_rate' => round($averageInterestRate, 1),
+                'default_rate' => round($defaultRate, 1),
+                'profitability' => round($profitability, 1)
+            ];
+        }
+
+        // Sort by total amount descending
+        usort($productPerformance, function($a, $b) {
+            return $b['total_amount'] <=> $a['total_amount'];
+        });
+
+        $this->productPerformance = $productPerformance;
     }
 
     public function loadStaffPerformance()
     {
-        // Sample staff performance data
-        $this->staffPerformance = [
-            [
-                'staff_name' => 'John Doe',
-                'position' => 'Branch Manager',
-                'department' => 'Management',
-                'clients_served' => 150,
-                'loans_processed' => 45,
-                'deposits_handled' => 200,
-                'performance_rating' => 95.0,
-                'customer_satisfaction' => 4.8
-            ],
-            [
-                'staff_name' => 'Jane Smith',
-                'position' => 'Loan Officer',
-                'department' => 'Credit',
-                'clients_served' => 120,
-                'loans_processed' => 60,
-                'deposits_handled' => 80,
-                'performance_rating' => 92.3,
-                'customer_satisfaction' => 4.6
-            ],
-            [
-                'staff_name' => 'Bob Wilson',
-                'position' => 'Teller',
-                'department' => 'Operations',
-                'clients_served' => 200,
-                'loans_processed' => 0,
-                'deposits_handled' => 300,
-                'performance_rating' => 88.7,
-                'customer_satisfaction' => 4.4
-            ]
-        ];
+        $branchFilter = $this->selectedBranch !== 'all' ? ['branch_id' => $this->selectedBranch] : [];
+        
+        $employees = Employee::with(['department', 'branch'])
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })
+            ->get();
+
+        $staffPerformance = [];
+
+        foreach ($employees as $employee) {
+            // Get clients served (this would need a relationship or tracking system)
+            $clientsServed = 0; // This would need to be tracked in a separate table
+            
+            // Get loans processed by this employee
+            $loansProcessed = LoansModel::where('supervisor_id', $employee->id)->count();
+            
+            // Get deposits handled (this would need transaction tracking)
+            $depositsHandled = 0; // This would need to be tracked in transaction records
+            
+            // Calculate performance rating (simplified)
+            $performanceRating = 0;
+            if ($loansProcessed > 0) {
+                $performanceRating = min(($loansProcessed / 10) * 100, 100);
+            }
+            
+            // Customer satisfaction (this would need a feedback system)
+            $customerSatisfaction = 4.0; // Default value, would need actual feedback data
+
+            $staffPerformance[] = [
+                'staff_name' => $employee->first_name . ' ' . $employee->last_name,
+                'position' => $employee->position ?? 'Staff',
+                'department' => $employee->department->name ?? 'General',
+                'clients_served' => $clientsServed,
+                'loans_processed' => $loansProcessed,
+                'deposits_handled' => $depositsHandled,
+                'performance_rating' => round($performanceRating, 1),
+                'customer_satisfaction' => $customerSatisfaction
+            ];
+        }
+
+        // Sort by performance rating descending
+        usort($staffPerformance, function($a, $b) {
+            return $b['performance_rating'] <=> $a['performance_rating'];
+        });
+
+        $this->staffPerformance = $staffPerformance;
     }
 
     public function loadFinancialSummary()
     {
-        // Sample financial summary data
+        $dateFilter = $this->getDateFilter();
+        $branchFilter = $this->selectedBranch !== 'all' ? ['branch_id' => $this->selectedBranch] : [];
+
+        // Get income data from general ledger
+        $interestIncome = general_ledger::where('account_type', 'INCOME')
+            ->where('description', 'like', '%interest%')
+            ->when($dateFilter, function($query) use ($dateFilter) {
+                return $query->whereBetween('created_at', $dateFilter);
+            })
+            ->sum('amount');
+
+        $feeIncome = general_ledger::where('account_type', 'INCOME')
+            ->where('description', 'like', '%fee%')
+            ->when($dateFilter, function($query) use ($dateFilter) {
+                return $query->whereBetween('created_at', $dateFilter);
+            })
+            ->sum('amount');
+
+        $otherIncome = general_ledger::where('account_type', 'INCOME')
+            ->where('description', 'not like', '%interest%')
+            ->where('description', 'not like', '%fee%')
+            ->when($dateFilter, function($query) use ($dateFilter) {
+                return $query->whereBetween('created_at', $dateFilter);
+            })
+            ->sum('amount');
+
+        $totalIncome = $interestIncome + $feeIncome + $otherIncome;
+
+        // Get expense data from general ledger
+        $operatingExpenses = general_ledger::where('account_type', 'EXPENSE')
+            ->where('description', 'like', '%operating%')
+            ->when($dateFilter, function($query) use ($dateFilter) {
+                return $query->whereBetween('created_at', $dateFilter);
+            })
+            ->sum('amount');
+
+        $staffCosts = general_ledger::where('account_type', 'EXPENSE')
+            ->where('description', 'like', '%staff%')
+            ->when($dateFilter, function($query) use ($dateFilter) {
+                return $query->whereBetween('created_at', $dateFilter);
+            })
+            ->sum('amount');
+
+        $administrativeCosts = general_ledger::where('account_type', 'EXPENSE')
+            ->where('description', 'like', '%administrative%')
+            ->when($dateFilter, function($query) use ($dateFilter) {
+                return $query->whereBetween('created_at', $dateFilter);
+            })
+            ->sum('amount');
+
+        $totalExpenses = $operatingExpenses + $staffCosts + $administrativeCosts;
+
+        // Calculate profitability metrics
+        $netProfit = $totalIncome - $totalExpenses;
+        $profitMargin = $totalIncome > 0 ? ($netProfit / $totalIncome) * 100 : 0;
+        
+        // Get total assets for ROA calculation
+        $totalAssets = general_ledger::where('account_type', 'ASSET')->sum('amount');
+        $roa = $totalAssets > 0 ? ($netProfit / $totalAssets) * 100 : 0;
+        
+        // Get total equity for ROE calculation
+        $totalEquity = general_ledger::where('account_type', 'EQUITY')->sum('amount');
+        $roe = $totalEquity > 0 ? ($netProfit / $totalEquity) * 100 : 0;
+
         $this->financialSummary = [
             'income' => [
-                'interest_income' => 8500000,
-                'fee_income' => 1200000,
-                'other_income' => 300000,
-                'total_income' => 10000000
+                'interest_income' => $interestIncome,
+                'fee_income' => $feeIncome,
+                'other_income' => $otherIncome,
+                'total_income' => $totalIncome
             ],
             'expenses' => [
-                'operating_expenses' => 4500000,
-                'staff_costs' => 2500000,
-                'administrative_costs' => 800000,
-                'total_expenses' => 7800000
+                'operating_expenses' => $operatingExpenses,
+                'staff_costs' => $staffCosts,
+                'administrative_costs' => $administrativeCosts,
+                'total_expenses' => $totalExpenses
             ],
             'profitability' => [
-                'gross_profit' => 10000000,
-                'net_profit' => 2200000,
-                'profit_margin' => 22.0,
-                'roa' => 1.47,
-                'roe' => 2.59
+                'gross_profit' => $totalIncome,
+                'net_profit' => $netProfit,
+                'profit_margin' => round($profitMargin, 1),
+                'roa' => round($roa, 2),
+                'roe' => round($roe, 2)
             ]
         ];
     }
 
     public function loadOperationalMetrics()
     {
-        // Sample operational metrics data
+        $branchFilter = $this->selectedBranch !== 'all' ? ['branch_id' => $this->selectedBranch] : [];
+        
+        // Calculate efficiency ratios
+        $totalIncome = $this->financialSummary['income']['total_income'] ?? 0;
+        $totalExpenses = $this->financialSummary['expenses']['total_expenses'] ?? 0;
+        $costToIncomeRatio = $totalIncome > 0 ? ($totalExpenses / $totalIncome) * 100 : 0;
+        
+        $operatingEfficiency = $totalIncome > 0 ? (($totalIncome - $totalExpenses) / $totalIncome) * 100 : 0;
+        
+        // Staff productivity (loans per staff member)
+        $totalStaff = Employee::when($branchFilter, function($query) use ($branchFilter) {
+            return $query->where($branchFilter);
+        })->count();
+        
+        $totalLoans = LoansModel::when($branchFilter, function($query) use ($branchFilter) {
+            return $query->where($branchFilter);
+        })->count();
+        
+        $staffProductivity = $totalStaff > 0 ? ($totalLoans / $totalStaff) : 0;
+
+        // Calculate risk metrics
+        $totalLoanPortfolio = LoansModel::whereIn('status', ['ACTIVE', 'APPROVED'])
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })->sum('principle');
+        
+        $portfolioAtRisk = LoansModel::where('days_in_arrears', '>', 30)
+            ->when($branchFilter, function($query) use ($branchFilter) {
+                return $query->where($branchFilter);
+            })->sum('principle');
+        
+        $portfolioAtRiskPercentage = $totalLoanPortfolio > 0 ? ($portfolioAtRisk / $totalLoanPortfolio) * 100 : 0;
+        
+        // Provision coverage (simplified calculation)
+        $provisionCoverage = 85.0; // This would need actual provision calculations
+        
+        // Capital adequacy (simplified)
+        $totalAssets = general_ledger::where('account_type', 'ASSET')->sum('amount');
+        $totalCapital = general_ledger::where('account_type', 'EQUITY')->sum('amount');
+        $capitalAdequacy = $totalAssets > 0 ? ($totalCapital / $totalAssets) * 100 : 0;
+
         $this->operationalMetrics = [
             'efficiency_ratios' => [
-                'cost_to_income_ratio' => 78.0,
-                'operating_efficiency' => 85.3,
-                'staff_productivity' => 92.1
+                'cost_to_income_ratio' => round($costToIncomeRatio, 1),
+                'operating_efficiency' => round($operatingEfficiency, 1),
+                'staff_productivity' => round($staffProductivity, 1)
             ],
             'service_metrics' => [
-                'average_processing_time' => '2.5 days',
-                'customer_satisfaction' => 4.2,
-                'complaint_resolution_time' => '24 hours'
+                'average_processing_time' => '2.5 days', // This would need actual processing time tracking
+                'customer_satisfaction' => 4.2, // This would need a feedback system
+                'complaint_resolution_time' => '24 hours' // This would need complaint tracking
             ],
             'risk_metrics' => [
-                'portfolio_at_risk' => 12.3,
-                'provision_coverage' => 85.0,
-                'capital_adequacy' => 18.5
+                'portfolio_at_risk' => round($portfolioAtRiskPercentage, 1),
+                'provision_coverage' => $provisionCoverage,
+                'capital_adequacy' => round($capitalAdequacy, 1)
             ]
         ];
     }
@@ -369,6 +860,31 @@ class GeneralReport extends Component
         $this->netWorth = $this->overviewData['net_worth'] ?? 0;
         $this->activeBranches = $this->overviewData['number_of_branches'] ?? 0;
         $this->activeStaff = $this->overviewData['number_of_staff'] ?? 0;
+    }
+
+    public function getDateFilter()
+    {
+        $year = $this->selectedYear;
+        $month = $this->selectedMonth;
+
+        switch ($this->reportPeriod) {
+            case 'daily':
+                return [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()];
+            case 'weekly':
+                return [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()];
+            case 'monthly':
+                return [
+                    Carbon::createFromFormat('Y-m', $year . '-' . $month)->startOfMonth(),
+                    Carbon::createFromFormat('Y-m', $year . '-' . $month)->endOfMonth()
+                ];
+            case 'yearly':
+                return [
+                    Carbon::createFromFormat('Y', $year)->startOfYear(),
+                    Carbon::createFromFormat('Y', $year)->endOfYear()
+                ];
+            default:
+                return null;
+        }
     }
 
     public function getReportPeriodLabel()
@@ -409,8 +925,43 @@ class GeneralReport extends Component
 
     public function exportToExcel()
     {
-        // Implementation for Excel export
-        session()->flash('success', 'General Report exported successfully!');
+        try {
+            // Prepare report data for export
+            $reportData = [
+                'overview' => $this->overviewData,
+                'client_summary' => $this->clientSummary,
+                'loan_summary' => $this->loanSummary,
+                'deposit_summary' => $this->depositSummary,
+                'branch_performance' => $this->branchPerformance,
+                'product_performance' => $this->productPerformance,
+                'staff_performance' => $this->staffPerformance,
+                'financial_summary' => $this->financialSummary,
+                'operational_metrics' => $this->operationalMetrics,
+            ];
+
+            // Prepare filters for export
+            $filters = [
+                'report_period' => $this->getReportPeriodLabel(),
+                'selected_month' => $this->selectedMonth,
+                'selected_year' => $this->selectedYear,
+                'selected_branch' => $this->selectedBranch,
+                'generated_at' => Carbon::now()->format('Y-m-d H:i:s'),
+            ];
+
+            // Generate filename
+            $filename = 'general_report_' . 
+                       strtolower(str_replace(' ', '_', $this->reportPeriod)) . '_' . 
+                       $this->selectedYear . '_' . 
+                       str_pad($this->selectedMonth, 2, '0', STR_PAD_LEFT) . '_' . 
+                       Carbon::now()->format('Y-m-d_H-i-s') . '.xlsx';
+
+            // Create and download the Excel file
+            return Excel::download(new GeneralReportExport($reportData, $filters), $filename);
+
+        } catch (Exception $e) {
+            Log::error('Error exporting General Report to Excel: ' . $e->getMessage());
+            session()->flash('error', 'Error exporting report: ' . $e->getMessage());
+        }
     }
 
     public function render()

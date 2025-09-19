@@ -920,7 +920,7 @@
                                                 @endif
                                             </label>
                                             @if($fieldConfig['type'] === 'textarea')
-                                                <textarea wire:model="editingMember.{{ $key }}" 
+                                                <textarea wire:model.defer="editingMember.{{ $key }}" 
                                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm {{ $disabledClass }}"
                                                     {{ $isRequired }} {{ $isDisabled }}></textarea>
                                             @elseif($fieldConfig['type'] === 'select')
@@ -934,7 +934,7 @@
                                                 </select>
                                             @else
                                                 <input type="{{ $fieldConfig['type'] }}" 
-                                                    wire:model="editingMember.{{ $key }}"
+                                                    wire:model.defer="editingMember.{{ $key }}"
                                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm {{ $disabledClass }}"
                                                     {{ $isRequired }} {{ $isDisabled }}>
                                             @endif

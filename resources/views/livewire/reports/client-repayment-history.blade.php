@@ -4,23 +4,37 @@
         <div class="px-6 py-4 border-b border-gray-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Client Repayment History Report</h1>
+                    <h1 class="text-2xl font-bold text-gray-900">Member Repayment History Report</h1>
                     <p class="mt-1 text-sm text-gray-500">Complete repayment history and payment patterns</p>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button wire:click="exportReport('pdf')" 
-                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button wire:click="exportToPdf" 
+                            wire:loading.attr="disabled"
+                            wire:target="exportToPdf"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg wire:loading.remove wire:target="exportToPdf" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        Export PDF
+                        <svg wire:loading wire:target="exportToPdf" class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span wire:loading.remove wire:target="exportToPdf">Export PDF</span>
+                        <span wire:loading wire:target="exportToPdf">Generating PDF...</span>
                     </button>
-                    <button wire:click="exportReport('excel')" 
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button wire:click="exportToExcel" 
+                            wire:loading.attr="disabled"
+                            wire:target="exportToExcel"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg wire:loading.remove wire:target="exportToExcel" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        Export Excel
+                        <svg wire:loading wire:target="exportToExcel" class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span wire:loading.remove wire:target="exportToExcel">Export Excel</span>
+                        <span wire:loading wire:target="exportToExcel">Generating Excel...</span>
                     </button>
                 </div>
             </div>
@@ -30,17 +44,17 @@
     {{-- Filters --}}
     <div class="bg-white shadow rounded-lg mb-6">
         <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">Report Filters</h3>
+            <h3 class="text-lg font-semibold text-gray-900">Member Report Filters</h3>
         </div>
         <div class="px-6 py-4">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <label for="selectedClient" class="block text-sm font-medium text-gray-700 mb-2">
-                        Select Client
+                        Select Member
                     </label>
                     <select wire:model.live="selectedClient" 
                             class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        <option value="">Choose a client...</option>
+                        <option value="">Choose a member...</option>
                         @foreach($clients as $client)
                             <option value="{{ $client->id }}">{{ $client->full_name }} ({{ $client->client_number }})</option>
                         @endforeach
@@ -48,11 +62,11 @@
                 </div>
                 <div>
                     <label for="clientNumber" class="block text-sm font-medium text-gray-700 mb-2">
-                        Or Enter Client Number
+                        Or Enter Member Number
                     </label>
                     <input type="text" 
                            wire:model.live="clientNumber" 
-                           placeholder="Enter client number..."
+                           placeholder="Enter member number..."
                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                 </div>
                 <div>

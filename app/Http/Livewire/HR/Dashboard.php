@@ -8,9 +8,11 @@ use App\Models\PayRolls as PayRoll;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Carbon\Carbon;
+use App\Traits\Livewire\WithModulePermissions;
 
 class Dashboard extends Component
 {
+    use WithModulePermissions;
     public $menuNumber = 0; // 0=dashboard, 1=employees, 2=payroll, 3=leave, 4=attendance, 5=requests
     public $totalEmployees;
     public $totalDepartments;
@@ -21,11 +23,30 @@ class Dashboard extends Component
 
     public function mount()
     {
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
         $this->loadDashboardData();
     }
 
     public function setMenuNumber($number)
     {
+        // Check permissions based on the menu being accessed
+        $permissionMap = [
+            0 => 'canView',         // Dashboard Overview
+            1 => 'canEmployees',    // Employee Management
+            2 => 'canPayroll',      // Payroll Management
+            3 => 'canLeave',        // Leave Management
+            4 => 'canAttendance',   // Attendance Tracking
+            5 => 'canRequests'      // Request Management
+        ];
+        
+        $requiredPermission = $permissionMap[$number] ?? 'canView';
+        
+        if (!($this->permissions[$requiredPermission] ?? false)) {
+            session()->flash('error', 'You do not have permission to access this HR section');
+            return;
+        }
+        
         $this->menuNumber = $number;
     }
 
@@ -66,6 +87,21 @@ class Dashboard extends Component
 
     public function render()
     {
-        return view('livewire.h-r.dashboard');
+        return view('livewire.h-r.dashboard', array_merge(
+            $this->permissions,
+            [
+                'permissions' => $this->permissions
+            ]
+        ));
+    }
+
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'hr';
     }
 } 

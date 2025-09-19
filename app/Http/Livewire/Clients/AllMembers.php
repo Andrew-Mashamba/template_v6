@@ -1003,7 +1003,7 @@ class AllMembers extends Component
             
             // Create approval using the existing pattern
             \App\Models\approvals::create([
-                'institution_id' => auth()->user()->institution_id ?? '',
+                // 'institution_id' => auth()->user()->institution_id ?? '',
                 'process_name' => $processName,
                 'process_description' => $processDescription,
                 'approval_process_description' => 'Member status change approval required',

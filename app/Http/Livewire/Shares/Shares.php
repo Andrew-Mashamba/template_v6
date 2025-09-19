@@ -3,6 +3,7 @@ namespace App\Http\Livewire\Shares;
 
 use Illuminate\Support\Facades\Config;
 use Livewire\Component;
+use App\Traits\Livewire\WithModulePermissions;
 use App\Models\SharesModel;
 use App\Models\approvals;
 use Illuminate\Support\Facades\Auth;
@@ -47,6 +48,7 @@ class Shares extends Component
 {
     use WithPagination;
     use WithFileUploads;
+    use WithModulePermissions;
 
     public $tab_id = '10';
     public $title = 'Shares list';
@@ -476,12 +478,25 @@ class Shares extends Component
     
     public function mount()
     {
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
+        
         $this->sidebar_view = 'home_dashboard';
         $this->getShareSummary();
         $this->loadAvailableProducts();
         $this->loadShareProducts();
         $this->loadWithdrawals();
         $this->loadShareTransfers();
+    }
+    
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'shares';
     }
 
     public function loadShareProducts()
@@ -661,6 +676,10 @@ class Shares extends Component
     }
 
     public function updateSharesAccount(){
+        if (!$this->authorize('edit', 'You do not have permission to update share accounts')) {
+            return;
+        }
+        
         $user = auth()->user();
         $data = [
             'membershipNumber' =>$this->membershipNumber,
@@ -898,6 +917,10 @@ class Shares extends Component
 
     public function issueShares()
     {
+        if (!$this->authorize('create', 'You do not have permission to issue shares')) {
+            return;
+        }
+        
         try {
             Log::info('Starting share issuance process', [
                 'client_number' => $this->client_number,
@@ -1102,6 +1125,9 @@ class Shares extends Component
 
     public function createNewSharesAccount()
     {
+        if (!$this->authorize('create', 'You do not have permission to create share accounts')) {
+            return;
+        }
         $this->showCreateNewSharesAccount = true;
     }    
 
@@ -1220,6 +1246,9 @@ class Shares extends Component
 
     public function editSharesAccountModal($id)
     {
+        if (!$this->authorize('edit', 'You do not have permission to edit share accounts')) {
+            return;
+        }
         $this->showEditSharesAccount = true;
         $this->pendingSharesAccount = $id;
         $this->SharesAccount = $id;
@@ -1293,6 +1322,9 @@ class Shares extends Component
 
     public function delete(): void
     {
+        if (!$this->authorize('delete', 'You do not have permission to delete share accounts')) {
+            return;
+        }
         $user = User::where('id',$this->userSelected)->first();
         $action = '';
         if ($user) {
@@ -1708,9 +1740,13 @@ class Shares extends Component
 
         $shareAccounts = $query->paginate(10);
 
-        return view('livewire.shares.shares', [
-            'shareAccounts' => $shareAccounts
-        ]);
+        return view('livewire.shares.shares', array_merge(
+            $this->permissions,
+            [
+                'shareAccounts' => $shareAccounts,
+                'permissions' => $this->permissions
+            ]
+        ));
     }
 
     protected function loadAvailableProducts()
@@ -2379,6 +2415,10 @@ class Shares extends Component
 
     public function processShareTransfer()
     {
+        if (!$this->authorize('transfer', 'You do not have permission to transfer shares')) {
+            return;
+        }
+        
         try {
             Log::info('Starting share transfer process', [
                 'sender' => $this->senderMemberDetails->client_number,
@@ -3210,6 +3250,9 @@ class Shares extends Component
 
     public function processShareWithdrawal()
     {
+        if (!$this->authorize('withdraw', 'You do not have permission to withdraw shares')) {
+            return;
+        }
 
         if(empty($this->withdrawalReason)){
             //$this->showErrorMessage('Please enter a withdrawal reason');
@@ -3747,6 +3790,10 @@ class Shares extends Component
 
     public function approveTransfer($transferId)
     {
+        if (!$this->authorize('approve', 'You do not have permission to approve share transfers')) {
+            return;
+        }
+        
         try {
             DB::beginTransaction();
             

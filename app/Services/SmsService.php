@@ -360,4 +360,13 @@ class SmsService
         Cache::put($key, $count + 1, $this->rateLimitWindow);
         return true;
     }
+
+    /**
+     * Alias for send() method for compatibility
+     * Used by ProcessTradePayableInvoice job
+     */
+    public function sendSms($phoneNumber, $message)
+    {
+        return $this->send($phoneNumber, $message);
+    }
 }

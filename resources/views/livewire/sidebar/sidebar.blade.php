@@ -47,7 +47,13 @@
                 @if($menuId == 11 || $menuId == 12 || $menuId == 14 || $menuId == 15 || $menuId == 24 || $menuId == 25)
                     @continue
                 @endif
+                @if($menuId == 0)
+                    @continue {{-- Dashboard is already handled above --}}
+                @endif
                 @php $menu = \App\Models\Menu::find($menuId); @endphp
+                @if(!$menu)
+                    @continue {{-- Skip if menu not found --}}
+                @endif
                 <button wire:click="menuItemClicked({{$menuId}})" class="relative w-full group transition-all duration-200">
                     <div
                         class="flex items-center p-3 rounded-xl transition-all duration-200

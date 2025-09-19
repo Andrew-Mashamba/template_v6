@@ -412,7 +412,7 @@
 
     <!-- Create Account Modal -->
     @if($showCreateModal)
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30"></div>
         <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-2xl sm:w-full">
@@ -558,7 +558,7 @@
 
     <!-- Edit Account Modal -->
     @if($showEditModal)
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30"></div>
         <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-2xl sm:w-full">
@@ -725,7 +725,7 @@
 
     <!-- Delete Account Modal -->
     @if($showDeleteModal)
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30"></div>
         <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-md sm:w-full">
@@ -774,7 +774,7 @@
 
     <!-- Account Details Modal -->
     @if($showDetailsModal)
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30"></div>
         <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-2xl sm:w-full">
@@ -905,7 +905,7 @@
 
     <!-- Ledger Modal -->
     @if($showLedgerModal)
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30"></div>
         <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-4xl sm:w-full">
@@ -986,7 +986,7 @@
 
     <!-- Statement Modal -->
     @if($showStatementModal)
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30"></div>
         <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
                 <div class="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:max-w-3xl sm:w-full">

@@ -114,6 +114,42 @@ class User extends Authenticatable
         return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id')
             ->withTimestamps();
     }
+    
+    public function subRoles()
+    {
+        return $this->belongsToMany(SubRole::class, 'user_sub_roles', 'user_id', 'sub_role_id')
+            ->withTimestamps();
+    }
+    
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class, 'user_permissions', 'user_id', 'permission_id')
+            ->withTimestamps();
+    }
+    
+    public function getAllPermissions()
+    {
+        // Get direct user permissions
+        $directPermissions = $this->permissions;
+        
+        // Get permissions from roles
+        $rolePermissions = collect();
+        foreach ($this->roles as $role) {
+            $rolePermissions = $rolePermissions->merge($role->permissions);
+        }
+        
+        // Get permissions from sub-roles
+        $subRolePermissions = collect();
+        foreach ($this->subRoles as $subRole) {
+            $subRolePermissions = $subRolePermissions->merge($subRole->permissions);
+        }
+        
+        // Merge all permissions and get unique
+        return $directPermissions
+            ->merge($rolePermissions)
+            ->merge($subRolePermissions)
+            ->unique('id');
+    }
 
     public function employee()
     {

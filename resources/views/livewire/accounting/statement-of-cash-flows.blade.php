@@ -3,7 +3,7 @@
     <div class="bg-gradient-to-r from-blue-900 to-blue-800 text-white px-4 py-3 rounded-t-lg">
         <div class="text-center">
             <h1 class="text-xl font-bold uppercase">{{ $companyName }}</h1>
-            <h2 class="text-lg font-semibold">STATEMENT OF CASH FLOWS</h2>
+            <h2 class="text-lg font-semibold">STATEMENT OF CASH FLOWS x</h2>
             <p class="text-sm">For the year ended 31 December {{ $selectedYear }}</p>
             <p class="text-xs italic">({{ ucfirst($method) }} Method)</p>
         </div>

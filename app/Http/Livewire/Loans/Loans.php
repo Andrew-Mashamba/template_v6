@@ -5,6 +5,7 @@ namespace App\Http\Livewire\Loans;
 use App\Models\Committee;
 use App\Models\User;
 use Livewire\Component;
+use App\Traits\Livewire\WithModulePermissions;
 use Illuminate\Support\Facades\Session;
 
 
@@ -34,6 +35,7 @@ use App\Models\general_ledger;
 
 class Loans extends Component
 {
+    use WithModulePermissions;
 
 
     public $tab_id ;
@@ -114,10 +116,22 @@ class Loans extends Component
 
 
         public function mount(){
-
+            // Initialize the permission system for this module
+            $this->initializeWithModulePermissions();
+            
             Session::put('currentloanID', null);
             Session::put('currentloanClient', null);
             $this->view_path = 'loans.new-loans';
+        }
+        
+        /**
+         * Override to specify the module name for permissions
+         * 
+         * @return string
+         */
+        protected function getModuleName(): string
+        {
+            return 'loans';
         }
 
         public function selectedMenu($menuId)
@@ -212,7 +226,12 @@ class Loans extends Component
         $this->activeLoansCount = LoansModel::where('status', 'ACTIVE')->count();
         $this->inactiveLoansCount = LoansModel::where('status', 'PENDING')->count();
         $this->LoansList = LoansModel::get();
-        return view('livewire.loans.loans');
+        return view('livewire.loans.loans', array_merge(
+            $this->permissions,
+            [
+                'permissions' => $this->permissions
+            ]
+        ));
     }
 
 

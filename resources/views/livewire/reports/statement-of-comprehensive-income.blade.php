@@ -118,7 +118,7 @@
                 <div class="space-y-6">
                     <!-- Statement Header -->
                     <div class="text-center border-b pb-4">
-                        <h2 class="text-2xl font-bold text-gray-900">STATEMENT OF COMPREHENSIVE INCOME</h2>
+                        <h2 class="text-2xl font-bold text-gray-900">STATEMENT OF COMPREHENSIVE INCOME Y</h2>
                         <p class="text-lg text-gray-600 mt-2">
                             For the period from {{ \Carbon\Carbon::parse($statementData['period_start'])->format('F d, Y') }} 
                             to {{ \Carbon\Carbon::parse($statementData['period_end'])->format('F d, Y') }}

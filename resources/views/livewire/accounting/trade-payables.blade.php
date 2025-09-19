@@ -85,6 +85,35 @@
                             @error('due_date') <span class="text-red-500">{{ $message }}</span> @enderror
                         </div>
 
+                        {{-- Vendor Bank Details Section --}}
+                        <div class="mb-4 bg-yellow-50 rounded-lg border border-yellow-200 p-3">
+                            <h4 class="text-sm font-medium text-yellow-900 mb-3">Vendor Bank Details (For Payment)</h4>
+                            
+                            <div class="mb-2">
+                                <label class="block mb-1 text-xs font-medium text-gray-700">Bank Name</label>
+                                <input type="text" wire:model="vendor_bank_name" placeholder="e.g., CRDB Bank" 
+                                    class="bg-white border border-gray-300 text-gray-900 text-xs rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5">
+                            </div>
+                            
+                            <div class="mb-2">
+                                <label class="block mb-1 text-xs font-medium text-gray-700">Account Number</label>
+                                <input type="text" wire:model="vendor_bank_account_number" placeholder="e.g., 0150123456789" 
+                                    class="bg-white border border-gray-300 text-gray-900 text-xs rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5">
+                            </div>
+                            
+                            <div class="mb-2">
+                                <label class="block mb-1 text-xs font-medium text-gray-700">Branch</label>
+                                <input type="text" wire:model="vendor_bank_branch" placeholder="e.g., Mlimani City" 
+                                    class="bg-white border border-gray-300 text-gray-900 text-xs rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5">
+                            </div>
+                            
+                            <div class="mb-2">
+                                <label class="block mb-1 text-xs font-medium text-gray-700">SWIFT Code (Optional)</label>
+                                <input type="text" wire:model="vendor_swift_code" placeholder="e.g., CORUTZTZ" 
+                                    class="bg-white border border-gray-300 text-gray-900 text-xs rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5">
+                            </div>
+                        </div>
+
                         {{-- Display created account info if in edit mode --}}
                         @if($editMode && $created_payable_account_number)
                         <div class="mb-4 bg-blue-50 rounded-lg border border-blue-200 p-3">

@@ -108,6 +108,7 @@
                             @php
                                 $isActive = $selectedMenuItem == $section['id'];
                             @endphp
+                            @if($permissions['canView'] ?? false)
                             <button
                                 wire:click="selectedMenu({{ $section['id'] }})"
                                 class="relative w-full group transition-all duration-200"
@@ -136,6 +137,32 @@
                                     </div>
                                 </div>
                             </button>
+                            @else
+                            <div class="relative w-full group transition-all duration-200 opacity-50 cursor-not-allowed" title="No permission to access this section">
+                                <div class="flex items-center p-3 rounded-xl transition-all duration-200
+                                    @if ($isActive) 
+                                        bg-blue-900 text-white shadow-lg 
+                                    @else 
+                                        bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900 
+                                    @endif">
+                                    <div wire:loading wire:target="selectedMenu({{ $section['id'] }})" class="mr-3">
+                                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    </div>
+                                    <div wire:loading.remove wire:target="selectedMenu({{ $section['id'] }})" class="mr-3">
+                                        <svg class="w-5 h-5 @if ($isActive) text-white @else text-gray-500 group-hover:text-gray-700 @endif" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $section['icon'] }}"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 text-left">
+                                        <div class="font-medium text-sm">{{ $section['label'] }}</div>
+                                        <div class="text-xs opacity-75">{{ $section['description'] }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
                         @endforeach
                     </nav>
                 </div>
@@ -310,10 +337,16 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $bill->due_date ? $bill->due_date->format('Y-m-d') : '-' }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             <div class="flex space-x-2">
+                                                @if($permissions['canView'] ?? false)
                                                 <button wire:click="viewBill({{ $bill->id }})" class="text-indigo-600 hover:text-indigo-900">View</button>
+                                                @endif
                                                 @if($bill->status === 'PENDING')
+                                                    @if($permissions['canEdit'] ?? false)
                                                     <button wire:click="confirmPause({{ $bill->id }})" class="text-yellow-600 hover:text-yellow-900">Pause</button>
+                                                    @endif
+                                                    @if($permissions['canDelete'] ?? false)
                                                     <button wire:click="confirmDelete({{ $bill->id }})" class="text-red-600 hover:text-red-900">Delete</button>
+                                                    @endif
                                                 @endif
                                             </div>
                                         </td>
@@ -370,9 +403,20 @@
 @endif
 @if($selectedMenuItem == 2)
 <!-- Create New Bill Section -->
+@if($permissions['canCreate'] ?? false)
 <div class="bg-white rounded-xl p-6 border border-gray-200 mb-8">
     <livewire:billing.create-bill />
 </div>
+@else
+<div class="bg-white rounded-xl p-6 border border-gray-200 mb-8">
+    <div class="text-center py-8">
+        <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+        </svg>
+        <p class="text-gray-500">You don't have permission to create bills.</p>
+    </div>
+</div>
+@endif
 @endif
 @if($selectedMenuItem == 6)
 <!-- Reports Section -->

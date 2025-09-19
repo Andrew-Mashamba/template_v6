@@ -7,6 +7,8 @@ use App\Models\LoansModel;
 use App\Models\ClientsModel;
 use App\Models\loans_schedules;
 use App\Exports\LoanScheduleReport;
+use App\Exports\PortfolioAtRiskExport;
+use App\Exports\PortfolioAtRiskPdfExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class PortifolioAtRisk extends Component
@@ -111,6 +113,50 @@ class PortifolioAtRisk extends Component
             return Excel::download(new LoanScheduleReport($loanId), 'LoanScheduleReport.xlsx');
         } catch (\Exception $e) {
             session()->flash('error', 'Error downloading schedule: ' . $e->getMessage());
+        }
+    }
+
+    public function exportToExcel()
+    {
+        try {
+            $categoryNames = [
+                10 => 'PAR_1_10_Days',
+                30 => 'PAR_10_30_Days',
+                40 => 'PAR_30_90_Days',
+                50 => 'PAR_Above_90_Days'
+            ];
+
+            $filename = $categoryNames[$this->selected] . '_' . now()->format('Y_m_d_H_i_s') . '.xlsx';
+            
+            return Excel::download(
+                new PortfolioAtRiskExport($this->parRange, $this->selected), 
+                $filename
+            );
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error exporting to Excel: ' . $e->getMessage());
+        }
+    }
+
+    public function exportToPdf()
+    {
+        try {
+            $categoryNames = [
+                10 => 'PAR_1_10_Days',
+                30 => 'PAR_10_30_Days',
+                40 => 'PAR_30_90_Days',
+                50 => 'PAR_Above_90_Days'
+            ];
+
+            $filename = $categoryNames[$this->selected] . '_' . now()->format('Y_m_d_H_i_s') . '.pdf';
+            
+            $pdfExport = new PortfolioAtRiskPdfExport($this->parRange, $this->selected);
+            $pdf = $pdfExport->generate();
+            
+            return response()->streamDownload(function () use ($pdf) {
+                echo $pdf->output();
+            }, $filename);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error exporting to PDF: ' . $e->getMessage());
         }
     }
 

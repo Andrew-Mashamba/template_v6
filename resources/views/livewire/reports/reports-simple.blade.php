@@ -1,5 +1,17 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     @if($activeComponent === 'dashboard')
+        @if(!($permissions['canView'] ?? false))
+        <!-- No Access Message -->
+        <div class="bg-white shadow rounded-lg p-8 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No Access</h3>
+            <p class="text-gray-500">You don't have permission to access the reports module.</p>
+        </div>
+        @else
         <!-- Reports Header -->
         <div class="bg-white shadow rounded-lg mb-6">
             <div class="px-6 py-4 border-b border-gray-200">
@@ -37,10 +49,12 @@
         </div>
 
         <!-- Financial Statements Section -->
+        @if($permissions['canView'] ?? false)
         <div class="mb-8">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Financial Statements</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Statement of Financial Position -->
+                @if($permissions['canView'] ?? false)
                 <div class="bg-white shadow rounded-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer"
                      wire:click="showComponent('statement-of-financial-position')">
                     <div class="p-6">
@@ -150,10 +164,13 @@
                         </div>
                     </div>
                 </div>
+                @endif
             </div>
         </div>
+        @endif
 
         <!-- Loan Reports Section -->
+        @if($permissions['canView'] ?? false)
         <div class="mb-8">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Loan Reports</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -362,12 +379,14 @@
                 </div>
             </div>
         </div>
+        @endif
 
-        <!-- Client Reports Section -->
+        <!-- Member Reports Section -->
+        @if($permissions['canView'] ?? false)
         <div class="mb-8">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Client Reports</h2>
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Member Reports</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Client Details Report -->
+                <!-- Member Details Report -->
                 <div class="bg-white shadow rounded-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer"
                      wire:click="showComponent('clients-details-report')">
                     <div class="p-6">
@@ -381,7 +400,7 @@
                                     </div>
                                 </div>
                                 <div class="ml-4">
-                                    <h3 class="text-lg font-semibold text-gray-900">Client Details Report</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900">Member Details Report</h3>
                                     <p class="text-sm text-gray-500">Member Information</p>
                                 </div>
                             </div>
@@ -401,7 +420,7 @@
                     </div>
                 </div>
 
-                <!-- Client Loan Account -->
+                <!-- Member Loan Account -->
                 <div class="bg-white shadow rounded-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer"
                      wire:click="showComponent('client-loan-account')">
                     <div class="p-6">
@@ -415,7 +434,7 @@
                                     </div>
                                 </div>
                                 <div class="ml-4">
-                                    <h3 class="text-lg font-semibold text-gray-900">Client Loan Account</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900">Member Loan Account</h3>
                                     <p class="text-sm text-gray-500">Account Details</p>
                                 </div>
                             </div>
@@ -425,7 +444,7 @@
                                 </span>
                             </div>
                         </div>
-                        <p class="text-sm text-gray-600 mb-4">Individual client loan account statements and balances</p>
+                        <p class="text-sm text-gray-600 mb-4">Individual member loan account statements and balances</p>
                         <div class="flex items-center justify-between">
                             <span class="text-xs text-gray-500">Monthly Report</span>
                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -435,7 +454,7 @@
                     </div>
                 </div>
 
-                <!-- Client Repayment History -->
+                <!-- Member Repayment History -->
                 <div class="bg-white shadow rounded-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer"
                      wire:click="showComponent('client-repayment-history')">
                     <div class="p-6">
@@ -449,7 +468,7 @@
                                     </div>
                                 </div>
                                 <div class="ml-4">
-                                    <h3 class="text-lg font-semibold text-gray-900">Client Repayment History</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900">Member Repayment History</h3>
                                     <p class="text-sm text-gray-500">Payment Records</p>
                                 </div>
                             </div>
@@ -459,7 +478,7 @@
                                 </span>
                             </div>
                         </div>
-                        <p class="text-sm text-gray-600 mb-4">Complete repayment history and payment patterns</p>
+                        <p class="text-sm text-gray-600 mb-4">Complete repayment history and payment patterns for members</p>
                         <div class="flex items-center justify-between">
                             <span class="text-xs text-gray-500">Monthly Report</span>
                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -470,8 +489,10 @@
                 </div>
             </div>
         </div>
+        @endif
 
         <!-- Regulatory Reports Section -->
+        @if($permissions['canView'] ?? false)
         <div class="mb-8">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Regulatory Reports</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -681,8 +702,10 @@
                 </div>
             </div>
         </div>
+        @endif
 
         <!-- Operational Reports Section -->
+        @if($permissions['canView'] ?? false)
         <div class="mb-8">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Operational Reports</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -891,8 +914,10 @@
                 </div>
             </div>
         </div>
+        @endif
 
         <!-- Reports Summary -->
+        @if($permissions['canView'] ?? false)
         <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-white shadow rounded-lg p-6">
                 <div class="flex items-center">
@@ -940,6 +965,9 @@
                 </div>
             </div>
         </div>
+        @endif
+        @endif
+        
     @elseif($activeComponent === 'statement-of-financial-position')
         <!-- Statement of Financial Position Component -->
         <div class="mb-6">
@@ -1049,7 +1077,7 @@
         </div>
         @livewire('reports.loan-application-report')
     @elseif($activeComponent === 'clients-details-report')
-        <!-- Client Details Report Component -->
+        <!-- Member Details Report Component -->
         <div class="mb-6">
             <button wire:click="backToDashboard" 
                     class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -1061,7 +1089,7 @@
         </div>
         @livewire('reports.clients-details-report')
     @elseif($activeComponent === 'client-loan-account')
-        <!-- Client Loan Account Component -->
+        <!-- Member Loan Account Component -->
         <div class="mb-6">
             <button wire:click="backToDashboard" 
                     class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -1073,7 +1101,7 @@
         </div>
         @livewire('reports.client-loan-account')
     @elseif($activeComponent === 'client-repayment-history')
-        <!-- Client Repayment History Component -->
+        <!-- Member Repayment History Component Component -->
         <div class="mb-6">
             <button wire:click="backToDashboard" 
                     class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">

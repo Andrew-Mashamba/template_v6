@@ -125,6 +125,7 @@
                             40 => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
                             41 => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
                             42 => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+                            50 => 'M9 17v1a1 1 0 001 1h1a1 1 0 001-1v-1m3 0v1a1 1 0 001 1h1a1 1 0 001-1v-1m-6-2V9a2 2 0 012-2h2a2 2 0 012 2v6M5 11h14a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm4-7h6a2 2 0 012 2v2H7V6a2 2 0 012-2z',
                             28 => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
                             8 => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
                             5 => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
@@ -164,8 +165,8 @@
                     @foreach($menuCategories as $category => $menuIds)
                         @php
                             $filteredItems = collect($menuItems)->whereIn('id', $menuIds);
-                            if ($menuSearch) {
-                                $filteredItems = $filteredItems->filter(function($item) {
+                            if (isset($menuSearch) && $menuSearch) {
+                                $filteredItems = $filteredItems->filter(function($item) use ($menuSearch) {
                                     return str_contains(strtolower($item['label']), strtolower($menuSearch));
                                 });
                             }
@@ -184,6 +185,42 @@
                                 
                                 <div class="space-y-1">
                                     @foreach($filteredItems as $menuItem)
+                                        @php
+                                            // Check permissions for each menu item
+                                            $showMenuItem = true;
+                                            
+                                            // Core accounting items - require view permission
+                                            if (in_array($menuItem['id'], [37, 47, 3, 4, 6])) {
+                                                $showMenuItem = $permissions['canView'] ?? false;
+                                            }
+                                            
+                                            // Financial statements - require reports permission
+                                            if (in_array($menuItem['id'], [12, 50, 5, 8, 28, 40, 41, 42])) {
+                                                $showMenuItem = ($permissions['canViewReports'] ?? false) || ($permissions['canView'] ?? false);
+                                            }
+                                            
+                                            // Asset management - require edit permission
+                                            if (in_array($menuItem['id'], [20, 32, 16])) {
+                                                $showMenuItem = ($permissions['canManageAssets'] ?? false) || ($permissions['canEdit'] ?? false);
+                                            }
+                                            
+                                            // Risk management - require special permission
+                                            if (in_array($menuItem['id'], [17])) {
+                                                $showMenuItem = ($permissions['canManageRisk'] ?? false) || ($permissions['canEdit'] ?? false);
+                                            }
+                                            
+                                            // Operations - require edit permission
+                                            if (in_array($menuItem['id'], [18, 30, 21, 24, 25, 26, 27, 29, 36, 19, 22])) {
+                                                $showMenuItem = $permissions['canEdit'] ?? false;
+                                            }
+                                            
+                                            // Members - require view permission
+                                            if ($menuItem['id'] == 9) {
+                                                $showMenuItem = $permissions['canView'] ?? false;
+                                            }
+                                        @endphp
+                                        
+                                        @if($showMenuItem)
                                         <button 
                                             wire:click="menuItemClicked({{ $menuItem['id'] }})"
                                             class="group w-full flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 relative overflow-hidden
@@ -230,6 +267,7 @@
                                             {{-- Hover effect overlay --}}
                                             <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                                         </button>
+                                        @endif
                                     @endforeach
                                 </div>
                             </div>
@@ -237,7 +275,7 @@
                     @endforeach
                     
                     {{-- No results message --}}
-                    @if($menuSearch && collect($menuItems)->filter(function($item) { return str_contains(strtolower($item['label']), strtolower($menuSearch)); })->count() == 0)
+                    @if(isset($menuSearch) && $menuSearch && collect($menuItems)->filter(function($item) use ($menuSearch) { return str_contains(strtolower($item['label']), strtolower($menuSearch)); })->count() == 0)
                         <div class="text-center py-8">
                             <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -246,37 +284,6 @@
                             <p class="text-gray-400 dark:text-gray-500 text-xs mt-1">Try a different search term</p>
                         </div>
                     @endif
-            </div>
-
-            {{-- Quick Actions --}}
-            <div class="p-4 border-t border-gray-100 bg-gray-50">
-                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">Quick Actions</h3>
-                <div class="space-y-2">
-                    <button wire:click="menuItemClicked(2)" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
-                        Manual Posting
-                    </button>
-                    <button wire:click="menuItemClicked(5)" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        Trial Balance
-                    </button>
-                    <button wire:click="menuItemClicked(43)" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                        Approvers Manager
-                    </button>
-                    <button wire:click="menuItemClicked(7)" class="w-full flex items-center p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-colors duration-200">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                        </svg>
-                        Balance Sheet
-                    </button>
-                </div>
             </div>
 
             {{-- Footer --}}
@@ -290,48 +297,8 @@
     </aside>
 
     {{-- Main Content --}}
-    <main class="flex-1 p-8">
-        <header class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Accounts Management</h1>
-            <p class="text-gray-600 dark:text-gray-300">Manage all your institution and member accounts here.</p>
-        </header>
+    <main class="flex-1">
 
-        {{-- Statistics Cards --}}
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex items-center">
-                <div class="flex-1">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Total Institution Accounts</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $totalInstitutionAccounts }}</p>
-                </div>
-                <div class="ml-4 p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
-                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                </div>
-            </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex items-center">
-                <div class="flex-1">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Total Member Accounts</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $totalMemberAccounts }}</p>
-                </div>
-                <div class="ml-4 p-3 bg-green-100 dark:bg-green-900 rounded-full">
-                    <svg class="w-6 h-6 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                </div>
-            </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex items-center">
-                <div class="flex-1">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Pending Activities</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $pendingActivities }}</p>
-                </div>
-                <div class="ml-4 p-3 bg-red-100 dark:bg-red-900 rounded-full">
-                    <svg class="w-6 h-6 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-            </div>
-        </section>
 
         {{-- Enhanced Main Content Area --}}
         <div class="flex-1">
@@ -368,7 +335,6 @@
                                     @case(18) Track accounts receivable and collections @break
                                     @case(20) Manage property, plant, and equipment @break
                                     @case(21) Handle insurance policies and claims @break
-                                    @case(23) Manage bad loan write-offs and recovery processes @break
                                     @case(37) Review detailed ledger accounts @break
                                     @case(43) Manage approval workflows and processes @break
                                     @case(44) Process internal fund transfers between accounts @break
@@ -469,8 +435,6 @@
                         <livewire:accounting.investiments />
                     @elseif($this->tab_id == 30)
                         <livewire:accounting.trade-and-other-payables />
-                    @elseif($this->tab_id == 31)
-                        <livewire:accounting.provision />
                     @elseif($this->tab_id == 32)
                         <livewire:accounting.depreciation />
                     @elseif($this->tab_id == 33)
@@ -491,12 +455,12 @@
                         <livewire:accounting.notes-to-accounts />
                     @elseif($this->tab_id == 42)
                         <livewire:accounting.statement-of-financial-position />
+                    @elseif($this->tab_id == 50)
+                        <livewire:accounting.integrated-financial-statements />
                     @elseif($this->tab_id == 22)
                         <livewire:accounting.financial-insurance />
                     @elseif($this->tab_id == 24)
                         <livewire:accounting.creditors />
-                        @elseif($this->tab_id == 23)
-                            <livewire:active-loan.write-offs />
                         @elseif($this->tab_id == 43)
                             {{-- Approvers Manager --}}
                   

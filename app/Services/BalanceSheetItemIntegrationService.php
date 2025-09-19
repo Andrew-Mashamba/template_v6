@@ -116,10 +116,20 @@ class BalanceSheetItemIntegrationService
                 // Create depreciation account under same parent
                 $depreciationAccount = $this->accountCreationService->createAccount($depreciationAccountData, $parentAccountNumber);
                 
-                // Store account references in PPE record
-                $ppeAsset->asset_account_number = $assetAccount->account_number;
-                $ppeAsset->depreciation_account_number = $depreciationAccount->account_number;
-                $ppeAsset->save();
+                // Store both asset and depreciation account references in PPE record
+                if (isset($ppeAsset->id)) {
+                    // Update the PPE record with both account numbers
+                    \App\Models\PPE::where('id', $ppeAsset->id)->update([
+                        'account_number' => $assetAccount->account_number,
+                        'depreciation_account_number' => $depreciationAccount->account_number
+                    ]);
+                    
+                    Log::info('Updated PPE record with account numbers', [
+                        'ppe_id' => $ppeAsset->id,
+                        'asset_account' => $assetAccount->account_number,
+                        'depreciation_account' => $depreciationAccount->account_number
+                    ]);
+                }
                 
                 // Post initial transaction to GL: newly created PPE account + user-selected other account
                 $this->postPPEAcquisition($assetAccount, $ppeAsset->cost, $otherAccountId);
@@ -735,7 +745,32 @@ class BalanceSheetItemIntegrationService
         // CORRECT FLOW: Newly created PPE account + User-selected other account
         // PPE Acquisition: Debit PPE Asset (newly created), Credit Cash/Bank/Payable (user-selected)
         
-        $otherAccount = $otherAccountId ? AccountsModel::find($otherAccountId) : $this->getCashAccount();
+        // Try to find the other account - could be passed as ID or account_number
+        $otherAccount = null;
+        if ($otherAccountId) {
+            // First try to find by ID
+            $otherAccount = AccountsModel::find($otherAccountId);
+            
+            // If not found, try to find by account_number
+            if (!$otherAccount) {
+                $otherAccount = AccountsModel::where('account_number', $otherAccountId)->first();
+            }
+        }
+        
+        // If still no account, use the default cash account
+        if (!$otherAccount) {
+            $otherAccount = $this->getCashAccount();
+        }
+        
+        // Make sure we have both accounts before posting
+        if (!$newlyCreatedAccount || !$otherAccount) {
+            Log::error('Cannot post PPE acquisition - missing accounts', [
+                'newly_created_account' => $newlyCreatedAccount ? $newlyCreatedAccount->account_number : 'null',
+                'other_account' => $otherAccount ? $otherAccount->account_number : 'null',
+                'other_account_id' => $otherAccountId
+            ]);
+            return;
+        }
         
         $data = [
             'first_account' => $newlyCreatedAccount->account_number,  // Debit: Newly created PPE account

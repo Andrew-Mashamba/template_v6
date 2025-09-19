@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Exception;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ClientLoanAccountExport;
 
 class ClientLoanAccount extends Component
 {
@@ -32,11 +35,16 @@ class ClientLoanAccount extends Component
     public $nextPaymentAmount = 0;
     public $daysInArrears = 0;
     public $showLoanDetails = false;
+    
+    // Export loading states
+    public $isExportingPdf = false;
+    public $isExportingExcel = false;
 
     public function mount()
     {
         $this->startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
         $this->endDate = Carbon::now()->format('Y-m-d');
+        $this->clientLoans = collect([]);
         $this->loadClients();
     }
 
@@ -67,7 +75,7 @@ class ClientLoanAccount extends Component
     public function loadClientLoans()
     {
         if (empty($this->clientNumber)) {
-            $this->clientLoans = [];
+            $this->clientLoans = collect([]);
             return;
         }
 
@@ -197,21 +205,122 @@ class ClientLoanAccount extends Component
 
     public function exportReport($format = 'pdf')
     {
+        if ($format === 'pdf') {
+            return $this->exportToPdf();
+        } elseif ($format === 'excel') {
+            return $this->exportToExcel();
+        }
+    }
+
+    public function exportToPdf()
+    {
+        $this->isExportingPdf = true;
+        
         try {
-            session()->flash('success', "Client Loan Account Report exported as {$format} successfully!");
+            // Validate user permissions for export
+            if (!auth()->check()) {
+                throw new Exception('User authentication required for export');
+            }
+
+            // Validate that we have data to export
+            if (empty($this->clientLoans) || $this->clientLoans->isEmpty()) {
+                throw new Exception('No loan account data available for export. Please select a member and ensure there is data.');
+            }
+
+            // Prepare summary data
+            $summary = [
+                'totalLoans' => $this->clientLoans->count(),
+                'totalLoanAmount' => $this->clientLoans->sum('principle'),
+                'totalOutstanding' => $this->clientLoans->sum('outstanding_balance')
+            ];
+
+            $filename = 'member_loan_account_' . $this->clientNumber . '_' . now()->format('Y_m_d_H_i_s') . '.pdf';
             
-            Log::info('Client Loan Account Report exported', [
-                'format' => $format,
+            Log::info('Client Loan Account Report exported as PDF', [
+                'format' => 'pdf',
                 'client_number' => $this->clientNumber,
-                'loan_id' => $this->selectedLoan ? $this->selectedLoan->id : null,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
+                'record_count' => $this->clientLoans->count()
             ]);
+            
+            // Generate PDF using DomPDF
+            $pdf = Pdf::loadView('pdf.client-loan-account-report', [
+                'clientLoans' => $this->clientLoans,
+                'summary' => $summary,
+                'clientNumber' => $this->clientNumber
+            ]);
+            
+            // Set PDF options
+            $pdf->setPaper('A4', 'landscape');
+            $pdf->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'Arial'
+            ]);
+            
+            return response()->streamDownload(function () use ($pdf) {
+                echo $pdf->output();
+            }, $filename, [
+                'Content-Type' => 'application/pdf',
+            ]);
+            
         } catch (Exception $e) {
-            session()->flash('error', 'Error exporting report: ' . $e->getMessage());
-            Log::error('Client Loan Account Report export failed', [
+            session()->flash('error', 'Error exporting PDF: ' . $e->getMessage());
+            Log::error('Client Loan Account Report PDF export failed', [
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id()
             ]);
+        } finally {
+            $this->isExportingPdf = false;
+        }
+    }
+
+    public function exportToExcel()
+    {
+        $this->isExportingExcel = true;
+        
+        try {
+            // Validate user permissions for export
+            if (!auth()->check()) {
+                throw new Exception('User authentication required for export');
+            }
+
+            // Validate that we have data to export
+            if (empty($this->clientLoans) || $this->clientLoans->isEmpty()) {
+                throw new Exception('No loan account data available for export. Please select a member and ensure there is data.');
+            }
+
+            // Prepare summary data
+            $summary = [
+                'totalLoans' => $this->clientLoans->count(),
+                'totalLoanAmount' => $this->clientLoans->sum('principle'),
+                'totalOutstanding' => $this->clientLoans->sum('outstanding_balance')
+            ];
+
+            $filename = 'member_loan_account_' . $this->clientNumber . '_' . now()->format('Y_m_d_H_i_s') . '.xlsx';
+            
+            Log::info('Client Loan Account Report exported as Excel', [
+                'format' => 'excel',
+                'client_number' => $this->clientNumber,
+                'user_id' => auth()->id(),
+                'record_count' => $this->clientLoans->count()
+            ]);
+            
+            // Use the Excel export class
+            return Excel::download(
+                new ClientLoanAccountExport($this->clientLoans, $summary, $this->clientNumber),
+                $filename,
+                \Maatwebsite\Excel\Excel::XLSX
+            );
+            
+        } catch (Exception $e) {
+            session()->flash('error', 'Error exporting Excel: ' . $e->getMessage());
+            Log::error('Client Loan Account Report Excel export failed', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+        } finally {
+            $this->isExportingExcel = false;
         }
     }
 

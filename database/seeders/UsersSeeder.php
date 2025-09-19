@@ -23,7 +23,7 @@ class UsersSeeder extends Seeder
         // Insert user data
         $data = [
             [
-                'id' => 2,
+                // 'id' => 2,
                 'institution_user_id' => null,
                 'name' => 'Jane Doe',
                 'email' => 'jane.doe@example.com',
@@ -33,7 +33,7 @@ class UsersSeeder extends Seeder
                 'current_team_id' => 1,
                 'profile_photo_path' => null,
                 'role' => null,
-                'status' => 'active',
+                'status' => 'ACTIVE',
                 'otp_time' => null,
                 'otp' => null,
                 'verification_status' => 1,
@@ -58,7 +58,7 @@ class UsersSeeder extends Seeder
                 'otp_locked_until' => null,
             ],
             [
-                'id' => 1,
+                //  'id' => 1,
                 'institution_user_id' => null,
                 'name' => 'Andrew S. Mashamba',
                 'email' => 'andrew.s.mashamba@gmail.com',
@@ -68,7 +68,7 @@ class UsersSeeder extends Seeder
                 'current_team_id' => 1,
                 'profile_photo_path' => null,
                 'role' => null,
-                'status' => 'active',
+                'status' => 'ACTIVE',
                 'otp_time' => null,
                 'otp' => null,
                 'verification_status' => 1,

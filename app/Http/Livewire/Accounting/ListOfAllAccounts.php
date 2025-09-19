@@ -7,6 +7,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Services\AccountCreationService;
 
 class ListOfAllAccounts extends Component
 {
@@ -414,42 +415,43 @@ class ListOfAllAccounts extends Component
     {
         $this->validate([
             'newAccount.account_name' => 'required|string|max:200',
-            'newAccount.account_number' => 'required|string|unique:accounts,account_number|max:50',
             'newAccount.type' => 'required|string',
-            'newAccount.account_level' => 'required|string',
-            'newAccount.major_category_code' => 'required|string|max:20',
-            'newAccount.category_code' => 'required|string|max:20',
-            'newAccount.sub_category_code' => 'required|string|max:20'
+            'newAccount.account_use' => 'required|string'
         ], [
             'newAccount.account_name.required' => 'Account name is required',
-            'newAccount.account_number.required' => 'Account number is required',
-            'newAccount.account_number.unique' => 'This account number already exists',
-            'newAccount.type.required' => 'Account type is required'
+            'newAccount.type.required' => 'Account type is required',
+            'newAccount.account_use.required' => 'Account use is required'
         ]);
         
         try {
-            DB::table('accounts')->insert([
+            // Use AccountCreationService to create the account
+            $accountService = new AccountCreationService();
+            
+            // Prepare account data
+            $accountData = [
+                'account_use' => $this->newAccount['account_use'] ?: 'internal',
                 'account_name' => $this->newAccount['account_name'],
-                'account_number' => $this->newAccount['account_number'],
-                'parent_account_number' => $this->newAccount['parent_account_number'] ?: null,
-                'account_level' => $this->newAccount['account_level'],
-                'account_use' => $this->newAccount['account_use'],
-                'notes' => $this->newAccount['notes'],
                 'type' => $this->newAccount['type'],
-                'major_category_code' => $this->newAccount['major_category_code'],
-                'category_code' => $this->newAccount['category_code'],
-                'sub_category_code' => $this->newAccount['sub_category_code'],
-                'status' => $this->newAccount['status'],
-                'balance' => $this->newAccount['balance'],
-                'debit' => $this->newAccount['debit'],
-                'credit' => $this->newAccount['credit'],
-                'client_number' => '0000',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
+                'product_number' => $this->newAccount['product_number'] ?? '0000',
+                'member_number' => $this->newAccount['account_use'] === 'external' ? 
+                    ($this->newAccount['member_number'] ?? '00000') : '00000',
+                'branch_number' => auth()->user()->branch,
+                'notes' => $this->newAccount['notes'] ?? null
+            ];
+            
+            // Create account with parent if specified
+            $parentAccountNumber = $this->newAccount['parent_account_number'] ?: null;
+            $account = $accountService->createAccount($accountData, $parentAccountNumber);
+            
+            // Update the account status to ACTIVE if needed
+            if ($this->newAccount['status'] ?? false) {
+                DB::table('accounts')
+                    ->where('account_number', $account->account_number)
+                    ->update(['status' => $this->newAccount['status']]);
+            }
             
             $this->closeCreateModal();
-            session()->flash('message', 'Account created successfully!');
+            session()->flash('message', 'Account created successfully with account number: ' . $account->account_number);
             
         } catch (\Exception $e) {
             Log::error('Error creating account: ' . $e->getMessage());

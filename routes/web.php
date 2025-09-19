@@ -96,6 +96,43 @@ Route::middleware(['auth'])->group(function () {
 
     // GEPG Payment Route
     Route::view('/payments/gepg', 'payments.gepg')->name('payments.gepg');
+    
+    // Trade Receivables Invoice Routes
+    Route::get('/receivables/invoice/view', function() {
+        $invoiceId = session('view_invoice_id');
+        if (!$invoiceId) {
+            abort(404, 'Invoice not found');
+        }
+        
+        $receivable = \DB::table('trade_receivables')->where('id', $invoiceId)->first();
+        if (!$receivable || !$receivable->invoice_file_path) {
+            abort(404, 'Invoice file not found');
+        }
+        
+        $path = storage_path('app/' . $receivable->invoice_file_path);
+        if (!file_exists($path)) {
+            abort(404, 'Invoice file does not exist');
+        }
+        
+        // Clear session
+        session()->forget('view_invoice_id');
+        
+        return response()->file($path);
+    })->name('view.invoice');
+    
+    Route::get('/receivables/invoice/download', function() {
+        $path = session('download_invoice_path');
+        $name = session('download_invoice_name', 'invoice.pdf');
+        
+        if (!$path || !file_exists($path)) {
+            abort(404, 'Invoice file not found');
+        }
+        
+        // Clear session
+        session()->forget(['download_invoice_path', 'download_invoice_name']);
+        
+        return response()->download($path, $name);
+    })->name('download.invoice');
 });
 
 // Payment Notification Webhook
@@ -107,6 +144,11 @@ Route::get('/download-pdf', [\App\Http\Controllers\WebRoutesController::class, '
 
 // CSV Download Route
 Route::get('/download-csv', [\App\Http\Controllers\WebRoutesController::class, 'downloadCsv'])->name('download.csv');
+
+// Loan Loss Report Download Route
+Route::get('/loan-loss-report/download', [\App\Http\Controllers\LoanLossReportController::class, 'downloadCustomReport'])
+    ->middleware('auth')
+    ->name('loan-loss-report.download');
 
 // AI Agent Routes
 Route::middleware('auth')->group(function () {

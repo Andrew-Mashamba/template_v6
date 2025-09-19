@@ -26,10 +26,14 @@ use App\Services\BackupService;
 use App\Services\MandatorySavingsService;
 use App\Services\SimpleDailyLoanReportsService;
 use App\Services\OptimizedDailyLoanService;
+use App\Services\PaymentNotificationService;
 use Illuminate\Support\Facades\Cache;
 use App\Traits\TracksActivityProgress;
 use App\Traits\LogsEndOfDayActivities;
 use App\Models\DailyActivityStatus;
+use App\Jobs\ProcessTradeReceivableInvoice;
+use App\Services\SmsService;
+use Illuminate\Support\Facades\Mail;
 
 class DailySystemActivitiesService
 {
@@ -106,6 +110,11 @@ class DailySystemActivitiesService
             // 6. Communication and Notifications
             $this->logActivityProgress('Starting Communication and Notifications...');
             $this->processCommunicationAndNotifications($triggeredBy);
+            
+            // 7. Payment Notifications for Payables and Receivables
+            $this->logActivityProgress('Processing Payment Notifications...');
+            $this->processPaymentNotifications($triggeredBy);
+            
             // Temporarily disabled due to error
             // $this->processMandatorySavings();
 
@@ -895,6 +904,11 @@ class DailySystemActivitiesService
         try {
             $this->logActivityProgress('Preparing daily notifications');
             
+            // Process Trade Receivables Reminders
+            $this->logActivityProgress('Processing trade receivables reminders');
+            $tradeReceivablesProcessed = $this->processTradeReceivablesReminders();
+            $this->logActivityProgress('Trade receivables reminders processed', $tradeReceivablesProcessed, $tradeReceivablesProcessed);
+            
             // Send daily notifications (commented out for now)
             // $this->logActivityProgress('Sending daily notifications');
             // $notificationsSent = $this->notificationService->sendDailyNotifications($this->previousDay);
@@ -920,9 +934,10 @@ class DailySystemActivitiesService
             // $this->reportService->generateCommunicationReport($this->previousDay);
             
             $this->logActivityStatistics([
-                'notifications_sent' => 0, // Will be updated when enabled
+                'notifications_sent' => $tradeReceivablesProcessed, // Trade receivables reminders
                 'emails_processed' => 0,
-                'sms_processed' => 0
+                'sms_processed' => 0,
+                'trade_receivables_reminders' => $tradeReceivablesProcessed
             ]);
             
             $this->completeActivity();
@@ -1652,6 +1667,280 @@ class DailySystemActivitiesService
             
         } catch (\Exception $e) {
             Log::error('❌ Error dispatching daily loan reports job: ' . $e->getMessage());
+            // Don't throw - allow other activities to continue
+        }
+    }
+    
+    /**
+     * Process trade receivables reminders for unpaid invoices
+     * 
+     * @return int Number of reminders sent
+     */
+    protected function processTradeReceivablesReminders()
+    {
+        try {
+            $this->logActivityProgress('Starting trade receivables reminder processing');
+            
+            // Get unpaid invoices that need reminders
+            $unpaidReceivables = DB::table('trade_receivables')
+                ->where('status', '!=', 'paid')
+                ->where('status', '!=', 'written_off')
+                ->where('balance', '>', 0)
+                ->whereNotNull('customer_email') // Must have email or phone
+                ->where(function($query) {
+                    // Reminder logic based on days overdue
+                    $query->where(function($q) {
+                        // First reminder: 3 days before due date
+                        $q->whereRaw('due_date::date = ?', [Carbon::now()->addDays(3)->format('Y-m-d')])
+                          ->where(function($q2) {
+                              $q2->whereNull('last_reminder_sent_at')
+                                 ->orWhereRaw('last_reminder_sent_at::date < ?', [Carbon::now()->subDays(7)->format('Y-m-d')]);
+                          });
+                    })->orWhere(function($q) {
+                        // Second reminder: On due date
+                        $q->whereRaw('due_date::date = ?', [Carbon::now()->format('Y-m-d')])
+                          ->where(function($q2) {
+                              $q2->whereNull('last_reminder_sent_at')
+                                 ->orWhereRaw('last_reminder_sent_at::date < ?', [Carbon::now()->subDays(7)->format('Y-m-d')]);
+                          });
+                    })->orWhere(function($q) {
+                        // Third reminder: 7 days overdue
+                        $q->whereRaw('due_date::date = ?', [Carbon::now()->subDays(7)->format('Y-m-d')])
+                          ->where(function($q2) {
+                              $q2->whereNull('last_reminder_sent_at')
+                                 ->orWhereRaw('last_reminder_sent_at::date < ?', [Carbon::now()->subDays(7)->format('Y-m-d')]);
+                          });
+                    })->orWhere(function($q) {
+                        // Fourth reminder: 14 days overdue
+                        $q->whereRaw('due_date::date = ?', [Carbon::now()->subDays(14)->format('Y-m-d')])
+                          ->where(function($q2) {
+                              $q2->whereNull('last_reminder_sent_at')
+                                 ->orWhereRaw('last_reminder_sent_at::date < ?', [Carbon::now()->subDays(7)->format('Y-m-d')]);
+                          });
+                    })->orWhere(function($q) {
+                        // Monthly reminders: Every 30 days after 30 days overdue
+                        $q->whereRaw('due_date::date < ?', [Carbon::now()->subDays(30)->format('Y-m-d')])
+                          ->where(function($q2) {
+                              $q2->whereNull('last_reminder_sent_at')
+                                 ->orWhereRaw('last_reminder_sent_at::date < ?', [Carbon::now()->subDays(30)->format('Y-m-d')]);
+                          });
+                    });
+                })
+                ->get();
+            
+            $this->logActivityProgress('Found ' . $unpaidReceivables->count() . ' invoices needing reminders');
+            
+            $processedCount = 0;
+            $failedCount = 0;
+            
+            foreach ($unpaidReceivables as $receivable) {
+                try {
+                    // Calculate days overdue
+                    $daysOverdue = Carbon::now()->diffInDays(Carbon::parse($receivable->due_date), false);
+                    $reminderType = $this->getReminderType($daysOverdue);
+                    
+                    $this->logActivityProgress('Processing reminder for invoice ' . $receivable->invoice_number . ' (' . $reminderType . ')');
+                    
+                    // Check if invoice has been generated
+                    if ($receivable->processing_status === 'completed' || $receivable->invoice_file_path) {
+                        // Invoice already generated, just send reminder
+                        $this->sendTradeReceivableReminder($receivable, $reminderType);
+                    } else {
+                        // Generate invoice first, then send reminder
+                        ProcessTradeReceivableInvoice::dispatch($receivable->id, 1)
+                            ->onQueue('invoices');
+                        
+                        $this->logActivityProgress('Dispatched invoice generation job for ' . $receivable->invoice_number);
+                    }
+                    
+                    // Update last reminder sent timestamp
+                    DB::table('trade_receivables')
+                        ->where('id', $receivable->id)
+                        ->update([
+                            'last_reminder_sent_at' => now(),
+                            'reminder_count' => DB::raw('COALESCE(reminder_count, 0) + 1'),
+                            'updated_at' => now()
+                        ]);
+                    
+                    $processedCount++;
+                    
+                } catch (\Exception $e) {
+                    $failedCount++;
+                    Log::error('Failed to process reminder for receivable ID ' . $receivable->id, [
+                        'error' => $e->getMessage(),
+                        'invoice_number' => $receivable->invoice_number
+                    ]);
+                }
+            }
+            
+            $this->logActivityProgress('Trade receivables reminder processing completed', [
+                'total_found' => $unpaidReceivables->count(),
+                'processed' => $processedCount,
+                'failed' => $failedCount
+            ]);
+            
+            return $processedCount;
+            
+        } catch (\Exception $e) {
+            Log::error('Error in processTradeReceivablesReminders: ' . $e->getMessage());
+            $this->logActivityError('Trade receivables reminder processing failed: ' . $e->getMessage());
+            return 0;
+        }
+    }
+    
+    /**
+     * Send reminder for a trade receivable
+     */
+    protected function sendTradeReceivableReminder($receivable, $reminderType)
+    {
+        try {
+            // Prepare reminder data
+            $daysOverdue = Carbon::now()->diffInDays(Carbon::parse($receivable->due_date), false);
+            $institution = DB::table('institutions')->where('id', 1)->first();
+            
+            // Send email reminder if email exists
+            if ($receivable->customer_email) {
+                $this->sendEmailReminder($receivable, $reminderType, $daysOverdue, $institution);
+            }
+            
+            // Send SMS reminder if phone exists
+            if ($receivable->customer_phone) {
+                $this->sendSmsReminder($receivable, $reminderType, $daysOverdue);
+            }
+            
+            Log::info('Reminder sent for invoice ' . $receivable->invoice_number, [
+                'type' => $reminderType,
+                'days_overdue' => $daysOverdue,
+                'customer' => $receivable->customer_name
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to send reminder for invoice ' . $receivable->invoice_number, [
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+    
+    /**
+     * Send email reminder
+     */
+    protected function sendEmailReminder($receivable, $reminderType, $daysOverdue, $institution)
+    {
+        $data = [
+            'invoice' => $receivable,
+            'reminderType' => $reminderType,
+            'daysOverdue' => abs($daysOverdue),
+            'paymentUrl' => $receivable->payment_link,
+            'institution' => $institution,
+            'customerName' => $receivable->customer_name
+        ];
+        
+        // Attach invoice PDF if it exists
+        $attachments = [];
+        if ($receivable->invoice_file_path && file_exists(storage_path('app/' . $receivable->invoice_file_path))) {
+            $attachments[] = storage_path('app/' . $receivable->invoice_file_path);
+        }
+        
+        Mail::send('emails.invoice-reminder', $data, function ($message) use ($receivable, $reminderType, $attachments) {
+            $message->to($receivable->customer_email, $receivable->customer_name)
+                    ->subject($reminderType . ': Invoice ' . $receivable->invoice_number . ' - Payment Reminder');
+            
+            foreach ($attachments as $attachment) {
+                $message->attach($attachment, [
+                    'as' => 'invoice_' . $receivable->invoice_number . '.pdf',
+                    'mime' => 'application/pdf',
+                ]);
+            }
+        });
+    }
+    
+    /**
+     * Send SMS reminder
+     */
+    protected function sendSmsReminder($receivable, $reminderType, $daysOverdue)
+    {
+        $smsService = new SmsService();
+        
+        // Format amount
+        $amount = ($receivable->currency ?: 'TZS') . ' ' . number_format($receivable->balance, 2);
+        
+        // Prepare SMS message based on reminder type
+        $message = "Dear {$receivable->customer_name},\n";
+        
+        if ($daysOverdue > 0) {
+            $message .= "REMINDER: Invoice {$receivable->invoice_number} for {$amount} is due in " . abs($daysOverdue) . " days.\n";
+        } elseif ($daysOverdue == 0) {
+            $message .= "Invoice {$receivable->invoice_number} for {$amount} is due TODAY.\n";
+        } else {
+            $message .= "OVERDUE: Invoice {$receivable->invoice_number} for {$amount} is " . abs($daysOverdue) . " days overdue.\n";
+        }
+        
+        if ($receivable->control_number) {
+            $message .= "Control No: {$receivable->control_number}\n";
+        }
+        
+        if ($receivable->payment_link) {
+            $message .= "Pay online: {$receivable->payment_link}\n";
+        }
+        
+        $message .= "Please pay promptly to avoid penalties.";
+        
+        $smsService->send($receivable->customer_phone, $message);
+    }
+    
+    /**
+     * Determine reminder type based on days overdue
+     */
+    protected function getReminderType($daysOverdue)
+    {
+        if ($daysOverdue > 0) {
+            return 'Pre-Due Reminder';
+        } elseif ($daysOverdue == 0) {
+            return 'Due Date Reminder';
+        } elseif ($daysOverdue >= -7) {
+            return 'First Overdue Notice';
+        } elseif ($daysOverdue >= -14) {
+            return 'Second Overdue Notice';
+        } elseif ($daysOverdue >= -30) {
+            return 'Third Overdue Notice';
+        } else {
+            return 'Final Demand Notice';
+        }
+    }
+    
+    /**
+     * Process payment notifications for payables and receivables
+     */
+    protected function processPaymentNotifications($triggeredBy = 'system')
+    {
+        $this->logActivityStart('Payment Notifications', [
+            'Process' => 'Payment notifications for payables and receivables',
+            'Date' => Carbon::today()->format('Y-m-d')
+        ]);
+        
+        $this->startActivity('payment_notifications', 'Payment notifications', $triggeredBy);
+        
+        try {
+            $this->logActivityProgress('Initializing Payment Notification Service');
+            
+            $paymentNotificationService = new PaymentNotificationService();
+            $result = $paymentNotificationService->processDailyNotifications();
+            
+            if ($result['status'] === 'success') {
+                $this->completeActivity('payment_notifications', 'Payment notifications completed successfully');
+                $this->logActivityComplete('Payment Notifications completed successfully');
+            } else {
+                throw new \Exception($result['message']);
+            }
+            
+        } catch (\Exception $e) {
+            $this->failActivity('payment_notifications', $e->getMessage());
+            $this->logActivityError('Payment Notifications failed: ' . $e->getMessage());
+            Log::error('Payment notifications processing failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             // Don't throw - allow other activities to continue
         }
     }

@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use App\Services\BankReconciliationService;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use App\Traits\Livewire\WithModulePermissions;
 use Illuminate\Support\Facades\Storage;
 use Smalot\PdfParser\Parser;
 use Carbon\Carbon;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 class Reconciliation extends Component
 {
     use WithFileUploads;
+    use WithModulePermissions;
 
     // File upload properties
     public $bankStatement;
@@ -45,7 +47,20 @@ class Reconciliation extends Component
 
     public function mount()
     {
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
+        
         $this->loadSessions();
+    }
+    
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'reconciliation';
     }
 
     public function loadSessions()
@@ -57,6 +72,9 @@ class Reconciliation extends Component
 
     public function setActiveSession($sessionId)
     {
+        if (!$this->authorize('view', 'You do not have permission to view reconciliation sessions')) {
+            return;
+        }
         $this->activeSessionId = $sessionId;
         $this->showData = true;
         $this->reconciliationResults = null;
@@ -64,6 +82,9 @@ class Reconciliation extends Component
 
     public function uploadFile()
     {
+        if (!$this->authorize('upload', 'You do not have permission to upload bank statements')) {
+            return;
+        }
         try {
             $this->validate();
 
@@ -335,6 +356,9 @@ class Reconciliation extends Component
 
     public function runReconciliation()
     {
+        if (!$this->authorize('reconcile', 'You do not have permission to run reconciliation')) {
+            return;
+        }
         if (!$this->activeSessionId) {
             session()->flash('error', 'No session selected for reconciliation.');
             return;
@@ -360,6 +384,9 @@ class Reconciliation extends Component
 
     public function showManualReconciliation($bankTransactionId)
     {
+        if (!$this->authorize('reconcile', 'You do not have permission to perform manual reconciliation')) {
+            return;
+        }
         $this->selectedBankTransactionId = $bankTransactionId;
         $this->showReconciliationModal = true;
         
@@ -374,6 +401,9 @@ class Reconciliation extends Component
 
     public function manualReconcile($transactionId, $notes = null)
     {
+        if (!$this->authorize('reconcile', 'You do not have permission to perform manual reconciliation')) {
+            return;
+        }
         try {
             $reconciliationService = new BankReconciliationService();
             $result = $reconciliationService->manualReconcile($this->selectedBankTransactionId, $transactionId, $notes);
@@ -469,16 +499,20 @@ class Reconciliation extends Component
             }
         }
 
-        return view('livewire.reconciliation.reconciliation', [
-            'sessions' => $this->sessions ?? collect(),
-            'activeSession' => $activeSession,
-            'bankTransactions' => $bankTransactions,
-            'reconciliationSummary' => $reconciliationSummary,
-            'activeSessionId' => $this->activeSessionId ?? null,
-            'showData' => $this->showData ?? false,
-            'reconciliationResults' => $this->reconciliationResults ?? null,
-            'showReconciliationModal' => $this->showReconciliationModal ?? false,
-            'availableTransactions' => $this->availableTransactions ?? collect()
-        ]);
+        return view('livewire.reconciliation.reconciliation', array_merge(
+            $this->permissions,
+            [
+                'sessions' => $this->sessions ?? collect(),
+                'activeSession' => $activeSession,
+                'bankTransactions' => $bankTransactions,
+                'reconciliationSummary' => $reconciliationSummary,
+                'activeSessionId' => $this->activeSessionId ?? null,
+                'showData' => $this->showData ?? false,
+                'reconciliationResults' => $this->reconciliationResults ?? null,
+                'showReconciliationModal' => $this->showReconciliationModal ?? false,
+                'availableTransactions' => $this->availableTransactions ?? collect(),
+                'permissions' => $this->permissions
+            ]
+        ));
     }
 }

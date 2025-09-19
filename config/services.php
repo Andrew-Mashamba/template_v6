@@ -143,4 +143,14 @@ return [
         'timeout' => env('PAYMENT_LINK_TIMEOUT', 30),
     ],
 
+    /*
+    Reseller API Service Configuration for domain management
+    */
+
+    'reseller' => [
+        'api_url' => env('RESELLER_API_URL'),
+        'api_key' => env('RESELLER_API_KEY'),
+        'timeout' => env('RESELLER_TIMEOUT', 30),
+    ],
+
 ];

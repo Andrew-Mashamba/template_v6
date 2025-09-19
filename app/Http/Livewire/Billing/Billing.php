@@ -9,10 +9,11 @@ use App\Models\Bill;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Livewire\WithPagination;
+use App\Traits\Livewire\WithModulePermissions;
 
 class Billing extends Component
 {
-    use WithPagination;
+    use WithPagination, WithModulePermissions;
 
     // Properties for form inputs
     public $client_number;
@@ -64,7 +65,19 @@ class Billing extends Component
 
     public function mount()
     {
+        // Initialize the permission system for this module
+        $this->initializeWithModulePermissions();
         $this->loadInitialData();
+    }
+    
+    /**
+     * Override to specify the module name for permissions
+     * 
+     * @return string
+     */
+    protected function getModuleName(): string
+    {
+        return 'billing';
     }
 
     public function loadInitialData()
@@ -96,6 +109,10 @@ class Billing extends Component
 
     public function selectedMenu($menuId)
     {
+        if (!$this->authorize('view', 'You do not have permission to view this section')) {
+            return;
+        }
+        
         $this->selectedMenuItem = $menuId;
     }
 
@@ -165,6 +182,10 @@ class Billing extends Component
 
     public function createBill()
     {
+        if (!$this->authorize('create', 'You do not have permission to create bills')) {
+            return;
+        }
+        
         $this->validate();
 
         try {
@@ -217,6 +238,10 @@ class Billing extends Component
 
     public function viewBill($billId)
     {
+        if (!$this->authorize('view', 'You do not have permission to view bills')) {
+            return;
+        }
+        
         $this->selectedBill = Bill::with(['client', 'service', 'payments'])
             ->find($billId);
     }
@@ -229,6 +254,10 @@ class Billing extends Component
 
     public function deleteBill()
     {
+        if (!$this->authorize('delete', 'You do not have permission to delete bills')) {
+            return;
+        }
+        
         try {
             $bill = Bill::findOrFail($this->billToDelete);
             
@@ -254,6 +283,10 @@ class Billing extends Component
 
     public function pauseBill()
     {
+        if (!$this->authorize('edit', 'You do not have permission to pause bills')) {
+            return;
+        }
+        
         try {
             $bill = Bill::findOrFail($this->billToPause);
             
@@ -308,8 +341,12 @@ class Billing extends Component
 
         $bills = $query->paginate($this->perPage);
 
-        return view('livewire.billing.billing', [
-            'bills' => $bills
-        ]);
+        return view('livewire.billing.billing', array_merge(
+            $this->permissions,
+            [
+                'bills' => $bills,
+                'permissions' => $this->permissions
+            ]
+        ));
     }
 }

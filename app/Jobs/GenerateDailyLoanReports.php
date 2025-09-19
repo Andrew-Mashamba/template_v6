@@ -347,7 +347,7 @@ class GenerateDailyLoanReports implements ShouldQueue
                 'l.total_arrears',
                 'l.days_in_arrears',
                 'lp.last_payment',
-                'c.mobile_number'
+                'c.mobile_phone_number'
             ])
             ->orderBy('l.days_in_arrears', 'desc')
             ->chunk(500, function ($loans) use ($sheet, &$row) {
@@ -362,7 +362,7 @@ class GenerateDailyLoanReports implements ShouldQueue
                     $sheet->setCellValue('E' . $row, number_format($loan->total_arrears ?? 0, 2));
                     $sheet->setCellValue('F' . $row, $loan->days_in_arrears);
                     $sheet->setCellValue('G' . $row, $loan->last_payment ? Carbon::parse($loan->last_payment)->format('Y-m-d') : 'Never');
-                    $sheet->setCellValue('H' . $row, $loan->mobile_number ?? 'N/A');
+                    $sheet->setCellValue('H' . $row, $loan->mobile_phone_number ?? 'N/A');
                 }
             });
         
