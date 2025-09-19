@@ -74,7 +74,7 @@
                         <option value="INACTIVE">Inactive</option>
                     </select>
                     
-                    <button wire:click="openCreateModal" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button wire:click="openCreateModal" class="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
@@ -196,7 +196,7 @@
 
     <!-- Create/Edit User Modal -->
     @if($showCreateUser || $showEditUser)
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 overflow-y-auto z-50">
+        <div class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto z-50">
             <div class="flex items-center justify-center min-h-screen p-4">
                 <div class="bg-white rounded-lg max-w-2xl w-full p-6">
                     <div class="flex justify-between items-center mb-6">
@@ -217,27 +217,22 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                                    <input type="text" wire:model="name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <input type="text" wire:model.defer="name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     @error('name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                 </div>
                                 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                                    <input type="email" wire:model="email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <input type="email" wire:model.defer="email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     @error('email') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                 </div>
                                 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                                    <input type="text" wire:model="phone_number" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <input type="text" wire:model.defer="phone_number" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     @error('phone_number') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                 </div>
                                 
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
-                                    <input type="text" wire:model="employee_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    @error('employee_id') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                                </div>
                             </div>
                         </div>
 
@@ -296,7 +291,7 @@
                         </div>
 
                         <!-- Password Section -->
-                        @if(!$editingUserId)
+                        {{--@if(!$editingUserId)
                             <div class="mb-6">
                                 <h4 class="text-sm font-medium text-gray-700 mb-4">Password</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -338,14 +333,14 @@
                                     </div>
                                 </div>
                             </div>
-                        @endif
+                        @endif--}}
 
                         <!-- Form Actions -->
                         <div class="flex justify-end gap-3">
                             <button type="button" wire:click="resetForm" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
                                 Cancel
                             </button>
-                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            <button type="submit" class="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
                                 {{ $editingUserId ? 'Update User' : 'Create User' }}
                             </button>
                         </div>
@@ -357,7 +352,7 @@
 
     <!-- Delete Confirmation Modal -->
     @if($showDeleteUser)
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 overflow-y-auto z-50">
+        <div class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto z-50">
             <div class="flex items-center justify-center min-h-screen p-4">
                 <div class="bg-white rounded-lg max-w-md w-full p-6">
                     <div class="flex items-center mb-4">
@@ -400,7 +395,7 @@
     @endif
 
     @if (session()->has('info'))
-        <div class="fixed bottom-4 right-4 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+        <div class="fixed bottom-4 right-4 bg-blue-900 text-white px-6 py-3 rounded-lg shadow-lg z-50">
             {{ session('info') }}
         </div>
     @endif

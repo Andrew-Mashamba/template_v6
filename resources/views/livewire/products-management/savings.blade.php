@@ -1,5 +1,21 @@
 <div>
     <!-- Header Section -->
+         <!-- Flash Messages -->
+    @if (session()->has('message'))
+        <div class="fixed bottom-0 right-0 m-6">
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">{{ session('message') }}</span>
+            </div>
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="fixed bottom-0 right-0 m-6">
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">{{ session('error') }}</span>
+            </div>
+        </div>
+    @endif
     <div class="bg-white shadow-sm border-b border-gray-100 mb-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex justify-between items-center">
@@ -49,8 +65,8 @@
                     <label class="block text-sm font-medium text-gray-700">Status</label>
                     <select wire:model="filters.status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg">
                         <option value="">All Status</option>
-                        <option value="1">Active</option>
-                        <option value="0">Inactive</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="INACTIVE">Inactive</option>
                     </select>
                 </div>
                 <div>
@@ -117,24 +133,24 @@
                                     {{ number_format($product->min_balance, 2) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        {{ $product->status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                        {{ $product->status ? 'Active' : 'Inactive' }}
-                                    </span>
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {{ $product->status == 'ACTIVE' 
+                                        ? 'bg-green-100 text-green-800' 
+                                        : ($product->status == 'INACTIVE' 
+                                            ? 'bg-red-100 text-red-800' 
+                                            : 'bg-yellow-100 text-yellow-800') }}">
+                                    {{ $product->status == 'ACTIVE' 
+                                        ? 'Active' 
+                                        : ($product->status == 'INACTIVE' 
+                                            ? 'Inactive' 
+                                            : 'Pending') }}
+                                </span>    
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex space-x-3">
-                                        <button wire:click="editProduct({{ $product->id }})" class="text-blue-600 hover:text-blue-900">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                            </svg>
-                                        </button>
-                                        <button wire:click="deleteProduct({{ $product->id }})" class="text-red-600 hover:text-red-900">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
-                                    </div>
+                                @if($product->status !== 'PENDING')
+                                    <button wire:click="editProduct({{ $product->id }})" class="text-blue-600 hover:text-blue-900 mr-3">Edit</button>                                    
+                                    <button wire:click="deleteProduct({{ $product->id }})" class="text-red-600 hover:text-red-900">Delete</button>
+                                @endif
                                 </td>
                             </tr>
                         @empty
@@ -165,7 +181,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div>
                                     <label for="product_name" class="block text-sm font-medium text-gray-700">Product Name</label>
-                                    <input disabled type="text" wire:model="form.product_name" id="product_name" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <input readonly type="text" wire:model="form.product_name" id="product_name" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                     @error('form.product_name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                 </div>
 
@@ -199,6 +215,19 @@
                                         @endforeach
                                     </select>
                                     @error('form.product_account') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                </div>
+
+                                <div>
+                                    <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                                    <select wire:model="form.status" id="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg">
+                                        @if($editingProduct)
+                                        <option value="ACTIVE">Active</option>
+                                        <option value="INACTIVE">Inactive</option>
+                                        @else
+                                        <option value="PENDING">Pending</option>                                        
+                                        @endif
+                                    </select>
+                                    @error('form.status') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                 </div>
                             </div>
                         </div>
@@ -461,20 +490,5 @@
     </div>
     @endif
 
-    <!-- Flash Messages -->
-    @if (session()->has('message'))
-        <div class="fixed bottom-0 right-0 m-6">
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-                <span class="block sm:inline">{{ session('message') }}</span>
-            </div>
-        </div>
-    @endif
 
-    @if (session()->has('error'))
-        <div class="fixed bottom-0 right-0 m-6">
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                <span class="block sm:inline">{{ session('error') }}</span>
-            </div>
-        </div>
-    @endif
 </div>

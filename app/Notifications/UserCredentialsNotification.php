@@ -33,30 +33,14 @@ class UserCredentialsNotification extends Notification implements ShouldQueue
     {
         $appName = config('app.name', 'SACCOS Management System');
         
-        $message = (new MailMessage)
+        return (new MailMessage)
             ->subject('Your Account Has Been Created - ' . $appName)
-            ->greeting('Dear ' . $this->user->name . ',')
-            ->line('Your account has been successfully created in the ' . $appName . '.')
-            ->line('Below are your login credentials:')
-            ->line('**Email:** ' . $this->user->email)
-            ->line('**Password:** ' . $this->password);
-            
-        // Add department and role information if available
-        if ($this->department) {
-            $message->line('**Department:** ' . $this->department);
-        }
-        
-        if ($this->role) {
-            $message->line('**Role:** ' . $this->role);
-        }
-        
-        $message->line('For security reasons, please change your password immediately after your first login.')
-            ->line('To access the system, please use the following link:')
-            ->action('Login to System', url('/login'))
-            ->line('If you have any questions or need assistance, please contact our support team.')
-            ->line('Thank you for joining our team!');
-
-        return $message;
+            ->view('emails.user-credentials', [
+                'user' => $this->user,
+                'password' => $this->password,
+                'department' => $this->department,
+                'role' => $this->role,
+            ]);
     }
 
     public function toArray($notifiable)
