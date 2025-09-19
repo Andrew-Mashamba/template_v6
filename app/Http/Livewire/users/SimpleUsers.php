@@ -39,7 +39,7 @@ class SimpleUsers extends Component
     public $name;
     public $email;
     public $phone_number;
-    public $employee_id;
+    // public $employee_id;
     public $password;
     public $password_confirmation;
     public $sendCredentials = true;
@@ -68,7 +68,7 @@ class SimpleUsers extends Component
             'name' => 'required|string|min:3|max:255',
             'email' => 'required|email|unique:users,email',
             'phone_number' => 'nullable|string|max:20',
-            'employee_id' => 'nullable|string|max:50|unique:users,employeeId',
+            // 'employee_id' => 'nullable|string|max:50|unique:users,employeeId',
             'selectedDepartment' => 'required|exists:departments,id',
             'selectedRole' => 'required|exists:roles,id',
             'selectedBranch' => 'nullable|exists:branches,id',
@@ -81,7 +81,7 @@ class SimpleUsers extends Component
         } else {
             // $rules['password'] = 'nullable|string|min:8|confirmed';
             $rules['email'] = ['required', 'email', Rule::unique('users')->ignore($this->editingUserId)];
-            $rules['employee_id'] = ['nullable', 'string', 'max:50', Rule::unique('users', 'employeeId')->ignore($this->editingUserId)];
+            // $rules['employee_id'] = ['nullable', 'string', 'max:50', Rule::unique('users', 'employeeId')->ignore($this->editingUserId)];
         }
         
         return $rules;
@@ -166,7 +166,7 @@ class SimpleUsers extends Component
             $this->name = $user->name;
             $this->email = $user->email;
             $this->phone_number = $user->phone_number;
-            $this->employee_id = $user->employeeId;
+            // $this->employee_id = $user->employeeId;
             
             // Load the user's department, role, and sub-roles
             if ($user->roles->first()) {
@@ -237,7 +237,7 @@ class SimpleUsers extends Component
             'email' => $this->email,
             'password' => Hash::make($generatedPassword),
             'phone_number' => $this->phone_number,
-            'employeeId' => $this->employee_id,
+            // 'employeeId' => $this->employee_id,
             'department_code' => $department ? $department->department_code : null,
             'branch' => $this->selectedBranch,
             'status' => 'ACTIVE',
@@ -252,7 +252,7 @@ class SimpleUsers extends Component
             'first_name' => $this->name ?? null,
             'email' => $this->email ?? null,
             'phone' => '255' . substr($this->phone_number, -9),
-            'employee_number' => $this->employee_id,
+            // 'employee_number' => $this->employee_id,
             'department_id' => $department->id,
             'job_title' => $this->job_title ?? null,
             'hire_date' => $this->hire_date ?? null,
@@ -263,6 +263,10 @@ class SimpleUsers extends Component
             'address' => $this->address ?? null,
             'employee_status' => $this->employee_status ?? null,
             'employment_type' => $this->employment_type ?? null,
+        ]);
+
+        $user->update([
+            'employeeId' => $employee->id
         ]);
         
         // Assign the role
@@ -298,7 +302,7 @@ class SimpleUsers extends Component
             'name' => $this->name,
             'email' => $this->email,
             'phone_number' => $this->phone_number,
-            'employeeId' => $this->employee_id,
+            // 'employeeId' => $this->employee_id,
             'department_code' => $department ? $department->department_code : null,
             'branch' => $this->selectedBranch,
         ];
@@ -395,8 +399,7 @@ class SimpleUsers extends Component
                 session()->flash('message', 'User deactivated successfully.');
             }
             
-            $this->showDeleteUser = false;
-            $this->deletingUserId = null;
+            $this->closeModals();
             $this->emit('refreshUsers');
             
         } catch (\Exception $e) {
@@ -405,12 +408,21 @@ class SimpleUsers extends Component
         }
     }
     
+    public function closeModals()
+    {
+        $this->showCreateUser = false;
+        $this->showEditUser = false;
+        $this->showDeleteUser = false;
+        $this->deletingUserId = null;
+        $this->editingUserId = null;
+    }
+    
     public function resetForm()
     {
         $this->name = '';
         $this->email = '';
         $this->phone_number = '';
-        $this->employee_id = '';
+        // $this->employee_id = '';
         $this->password = '';
         $this->password_confirmation = '';
         $this->selectedDepartment = null;
@@ -421,6 +433,10 @@ class SimpleUsers extends Component
         $this->availableSubRoles = [];
         $this->editingUserId = null;
         $this->sendCredentials = true;
+        
+        // Close all modals
+        $this->closeModals();
+        
         $this->resetValidation();
     }
     

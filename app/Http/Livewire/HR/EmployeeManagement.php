@@ -167,6 +167,11 @@ class EmployeeManagement extends Component
             'employment_type' => $this->employment_type,
         ]);
         
+        User::where('employeeId', $this->editingEmployee)->update([
+            'email' => $this->email,
+            'phone_number' => $this->phone,
+        ]);
+        
         session()->flash('success', 'Employee updated successfully!');
         $this->showEditModal = false;
         $this->editingEmployee = null;
