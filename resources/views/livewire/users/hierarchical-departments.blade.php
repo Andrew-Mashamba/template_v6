@@ -1,6 +1,6 @@
 <div class="p-6">
     <!-- Header with Statistics -->
-    <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-6 mb-6 text-white">
+    <div class=" rounded-xl p-6 mb-6 ">
         <h2 class="text-3xl font-bold mb-4">Department Management</h2>
         <div class="grid grid-cols-4 gap-4">
             <div class="bg-white/20 rounded-lg p-3">
@@ -69,7 +69,7 @@
         @foreach($departments as $dept)
             <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
                 <!-- Department Header -->
-                <div class="bg-gradient-to-r from-gray-700 to-gray-900 text-white p-4">
+                <div class=" p-4">
                     <div class="flex justify-between items-start">
                         <div>
                             <h3 class="text-xl font-bold">{{ $dept->department_name }}</h3>

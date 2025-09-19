@@ -25,21 +25,7 @@
                 <h1 class="text-2xl font-bold text-gray-900">Service Subscriptions</h1>
                 <p class="text-gray-600 mt-1">Manage your SACCOS service subscriptions and billing</p>
             </div>
-            <div class="flex items-center space-x-3">
-                @if($permissions['canManage'] ?? false)
-                <button wire:click="processDueSubscriptions" 
-                        class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-150">
-                    <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    Process Billing
-                </button>
-                @endif
-                <div class="bg-white rounded-lg px-4 py-2 shadow-sm border border-gray-200">
-                    <p class="text-sm text-gray-600">Monthly Bill</p>
-                    <p class="text-xl font-bold text-gray-900">TSH {{ number_format($totalMonthlyBill) }}</p>
-                </div>
-            </div>
+      
         </div>
     </div>
 
