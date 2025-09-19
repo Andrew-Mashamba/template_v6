@@ -247,7 +247,7 @@
 
     <!-- Request Details Modal -->
     @if($showDetailsModal && $selectedRequest)
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-screen overflow-y-auto">
             <div class="flex justify-between items-start mb-6">
                 <h3 class="text-lg font-semibold text-gray-900">

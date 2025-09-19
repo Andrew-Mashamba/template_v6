@@ -73,7 +73,7 @@ class UsersSeeder extends Seeder
                 'otp' => null,
                 'verification_status' => 1,
                 'phone_number' => null,
-                'employeeId' => null,
+                'employeeId' => 1,
                 'department_code' => 'ICT',
                 'sub_role' => null,
                 'branch_id' => 1,

@@ -20,7 +20,7 @@ class LeavesSeeder extends Seeder
         // Insert sample data (table was empty)
         $data = [
             [
-                'id' => 1,
+                // 'id' => 1,
                 'employee_id' => 1,
                 'leave_type' => 'TYPE_B',
                 'start_date' => '2025-07-24',
@@ -32,7 +32,7 @@ class LeavesSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'id' => 2,
+                // 'id' => 2,
                 'employee_id' => 2,
                 'leave_type' => 'TYPE_C',
                 'start_date' => '2025-07-25',

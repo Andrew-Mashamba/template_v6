@@ -69,6 +69,7 @@ class SelfServices extends Component
         $this->initializeWithModulePermissions();
         $this->loadEmployeeData();
         $this->loadDashboardStats();
+        $this->resetLeaveForm();
     }
 
     protected function loadEmployeeData()
