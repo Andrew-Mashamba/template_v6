@@ -3,7 +3,7 @@
 <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <!-- Background overlay -->
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
+        <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" 
              wire:click="closePaymentModal" aria-hidden="true"></div>
 
         <!-- Modal panel -->

@@ -284,7 +284,7 @@
 
     {{-- Create/Edit Modal --}}
     @if($showCreateModal)
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 overflow-y-auto h-full w-full z-50">
+        <div class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold">{{ $editMode ? 'Edit' : 'Record' }} Other Income</h3>
@@ -533,7 +533,7 @@
 
     {{-- Details Modal --}}
     @if($showDetailsModal)
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 overflow-y-auto h-full w-full z-50">
+        <div class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold">Income Details</h3>
