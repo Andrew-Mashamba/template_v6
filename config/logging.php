@@ -96,6 +96,15 @@ return [
             ],
         ],
 
+        'statements' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/statements/statements.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 30,
+            'replace_placeholders' => true,
+            'permission' => 0664,
+        ],
+
         'stack' => [
             'driver' => 'stack',
             'channels' => ['daily', 'luku'],

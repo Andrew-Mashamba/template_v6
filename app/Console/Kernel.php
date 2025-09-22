@@ -118,6 +118,26 @@ class Kernel extends ConsoleKernel
                 ->withoutOverlapping()
                 ->runInBackground()
                 ->appendOutputTo(storage_path('logs/standing-instructions.log'));
+
+        // Sync NBC account balances every 15 minutes
+        $schedule->command('nbc:sync-balances')
+                ->everyFifteenMinutes()
+                ->withoutOverlapping()
+                ->runInBackground()
+                ->appendOutputTo(storage_path('logs/nbc-sync.log'))
+                ->onSuccess(function () {
+                    \Log::channel('payments')->info('NBC account balances synced successfully');
+                })
+                ->onFailure(function () {
+                    \Log::channel('payments')->error('NBC account balance sync failed');
+                });
+
+        // Full NBC sync daily at 6 AM (force sync)
+        $schedule->command('nbc:sync-balances --force')
+                ->dailyAt('06:00')
+                ->withoutOverlapping()
+                ->runInBackground()
+                ->appendOutputTo(storage_path('logs/nbc-sync-daily.log'));
     }
 
     /**

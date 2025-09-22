@@ -153,4 +153,18 @@ return [
         'timeout' => env('RESELLER_TIMEOUT', 30),
     ],
 
+    /*
+    NBC Statement Service (PVAS) Configuration
+    Partners Values Added Services for account statements
+    */
+    'nbc_statement' => [
+        'base_url' => env('NBC_STATEMENT_BASE_URL', 'https://api-uat.nbc.co.tz'),  // Mock URL for UAT
+        'username' => env('NBC_STATEMENT_USERNAME', 'SACCOS_USER'),
+        'password' => env('NBC_STATEMENT_PASSWORD', 'SACCOS_SECRET'),
+        'timeout' => env('NBC_STATEMENT_TIMEOUT', 30),
+        'verify_ssl' => env('NBC_STATEMENT_VERIFY_SSL', true),
+        'cache_token' => env('NBC_STATEMENT_CACHE_TOKEN', true),
+        'token_expiry_buffer' => env('NBC_STATEMENT_TOKEN_EXPIRY_BUFFER', 300), // 5 minutes buffer
+    ],
+
 ];

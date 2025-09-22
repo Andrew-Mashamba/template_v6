@@ -115,16 +115,30 @@ class InternalFundsTransferService
             if ($response['success']) {
                 $accountData = $response['data'];
                 
+                // Check if the response has the expected structure with statusCode and body
+                $responseBody = null;
+                if (isset($accountData['statusCode']) && $accountData['statusCode'] == 600 && isset($accountData['body'])) {
+                    // NBC API response structure with body
+                    $responseBody = $accountData['body'];
+                } elseif (isset($accountData['accountTitle'])) {
+                    // Direct response structure
+                    $responseBody = $accountData;
+                } else {
+                    // Fallback to the whole data
+                    $responseBody = $accountData;
+                }
+                
                 $this->logInfo("[SUCCESS] Account Validation Complete", [
                     'account' => $accountNumber,
                     'full_response' => json_encode($accountData, JSON_PRETTY_PRINT),
                     'extracted_data' => [
-                        'account_name' => $accountData['accountName'] ?? 'Not provided',
-                        'status' => $accountData['status'] ?? 'Unknown',
-                        'branch' => $accountData['branchName'] ?? 'Unknown',
-                        'currency' => $accountData['currency'] ?? 'TZS',
-                        'can_receive' => $accountData['canReceive'] ?? null,
-                        'can_debit' => $accountData['canDebit'] ?? null
+                        'account_name' => $responseBody['accountTitle'] ?? $responseBody['accountName'] ?? 'Not provided',
+                        'status' => $responseBody['casaAccountStatus'] ?? $responseBody['status'] ?? 'Unknown',
+                        'branch' => $responseBody['branchShortName'] ?? $responseBody['branchName'] ?? 'Unknown',
+                        'currency' => $responseBody['currencyShortName'] ?? $responseBody['currency'] ?? 'TZS',
+                        'available_balance' => $responseBody['availableBalance'] ?? 'Not provided',
+                        'blocked' => $responseBody['blocked'] ?? false,
+                        'restricted' => $responseBody['restrictedAccount'] ?? false
                     ],
                     'duration_ms' => $duration,
                     'api_call_completed' => true
@@ -133,13 +147,18 @@ class InternalFundsTransferService
                 return [
                     'success' => true,
                     'account_number' => $accountNumber,
-                    'account_name' => $accountData['accountName'] ?? 'NBC Account',
-                    'account_status' => $accountData['status'] ?? 'ACTIVE',
-                    'branch_code' => $accountData['branchCode'] ?? substr($accountNumber, 0, 3),
-                    'branch_name' => $accountData['branchName'] ?? 'NBC Branch',
-                    'currency' => $accountData['currency'] ?? 'TZS',
-                    'can_receive' => $accountData['canReceive'] ?? true,
-                    'can_debit' => $accountData['canDebit'] ?? ($accountType === 'source'),
+                    'account_name' => $responseBody['accountTitle'] ?? $responseBody['accountName'] ?? 'NBC Account',
+                    'account_status' => $responseBody['casaAccountStatus'] ?? $responseBody['status'] ?? 'ACTIVE',
+                    'branch_code' => $responseBody['branchCode'] ?? substr($accountNumber, 0, 3),
+                    'branch_name' => $responseBody['branchShortName'] ?? $responseBody['branchName'] ?? 'NBC Branch',
+                    'currency' => $responseBody['currencyShortName'] ?? $responseBody['currency'] ?? 'TZS',
+                    'available_balance' => isset($responseBody['availableBalance']) ? (float) $responseBody['availableBalance'] : null,
+                    'customer_id' => $responseBody['customerId'] ?? null,
+                    'customer_name' => $responseBody['customerShortName'] ?? null,
+                    'blocked' => $responseBody['blocked'] ?? false,
+                    'restricted' => $responseBody['restrictedAccount'] ?? false,
+                    'can_receive' => !($responseBody['blocked'] ?? false) && !($responseBody['restrictedAccount'] ?? false),
+                    'can_debit' => ($accountType === 'source') && !($responseBody['blocked'] ?? false),
                     'response_time' => $duration
                 ];
             } else {

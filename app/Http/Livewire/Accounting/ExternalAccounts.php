@@ -7,6 +7,7 @@ use App\Models\BranchesModel;
 use App\Models\Employee;
 use App\Models\MembersModel;
 use App\Services\AccountDetailsService;
+use App\Services\Payments\InternalFundsTransferService;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -376,43 +377,101 @@ class ExternalAccounts extends Component
         try {
             $bankAccount = BankAccount::findOrFail($bankAccountId);
             $accountNumber = $bankAccount->account_number;
+            $bankName = strtoupper(trim($bankAccount->bank_name));
 
-            Log::info('Refreshing account balance from external API', [
+            Log::info('Refreshing account balance', [
                 'bank_account_id' => $bankAccountId,
                 'account_number' => $accountNumber,
+                'bank_name' => $bankName,
                 'user_id' => Auth::id()
             ]);
 
-            $accountDetailsService = new AccountDetailsService();
-            $result = $accountDetailsService->getAccountDetails($accountNumber);
-
-            if ($result['statusCode'] === 600 && isset($result['body']['availableBalance'])) {
-                $newBalance = (float) $result['body']['availableBalance'];
-                $oldBalance = $bankAccount->current_balance;
-
-                $bankAccount->update([
-                    'current_balance' => $newBalance,
-                    'updated_at' => now()
-                ]);
-
-                Log::info('Account balance updated successfully', [
-                    'bank_account_id' => $bankAccountId,
-                    'account_number' => $accountNumber,
-                    'old_balance' => $oldBalance,
-                    'new_balance' => $newBalance,
-                    'user_id' => Auth::id()
-                ]);
-
-                session()->flash('message', "Account balance updated: " . number_format($newBalance, 2) . " " . $bankAccount->currency);
+            // Check if this is an NBC account
+            if ($bankName === 'NBC' || strpos($bankName, 'NBC') !== false || strpos($bankName, 'NATIONAL BANK') !== false) {
+                // Use InternalFundsTransferService for NBC accounts
+                Log::info('Using InternalFundsTransferService for NBC account lookup');
+                
+                $internalService = new InternalFundsTransferService();
+                $result = $internalService->lookupAccount($accountNumber, 'source');
+                
+                if ($result['success']) {
+                    // Extract balance from the NBC API response
+                    // The balance might be in different fields based on the actual response
+                    $newBalance = 0.0;
+                    
+                    // Check for available_balance first (from the actual NBC API response)
+                    if (isset($result['available_balance'])) {
+                        $newBalance = (float) $result['available_balance'];
+                    } elseif (isset($result['current_balance'])) {
+                        $newBalance = (float) $result['current_balance'];
+                    } elseif (isset($result['actual_balance'])) {
+                        $newBalance = (float) $result['actual_balance'];
+                    }
+                    
+                    $oldBalance = $bankAccount->current_balance;
+                    
+                    // Also update account name if provided
+                    $updateData = [
+                        'current_balance' => $newBalance,
+                        'updated_at' => now()
+                    ];
+                    
+                    if (!empty($result['account_name']) && $result['account_name'] !== 'NBC Account') {
+                        $updateData['account_name'] = $result['account_name'];
+                    }
+                    
+                    $bankAccount->update($updateData);
+                    
+                    Log::info('NBC account balance updated successfully', [
+                        'bank_account_id' => $bankAccountId,
+                        'account_number' => $accountNumber,
+                        'old_balance' => $oldBalance,
+                        'new_balance' => $newBalance,
+                        'account_name' => $result['account_name'] ?? 'Not provided',
+                        'branch' => $result['branch_name'] ?? 'Not provided',
+                        'user_id' => Auth::id()
+                    ]);
+                    
+                    session()->flash('message', 'NBC account balance refreshed successfully. New balance: ' . number_format($newBalance, 2) . ' ' . ($result['currency'] ?? 'TZS'));
+                } else {
+                    throw new Exception('Failed to lookup NBC account: ' . ($result['error'] ?? 'Unknown error'));
+                }
+                
             } else {
-                Log::warning('Failed to refresh account balance from external API', [
-                    'bank_account_id' => $bankAccountId,
-                    'account_number' => $accountNumber,
-                    'status_code' => $result['statusCode'],
-                    'message' => $result['message'] ?? 'Unknown error'
-                ]);
+                // Use AccountDetailsService for other banks
+                Log::info('Using AccountDetailsService for external bank account lookup');
+                
+                $accountDetailsService = new AccountDetailsService();
+                $result = $accountDetailsService->getAccountDetails($accountNumber);
 
-                session()->flash('error', 'Failed to refresh account balance: ' . ($result['message'] ?? 'Unknown error'));
+                if ($result['statusCode'] === 600 && isset($result['body']['availableBalance'])) {
+                    $newBalance = (float) $result['body']['availableBalance'];
+                    $oldBalance = $bankAccount->current_balance;
+
+                    $bankAccount->update([
+                        'current_balance' => $newBalance,
+                        'updated_at' => now()
+                    ]);
+
+                    Log::info('External bank account balance updated successfully', [
+                        'bank_account_id' => $bankAccountId,
+                        'account_number' => $accountNumber,
+                        'old_balance' => $oldBalance,
+                        'new_balance' => $newBalance,
+                        'user_id' => Auth::id()
+                    ]);
+
+                    session()->flash('message', "Account balance updated: " . number_format($newBalance, 2) . " " . $bankAccount->currency);
+                } else {
+                    Log::warning('Failed to refresh account balance from external API', [
+                        'bank_account_id' => $bankAccountId,
+                        'account_number' => $accountNumber,
+                        'status_code' => $result['statusCode'],
+                        'message' => $result['message'] ?? 'Unknown error'
+                    ]);
+
+                    session()->flash('error', 'Failed to refresh account balance: ' . ($result['message'] ?? 'Unknown error'));
+                }
             }
 
         } catch (Exception $e) {

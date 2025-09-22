@@ -96,19 +96,34 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                 <div class="flex items-center space-x-2">
                                     <span>{{ number_format($account->current_balance, 2) }}</span>
-                                    <button 
-                                        wire:click="refreshAccountBalance({{ $account->id }})" 
-                                        wire:loading.attr="disabled"
-                                        wire:target="refreshAccountBalance({{ $account->id }})"
-                                        class="inline-flex items-center p-1 text-gray-400 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded transition-colors duration-200"
-                                        title="Refresh balance from external API">
-                                        <svg wire:loading.remove wire:target="refreshAccountBalance({{ $account->id }})" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                        </svg>
-                                        <svg wire:loading wire:target="refreshAccountBalance({{ $account->id }})" class="h-4 w-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                        </svg>
-                                    </button>
+                                    @php
+                                        $bankNameUpper = strtoupper(trim($account->bank_name));
+                                        $isNbcAccount = $bankNameUpper === 'NBC' || 
+                                                       strpos($bankNameUpper, 'NBC') !== false || 
+                                                       strpos($bankNameUpper, 'NATIONAL BANK') !== false;
+                                    @endphp
+                                    @if($isNbcAccount)
+                                        <button 
+                                            wire:click="refreshAccountBalance({{ $account->id }})" 
+                                            wire:loading.attr="disabled"
+                                            wire:target="refreshAccountBalance({{ $account->id }})"
+                                            class="inline-flex items-center p-1 text-gray-400 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded transition-colors duration-200"
+                                            title="Refresh NBC account balance via API">
+                                            <svg wire:loading.remove wire:target="refreshAccountBalance({{ $account->id }})" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                            <svg wire:loading wire:target="refreshAccountBalance({{ $account->id }})" class="h-4 w-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                        </button>
+                                        <span class="text-xs text-green-600" title="NBC account - API refresh enabled">NBC</span>
+                                    @else
+                                        <span class="text-xs text-gray-400 italic" title="Manual update required for {{ $account->bank_name }}">
+                                            <svg class="h-4 w-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </span>
+                                    @endif
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
