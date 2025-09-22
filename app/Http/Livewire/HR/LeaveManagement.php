@@ -21,6 +21,8 @@ class LeaveManagement extends Component
     public $totalOnLeave = 0;
     public $search = '';
     public $filterStatus = '';
+    public $selectedLeave = null;
+    public $showLeaveModal = false;
 
     public function mount()
     {
@@ -135,6 +137,18 @@ class LeaveManagement extends Component
             session()->flash('info', 'Leave request rejected.');
             $this->loadLeaveData();
         }
+    }
+
+    public function viewLeave($leaveId)
+    {
+        $this->selectedLeave = Leave::with('employee', 'branch')->find($leaveId);
+        $this->showLeaveModal = true;
+    }
+
+    public function closeLeaveModal()
+    {
+        $this->showLeaveModal = false;
+        $this->selectedLeave = null;
     }
 
     public function getEmployeeLeaveBalance($employeeId)
