@@ -210,7 +210,7 @@ class AllMembers extends Component
     ];
 
     protected $fieldTypes = [
-        'client_number' => ['type' => 'text', 'required' => true],
+        'client_number' => ['type' => 'text', 'required' => true, 'disabled' => true],
         'first_name' => ['type' => 'text', 'required' => true],
         'last_name' => ['type' => 'text', 'required' => true],
         'phone_number' => ['type' => 'tel', 'required' => true, 'disabled' => true],
@@ -227,7 +227,7 @@ class AllMembers extends Component
 
     protected $rules = [
         'editingMember.current_team_id' => 'nullable|integer',
-        'editingMember.account_number' => 'nullable|integer',
+        'editingMember.account_number' => 'nullable|numeric',
         'editingMember.client_number' => 'required|string|max:50',
         'editingMember.first_name' => 'required|string|max:100',
         'editingMember.middle_name' => 'nullable|string|max:100',

@@ -245,7 +245,7 @@ class OtherIncome extends Component
     
     public function calculateNetAmount()
     {
-        $this->net_amount = $this->amount - $this->tax_amount;
+        $this->net_amount = (float)$this->amount - (float)$this->tax_amount;
     }
     
     public function openCreateModal()

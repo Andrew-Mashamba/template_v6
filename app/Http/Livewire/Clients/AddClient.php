@@ -156,6 +156,7 @@ class AddClient extends Component
             'gender'=> $this->gender,
             'marital_status'=> $this->marital_status,
             'client_number'=> $newClientId,
+            'member_number' => $newClientId,
             'registration_date'=> $this->registration_date,
             'street'=> $this->street,
             'address' => $this->address,

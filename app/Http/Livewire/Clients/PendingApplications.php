@@ -683,7 +683,7 @@ class PendingApplications extends Component
     {
         $this->columns = [
             'account_number' => true,
-            'client_number' => true,
+            // 'client_number' => true,
             'first_name' => true,
             'last_name' => true,
             'email' => true,
